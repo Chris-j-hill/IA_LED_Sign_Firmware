@@ -1,16 +1,17 @@
 
 
-#include "libraries.h"                //file containing all 3rd party libraries used
-#include "Pins.h"                     //list of pins used in each board
+#include "Config_Local.h"
+#include "Due_Libraries.h"                //file containing all 3rd party libraries used
+#include "Due_Pins.h"                     //list of pins used in each board
 #include "function_declarations.h"    //any functions that need prototypes
 #include "Global_variables.h"         //all global variables defined here
 #include "due_structs.h"              //structs for a variety of aspects of the sign (fans, encoder, text etc)
 
-#include "Interrupts.h"               //interrupt functions, arduino doesnt like them in classes so created seperately 
+#include "Due_Interrupts.h"               //interrupt functions, arduino doesnt like them in classes so created seperately 
 
 #include "base_class.h"               //classes
-#include "due_class.h"
-#include "mega_class.h"
+#include "Due_class.h"
+
 
 
 due_class due; 	// class constructor      
@@ -59,34 +60,20 @@ void due_setup() {
 
 
 void due_loop() {
-  text_cursor.x = 0;
-  text_cursor.y = 0; 
-  int mega_last_sent_time = millis();
-  while (1) {
-  due.send_all_pos();   //timer based function to send pos
+ //do these periodically based on config
+ cards.check_for_card_inserted();   
+ internet.check_connection();       
+ fans.get_temperature();            
+ fans.set_fan_speed();
+ disp.update_brightness();
+ encoder.update_encoder_postion();
+ encoder.pressed();
+ update_display();  //push additional data to screens as required
 
-  due.send_all_text();    //send text periodically
+ //do this based speed variable
+ update_text_location(); //write location variable to be sent by interrupt
 
-  
-    //Serial.println(F("Loop"));
-    //  delay(1000);
-    //due.send_disp_string_frame(1);
-    //due.send_disp_string_frame(4);
-     //x_pos_dir = 1;
-     if (text_cursor.x <= -text.text_width*strlen(text_str)*2)
-     text_cursor.x=0;
-//     y_pos++;
-//     Serial.println(text_str);
-//    Serial.println(x_pos);
-//    Serial.println(y_pos);
-//    send_text_frame_123 = true;
-//    Serial.println();
-
-  
-    
  
-  }
-
 }
 
 

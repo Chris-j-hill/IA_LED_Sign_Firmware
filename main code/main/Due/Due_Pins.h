@@ -1,12 +1,11 @@
 
 
-#ifndef PINS_H
-#define PINS_H      //define to stop double declarations
+#ifndef Due_Pins_H
+#define Due_Pins_H      //define to stop double declarations
 #include "Arduino.h"
 
     //      due pins
 
-    #ifdef _SAM3XA_
 
         //also uses SDA1 and SCL1 and spi pins
         #define PIN_A       5
@@ -53,7 +52,5 @@
         #define RX_PIN_4 39 // software serial port's reception pin
         #define TX_PIN_4 43 // software serial port's transmision pin
 
-        
-    #endif // _SAM3XA_
 
-#endif // PINS_H
+#endif // Due_Pins_H
