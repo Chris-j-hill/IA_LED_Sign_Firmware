@@ -40,7 +40,7 @@ struct Fan_Struct {
   bool fan_on  = true;                    // is fan enabled, if so, run functions
 
 };
-Fan_Struct fan;        //create fan struct
+//Fan_Struct fan;        //create fan struct
 
 int attach_timer_fan(){
   //attach fan interrupt
@@ -78,16 +78,17 @@ int fans_set_freq(){}      //interrupt to set the frequency the fans are adjuste
 
 
 //class for both fan cantrol and temperature monitoring  
-class fans{
+class Fans{
 
   private:
 
     int poll_temperature_sensor (int pin);       // read temp sensor registers, used to update stored value to most recent
     byte read_temp_data_from_register (int pin);        // convert incoming bits from temp sensor to a byte
-
+    
   public:
-        fans(){}
-
+        Fan_Struct fan1;        //create fan struct
+        Fans(){}
+        
           //initialisations of individual items, set pins, test if working if applicable, etc
         int init_fans();
         int init_temp_sensors();            

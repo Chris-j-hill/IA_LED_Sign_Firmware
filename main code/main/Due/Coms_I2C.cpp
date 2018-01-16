@@ -9,7 +9,7 @@
 
 //methods for i2c coms class
 #ifdef USE_I2C_TO_MEGAS
-int coms::init_i2c() { //if init does not specify address call with address 5(safe value), if due, value not used
+int Coms_i2c::init_i2c() { //if init does not specify address call with address 5(safe value), if due, value not used
 
   init_i2c_due();   //attach the i2c to wire1
   //Serial.println(F("Pause for megas to initialise"));
@@ -18,7 +18,7 @@ int coms::init_i2c() { //if init does not specify address call with address 5(sa
 
 }
 
-int coms::init_i2c(int address) {   //initialise i2c by calling specify routines for this chipset
+int Coms_i2c::init_i2c(int address) {   //initialise i2c by calling specify routines for this chipset
 
 
   int alpha = i2c_scanner();   //test all addresses
@@ -36,7 +36,7 @@ int coms::init_i2c(int address) {   //initialise i2c by calling specify routines
 
 }
 
-int coms::init_i2c_due() {  //i2c init for the due specifically
+int Coms_i2c::init_i2c_due() {  //i2c init for the due specifically
 
   //ensure the device running this is a due
 
@@ -45,7 +45,7 @@ int coms::init_i2c_due() {  //i2c init for the due specifically
 
 }
 
-int coms::i2c_scanner() {           // scan all addresses and make sure decive responds
+int Coms_i2c::i2c_scanner() {           // scan all addresses and make sure decive responds
 
   // based on the i2c scanner methodology send dummy frame to mega
   // check endTransmission() return value, if non zero there is an error
@@ -70,7 +70,7 @@ int coms::i2c_scanner() {           // scan all addresses and make sure decive r
 
 }
 
-int coms::i2c_scanner(int address) { // test specific address
+int Coms_i2c::i2c_scanner(int address) { // test specific address
 
   Wire1.beginTransmission(address);
   //for(int i=0; i<strlen(dummy_frame);i++){

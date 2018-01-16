@@ -4,13 +4,13 @@
 #include "Due_Libraries.h"
 
 
-class internet
+class Internet {
 
   private:
 
   public:
 
-    internet(){}
+    Internet(){}
     
     int init_ethernet();
     int init_wifi();

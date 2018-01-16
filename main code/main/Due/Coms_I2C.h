@@ -4,14 +4,14 @@
 
 #include "Global_variables.h"
 #include "Config_Local.h"
-class coms {
+class Coms_i2c:public Coms {
 
   private:
     
 
   public:
 
-    coms(){}
+    Coms_i2c(){}
 
     int init_serial();            // init the serial at 115200 baud rate
     int init_serial(int speed);   // init the serial at a custom speed

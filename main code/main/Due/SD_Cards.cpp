@@ -5,7 +5,7 @@
 #include "Due.h"
 
 
-int card::init_sd_cards() {      // code to init sd cards and copy data from external to internal card
+int Card::init_sd_cards() {      // code to init sd cards and copy data from external to internal card
 
   // code for initialising sd cards, waits for both cards to be active then copies files from
   // the external one to the internal one. listas are made of all files in directory and errors are
@@ -148,7 +148,7 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
 
 }
 
-int card::copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir) {   //funtion to copy the data from /ext_dir/ext_file to /int_dir/int_file
+int Card::copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir) {   //funtion to copy the data from /ext_dir/ext_file to /int_dir/int_file
 
 
   // set the current working directory for open() to external_sd_card
@@ -208,7 +208,7 @@ int card::copy_sd_data(const char *ext_file, const char *int_file, const char *e
 
 }
 
-int card::extract_network_data() {   // parse the file and extract network info (test network login not implmented yet 28/7/17)
+int Card::extract_network_data() {   // parse the file and extract network info (test network login not implmented yet 28/7/17)
   // function to extract data from the sd card on the ethernet shield, passwords should already be copied here when this is called
   // network info is identifiable the keywords network, password and default, the associated string is identifiable by a tab or return carrige at their end
   // default is a string to be taken hould no known network be available
@@ -286,7 +286,7 @@ int card::extract_network_data() {   // parse the file and extract network info 
   }
 }
 
-int card::buffer_in_header() {      //return 1 if the colon is in the header, otherwise 0
+int Card::buffer_in_header() {      //return 1 if the colon is in the header, otherwise 0
 
   if (sd_file_read_buffer[15] == '"')
     return 1;
@@ -297,26 +297,26 @@ int card::buffer_in_header() {      //return 1 if the colon is in the header, ot
   return 0;
 }
 
-int card::buffer_is_network() {     //check if network stored in buffer
+int Card::buffer_is_network() {     //check if network stored in buffer
   if (sd_file_read_buffer[7] == 'N' && sd_file_read_buffer[8] == 'e' && sd_file_read_buffer[9] == 't' && sd_file_read_buffer[10] == 'w' && sd_file_read_buffer[11] == 'o' && sd_file_read_buffer[12] == 'r' && sd_file_read_buffer[13] == 'k')
     return 1;
   return 0;
 
 }
 
-int card::buffer_is_password() {   //check if password stored in buffer
+int Card::buffer_is_password() {   //check if password stored in buffer
   if (sd_file_read_buffer[6] == 'P' && sd_file_read_buffer[7] == 'a' && sd_file_read_buffer[8] == 's' && sd_file_read_buffer[9] == 's' && sd_file_read_buffer[10] == 'w' && sd_file_read_buffer[11] == 'o' && sd_file_read_buffer[12] == 'r' && sd_file_read_buffer[13] == 'd')
     return 1;
   return 0;
 }
 
-int card::buffer_is_default() {    //check if default string stored in buffer
+int Card::buffer_is_default() {    //check if default string stored in buffer
   if (sd_file_read_buffer[7] == 'D' && sd_file_read_buffer[8] == 'e' && sd_file_read_buffer[9] == 'f' && sd_file_read_buffer[10] == 'a' && sd_file_read_buffer[11] == 'u' && sd_file_read_buffer[12] == 'l' && sd_file_read_buffer[13] == 't')
     return 1;
   return 0;
 }
 
-int card::string_length() {  // get string length, data strings seperated by tab or return carrige at end
+int Card::string_length() {  // get string length, data strings seperated by tab or return carrige at end
   int alpha = 16;
   while (sd_file_read_buffer[alpha] != '\n' && sd_file_read_buffer[alpha] != '\t') {  //if the current index is a carriage return exit
     alpha++;    //increment alpha
@@ -324,7 +324,7 @@ int card::string_length() {  // get string length, data strings seperated by tab
   return alpha - 16 - 1; //alpha-offset-1
 }
 
-int card::remove_card_1() {  //function to stall code until the external sd is removed, safety to prevent sd containing network info left unattended
+int Card::remove_card_1() {  //function to stall code until the external sd is removed, safety to prevent sd containing network info left unattended
 
   // function to prevent standard operation of the display until external sd card removed.
 

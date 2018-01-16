@@ -4,14 +4,14 @@
 
 #include "Global_variables.h"
 #include "Config_Local.h"
-class coms_serial: public coms {    
+class Coms_Serial: public Coms {    
 
   private:
     
 
   public:
 
-    coms_serial(){}
+    Coms_Serial(){}
 
     int init_serial();            // init the serial at 115200 baud rate
     int init_serial(int speed);   // init the serial at a custom speed

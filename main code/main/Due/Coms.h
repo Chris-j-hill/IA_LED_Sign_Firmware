@@ -18,12 +18,19 @@ using namespace arduino_due;
 #define RX_BUF_LENGTH 256 // software serial port's reception buffer length 
 #define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
 
+serial_tc5_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_1=serial_tc5;
+serial_tc6_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_2=serial_tc6;
+serial_tc7_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_3=serial_tc7;
+serial_tc8_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_4=serial_tc8;
 
-
-#define HEADER_LENGTH 4;  //length,type,num frames, frame no
-#define TRAILER_LENGTH = 1; //just checksum
-#define DATA_IDENTIFIER_BYTE = 2;   //frame type byte
-#define FRAME_LENGTH_BYTE = 1;
+#define HEADER_LENGTH 4  //length,type,num frames, frame no
+#define TRAILER_LENGTH 1 //just checksum
+#define DATA_IDENTIFIER_BYTE  2   //frame type byte
+#define FRAME_LENGTH_BYTE  1
 #define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
 
@@ -87,14 +94,14 @@ void send_pos_interrupt(){     // interrupt to send pos data to all megas
 }
 
 
-class coms {
+class Coms {
 
   private:
     
 
   public:
 
-    coms(){}
+    Coms(){}
 
     int init_software_serial_to_megas();            // init the software serial at 115200 baud rate
     int init_software_serial_to_megas(int speed);   // init the serial at a custom speed

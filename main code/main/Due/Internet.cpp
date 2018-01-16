@@ -10,9 +10,9 @@
 
 //methods for internet_class
 
-int internet::init_ethernet() {}     //not implented
+int Internet::init_ethernet() {}     //not implented
 
-int internet::init_wifi() {       //not implented
+int Internet::init_wifi() {       //not implented
 
   if (sd_cards_enabled) {        //make sure the sd cards have been enabled, otherwise due cant have access to network info
 

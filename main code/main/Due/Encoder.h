@@ -114,7 +114,7 @@ void update_button_ISR() {
 }
 
 
-class encoder {
+class Encoder {
 
   private:
 

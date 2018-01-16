@@ -2,7 +2,8 @@
 #ifndef Coms_CPP
 #define Coms_CPP
 
-
+#include "Coms.h"
+#include "Arduino.h"
 
 // ______  non class functions _______
 
@@ -48,7 +49,7 @@ int set_pos_update_frequency(int freq){
 
 // ______ class functions _______
 
-int coms::init_software_serial_to_usb_port(){           // init the serial at 115200 baud rate
+int Coms::init_software_serial_to_usb_port(){           // init the serial at 115200 baud rate
 
   Serial.begin(COMS_SPEED)
   alpha=millis();
@@ -62,7 +63,7 @@ int coms::init_software_serial_to_usb_port(){           // init the serial at 11
   return 0; 
 }
 
-int coms::init_software_serial_to_usb_port(int speed){  // init the serial at a custom speed
+int Coms::init_software_serial_to_usb_port(int speed){  // init the serial at a custom speed
 
   if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
     return (-2);
@@ -79,7 +80,7 @@ int coms::init_software_serial_to_usb_port(int speed){  // init the serial at a 
   return 0;
 }
 
-int coms::startup_handshake() {  //code to delay the due in initialisation and enable mega startup, simply wait until the megas all set ready pin high
+int Coms::startup_handshake() {  //code to delay the due in initialisation and enable mega startup, simply wait until the megas all set ready pin high
 
 #ifdef USING_SIMPLE_BINARY_NODE_READY_PROTOCOL
   pinMode(due_ready_pin, OUTPUT);           //due handshake
@@ -121,7 +122,7 @@ int coms::startup_handshake() {  //code to delay the due in initialisation and e
 #endif
 }
 
-int coms::send_disp_string_frame(int address) {   //function to send strings to display on screen
+int Coms::send_disp_string_frame(int address) {   //function to send strings to display on screen
 
   // function calculates the number of frames required to send the string, then loops,
   // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
@@ -160,7 +161,7 @@ int coms::send_disp_string_frame(int address) {   //function to send strings to 
   return (0);
 }
 
-int coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //function to pack a frame of text to display
+int Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //function to pack a frame of text to display
 
   // function to pack a frame based on a given offset (ie this frames number)
   // maybe generalise later to accept calls from multiple frame building methods
@@ -178,7 +179,7 @@ int coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //functio
   return (0);
 }
 
-int coms::send_pos_frame(int address) {
+int Coms::send_pos_frame(int address) {
 
   int type = 2;
   Sprint(F("Sending cursor positions to address "));
@@ -207,7 +208,7 @@ int coms::send_pos_frame(int address) {
   return (0);
   }
 
-int coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send the x and y positions of the text cursor
+int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send the x and y positions of the text cursor
 
   // Wire.write can only handle bytes (0-256) whereas we will need to use positive and negaitve values potientially significantly larger than 256
   // to accomplish this two sucessive bytes are sent to repersent one number. to deal with positive and negative numbers, the coordinate is split into
@@ -249,7 +250,7 @@ int coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send t
   return (0);
 }
 
-int coms::send_all_calibration_data(int address) {     //function to send all data
+int Coms::send_all_calibration_data(int address) {     //function to send all data
 
   //function to send all the sensor data. loop through all sensor values
   byte type = 3;
@@ -289,7 +290,7 @@ int coms::send_all_calibration_data(int address) {     //function to send all da
 
 }
 
-int coms::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
+int Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
 
   // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
   // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
@@ -328,11 +329,11 @@ int coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
       break;
 
     case 40:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan.fan_target_speed;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fans.fan1.fan_target_speed;
       break;
 
     case 50:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip.target_brightness;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip.led_strip1.target_brightness;
       break;
 
     case 60:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
@@ -415,7 +416,7 @@ int coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
 
 }
 
-int coms::send_all_pos_on_interrupt() {    // function to send pos data to all megas if timer interrupt has indicated they should be sent
+int Coms::send_all_pos_on_interrupt() {    // function to send pos data to all megas if timer interrupt has indicated they should be sent
 
     if (!timers.pos_timer_attached){
       Sprintln(F("Error: Cant send pos, timer not enabled"));
@@ -432,7 +433,7 @@ int coms::send_all_pos_on_interrupt() {    // function to send pos data to all m
   return(0);
 }
 
-int coms::send_all_pos_now(){    //function to send all the positional info now, not wait for timer to trigger flag
+int Coms::send_all_pos_now(){    //function to send all the positional info now, not wait for timer to trigger flag
   
      send_pos_frame(1);   // send frames
      send_pos_frame(2);
@@ -442,7 +443,7 @@ int coms::send_all_pos_now(){    //function to send all the positional info now,
   return(0);
 }
 
-int coms::calc_delay() {    // function to calculate the dalay in sending frames to the megas
+int Coms::calc_delay() {    // function to calculate the dalay in sending frames to the megas
   // this could be useful for syncing up the screen updates. this value is only necessary for the pos data
   //frame as the other ones dont require accurate timing
 
@@ -455,7 +456,7 @@ int coms::calc_delay() {    // function to calculate the dalay in sending frames
   return (0);
 }
 
-int coms::send_all_text() {   // send the text frame to all megas
+int Coms::send_all_text() {   // send the text frame to all megas
 
   if (millis()>mega_last_sent_time+TEXT_TRANSMIT_PERIOD){
     mega_last_sent_time = millis();
@@ -475,22 +476,22 @@ int coms::send_all_text() {   // send the text frame to all megas
   return (0);
 }
 
-void coms::print_frame() {
+void Coms::print_frame() {
   for (int alpha = 0; alpha < frame.frame_buffer[0]; alpha++) {
     Sprint((char)frame.frame_buffer[alpha]);
   }
   Sprintln("");
 }
 
-int coms::write_frame(int address){
+int Coms::write_frame(int address){
 
-#ifdef USE_SERIAL_TO_MEGAS
+#if defined(USE_SERIAL_TO_MEGAS)
 serial_write_frame(address);
-#elif USE_I2C_TO_MEGAS
+#elif defined(USE_I2C_TO_MEGAS)
 wire_write_frame(address);
 #else
 #error "Define a coms protocol"
-  #endif
+#endif
 }
 
 

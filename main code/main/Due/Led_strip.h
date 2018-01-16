@@ -20,7 +20,7 @@ struct Led_Strip_Struct {
   int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
 
 };
-Led_Strip_Struct led_strip;              //create led strip struct
+//Led_Strip_Struct led_strip;              //create led strip struct
 
 int attach_timer_led_strip();
 
@@ -32,14 +32,16 @@ void fade_led_strip();          //ISR functon to fade led strip between current 
 
 
 
-class led_strip{
+class Led_Strip{
 
   private:
 
 
 
   public:
-    led_strip(){}
+  Led_Strip_Struct led_strip;              //create led strip struct
+
+    Led_Strip(){}
     int init_led_strip();           //initialisations of individual items, set pins, test if working if applicable, etc
     int writeLedStrips(int newValue);       // change value of led strips, attach timers to fade in an out over period
        

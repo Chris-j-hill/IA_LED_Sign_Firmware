@@ -1,10 +1,20 @@
 
 #ifndef Functions_H
 #define Functions_H
+//
+//class sign_coms;
+//class due_class;
+//class mega_class;
 
-class sign_coms;
-class due_class;
-class mega_class;
+class coms;
+class coms_serial;
+class coms_i2c;
+class card;
+class menu;
+class internet;
+class fans;
+class encoder;
+class led_strip;
 
 
 

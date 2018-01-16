@@ -3,6 +3,10 @@
 #ifndef Config_Local_h
 #define Config_Local_h
 #include "Arduino.h"
+#include "Due_Libraries.h"
+
+
+
 
 #define USE_SERIAL_TO_MEGAS
 #define USE_I2C_TO_MEGAS
@@ -14,10 +18,10 @@
 #define STARTUP_DUE_DELAY_PERIOD 500             //if no one wire protocol, just delay, system should be stable so should autosync after a while
 #endif
 
-#define single_matrix_width = 64;
-#define single_matrix_height = 32;
-#define NUM_SCREENS = 4;    //per side
-#define total_width = single_matrix_width * NUM_SCREENS;
+#define single_matrix_width 64
+#define single_matrix_height 32
+#define NUM_SCREENS 4    //per side
+#define total_width single_matrix_width * NUM_SCREENS
 
 // Select if the due is enabled or if all megas enabled, if not all megas enabled, choose which
 #define DUE_ENABLED                        
@@ -116,14 +120,7 @@ volatile bool send_pos_now = false;   //variable set in interrupt to trigger sen
 
 
 
-serial_tc5_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_1=serial_tc5;
-serial_tc6_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_2=serial_tc6;
-serial_tc7_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_3=serial_tc7;
-serial_tc8_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_4=serial_tc8;
+
 
 
 
@@ -152,7 +149,7 @@ bool ethernet_enabled = false;
 bool wifi_enabled = false;
 
 
-int notifier = NOTIFIER;      //led pin, set to indicate data stuff
+//int notifier = NOTIFIER;      //led pin, set to indicate data stuff
 
 
 

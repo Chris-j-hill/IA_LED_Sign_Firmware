@@ -62,7 +62,7 @@ SD_Strings SD_string;
 bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
 bool sd_card2_detected = true;
 
-class card {
+class Card {
 
   private:
     int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
@@ -77,7 +77,7 @@ class card {
 
   public:
 
-    card() {}
+    Card() {}
 
     int init_sd_cards();
     int check_for_SD_card_inserted();

@@ -11,7 +11,7 @@
 
 #ifdef USE_SERIAL_TO_MEGAS
 
-int coms_serial::init_software_serial_to_megas() {      // initialise serial at set baud rate speed of 115200
+int Coms_Serial::init_software_serial_to_megas() {      // initialise serial at set baud rate speed of 115200
 
   //init four soft serial objects on due
   Serial_1.begin(
@@ -50,7 +50,7 @@ int coms_serial::init_software_serial_to_megas() {      // initialise serial at 
 
 }
 
-int coms_serial::init_software_serial_to_megas(int speed) {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
+int Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
   //ensure the speed is a standard baud rate
   if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
     return (-2);
@@ -93,7 +93,7 @@ int coms_serial::init_software_serial_to_megas(int speed) {   // initialise seri
 
 }
 
-int coms_serial::get_serial() {                   //function to interpret serial data recieved without a user prompt
+int Coms_Serial::get_serial() {                   //function to interpret serial data recieved without a user prompt
 
   // function to interpret any serial data recieved during the main loop (ie without a user prompt)
   // the function should work on a key word basis whereby any recieved data should be of the form 'keyword: data'
