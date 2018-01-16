@@ -16,8 +16,31 @@
 
 due_class due; 	// class constructor      
 
+
+
+/*    --------------------------------------------------------------------------------
+ *     timer struct variables
+ *    --------------------------------------------------------------------------------
+ */
+
+struct Timers{            //structer for all timers used and related variables
+  
+//Timer1 is led strip timer
+// Timer2 is fan speed control timer
+//Timer3 is to cycle between modes, eg display different strings peiodically, read instruction set when implented etc
+
+bool led_strip_timer_attached = false;
+bool fan_timer_attached = false;
+bool pos_timer_attached = false;
+
+};
+Timers timers;
+
+
+
+
 void due_setup() {
-  if (!due_enabled){    //stop code imidiately if due disabled
+  if (!DUE_ENABLED){    //stop code imidiately if due disabled
     while(1){}
   }
   
@@ -61,7 +84,7 @@ void due_setup() {
 
 void due_loop() {
  //do these periodically based on config
- cards.check_for_card_inserted();   
+ cards.check_for_sd_card_inserted();   
  internet.check_connection();       
  fans.get_temperature();            
  fans.set_fan_speed();
@@ -77,4 +100,4 @@ void due_loop() {
 }
 
 
-  
+

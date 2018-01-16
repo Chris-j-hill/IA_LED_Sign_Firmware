@@ -16,8 +16,8 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
   pinMode(SD1_CS, OUTPUT);
 
   Sprintln(F("\t Sd init setup..."));
-  int card1_init = 0;
-  int card2_init = 0;
+  bool external_sd_card_initialised = false;
+  bool internal_sd_card_initialised = false;
 
   pinMode(notifier, OUTPUT);
   PgmPrint("\t FreeRam: ");
@@ -25,31 +25,31 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
   Sprintln(FreeRam());
 
   // fill buffer with known data
-  for (int i = 0; i < sizeof(buf); i++) buf[i] = i;
+  for (int i = 0; i < sizeof(sd_file_copy_buffer); i++) sd_file_copy_buffer[i] = i;
 
-  // disable sd_internal while initializing sd_external
+  // disable internal_sd_card while initializing external_sd_card
   pinMode(SD2_CS, OUTPUT);
   digitalWrite(SD2_CS, HIGH);
 
 
   // initialize the external card
+  int alpha = 0;
   int beta = millis();
   int theta = beta;
-  int alpha = 0;
-  while (millis() < beta + 40000 && card1_init == 0) {    //wait for 40 seconds or until card inserted
-    if (sd_external.begin(SD1_CS)) {    //if card initialised sucessfully exit wait loop
-      card1_init = 1;              //loop exit conditions if card detected
+
+  while (millis() < beta + WAIT_TIME_FOR_SD_ON_STARTUP && external_sd_card_initialised == 0) {    //wait for 40 seconds or until card inserted
+    if (external_sd_card.begin(SD1_CS)) {    //if card initialised sucessfully exit wait loop
+      external_sd_card_initialised = true;              //loop exit conditions if card detected
     }
+#ifdef DEBUG
     else {          //flash led and print promt
       if (alpha % 50 == 0) {
         
           Sprintln(F("\t Insert external sd card"));
 
       }
-
       delay(20);
       alpha++;
-
       if (millis() >= theta + 3000) { //flash built in led while waiting as a notification if debug not enabled
         digitalWrite(notifier, HIGH);
         delay(200);
@@ -60,45 +60,39 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
         digitalWrite(notifier, LOW);
         theta = millis();
       }
+#endif
       //send_frame... //display error on screen
     }
   }
 
-  if (card1_init == 0) {
+  if (!external_sd_card_initialised) {
     Sprintln(F("\t No SD card detected"));
-    sd_external.initError("sd_external:");    //stops code when called
+    external_sd_card.initError("external_sd_card:");    //stops code when called
   }
 
 
-  // create SIGN1 on sd_external if it does not exist
+  // create SIGN1 on external_sd_card if it does not exist
   // Use this to test if card is inserted, if directory can't be made, functional card not inserted (or wiring problem..., presume card)
   beta = millis();
-  card1_init = 0;
+  external_sd_card_initialised = false;
   alpha = 0;
 
-  while (millis() < beta + 5000 && card1_init == 0) {    // make sure directory exists on external card, may take a moment, if longer than 5 seconds then error
+  while (millis() < beta + 5000 && external_sd_card_initialised == false) {    // make sure directory exists on external card, may take a moment, if longer than 5 seconds then error
 
-    if (!sd_external.exists(sd_ext_dir)) {
-      if (alpha % 50 == 0) //fast loop, do not print all itterations
-        Sprintln(F("\t External Directory does not exist"));
-
-      if (!sd_external.mkdir(sd_ext_dir)) {
-        if (alpha % 50 == 0)
-          Sprintln(F("\t Can't create External Directory"));
-
-        alpha++;
-        if (alpha == 20)  //print once, after short delay
-          Sprintln(F("\t Please insure card inserted properly"));
+    if (!external_sd_card.exists(sd_ext_dir)) {
+      if (alpha % 50 == 0) Sprintln(F("\t External Directory does not exist"));
+      if (!external_sd_card.mkdir(sd_ext_dir)) {
+        if (alpha % 50 == 0) Sprintln(F("\t Can't create External Directory, ensure card works and in write mode"));
+        if (alpha == 20) Sprintln(F("\t Please insure card inserted properly"));
         delay(20);
-
       }
-
     }
-    else
-      card1_init = 1;    //folder exists, exit loop
+    else external_sd_card_initialised = true;    //folder exists, exit loop
+    alpha++;
   }
-  if (card1_init == 0) {
-    sd_external.errorExit("sd_external.mkdir");   //while(1)...
+  
+  if (!external_sd_card_initialised) {
+    external_sd_card.errorExit("external_sd_card.mkdir");   //while(1)...
   }
 
 
@@ -106,9 +100,9 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
   beta = millis();
   alpha = 0;
 
-  while (millis() < beta + 10000 && card2_init == 0) {    //wait until card initialised correctly, shorter time to insert as it should be in all the time
-    if (sd_internal.begin(SD2_CS)) {
-      card2_init = 1;              //loop exit conditions if card detected
+  while (millis() < beta + 10000 && internal_sd_card_initialised == 0) {    //wait until card initialised correctly, shorter time to insert as it should be in all the time
+    if (internal_sd_card.begin(SD2_CS)) {
+      internal_sd_card_initialised = true;              //loop exit conditions if card detected
     }
     else {
       if (alpha % 100 == 0)
@@ -119,34 +113,34 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
     }
   }
 
-  if (card2_init == 0)
-    sd_external.initError("sd_internal:");    //stops code when called
+  if (!internal_sd_card_initialised)
+    internal_sd_card.initError("internal_sd_card:");    //stops code when called
 
-  // create SIGN2 on sd_internal if it does not exist
-  if (!sd_internal.exists(sd_int_dir)) {
-    if (!sd_internal.mkdir(sd_int_dir)) sd_internal.errorExit("sd_internal.mkdir");
+  // create SIGN2 on internal_sd_card if it does not exist
+  if (!internal_sd_card.exists(sd_int_dir)) {
+    if (!internal_sd_card.mkdir(sd_int_dir)) internal_sd_card.errorExit("internal_sd_card.mkdir");
   }
 
   #if defined (DEBUG)
     // list root directory on both cards
-    Sprintln("\t ------sd_external root-------");
-    sd_external.ls();
-    Sprintln("\t ------sd_internal root-------");
-    sd_internal.ls();
+    Sprintln("\t ------external_sd_card root-------");
+    external_sd_card.ls();
+    Sprintln("\t ------internal_sd_card root-------");
+    internal_sd_card.ls();
   #endif
 
-  // make /SIGN1 the default directory for sd_external
-  if (!sd_external.chdir(sd_ext_dir)) sd_external.errorExit("sd_external.chdir");
+  // make /SIGN1 the default directory for external_sd_card
+  if (!external_sd_card.chdir(sd_ext_dir)&& external_sd_card_initialised) external_sd_card.errorExit("external_sd_card.chdir");
 
-  // make /SIGN2 the default directory for sd_internal
-  if (!sd_internal.chdir(sd_int_dir)) sd_internal.errorExit("sd_internal.chdir");
+  // make /SIGN2 the default directory for internal_sd_card
+  if (!internal_sd_card.chdir(sd_int_dir)&& internal_sd_card_initialised) internal_sd_card.errorExit("internal_sd_card.chdir");
 
   // list current directory on both cards
   #if defined(DEBUG) 
-    Sprintln("\t ------sd_external SIGN1-------");
-    sd_external.ls();
-    Sprintln("\t ------sd_internal SIGN2-------");
-    sd_internal.ls();
+    Sprintln("\t ------external_sd_card SIGN1-------");
+    external_sd_card.ls();
+    Sprintln("\t ------internal_sd_card SIGN2-------");
+    internal_sd_card.ls();
     Sprintln("\t ---------------------");
   #endif
 
@@ -157,30 +151,30 @@ int card::init_sd_cards() {      // code to init sd cards and copy data from ext
 int card::copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir) {   //funtion to copy the data from /ext_dir/ext_file to /int_dir/int_file
 
 
-  // set the current working directory for open() to sd_external
-  sd_external.chvol();
+  // set the current working directory for open() to external_sd_card
+  external_sd_card.chvol();
 
-  //  // make /SIGN1 the default directory for sd_external    //shouldnt need to call these but do anyway to be sure
-  //  if (!sd_external.chdir(ext_dir)) sd_external.errorExit("sd_external.chdir");
+  //  // make /SIGN1 the default directory for external_sd_card    //shouldnt need to call these but do anyway to be sure
+  //  if (!external_sd_card.chdir(ext_dir)) external_sd_card.errorExit("external_sd_card.chdir");
   //
-  //  // make /SIGN2 the default directory for sd_internal
-  //  if (!sd_internal.chdir(int_dir)) sd_internal.errorExit("sd_internal.chdir");
+  //  // make /SIGN2 the default directory for internal_sd_card
+  //  if (!internal_sd_card.chdir(int_dir)) internal_sd_card.errorExit("internal_sd_card.chdir");
 
 
 
   // create or open /ext_dir/ext_file and truncate it to zero length
 
   if (!file1.open(ext_file, O_RDWR | O_CREAT )) {
-    sd_external.errorExit("error opening external sd file");
+    external_sd_card.errorExit("error opening external sd file");
   }
 
-  // set the current working directory for open() to sd_internal
-  sd_internal.chvol();
+  // set the current working directory for open() to internal_sd_card
+  internal_sd_card.chvol();
 
   // create or open /int_dir/int_file and truncate it to zero length
 
   if (!file2.open(int_file, O_WRITE | O_CREAT | O_TRUNC)) {
-    sd_internal.errorExit("error opening internal sd file");
+    internal_sd_card.errorExit("error opening internal sd file");
   }
   Sprintln("\t Copying");
 
@@ -189,10 +183,10 @@ int card::copy_sd_data(const char *ext_file, const char *int_file, const char *e
   uint32_t t = millis();
 
   while (1) {
-    int n = file1.read(buf, sizeof(buf));
-    if (n < 0) sd_external.errorExit("error reading external file");
+    int n = file1.read(sd_file_copy_buffer, sizeof(sd_file_copy_buffer));
+    if (n < 0) external_sd_card.errorExit("error reading external file");
     if (n == 0) break;
-    if (file2.write(buf, n) != n) sd_internal.errorExit("error writing internal file");
+    if (file2.write(sd_file_copy_buffer, n) != n) internal_sd_card.errorExit("error writing internal file");
     digitalWrite(notifier, !digitalRead(notifier));
   }
 
@@ -220,9 +214,9 @@ int card::extract_network_data() {   // parse the file and extract network info 
   // default is a string to be taken hould no known network be available
 
 
-  char temp_password[25];   //temp arrays to copy data into if found, makes converting from array of lots of data to string of only selected data easier
-  char temp_network[25];
-  char temp_default [50];
+  char temp_password[MAX_NETWORK_PASSWORD_LENGTH];   //temp arrays to copy data into if found, makes converting from array of lots of data to string of only selected data easier
+  char temp_network[MAX_NETWORK_NAME_LENGTH];
+  char temp_default [MAX_DEFAULT_NO_NETWORK_STRING_LENGTH];
 
   int str_len = 0;
   bool Connected = false;     //value to define if ethernet/wifi connected with current network and password, if true stop looping through file
@@ -232,7 +226,7 @@ int card::extract_network_data() {   // parse the file and extract network info 
 
   SD_string.str_sd.reserve(150);
 
-  sd_internal.chvol();
+  internal_sd_card.chvol();
 
   if (!file2.open("TEST2.BIN", O_READ)) {       //open file for reading
     Sprintln(F("Can't open file to extract data"));
@@ -243,61 +237,44 @@ int card::extract_network_data() {   // parse the file and extract network info 
 
     file2.seekSet(alpha);       //set cursor position, and increment by one on each loop (probably better way to do this)
     alpha++;
-    n = file2.read(read_buffer, sizeof(read_buffer));   //returns 0 if file finished, negative if error
-    if (n < 0) sd_internal.errorExit("read2");
+    n = file2.read(sd_file_read_buffer, sizeof(sd_file_read_buffer));   //returns 0 if file finished, negative if error
+    if (n < 0) internal_sd_card.errorExit("read2");
 
-    if (read_buffer[14] == ':') {   // if it equals a colon it could be a password or network
+    if (sd_file_read_buffer[14] == ':') {   // if it equals a colon it could be a password or network
        Sprintln(F("colon found"));
+      if (buffer_in_header())  Sprintln(F("colon in file header"));
 
-      if (in_header()) { // check if colon is from header, such as examples
-        //do nothing
-       Sprintln(F("colon in header"));
-      }
-
-      else {            // if not, presume to be valid string found
-        if (is_network()) {
-          str_len = string_length();    //call function to find length of string
-
+      else {            
+        if (buffer_is_network()) {  //if valid, check if connection available
+          str_len = string_length();    
           for (beta = 0; beta < str_len; beta++) { //loop through network name
-            SD_string.Network[beta] = read_buffer[beta + 16]; // offset to where string starts
-
+            SD_string.Network[beta] = sd_file_read_buffer[beta + 16]; // offset to where string starts
           }
           SD_string.Network.remove(beta);
-          
         }
 
-        else if (is_password()) {
-          str_len = string_length();    //call function to find length of string
-
+        else if (buffer_is_password()) {
+          str_len = string_length();    
           for (beta = 0; beta < str_len; beta++) { //loop through network name
-            SD_string.Password[beta] = read_buffer[beta + 16]; // offset to where string starts
-
+            SD_string.Password[beta] = sd_file_read_buffer[beta + 16]; // offset to where string starts
           }
           SD_string.Password.remove(beta);
-          Connected=true;
+          
           // attempt to connect to network using network and password...
           //wifi_connect....
           //ethernet_connect...
         }
 
         else if (is_default()) {
-          str_len = string_length();    //call function to find length of string
-          Sprint(F("string length: "));
-          Sprintln(str_len);
-          
-
+          str_len = string_length();    
           beta = 0;
-          while (beta != str_len) { //loop through network name
-            SD_string.str_sd[beta] = read_buffer[beta + 16]; // offset to where string starts
-            
-              Sprint(SD_string.str_sd[beta]);
+          while (beta != str_len) { //loop through default string 
+            SD_string.str_sd[beta] = sd_file_read_buffer[beta + 16]; // offset to where string starts           
+            Sprint(SD_string.str_sd[beta]);
             beta++;
           }
           Sprintln("");
-
           SD_string.str_sd.remove(str_len);
-
-
         }
       }
     }
@@ -311,37 +288,37 @@ int card::extract_network_data() {   // parse the file and extract network info 
 
 int card::buffer_in_header() {      //return 1 if the colon is in the header, otherwise 0
 
-  if (read_buffer[15] == '"')
+  if (sd_file_read_buffer[15] == '"')
     return 1;
 
-  if (read_buffer[16] == 'E' && read_buffer[17] == 'x' && read_buffer[18] == 'a' && read_buffer[19] == 'm' && read_buffer[20] == 'p' && read_buffer[21] == 'l' && read_buffer[22] == 'e' )//&& (read_buffer[23] == '\n' || read_buffer[23] == '\t'))
+  if (sd_file_read_buffer[16] == 'E' && sd_file_read_buffer[17] == 'x' && sd_file_read_buffer[18] == 'a' && sd_file_read_buffer[19] == 'm' && sd_file_read_buffer[20] == 'p' && sd_file_read_buffer[21] == 'l' && sd_file_read_buffer[22] == 'e' )//&& (sd_file_read_buffer[23] == '\n' || sd_file_read_buffer[23] == '\t'))
     return 1;
 
   return 0;
 }
 
 int card::buffer_is_network() {     //check if network stored in buffer
-  if (read_buffer[7] == 'N' && read_buffer[8] == 'e' && read_buffer[9] == 't' && read_buffer[10] == 'w' && read_buffer[11] == 'o' && read_buffer[12] == 'r' && read_buffer[13] == 'k')
+  if (sd_file_read_buffer[7] == 'N' && sd_file_read_buffer[8] == 'e' && sd_file_read_buffer[9] == 't' && sd_file_read_buffer[10] == 'w' && sd_file_read_buffer[11] == 'o' && sd_file_read_buffer[12] == 'r' && sd_file_read_buffer[13] == 'k')
     return 1;
   return 0;
 
 }
 
 int card::buffer_is_password() {   //check if password stored in buffer
-  if (read_buffer[6] == 'P' && read_buffer[7] == 'a' && read_buffer[8] == 's' && read_buffer[9] == 's' && read_buffer[10] == 'w' && read_buffer[11] == 'o' && read_buffer[12] == 'r' && read_buffer[13] == 'd')
+  if (sd_file_read_buffer[6] == 'P' && sd_file_read_buffer[7] == 'a' && sd_file_read_buffer[8] == 's' && sd_file_read_buffer[9] == 's' && sd_file_read_buffer[10] == 'w' && sd_file_read_buffer[11] == 'o' && sd_file_read_buffer[12] == 'r' && sd_file_read_buffer[13] == 'd')
     return 1;
   return 0;
 }
 
 int card::buffer_is_default() {    //check if default string stored in buffer
-  if (read_buffer[7] == 'D' && read_buffer[8] == 'e' && read_buffer[9] == 'f' && read_buffer[10] == 'a' && read_buffer[11] == 'u' && read_buffer[12] == 'l' && read_buffer[13] == 't')
+  if (sd_file_read_buffer[7] == 'D' && sd_file_read_buffer[8] == 'e' && sd_file_read_buffer[9] == 'f' && sd_file_read_buffer[10] == 'a' && sd_file_read_buffer[11] == 'u' && sd_file_read_buffer[12] == 'l' && sd_file_read_buffer[13] == 't')
     return 1;
   return 0;
 }
 
 int card::string_length() {  // get string length, data strings seperated by tab or return carrige at end
   int alpha = 16;
-  while (read_buffer[alpha] != '\n' && read_buffer[alpha] != '\t') {  //if the current index is a carriage return exit
+  while (sd_file_read_buffer[alpha] != '\n' && sd_file_read_buffer[alpha] != '\t') {  //if the current index is a carriage return exit
     alpha++;    //increment alpha
   }
   return alpha - 16 - 1; //alpha-offset-1
@@ -353,20 +330,20 @@ int card::remove_card_1() {  //function to stall code until the external sd is r
 
   // TO DO, currently the code stalls indefinitely while waiting for the sd card to be removed, maybe add a timer interrupt and enter a restricted operation mode
 
-
-  int theta = millis();
-  int card1_init = 0;
   int alpha = 0;
-  while (card1_init == 0) {
-    if (!sd_external.begin(SD1_CS)) {
-      card1_init = 1;              //loop exit conditions if card detected
+  int theta = millis();
+  bool external_sd_card_initialised = false;
+
+  while (external_sd_card_initialised == 0) {
+    if (!external_sd_card.begin(SD1_CS)) {
+      external_sd_card_initialised = true;              //loop exit conditions if card detected
     }
+#ifdef DEBUG
     else {
       if (alpha == 10) {            //prompt
         Sprintln(F("Remove sd card 1"));
         //send frame to matrix...
       }
-
       delay(50);
       alpha++;
     }
@@ -381,6 +358,7 @@ int card::remove_card_1() {  //function to stall code until the external sd is r
       digitalWrite(notifier, LOW);
       theta = millis();
     }
+#endif
   }
 }
 

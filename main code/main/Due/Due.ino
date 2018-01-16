@@ -6,6 +6,8 @@
 #ifdef _SAM3XA_
 #include "Due.h"    
 
+
+
 //all code for both board types executed in setup
 void setup() {
 

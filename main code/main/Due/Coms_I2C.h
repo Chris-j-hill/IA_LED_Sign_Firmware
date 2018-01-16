@@ -172,7 +172,7 @@ int coms::i2c_scanner() {           // scan all addresses and make sure decive r
   // check endTransmission() return value, if non zero there is an error
   if (test_i2c) {
     int fail;
-    for (int i = 1; i <= num_screens; i++) {
+    for (int i = 1; i <= NUM_SCREENS; i++) {
       fail = i2c_scanner(i);
       if (fail != 0) {
           Sprint(F("Error connecting to i2c device:"));
@@ -519,11 +519,11 @@ int coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
       break;
 
     case 40:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = fan_speed;
+      frame.frame_buffer[5 + 2 * offset] = fan.fan_target_speed;
       break;
 
     case 50:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = led_strip_brightness;
+      frame.frame_buffer[5 + 2 * offset] = led_strip.target_brightness;
       break;
 
     case 60:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;

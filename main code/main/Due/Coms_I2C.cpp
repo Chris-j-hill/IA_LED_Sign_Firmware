@@ -51,7 +51,7 @@ int coms::i2c_scanner() {           // scan all addresses and make sure decive r
   // check endTransmission() return value, if non zero there is an error
   if (test_i2c) {
     int fail;
-    for (int i = 1; i <= num_screens; i++) {
+    for (int i = 1; i <= NUM_SCREENS; i++) {
       fail = i2c_scanner(i);
       if (fail != 0) {
           Sprint(F("Error connecting to i2c device:"));

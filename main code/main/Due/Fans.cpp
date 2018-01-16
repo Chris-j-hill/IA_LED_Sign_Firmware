@@ -6,7 +6,7 @@
 
 
 
-//methods for fasn and temperature sensors
+//methods for fans and temperature sensors
 
 // initialiser functions
 

@@ -10,6 +10,83 @@
 
 #include "Global_variables.h"
 #include "Config_Local.h"
+
+// variables for initialising soft serial for comms
+using namespace arduino_due;
+#define COMS_SPEED 38400         //speed of coms between due and megas when using serial
+#define SOFT_UART_BIT_RATE COMS_SPEED // 57600 38400 1200 19200 9600 115200 300
+#define RX_BUF_LENGTH 256 // software serial port's reception buffer length 
+#define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
+
+
+
+#define HEADER_LENGTH 4;  //length,type,num frames, frame no
+#define TRAILER_LENGTH = 1; //just checksum
+#define DATA_IDENTIFIER_BYTE = 2;   //frame type byte
+#define FRAME_LENGTH_BYTE = 1;
+#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
+#define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
+
+#define MEGA_SERIAL_BUFFER_LENGTH 32
+
+#define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
+
+
+struct Frame{             //frame details for the due, seperate one for the mega below
+
+byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH];
+byte frame_length = 0;
+byte frame_type = 1;
+byte checksum = 0;
+byte num_frames = 0;
+byte this_frame = 0;
+};
+Frame frame;
+
+
+#ifdef ENABLE_ERROR_CHECKING
+struct Nack_details{
+  byte mega1_failed_frame_type = 0;   // the type of frame last sent, to recalculate
+  byte mega2_failed_frame_type = 0;
+  byte mega3_failed_frame_type = 0;
+  byte mega4_failed_frame_type = 0;
+  
+  byte mega1_failed_frame_number = 0;   // the frame number that failed 
+  byte mega2_failed_frame_number = 0;
+  byte mega3_failed_frame_number = 0;
+  byte mega4_failed_frame_number = 0;
+};
+Nack_details nack;
+#endif // ENABLE_ERROR_CHECKING
+
+
+//pos frame variables
+byte x_pos_LSB = 0;   
+byte x_pos_MSB = 0;
+byte y_pos_LSB = 0;
+byte y_pos_MSB = 0;
+byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
+byte y_pos_dir = 127;
+byte comms_delay = 0;
+byte pos_update_freq = 5;
+byte pos_frame_length = 13;   //length of frame to transmit to update pos
+
+
+
+int attach_timer_pos_update();
+
+int set_pos_update_frequency(int freq);
+ 
+int set_pos_speed(int x_speed, int y_speed){            //function to set the speed (pixels per second) the cursor postion is moving at
+x_pos_dir = x_speed+128;                                //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
+y_pos_dir = y_speed+128;
+}
+
+void send_pos_interrupt(){     // interrupt to send pos data to all megas
+    send_pos_now = true;
+}
+
+
 class coms {
 
   private:
@@ -43,7 +120,7 @@ class coms {
     
     int generate_checksum();
     int error_check();
-     int get_serial();                     //function to interpret serial data recieved without a user prompt
+    int get_serial();                     //function to interpret serial data recieved without a user prompt
 
     int get_frame_code();
     int get_data();             //extract data from frame

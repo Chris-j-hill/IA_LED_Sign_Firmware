@@ -147,7 +147,7 @@ int coms::Serial_write_frame(int address) {   //function to actually send the fr
   
   
   //clear frame from last iteration
-  for (int beta = 0; beta < 32; beta++) {
+  for (int beta = 0; beta < MEGA_SERIAL_BUFFER_LENGTH; beta++) {
     frame.frame_buffer[beta] = 0;
   }
 

@@ -3,6 +3,64 @@
 
 #include "Due_Libraries.h"
 
+// print error msg, any SD error codes, and halt.
+// store messages in flash
+#define errorExit(msg) errorHalt_P(PSTR(msg))
+#define initError(msg) initErrorHalt_P(PSTR(msg))
+
+#define NETWORK_INFO_NAME_LENGTH 25 //number of bytes to use when parsing files for network info
+#define MAX_NETWORK_NAME_LENGTH               NETWORK_INFO_NAME_LENGTH
+#define MAX_NETWORK_PASSWORD_LENGTH           NETWORK_INFO_NAME_LENGTH
+#define MAX_DEFAULT_NO_NETWORK_STRING_LENGTH  2*NETWORK_INFO_NAME_LENGTH
+
+
+#define WAIT_TIME_FOR_SD_ON_STARTUP 40000 // wait this long before stopping code
+
+#ifndef EXPECTS_SD_ON_STARTUP
+#define DEFAULT_STARTUP_STRING_NO_SD_CARD "Not searching for sd card, heres some text instead"
+#endif
+
+//sd card objects,
+SdFat external_sd_card;            //external sd card
+SdFat internal_sd_card;            //onboard sd card
+
+SdFile file1;                 // file handling objects, use two objects to address both open files at once
+SdFile file2;                 // nb: if modifying files, make sure to close at the end of function
+
+const uint8_t SD2_CS = SD1_ENABLE;   // chip select for internal_sd_card
+const uint8_t SD1_CS = SD2_ENABLE;  // chip select for external_sd_card
+
+const uint8_t SD_FILE_COPY_BUF_SIZE = 100;
+uint8_t sd_file_copy_buffer[SD_FILE_COPY_BUF_SIZE];
+
+char sd_file_read_buffer[67];       //buffer to read some data, dont need to read whole file at once, and doing so could be problematic if file large,
+//read 15 bytes to recognise id word (eg Network) and have 50 bytes for string (default could be long) and two for \n type characters
+
+// put sd card file name strings here:
+
+const char *sd_ext_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;
+const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
+
+const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
+const char *sd_int_file = NETWORK_LOGIN_FILENAME;
+
+//const char *sd_ext_file2 = "Instructions.BIN";      //not implemented
+//const char *sd_int_file2 = "Instructions.BIN";
+//
+//const char *sd_ext_file3 = "bitmap.BIN";
+//const char *sd_int_file3 = "bitmap.BIN";
+
+struct SD_Strings{
+  
+String str_sd ="123456789 123456789 123456789 123456789 123456789 ";   //<- 60 bytes, sample default string, needed to set the length correctly
+String Network = "init network";    //store current network
+String Password = "init password";   //store current password
+ 
+};
+SD_Strings SD_string;
+
+bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
+bool sd_card2_detected = true;
 
 class card {
 
@@ -22,47 +80,8 @@ class card {
     card() {}
 
     int init_sd_cards();
- 
-
-
-    int read_current_meter(int pin);  // read the current sensor
-    float reading_to_amps(int value);   // convert 10 bit analog reading to amps
-
-    int LDR_calibration();        //calibrate maximum minimum and room brightness lights
-    int LDR_check_value();        //read the average value of the LDR's, if one fails to read correctly or large disparity, return other, if both fail return fail
-
-    int set_LDR_enable(int sensor);   // toggle, ueful if you dint care about ambient brightness, or sensor not working
-    int set_LDR_disable(int sensor);
-
-    int temp_check_temp(int sensor);   // get the temp vaule from the specified sensor register
-    int temp_check_humidity(int sensor);         // likewise, might be useful, probably not
-
-    int set_temp_sensor_enable(int sensor);   //code to enable sensors, might be useful to toggle them, maybe autotoggle if not working?
-    int set_temp_sensor_disable(int sensor);
-
-
-    int temp_read_sensor (int pin);        // read temperature based on specified pin, return value in degrees C
-    int read_temp_sensor (int pin);       // read temp sensor registers, used to update stored value to most recent
-    byte read_temp_data (int pin);        // convert incoming bits from temp sensor to a byte
-
-    
-    int get_serial();                     //function to interpret serial data recieved without a user prompt
-
-
-    // i2c functions
-    int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
-    int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
-    int wire_write_frame(int address) ;                                  //function to actually send the frame to given address
-    int send_pos_frame(int address);                                     //function to send the xy coordinates along with a number of other related variables
-    int pack_xy_coordinates() ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
-    int send_all_calibration_data(int address);                          //function to send all data calibration
-    int send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
-    int get_text_colour_hue(int byte_number);                            //function to retrun the MSB or LSB of the current hue value to send over i2c
-
-    int send_all_pos();     // function to send pos data to all megas periodically based on timer interrupt
-    int send_all_pos_now();
-    int send_all_text();    // send the text frame to all megas
-    int print_frame();      //print the currently stored frame to the serial monitor
+    int check_for_SD_card_inserted();
+      //print the currently stored frame to the serial monitor
 };
 
 

@@ -4,6 +4,34 @@
 #include "Due_Libraries.h"
 
 
+byte led_strip_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;
+
+struct Led_Strip_Struct {
+  int pin = LED_STRIP;                  // attached to
+  int target_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;        // value to approach
+  int current_brightness = 255;       // current value written to strip
+  int change_increment = 5;           // value to increment by to approach target
+  int change_interval = 40;           // interrupt period between incrementing value
+  int led_stable_interval = 500;          // interrupt period when target=current brightness
+  int minimum_on = 100;                  // minimum value where the leds are on
+  bool led_on  = true;                    // allow led to be set on
+  bool fast_interval = true;          // use change_interval if true as interrupt period, otherwise led_stable_interval
+  bool sinusoidal = false;              //set true if using a sinusoidal method to change between 
+  int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
+
+};
+Led_Strip_Struct led_strip;              //create led strip struct
+
+int attach_timer_led_strip();
+
+
+int led_strip_set_freq();     //function to set the frequency of the led strip interrupt, use at the end of a main loop iteration
+
+
+void fade_led_strip();          //ISR functon to fade led strip between current and target value by the increment value
+
+
+
 class led_strip{
 
   private:

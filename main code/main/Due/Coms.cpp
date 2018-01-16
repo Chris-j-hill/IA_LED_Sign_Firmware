@@ -3,12 +3,57 @@
 #define Coms_CPP
 
 
+
+// ______  non class functions _______
+
+int attach_timer_pos_update(){
+  //attach pos update interrupt
+    if (!timers.pos_timer_attached){
+      timers.pos_timer_attached = true;       //indicate the timer is attached
+      
+      Timer3.attachInterrupt(send_pos_interrupt);   //attach ISR
+      int fail = set_pos_update_frequency(pos_update_freq);         // set the freq
+      
+      if (fail !=0){
+        Sprintln(F("Failed to attach pos timer"));
+        timers.pos_timer_attached = false;       
+        return(-1);     //stop code   
+      }
+     
+      Timer3.start();
+      Sprintln(F("Attached pos timer"));
+    }
+}
+
+int set_pos_update_frequency(int freq){
+  
+  if (!timers.pos_timer_attached){
+      Sprintln(F("From 'set_pos_update_frequency': trying to set frequency but timer not attached"));
+      return (-1);
+  }
+  else{   //all good, set freq
+    
+    pos_update_freq = freq;   //variable for frame
+    
+    Timer3.setFrequency(freq);   //set interval
+    
+    return(0);
+  }
+
+}
+
+
+
+
+
+// ______ class functions _______
+
 int coms::init_software_serial_to_usb_port(){           // init the serial at 115200 baud rate
 
   Serial.begin(COMS_SPEED)
   alpha=millis();
   while (!Serial){
-    if (millis() > alpha + 5000) {  //after 5 seconds elapsed, assume serial failed to initialise
+    if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
       debug = false;
       return -1;
     }
@@ -25,7 +70,7 @@ int coms::init_software_serial_to_usb_port(int speed){  // init the serial at a 
   Serial.begin(speed)
   alpha=millis();
   while (!Serial){
-    if (millis() > alpha + 5000) {  //after 5 seconds elapsed, assume serial failed to initialise
+    if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
       debug = false;
       return -1;
     }
@@ -36,6 +81,7 @@ int coms::init_software_serial_to_usb_port(int speed){  // init the serial at a 
 
 int coms::startup_handshake() {  //code to delay the due in initialisation and enable mega startup, simply wait until the megas all set ready pin high
 
+#ifdef USING_SIMPLE_BINARY_NODE_READY_PROTOCOL
   pinMode(due_ready_pin, OUTPUT);           //due handshake
   pinMode(mega1_ready_pin, INPUT_PULLUP);
   pinMode(mega2_ready_pin, INPUT_PULLUP);
@@ -68,6 +114,11 @@ int coms::startup_handshake() {  //code to delay the due in initialisation and e
     }
   }
   return (0);
+#else
+
+  delay(STARTUP_DUE_DELAY_PERIOD);
+
+#endif
 }
 
 int coms::send_disp_string_frame(int address) {   //function to send strings to display on screen
@@ -80,16 +131,16 @@ int coms::send_disp_string_frame(int address) {   //function to send strings to 
 
   text_cursor.x_min = -text.text_width*strlen(text_str)*2; // set this based on size of string being sent, will update if string changed
 
-  frame.num_frames = 1 + (strlen(text_str) / 27); //send this many frames
+  frame.num_frames = 1 + (strlen(text_str) / (FRAME_DATA_LENGTH)); //send this many frames
   frame.this_frame = 1;
 
   do {    //loop to send multiple frames if string is long
 
     if (frame.num_frames != frame.this_frame)
-      frame.frame_buffer[0]  = 32;  //if there are more than one frame to send, this
+      frame.frame_buffer[0]  = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
-      frame.frame_buffer[0]  = strlen(text_str) - ((frame.num_frames - 1) * 27) + 5; //remaining frame is string length-offset+5 bytes overhead
+      frame.frame_buffer[0]  = strlen(text_str) - ((frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (HEADER_LENGTH + TRAILER_LENGTH); //remaining frame is string length-text offset+5 bytes overhead
 
 
     frame.frame_buffer[1] = (byte) type;
@@ -114,20 +165,15 @@ int coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //functio
   // function to pack a frame based on a given offset (ie this frames number)
   // maybe generalise later to accept calls from multiple frame building methods
 
-  frame_offset = ((frame_offset - 1) * 27); //if this frame is 1 offset in data set is 0, if 2 offset 27, etc
+  frame_offset = ((frame_offset - 1) * (FRAME_DATA_LENGTH)); //if this frame is 1 offset in data set is 0, if 2 offset 27, etc
 
   if (frame_type == 1) { //send str variable
-    for (int i = 0; i < strlen(text_str) - frame_offset; i++) {
-      frame.frame_buffer[i + 4] = (byte)text_str[frame_offset + i];
-      frame.checksum = frame.checksum + (byte)frame.frame_buffer[i + 4];
+    for (int i = 0; i < strlen(text_str) - frame_offset; i++) { //loop through string until end or break
+      frame.frame_buffer[i + HEADER_LENGTH] = (byte)text_str[frame_offset + i];
+      frame.checksum = frame.checksum + (byte)frame.frame_buffer[i + HEADER_LENGTH];
       if (i == 27) break;     //copy string untilend or 28 bytes copied
     }
   }
-
-  // else{
-  //   if (debug)
-  //     Serial.println(F("Error from pack_disp_string_frame: can only pack type 1 frames"));
-  // }
 
   return (0);
 }
@@ -135,10 +181,10 @@ int coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //functio
 int coms::send_pos_frame(int address) {
 
   int type = 2;
-  Sprint("Sending cursor positions to address ");
+  Sprint(F("Sending cursor positions to address "));
   Sprintln(address);
 
-  frame.frame_buffer[0] = (byte) pos_frame_length;   //build frame
+  frame.frame_buffer[0] = (byte)  ;   //build frame
   frame.frame_buffer[1] = (byte) type;
   frame.frame_buffer[2] = (byte) 1;
   frame.frame_buffer[3] = (byte) 1;
@@ -249,102 +295,102 @@ int coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
   // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
   // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
   byte type = 3;
-
+  int HEADER_PLUS_ONE = HEADER_LENGTH+1;
 
   //switch statement to pack the frame;
   switch (sensor_prefix) {
-    case 10:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = current1;
+    case 10:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current1;
       break;
 
-    case 11:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = current2;
+    case 11:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current2;
       break;
 
-    case 20:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = temp1;
+    case 20:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp1;
       break;
 
-    case 21:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = temp2;
+    case 21:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp2;
       break;
 
-    case 22:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = temp3;
+    case 22:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp3;
       break;
 
-    case 30:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = light1;
+    case 30:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light1;
       break;
 
-    case 31:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = light2;
+    case 31:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light2;
       break;
 
-    case 40:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = fan_speed;
+    case 40:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan.fan_target_speed;
       break;
 
-    case 50:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = led_strip_brightness;
+    case 50:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip.target_brightness;
       break;
 
-    case 60:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = sd_card1_detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
+    case 60:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card1_detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
       break;
 
-    case 61:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = sd_card2_detected ? (byte) 1 : (byte) 0;
+    case 61:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card2_detected ? (byte) 1 : (byte) 0;
       break;
 
-    case 70:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
+    case 70:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
       break;
 
-    case 80:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
+    case 80:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
       break;
 
-    case 90:  frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = screen_brightness;
+    case 90:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
       break;
 
-    case 100: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = text_size;
+    case 100: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_size;
       break;
 
-    case 110: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = text_colour_r;
-      break;
-
-
-    case 120: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = text_colour_g;
+    case 110: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_r;
       break;
 
 
-    case 130: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = text_colour_b;
+    case 120: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_g;
       break;
 
-    case 140: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = (byte)get_text_colour_hue(1);   //function to ge the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+
+    case 130: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_b;
       break;
 
-    case 150: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = (byte)get_text_colour_hue(2);
+    case 140: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to ge the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
-    case 160: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = use_hue ? (byte) 1 : (byte) 0;
+    case 150: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
       break;
 
-    case 170: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[5 + 2 * offset] = debug ? (byte) 1 : (byte) 0;
+    case 160: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = use_hue ? (byte) 1 : (byte) 0;
       break;
 
-    case 180: frame.frame_buffer[4 + 2 * offset] = sensor_prefix;
-      frame.  frame_buffer[5 + 2 * offset] = screen_mode;
+    case 170: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = debug ? (byte) 1 : (byte) 0;
+      break;
+
+    case 180: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.  frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_mode;
       break;
 
     default:  Sprint("Error: Prefix not defined. Prefix :");
@@ -353,11 +399,11 @@ int coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
   }
 
 
-  if (more_bytes && (4 + (offset * 2)) <= 29) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
+  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= 29) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
     return (0);
   }
   else {
-    frame.frame_buffer[0] = 5 + (offset * 2);
+    frame.frame_buffer[0] = FRAME_OVERHEAD + (offset * 2);
     frame.checksum = 0; //calculate checksum
     for (int alpha = 0; alpha < frame.frame_buffer[0] - 1; alpha++) {
       frame.checksum = frame.checksum + frame.frame_buffer[alpha];
@@ -413,7 +459,7 @@ int coms::send_all_text() {   // send the text frame to all megas
 
   if (millis()>mega_last_sent_time+TEXT_TRANSMIT_PERIOD){
     mega_last_sent_time = millis();
-    for (int alpha = 1; alpha <= num_screens; alpha++) {
+    for (int alpha = 1; alpha <= NUM_SCREENS; alpha++) {
      
         Sprint(F("Sending text frame to address "));
         Sprintln(alpha);

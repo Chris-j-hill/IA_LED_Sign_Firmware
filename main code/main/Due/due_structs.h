@@ -14,24 +14,24 @@
 
 
 
-
-
-struct Colour {
-  int red = 7;
-  int blue = 7;
-  int green = 7;
-  int hue = 0;
-  bool use_hue = false;     //if true, use hue value, otherwise colour using rgb
-};
-
-struct Text {
-  int text_width = 6;
-  int text_height = 9;
-  Colour colour;
-};
-
-
-
+//
+//
+//struct Colour {
+//  int red = 7;
+//  int blue = 7;
+//  int green = 7;
+//  int hue = 0;
+//  bool use_hue = false;     //if true, use hue value, otherwise colour using rgb
+//};
+//
+//struct Text {
+//  int text_width = 6;
+//  int text_height = 9;
+//  Colour colour;
+//};
+//
+//
+//
 
 //structures for the layout of the types of frames sent
 struct Test_Frame{
@@ -42,7 +42,7 @@ Test_Frame test_frame;
 
 #ifdef _SAM3XA_
 
-Text text;    //generate text structure for due
+//Text text;    //generate text structure for due
 
 
 /*    --------------------------------------------------------------------------------
@@ -50,32 +50,32 @@ Text text;    //generate text structure for due
  *    --------------------------------------------------------------------------------
  */
 
-struct Frame{             //frame details for the due, seperate one for the mega below
+//struct Frame{             //frame details for the due, seperate one for the mega below
+//
+//byte frame_buffer[32];
+//byte frame_length = 0;
+//byte frame_type = 1;
+//byte checksum = 0;
+//byte num_frames = 0;
+//byte this_frame = 0;
+//};
+//Frame frame;
 
-byte frame_buffer[32];
-byte frame_length = 0;
-byte frame_type = 1;
-byte checksum = 0;
-byte num_frames = 0;
-byte this_frame = 0;
-};
-Frame frame;
 
-
-
-struct Nack_details{
-  byte mega1_failed_frame_type = 0;   // the type of frame last sent, to recalculate
-  byte mega2_failed_frame_type = 0;
-  byte mega3_failed_frame_type = 0;
-  byte mega4_failed_frame_type = 0;
-  
-  byte mega1_failed_frame_number = 0;   // the frame number that failed 
-  byte mega2_failed_frame_number = 0;
-  byte mega3_failed_frame_number = 0;
-  byte mega4_failed_frame_number = 0;
-
-};
-Nack_details nack;
+//
+//struct Nack_details{
+//  byte mega1_failed_frame_type = 0;   // the type of frame last sent, to recalculate
+//  byte mega2_failed_frame_type = 0;
+//  byte mega3_failed_frame_type = 0;
+//  byte mega4_failed_frame_type = 0;
+//  
+//  byte mega1_failed_frame_number = 0;   // the frame number that failed 
+//  byte mega2_failed_frame_number = 0;
+//  byte mega3_failed_frame_number = 0;
+//  byte mega4_failed_frame_number = 0;
+//
+//};
+//Nack_details nack;
 
 
 /*    --------------------------------------------------------------------------------
@@ -83,19 +83,19 @@ Nack_details nack;
  *    --------------------------------------------------------------------------------
  */
 
-
-struct Text_cursor {        //xy coordinates of cursor position
-  int x = 0;
-  int y = 0;
-
-  byte x_min = 0;
-  
-  bool mega1_updated = false;   //is the mega up to date with current positions
-  bool mega2_updated = false;
-  bool mega3_updated = false;
-  bool mega4_updated = false;
-};
-Text_cursor text_cursor;
+//
+//struct Text_cursor {        //xy coordinates of cursor position
+//  int x = 0;
+//  int y = 0;
+//
+//  byte x_min = 0;
+//  
+//  bool mega1_updated = false;   //is the mega up to date with current positions
+//  bool mega2_updated = false;
+//  bool mega3_updated = false;
+//  bool mega4_updated = false;
+//};
+//Text_cursor text_cursor;
 
 
 
@@ -164,121 +164,121 @@ struct LDR_struct{
 };
 LDR_struct LDR;
 
+//
+//struct Temp_sensor{
+//
+//  int pin1 = TEMP1;
+//  int pin2 = TEMP2;
+//  int pin3 = temp3;
+//
+//  bool temp1_enable = true;
+//  bool temp2_enable = true;
+//  bool temp3_enable = true;
+//
+//  byte dat1[5];         //data array for temp and humidity
+//  byte dat2[5];
+//  byte dat3[5];
+//
+//  int temp1 = -100;   //current temperature as read by sensor, set to something rediculous to start
+//  int temp2 = -100;
+//  int temp3 = -100;
+//
+//  int humidity1 = -100;   //current humidity as read by sensor
+//  int humidity2 = -100;
+//  int humidity3 = -100;
+//};
+//Temp_sensor temp;
 
-struct Temp_sensor{
+//
+//struct Led_Strip_Struct {
+//  int pin = LED_STRIP;                  // attached to
+//  int target_brightness = 255;        // value to approach
+//  int current_brightness = 255;       // current value written to strip
+//  int change_increment = 5;           // value to increment by to approach target
+//  int change_interval = 40;           // interrupt period between incrementing value
+//  int led_stable_interval = 500;          // interrupt period when target=current brightness
+//  int minimum_on = 100;                  // minimum value where the leds are on
+//  bool led_on  = true;                    // allow led to be set on
+//  bool fast_interval = true;          // use change_interval if true as interrupt period, otherwise led_stable_interval
+//  bool sinusoidal = false;              //set true if using a sinusoidal method to change between 
+//  int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
+//
+//};
+//Led_Strip_Struct led_strip;              //create led strip struct
+//
+//
+//struct Fan_Struct {
+//  int fan_pin = FAN_PIN;                  // pin num
+//  int fan_target_speed = 0 ;              // target value to approach, not necessicarily the current speed
+//  int fan_current_speed = 0;              // current value written to fan
+//  int fan_change_increment = 5;           // value to increment by to approach target
+//  int fan_change_interval = 40;           // milliseconds to wait between incrementing value
+//  int fan_minimum = 100;                  // minimum value where the leds are on
+//  bool fan_on  = true;                    // is fan enabled, if so, run functions
+//
+//};
+//Fan_Struct fan;        //create fan struct
+//
+//
+//struct Encoder_Struct {   //structure for the encoder
+//
+//  int pinA = PIN_A;  // Connected to CLK on KY-040
+//  int pinB = PIN_B;  // Connected to DT on KY-040
+//
+//
+//  volatile int PosCount = 0;       //number of pulses recieved
+//  volatile int position = 0;      //position = no. of pulses/2
+//
+//  const int center = 0;         // center position, use as reference origin
+//  
+//  int pinALast;
+//  volatile int aVal;
+//  
+//  volatile bool encoder_moved = false;    // has the encoder moved, if so do functions
+//  bool clean_loop = false;                // interrupt will arrive mid loop, wait until end of loop check if encoder moved, 
+//                                          // set clean loop true, do functions on next loop then set both false when finished
+//
+//};
+//Encoder_Struct encoder;     //create encoder struct
+//
 
-  int pin1 = TEMP1;
-  int pin2 = TEMP2;
-  int pin3 = temp3;
-
-  bool temp1_enable = true;
-  bool temp2_enable = true;
-  bool temp3_enable = true;
-
-  byte dat1[5];         //data array for temp and humidity
-  byte dat2[5];
-  byte dat3[5];
-
-  int temp1 = -100;   //current temperature as read by sensor, set to something rediculous to start
-  int temp2 = -100;
-  int temp3 = -100;
-
-  int humidity1 = -100;   //current humidity as read by sensor
-  int humidity2 = -100;
-  int humidity3 = -100;
-};
-Temp_sensor temp;
-
-
-struct Led_Strip_Struct {
-  int pin = LED_STRIP;                  // attached to
-  int target_brightness = 255;        // value to approach
-  int current_brightness = 255;       // current value written to strip
-  int change_increment = 5;           // value to increment by to approach target
-  int change_interval = 40;           // interrupt period between incrementing value
-  int led_stable_interval = 500;          // interrupt period when target=current brightness
-  int minimum_on = 100;                  // minimum value where the leds are on
-  bool led_on  = true;                    // allow led to be set on
-  bool fast_interval = true;          // use change_interval if true as interrupt period, otherwise led_stable_interval
-  bool sinusoidal = false;              //set true if using a sinusoidal method to change between 
-  int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
-
-};
-Led_Strip_Struct led_strip;              //create led strip struct
-
-
-struct Fan_Struct {
-  int fan_pin = FAN_PIN;                  // pin num
-  int fan_target_speed = 0 ;              // target value to approach, not necessicarily the current speed
-  int fan_current_speed = 0;              // current value written to fan
-  int fan_change_increment = 5;           // value to increment by to approach target
-  int fan_change_interval = 40;           // milliseconds to wait between incrementing value
-  int fan_minimum = 100;                  // minimum value where the leds are on
-  bool fan_on  = true;                    // is fan enabled, if so, run functions
-
-};
-Fan_Struct fan;        //create fan struct
-
-
-struct Encoder_Struct {   //structure for the encoder
-
-  int pinA = PIN_A;  // Connected to CLK on KY-040
-  int pinB = PIN_B;  // Connected to DT on KY-040
-
-
-  volatile int PosCount = 0;       //number of pulses recieved
-  volatile int position = 0;      //position = no. of pulses/2
-
-  const int center = 0;         // center position, use as reference origin
-  
-  int pinALast;
-  volatile int aVal;
-  
-  volatile bool encoder_moved = false;    // has the encoder moved, if so do functions
-  bool clean_loop = false;                // interrupt will arrive mid loop, wait until end of loop check if encoder moved, 
-                                          // set clean loop true, do functions on next loop then set both false when finished
-
-};
-Encoder_Struct encoder;     //create encoder struct
-
-
-
-//data related to the button on the encoder
-struct Button_Struct {
-
-  int button_pin = BUTTON_PIN;              // pin num
-  volatile bool button_pressed = false;     // has the button been pressed recently
-  bool clean_loop = false;
-  volatile int last_button_pressed = 0;     // when was the button last pressed
-  int button_press_interval = 300;          // minimum period for button to be de-pressed to register 2 independant pressed
-
-};
-Button_Struct button;       //create button struct
-
-
+//
+////data related to the button on the encoder
+//struct Button_Struct {
+//
+//  int button_pin = BUTTON_PIN;              // pin num
+//  volatile bool button_pressed = false;     // has the button been pressed recently
+//  bool clean_loop = false;
+//  volatile int last_button_pressed = 0;     // when was the button last pressed
+//  int button_press_interval = 300;          // minimum period for button to be de-pressed to register 2 independant pressed
+//
+//};
+//Button_Struct button;       //create button struct
 
 
-/*    --------------------------------------------------------------------------------
- *     timer struct variables
- *    --------------------------------------------------------------------------------
- */
 
-struct Timers{            //structer for all timers used and related variables
-  
-
-//Timer1 is led strip timer
-// Timer2 is fan speed control timer
-
-//Timer3 is to cycles between modes, eg display different strings peiodically, read instruction set when implented etc
-
-bool led_strip_timer_attached = false;
-bool fan_timer_attached = false;
-bool pos_timer_attached = false;
-
-
-};
-
-Timers timers;
+//
+///*    --------------------------------------------------------------------------------
+// *     timer struct variables
+// *    --------------------------------------------------------------------------------
+// */
+//
+//struct Timers{            //structer for all timers used and related variables
+//  
+//
+////Timer1 is led strip timer
+//// Timer2 is fan speed control timer
+//
+////Timer3 is to cycle between modes, eg display different strings peiodically, read instruction set when implented etc
+//
+//bool led_strip_timer_attached = false;
+//bool fan_timer_attached = false;
+//bool pos_timer_attached = false;
+//
+//
+//};
+//
+//Timers timers;
 
 
 
@@ -287,15 +287,15 @@ Timers timers;
  *    --------------------------------------------------------------------------------
  */
 
-
-struct SD_Strings{
-  
-String str_sd ="123456789 123456789 123456789 123456789 123456789 ";   //sample default string, needed to set the length correctly
-String Network = "init network";    //store current network
-String Password = "init password";   //store current password
- 
-};
-SD_Strings SD_string;
+//
+//struct SD_Strings{
+//  
+//String str_sd ="123456789 123456789 123456789 123456789 123456789 ";   //sample default string, needed to set the length correctly
+//String Network = "init network";    //store current network
+//String Password = "init password";   //store current password
+// 
+//};
+//SD_Strings SD_string;
 
 #endif
 
