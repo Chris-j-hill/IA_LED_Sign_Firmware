@@ -2,6 +2,16 @@
 #define SD_Cards_H
 
 #include "Due_Libraries.h"
+#include "Config_Local.h"
+#include "function_declarations.h"    //any functions that need prototypes
+
+#ifdef ENABLE_SD_CARDS
+bool enable_sd_cards = true;
+#else
+bool enable_sd_cards = false;
+#endif
+
+bool sd_cards_enabled = false;
 
 // print error msg, any SD error codes, and halt.
 // store messages in flash

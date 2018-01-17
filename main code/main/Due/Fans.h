@@ -2,6 +2,29 @@
 #ifndef Fans_H
 #define Fans_H
 
+#include "Config_Local.h"
+#include "function_declarations.h"
+
+#ifdef ENABLE_FANS
+bool enable_fans = true;   //initialise on startup?   
+else
+bool enable_fans = false; 
+#endif
+
+#ifdef ENABLE_TEMPERATURE_SENSORS
+bool enable_temp_sensor = true;
+#else
+bool enable_temp_sensor = false;
+#endif
+
+bool fans_enabled = false; //to check if initialised sucessfully
+bool temp_sensor_enabled = false;
+
+#define FAN_DEFAULT_SPEED 180 
+
+byte temp1 = 4;
+byte temp2 = 5;
+byte temp3 = 6;
 
 
 struct Temp_sensor{
@@ -28,11 +51,11 @@ struct Temp_sensor{
 };
 Temp_sensor temp;
 
-byte fan_speed = FAN_DEFUALT_SPEED;
+//byte fan_speed = FAN_DEFAULT_SPEED;
 
 struct Fan_Struct {
   int fan_pin = FAN_PIN;                  // pin num
-  int fan_target_speed = FAN_DEFUALT_SPEED;              // target value to approach, not necessicarily the current speed
+  int fan_target_speed = FAN_DEFAULT_SPEED;              // target value to approach, not necessicarily the current speed
   int fan_current_speed = 0;              // current value written to fan
   int fan_change_increment = 5;           // value to increment by to approach target
   int fan_change_interval = 50;           // milliseconds to wait between incrementing value
@@ -42,31 +65,7 @@ struct Fan_Struct {
 };
 //Fan_Struct fan;        //create fan struct
 
-int attach_timer_fan(){
-  //attach fan interrupt
-    if (!timers.fan_timer_attached & fans_enabled){
-      timers.fan_timer_attached = true;       //indicate the timer is attached
-      
-      Timer2.attachInterrupt(fade_fans);   //attach ISR
-      int fail = fans_set_freq();          // set the freq to based on the programmed interval
-      
-      if (fail !=0){
-        if (debug)
-            Serial.print(F("Failed to attach fan timer"));
-        timers.fan_timer_attached = false;       
-        return(-1);     //stop code   
-      }
-      
-      
-      Timer2.start();
-      if (debug){
-        Serial.println(F("Attached fan timer"));
-      }
-    }
-    
-    */
-  
-}
+int attach_timer_fan();
 
 void fade_fans() {          // interrupt to change the current value of the fans to approach the target value
 

@@ -154,5 +154,14 @@ int coms::Serial_write_frame(int address) {   //function to actually send the fr
   return (0);
 }
 
+
+virtual void Coms_i2c::write_frame(int address){
+#if defined(USE_SERIAL_TO_MEGAS)
+wire_write_frame(address);
+#else
+#error "I2C coms protocol not defined, cant send frame"
+#endif
+}
+
 #endif //USE_SERIAL_TO_MEGAS
 #endif //Sign_coms_serial_CPP

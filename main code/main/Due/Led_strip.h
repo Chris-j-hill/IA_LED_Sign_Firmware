@@ -3,6 +3,15 @@
 
 #include "Due_Libraries.h"
 
+#ifdef ENABLE_LED_STRIP
+bool enable_led_strip = true;
+#else
+bool enable_led_strip = false;
+#endif
+
+bool led_strip_enabled = false;
+
+#define LED_STRIP_DEFUALT_BRIGHTNESS 255   
 
 byte led_strip_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;
 

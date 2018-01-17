@@ -1,29 +1,21 @@
 
 
+
 #include "Due_Pins.h"                     //list of pins used in each board
 #include "Config_Local.h"
-#include "Due_Libraries.h"                //file containing all 3rd party libraries used
 #include "function_declarations.h"    //any functions that need prototypes
-//#include "Global_variables.h"         //all global variables defined here
-//#include "due_structs.h"              //structs for a variety of aspects of the sign (fans, encoder, text etc)
+#include "Due_Libraries.h"                //file containing all class files and 3rd party libraries used
 
-#include "Due_Interrupts.h"               //interrupt functions, arduino doesnt like them in classes so created seperately 
-
-#include "base_class.h"               //classes
-#include "Due_class.h"
-
-
-
-//due_class due; 	// class constructor      
-Coms coms;
-Coms_Serial coms_serial;
-Coms_i2c coms_i2c;
-Card card;
-Menu menu;
-Internet internet;
-Fans fans;
-Encoder encoder;
-Led_Strip led_strip;
+// class constructors      
+Coms           coms;
+Coms_Serial    coms_serial;
+Coms_i2c       coms_i2c;
+Card           card;
+Menu           menu;
+Internet       internet;
+Fans           fans;
+Encoder        encoder;
+Led_Strip      led_strip;
 
 
 /*    --------------------------------------------------------------------------------
@@ -31,18 +23,6 @@ Led_Strip led_strip;
  *    --------------------------------------------------------------------------------
  */
 
-struct Timers{            //structer for all timers used and related variables
-  
-//Timer1 is led strip timer
-// Timer2 is fan speed control timer
-//Timer3 is to cycle between modes, eg display different strings peiodically, read instruction set when implented etc
-
-bool led_strip_timer_attached = false;
-bool fan_timer_attached = false;
-bool pos_timer_attached = false;
-
-};
-Timers timers;
 
 
 

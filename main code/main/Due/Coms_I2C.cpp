@@ -81,7 +81,13 @@ int Coms_i2c::i2c_scanner(int address) { // test specific address
 
 }
 
-
+virtual void Coms_i2c::write_frame(int address){
+#if defined(USE_I2C_TO_MEGAS)
+wire_write_frame(address);
+#else
+#error "I2C coms protocol not defined, cant send frame"
+#endif
+}
 
 
 

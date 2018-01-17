@@ -11,7 +11,7 @@ bool menu_width = 64;
 
 class Menu{
 
-private
+private:
   int current_menu = 0;    //use to keep track of where we are. use switch statement to navigate based on this value
   int previous_menu = 0;    //can be used if one menu option may be available from two locations in the tree
   int background_porcess = 1;
@@ -22,7 +22,7 @@ private
   void default_display();
   void display_menu_tree();
 
-public
+public:
 
   Menu(){};
   int init_menu_tree();

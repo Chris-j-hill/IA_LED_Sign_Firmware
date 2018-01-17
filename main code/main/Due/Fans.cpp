@@ -6,6 +6,26 @@
 
 
 
+int attach_timer_fan(){
+  //attach fan interrupt
+    if (!timers.fan_timer_attached & fans_enabled){
+      timers.fan_timer_attached = true;       //indicate the timer is attached
+      
+      Timer2.attachInterrupt(fade_fans);   //attach ISR
+      int fail = fans_set_freq();          // set the freq to based on the programmed interval
+      
+      if (fail !=0){
+        Sprintln("Failed to attach fan timer");
+        timers.fan_timer_attached = false;       
+        return(-1);     //stop code   
+      }
+           
+      Timer2.start();
+      Sprintln("Attached fan timer");      
+    } 
+}
+
+
 //methods for fans and temperature sensors
 
 // initialiser functions

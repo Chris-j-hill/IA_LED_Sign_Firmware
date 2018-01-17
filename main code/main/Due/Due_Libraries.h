@@ -7,7 +7,7 @@
 #include <Wire.h>
 
  
-//C:\Users\Chris\Documents\ElecSoc\innovation academy sign\sign_code\libs\sdfatlib\SdFat
+
 #include "libs/sdfatlib/SdFat/SdFat.h"
 #include "libs/sdfatlib/SdFat/SdFatUtil.h"
 
@@ -22,7 +22,16 @@
 #include "soft_uart.h"
 
 
-
+#include "Coms.h"
+#include "Coms_I2C.h"
+#include "Coms_Serial.h"
+#include "Encoder.h"
+#include "Fans.h"
+#include "Graphics.h"
+#include "Internet.h"
+#include "Led_strip.h"
+#include "Menu_tree.h"
+#include "SD_Cards.h"
 
 
 

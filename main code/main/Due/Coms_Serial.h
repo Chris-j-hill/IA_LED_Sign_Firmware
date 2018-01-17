@@ -2,8 +2,21 @@
 #ifndef Sign_coms_serial_H
 #define Sign_coms_serial_H
 
-#include "Global_variables.h"
+
 #include "Config_Local.h"
+//#include "Coms.h"
+
+
+#ifdef USE_SERIAL_TO_MEGAS
+bool enable_serial = true;   
+#else
+bool enable_serial = false;   
+#endif
+
+
+bool serial_enabled = false;
+
+
 class Coms_Serial: public Coms {    
 
   private:
@@ -21,7 +34,7 @@ class Coms_Serial: public Coms {
     int get_serial();                     //function to interpret serial data recieved without a user prompt
 
     int serial_write_frame(int address) ;                                  //function to actually send the frame to given address
- 
+    virtual void write_frame(int address);
 };
 
 

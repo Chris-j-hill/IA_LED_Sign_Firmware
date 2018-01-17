@@ -8,8 +8,14 @@
 #ifndef Sign_coms_H
 #define Sign_coms_H
 
-#include "Global_variables.h"
 #include "Config_Local.h"
+//#include "Coms_I2C.h"
+//#include "Coms_Serial.h"
+//https://github.com/ivanseidel/DueTimer
+#include "DueTimer.h"       // wrapper library to handle timers 0-4 
+
+//https://github.com/antodom/soft_uart
+#include "soft_uart.h"
 
 // variables for initialising soft serial for comms
 using namespace arduino_due;
@@ -37,6 +43,24 @@ auto& Serial_4=serial_tc8;
 #define MEGA_SERIAL_BUFFER_LENGTH 32
 
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
+
+
+#ifndef ALL_MEGAS_ENABLED
+bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};  
+#else
+bool mega_enabled[4] = {true, true, true, true};  // ignore communication if other board is false
+#endif
+
+
+
+
+// list of valid sensor prefix's for sending non string data to the megas.
+// append this as required and add to switch statements in due and mega code
+const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};  
+
+byte time_since_last_sent_text_frame = 0;
+bool send_text_now = false;
+volatile bool send_pos_now = false;   //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
 
 
 struct Frame{             //frame details for the due, seperate one for the mega below
@@ -108,7 +132,8 @@ class Coms {
     int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
     int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
-    int write_frame(int address);
+    virtual void write_frame(int address) = 0;
+//     void write_frame(int address)
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
     int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
     int send_pos_frame(int address);                                     //function to send the xy coordinates along with a number of other related variables
@@ -124,7 +149,7 @@ class Coms {
 
 
 //  todo
-    
+    void echo_menu();
     int generate_checksum();
     int error_check();
     int get_serial();                     //function to interpret serial data recieved without a user prompt

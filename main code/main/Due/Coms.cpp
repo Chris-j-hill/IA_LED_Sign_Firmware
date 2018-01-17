@@ -4,8 +4,13 @@
 
 #include "Coms.h"
 #include "Arduino.h"
-
+#include "function_declarations.h"
+#include "Due_Pins.h"
+#include "Graphics.h"
 // ______  non class functions _______
+
+
+
 
 int attach_timer_pos_update(){
   //attach pos update interrupt
@@ -51,11 +56,11 @@ int set_pos_update_frequency(int freq){
 
 int Coms::init_software_serial_to_usb_port(){           // init the serial at 115200 baud rate
 
-  Serial.begin(COMS_SPEED)
-  alpha=millis();
+  Serial.begin(COMS_SPEED);
+  int alpha=millis();
   while (!Serial){
     if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-      debug = false;
+//      debug = false;
       return -1;
     }
   }
@@ -68,11 +73,11 @@ int Coms::init_software_serial_to_usb_port(int speed){  // init the serial at a 
   if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
     return (-2);
   
-  Serial.begin(speed)
-  alpha=millis();
+  Serial.begin(speed);
+  int alpha=millis();
   while (!Serial){
     if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-      debug = false;
+//      debug = false;
       return -1;
     }
   }
@@ -458,8 +463,8 @@ int Coms::calc_delay() {    // function to calculate the dalay in sending frames
 
 int Coms::send_all_text() {   // send the text frame to all megas
 
-  if (millis()>mega_last_sent_time+TEXT_TRANSMIT_PERIOD){
-    mega_last_sent_time = millis();
+  if (millis()>time_since_last_sent_text_frame+TEXT_TRANSMIT_PERIOD){
+    time_since_last_sent_text_frame = millis();
     for (int alpha = 1; alpha <= NUM_SCREENS; alpha++) {
      
         Sprint(F("Sending text frame to address "));
@@ -483,7 +488,7 @@ void Coms::print_frame() {
   Sprintln("");
 }
 
-int Coms::write_frame(int address){
+virtual void Coms::write_frame(int address){
 
 #if defined(USE_SERIAL_TO_MEGAS)
 serial_write_frame(address);

@@ -6,16 +6,30 @@
 //class due_class;
 //class mega_class;
 
-class coms;
-class coms_serial;
-class coms_i2c;
-class card;
-class menu;
-class internet;
-class fans;
-class encoder;
-class led_strip;
+class Coms;
+class Coms_Serial;
+class Coms_i2c;
+class Card;
+class Menu;
+class Internet;
+class Fans;
+class Encoder;
+class Led_strip;
+class SdFat;
 
+
+struct Timers{            //structer for all timers used and related variables
+  
+//Timer1 is led strip timer
+// Timer2 is fan speed control timer
+//Timer3 is to cycle between modes, eg display different strings peiodically, read instruction set when implented etc
+
+bool led_strip_timer_attached = false;
+bool fan_timer_attached = false;
+bool pos_timer_attached = false;
+
+};
+Timers timers;
 
 
 
@@ -23,10 +37,6 @@ class led_strip;
 //main code for each board type
 void  due_setup();    
 void  due_loop();
-
-void  mega_setup();
-void  mega_loop();
-
 
 //interrupts
 void update_encoder_ISR();    //interrupt for when encoder position changes
@@ -52,7 +62,5 @@ int pack_xy_coordinates();
 int send_disp_string_frame(int address);
 int pack_disp_string_frame(int frame_type, int frame_offset);
 
-//mega
-void receiveEvent(int howMany);   //interrupt for the mega i2c
 
 #endif
