@@ -5,21 +5,6 @@
 #include "Due_Pins.h"
 #include "Config_local.h"
 
-#ifdef ENABLE_ENCODER
-bool enable_encoder = true;
-#else
-bool enable_encoder = false;
-#endif
-
-#ifdef ENABLE_BUTTON
-bool enable_button = true;
-#else
-bool enable_button = false;
-#endif
-
-bool encoder_enabled = false;
-bool button_enabled = false;
-
 
 
 struct Encoder_Struct {   //structure for the encoder
@@ -35,7 +20,7 @@ struct Encoder_Struct {   //structure for the encoder
   bool clean_loop = false;                // interrupt will arrive mid loop, wait until end of loop check if encoder moved, 
                                           // set clean loop true, do functions on next loop then set both false when finished
 };
-Encoder_Struct encoder;     //create encoder struct
+
 
 //data related to the button on the encoder
 struct Button_Struct {
@@ -46,7 +31,6 @@ struct Button_Struct {
   volatile int last_button_pressed = 0;     // when was the button last pressed
   int button_press_interval = 300;          // minimum period for button to be de-pressed to register 2 independant pressed
 };
-Button_Struct button;       //create button struct
 
 
 

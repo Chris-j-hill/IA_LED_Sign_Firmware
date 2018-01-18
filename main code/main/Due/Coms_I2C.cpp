@@ -1,9 +1,35 @@
 #ifndef Coms_I2C_CPP
 #define Coms_I2C_CPP 
 
-#include "Coms.h"
+//#include "Coms.h"
 #include "Coms_I2C.h"
-#include "Due.h"
+//#include "Due.h"
+#include <Wire.h>
+
+
+extern struct Frame frame;
+
+
+#ifdef USE_I2C_TO_MEGAS
+bool enable_i2c = true;    
+#else
+bool enable_i2c = false;
+#endif
+
+
+bool i2c_enabled = false;
+
+#ifdef USE_I2C_TO_MEGAS       //only run test if i2c is enabled and run_i2c scanner_test is defined 
+#ifdef RUN_I2C_SCANNER_TEST
+bool test_i2c = true;
+#else
+bool test_i2c = false;
+#endif
+#else
+bool test_i2c = false;
+#endif
+
+
 
 
 
@@ -12,36 +38,28 @@
 int Coms_i2c::init_i2c() { //if init does not specify address call with address 5(safe value), if due, value not used
 
   init_i2c_due();   //attach the i2c to wire1
-  //Serial.println(F("Pause for megas to initialise"));
-  //delay(500);
-  //init_i2c(0);      //check all i2c devices activated
 
 }
 
 int Coms_i2c::init_i2c(int address) {   //initialise i2c by calling specify routines for this chipset
 
-
-  int alpha = i2c_scanner();   //test all addresses
-  if (alpha != 0)
-    Serial.println(F("Failed to detect 4 megas on i2c"));
-  //alpha = init_i2c_due();
-
-  if (alpha < 0) {     //error if less than 0
-    
-      Sprintln("error setting up i2c, stopping program");
-      Sprintln("Error code: " + alpha);
-    
-    while (1) {}    //stop code
-  }
+//
+//  int alpha = i2c_scanner();   //test all addresses
+//  if (alpha != 0)
+//    Serial.println(F("Failed to detect 4 megas on i2c"));
+//  //alpha = init_i2c_due();
+//
+//  if (alpha < 0) {     //error if less than 0
+//    
+//      Sprintln("error setting up i2c, stopping program");
+//      Sprintln("Error code: " + alpha);
+//    
+//    while (1) {}    //stop code
+//  }
 
 }
 
 int Coms_i2c::init_i2c_due() {  //i2c init for the due specifically
-
-  //ensure the device running this is a due
-
-  Sprintln(F("Error, runinng due i2c init but using mega chipset"));
-  return (-1);
 
 }
 
@@ -81,13 +99,7 @@ int Coms_i2c::i2c_scanner(int address) { // test specific address
 
 }
 
-virtual void Coms_i2c::write_frame(int address){
-#if defined(USE_I2C_TO_MEGAS)
-wire_write_frame(address);
-#else
-#error "I2C coms protocol not defined, cant send frame"
-#endif
-}
+
 
 
 

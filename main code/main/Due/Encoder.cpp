@@ -3,89 +3,87 @@
 #define Encoder_CPP     
 #include "Arduino.h"
 #include "Encoder.h"
-#include "Due.h"
+//#include "Due.h"
+
+#ifdef ENABLE_ENCODER
+bool enable_encoder = true;
+#else
+bool enable_encoder = false;
+#endif
+
+#ifdef ENABLE_BUTTON
+bool enable_button = true;
+#else
+bool enable_button = false;
+#endif
+
+bool encoder_enabled = false;
+bool button_enabled = false;
 
 
+Encoder_Struct encoder_parameters;     //create encoder struct
+Button_Struct button_parameters;       //create button struct
 
 
 int init_encoder() {
   if (enable_encoder && !encoder_enabled) {
 
-    pinMode(encoder.pinA, INPUT);
-    pinMode(encoder.pinB, INPUT);
+    pinMode(encoder_parameters.pinA, INPUT);
+    pinMode(encoder_parameters.pinB, INPUT);
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-    if (encoder.pinA != 2 && encoder.pinA != 3 && encoder.pinA != 18 && encoder.pinA != 19 && encoder.pinA != 20 && encoder.pinA != 21) {
-      Sprintln("error, encoder pin not an interrupt");
-      return (-1);
-    }
-    else
-      attachInterrupt(digitalPinToInterrupt(encoder.pinA), update_encoder_ISR, CHANGE);
-#else
-    attachInterrupt(encoder.pinA, update_encoder_ISR, CHANGE);
-#endif
+    attachInterrupt(encoder_parameters.pinA, update_encoder_ISR, CHANGE);
+
 
     return (0);
   }
 
   else {
-    Sprintln(F("Conflict with enabling encoder: make sure only enabled once and 'enable_encoder' is true"));
+    Sprintln(F("Conflict with enabling encoder: make sure only enabled once and 'ENABLE_ENCODER' defined"));
     return (-1);
   }
 
 }
 
 int init_button() {
-
-  pinMode(button.button_pin, INPUT);
-
-
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  if (button.button_pin != 2 && button.button_pin != 3 && button.button_pin != 18 && button.button_pin != 19  && button.button_pin != 20 && button.button_pin != 21) {
-   
-      Sprintln("error, button pin not an interrupt");
-      return(-1);
-   
-    
-    }
-  else
-    attachInterrupt(digitalPinToInterrupt(button), update_button_ISR, FALLING);
-#else
-  attachInterrupt(button.button_pin, update_button_ISR, CHANGE);
-#endif
-
-
-Serial.println(F("Button Initialised"));
-return(0);
+  if(enable_button && !button_enabled){
+  pinMode(button_parameters.button_pin, INPUT);
+  attachInterrupt(button_parameters.button_pin, update_button_ISR, CHANGE);
+  Serial.println(F("Button Initialised"));
+  return(0);
+  }
+   else {
+    Sprintln(F("Conflict with enabling button: make sure only 'ENABLE_BUTTON' defined"));
+    return (-1);
+  }
 }
 
 void update_encoder_ISR () {
-  encoder.aVal = digitalRead(encoder.pinA);
-  if (encoder.aVal != encoder.pinALast) { // Means the knob is rotating
+  encoder_parameters.aVal = digitalRead(encoder_parameters.pinA);
+  if (encoder_parameters.aVal != encoder_parameters.pinALast) { // Means the knob is rotating
     // if the knob is rotating, we need to determine direction
     // We do that by reading pin B.
-    if (digitalRead(encoder.pinB) != encoder.aVal) {  // Means pin A Changed first - We're Rotating Clockwise
-      encoder.PosCount ++;
+    if (digitalRead(encoder_parameters.pinB) != encoder_parameters.aVal) {  // Means pin A Changed first - We're Rotating Clockwise
+      encoder_parameters.PosCount ++;
 
     } else {// Otherwise B changed first and we're moving CCW
 
-      encoder.PosCount--;
+      encoder_parameters.PosCount--;
 
     }
-    encoder.position = encoder.PosCount / 2;
+    encoder_parameters.position = encoder_parameters.PosCount / 2;
 
   }
 
-  encoder.pinALast = encoder.aVal;
-  encoder.encoder_moved = true;
+  encoder_parameters.pinALast = encoder_parameters.aVal;
+  encoder_parameters.encoder_moved = true;
 }
 
 void update_button_ISR() {
 
-  if (digitalRead(button.button_pin) == false && millis() - button.last_button_pressed >= button.button_press_interval) {
+  if (digitalRead(button_parameters.button_pin) == false && millis() - button_parameters.last_button_pressed >= button_parameters.button_press_interval) {
     Sprintln(F("Button Pressed"));
-    button.last_button_pressed = millis();
-    button.button_pressed = true;
+    button_parameters.last_button_pressed = millis();
+    button_parameters.button_pressed = true;
   }
 }
 

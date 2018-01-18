@@ -5,12 +5,11 @@
  * 
  */
 
-#ifndef Sign_coms_H
-#define Sign_coms_H
+#ifndef Coms_H
+#define Coms_H
 
 #include "Config_Local.h"
-//#include "Coms_I2C.h"
-//#include "Coms_Serial.h"
+
 //https://github.com/ivanseidel/DueTimer
 #include "DueTimer.h"       // wrapper library to handle timers 0-4 
 
@@ -24,14 +23,6 @@ using namespace arduino_due;
 #define RX_BUF_LENGTH 256 // software serial port's reception buffer length 
 #define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
 
-serial_tc5_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_1=serial_tc5;
-serial_tc6_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_2=serial_tc6;
-serial_tc7_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_3=serial_tc7;
-serial_tc8_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_4=serial_tc8;
 
 #define HEADER_LENGTH 4  //length,type,num frames, frame no
 #define TRAILER_LENGTH 1 //just checksum
@@ -45,22 +36,12 @@ auto& Serial_4=serial_tc8;
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 
-#ifndef ALL_MEGAS_ENABLED
-bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};  
-#else
-bool mega_enabled[4] = {true, true, true, true};  // ignore communication if other board is false
-#endif
 
 
 
 
-// list of valid sensor prefix's for sending non string data to the megas.
-// append this as required and add to switch statements in due and mega code
-const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};  
 
-byte time_since_last_sent_text_frame = 0;
-bool send_text_now = false;
-volatile bool send_pos_now = false;   //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
+
 
 
 struct Frame{             //frame details for the due, seperate one for the mega below
@@ -72,7 +53,7 @@ byte checksum = 0;
 byte num_frames = 0;
 byte this_frame = 0;
 };
-Frame frame;
+
 
 
 #ifdef ENABLE_ERROR_CHECKING
@@ -91,37 +72,22 @@ Nack_details nack;
 #endif // ENABLE_ERROR_CHECKING
 
 
-//pos frame variables
-byte x_pos_LSB = 0;   
-byte x_pos_MSB = 0;
-byte y_pos_LSB = 0;
-byte y_pos_MSB = 0;
-byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
-byte y_pos_dir = 127;
-byte comms_delay = 0;
-byte pos_update_freq = 5;
-byte pos_frame_length = 13;   //length of frame to transmit to update pos
-
-
-
 int attach_timer_pos_update();
 
 int set_pos_update_frequency(int freq);
  
-int set_pos_speed(int x_speed, int y_speed){            //function to set the speed (pixels per second) the cursor postion is moving at
-x_pos_dir = x_speed+128;                                //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
-y_pos_dir = y_speed+128;
-}
+int set_pos_speed(int x_speed, int y_speed);            //function to set the speed (pixels per second) the cursor postion is moving at
+                                                        //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
 
-void send_pos_interrupt(){     // interrupt to send pos data to all megas
-    send_pos_now = true;
-}
+void send_pos_interrupt();     // interrupt to send pos data to all megas
+
+
 
 
 class Coms {
 
   private:
-    
+
 
   public:
 
@@ -132,7 +98,7 @@ class Coms {
     int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
     int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
-    virtual void write_frame(int address) = 0;
+//    void write_frame(int address) = 0;
 //     void write_frame(int address)
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
     int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
@@ -147,7 +113,15 @@ class Coms {
    
     int get_text_colour_hue(int byte_number);                            //function to retrun the MSB or LSB of the current hue value to send over i2c
 
+    int calc_delay();
 
+
+    #ifndef ALL_MEGAS_ENABLED
+bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};  
+#else
+bool mega_enabled[4] = {true, true, true, true};  // ignore communication if other board is false
+#endif
+    
 //  todo
     void echo_menu();
     int generate_checksum();
@@ -163,5 +137,5 @@ class Coms {
 
 
 
-#endif  //Sign_coms_H
+#endif  //Coms_H
 

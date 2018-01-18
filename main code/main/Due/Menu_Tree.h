@@ -1,13 +1,89 @@
 #ifndef Menu_H
 #define Menu_H
 
+#include "Config_Local.h"
+
+
 #define MENU_VISABLITIY_TIMOUT 15000  //15 seconds until menu will disapear/default to standard view
-int time_since_menu_last_changed=0;  //time variable updated from encoder
 
-bool supress_frame_to_this_screen = false;  // use this to supress text frame to screens covered fully by menu
-                                            // other screens will require a black box cover if menu visable
+struct Menu_tree_items{
 
-bool menu_width = 64;
+//level 1 menu items  
+  String main_menu                PROGMEM           = "Main Menu";
+  String RETURN                   PROGMEM           = "RETURN";
+  String screen_mode              PROGMEM           = "Screen Mode";
+  String brightness               PROGMEM           = "Brightness";
+  String text_settings            PROGMEM           = "Text Settings";
+  String fan_settings             PROGMEM           = "Fan Settings";
+  String internet_settings        PROGMEM           = "Internet Config";
+  String sd_card_settings         PROGMEM           = "Sd Cards"; 
+  String led_strip_settings       PROGMEM           = "LED Strip";
+
+
+//level 2 mennu items
+//change mode folder
+  String screen_mode_menu         PROGMEM           = "Mode Menu";
+  String screen_mode0             PROGMEM           = "Both on";
+  String screen_mode1             PROGMEM           = "Front Side";
+  String screen_mode3             PROGMEM           = "Back Side";
+  String screen_mode2             PROGMEM           = "Both Off";
+
+// brightness folder
+
+  String brightness_menu          PROGMEM           = "Brightness";  
+
+//text adjustment folder
+  String text_settings_menu       PROGMEM           = "Text Settings";
+  String text_size_settings       PROGMEM           = "Text Size";
+  String text_colour_settings     PROGMEM           = "Text Colour";
+  String scroll_speed_settings    PROGMEM           = "Scroll Speed";
+  String Flip_dir_settings        PROGMEM           = "Flip Direction";
+
+//fan settings folder
+  String fan_settings_menu        PROGMEM           = "Fan Settings";
+  String fan_speed_settings       PROGMEM           = "Fan Speed";
+  String fan_enable               PROGMEM           = "Enable";
+  String fan_disable              PROGMEM           = "Disable";
+  String minimum_rotating_speed   PROGMEM           = "Minimum speed";
+
+// internet configuration folder  
+  String internet_config_menu     PROGMEM           = "Internet";
+  String select_network_manually  PROGMEM           = "Connect";
+  String ethernet_enable          PROGMEM           = "Enable Eth";
+  String ethernet_disable         PROGMEM           = "Disable Eth";
+  String wifi_enable              PROGMEM           = "Enable Wifi";
+  String wifi_disable             PROGMEM           = "Disable Wifi";
+  
+// SD cards folder
+  String SD_cards_menu            PROGMEM           = "SD Cards";
+  String enable_ext_card          PROGMEM           = "Enable Port";
+  String disable_ext_card         PROGMEM           = "Disable Port";
+  String SD_card_folders          PROGMEM           = "Read Folders";
+
+// Led Strip folder
+  String Led_strip_menu            PROGMEM           = "Led Strip";
+  String enable_led_strip          PROGMEM           = "Enable LED Strip";
+  String disable_led_strip         PROGMEM           = "Disable LED Strip";
+  String led_strip_brightness      PROGMEM           = "Brightness";
+
+
+
+//level 3 folders
+//text size
+  String text_size_menu           PROGMEM           = "Text Size";
+
+//text colour
+  String text_colour_menu         PROGMEM           = "Text Colour";
+  String text_colour_red          PROGMEM           = "Red";
+  String text_colour_green        PROGMEM           = "Green";
+  String text_colour_blue         PROGMEM           = "Blue";
+
+// scroll speed
+  String scroll_speed_menu        PROGMEM           = "Scroll Speed";
+  
+  
+};
+
 
 class Menu{
 
@@ -30,7 +106,7 @@ public:
   int set_menu_width();   //change the width of the menu on the screen
   
   
-}
+};
 
 
 #endif  // Menu_H

@@ -7,9 +7,54 @@
 #include "function_declarations.h"
 #include "Due_Pins.h"
 #include "Graphics.h"
+#include "Current_Control.h"
+#include "Fans.h"
+#include "Internet.h"
+#include "SD_Cards.h"
+#include "Led_Strip.h"
+
+
+// variables
+
+
+Frame frame;
+extern struct Led_Strip_Struct led_strip_parameters;
+
+extern struct Temp_sensor temp_parameters;
+extern struct Fan_Struct fan_parameters;        //create fan struct
+extern struct Text text;
+extern struct Text_cursor text_cursor;
+extern struct Timers timers;
+extern struct Encoder_Struct encoder_parameters;     //create encoder struct
+extern struct Button_Struct button_parameters;       //create button struct
+extern struct LDR_Struct light_sensor_parameters;
+extern struct Current_Meter_Struct current_meter_parameters;
+
+// list of valid sensor prefix's for sending non string data to the megas.
+// append this as required and add to switch statements in due and mega code
+const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};  
+
+byte time_since_last_sent_text_frame = 0;
+bool send_text_now = false;
+volatile bool send_pos_now = false;   //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
+
+
+//pos frame variables
+byte x_pos_LSB = 0;   
+byte x_pos_MSB = 0;
+byte y_pos_LSB = 0;
+byte y_pos_MSB = 0;
+byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
+byte y_pos_dir = 127;
+byte comms_delay = 0;
+byte pos_update_freq = 5;
+byte pos_frame_length = 13;   //length of frame to transmit to update pos
+
+
+
+
+
 // ______  non class functions _______
-
-
 
 
 int attach_timer_pos_update(){
@@ -48,8 +93,14 @@ int set_pos_update_frequency(int freq){
 
 }
 
+int set_pos_speed(int x_speed, int y_speed){            //function to set the speed (pixels per second) the cursor postion is moving at
+x_pos_dir = x_speed+128;                                //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
+y_pos_dir = y_speed+128;
+}
 
-
+void send_pos_interrupt(){     // interrupt to send pos data to all megas
+    send_pos_now = true;
+}
 
 
 // ______ class functions _______
@@ -156,7 +207,7 @@ int Coms::send_disp_string_frame(int address) {   //function to send strings to 
 
     pack_disp_string_frame(type, frame.this_frame);//function to pack the frame with which ever data is relevant
     frame.frame_buffer[frame.frame_buffer[0] - 1] = (byte)256 - frame.checksum;
-    write_frame(address);
+//    write_frame(address);
 
     frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
     delayMicroseconds(100000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
@@ -190,7 +241,7 @@ int Coms::send_pos_frame(int address) {
   Sprint(F("Sending cursor positions to address "));
   Sprintln(address);
 
-  frame.frame_buffer[0] = (byte)  ;   //build frame
+  frame.frame_buffer[0] = (byte) pos_frame_length;   //build frame
   frame.frame_buffer[1] = (byte) type;
   frame.frame_buffer[2] = (byte) 1;
   frame.frame_buffer[3] = (byte) 1;
@@ -208,7 +259,7 @@ int Coms::send_pos_frame(int address) {
   }
   frame.frame_buffer[pos_frame_length - 1] = (byte) 256 - (frame.frame_buffer[pos_frame_length - 1] % 256); //calc checksum
 
-  write_frame(address);    //send frame
+//  write_frame(address);    //send frame
 
   return (0);
   }
@@ -306,39 +357,39 @@ int Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
   //switch statement to pack the frame;
   switch (sensor_prefix) {
     case 10:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current1;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
       break;
 
     case 11:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current2;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
       break;
 
     case 20:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp1;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp1;
       break;
 
     case 21:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp2;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp2;
       break;
 
     case 22:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp3;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp3;
       break;
 
     case 30:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light1;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading1;
       break;
 
     case 31:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light2;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading2;
       break;
 
     case 40:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fans.fan1.fan_target_speed;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_target_speed;
       break;
 
     case 50:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip.led_strip1.target_brightness;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.target_brightness;
       break;
 
     case 60:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
@@ -392,7 +443,11 @@ int Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
       break;
 
     case 170: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = debug ? (byte) 1 : (byte) 0;
+#ifdef DEBUG
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 1;
+#else
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 0;
+#endif
       break;
 
     case 180: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
@@ -415,7 +470,7 @@ int Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
       frame.checksum = frame.checksum + frame.frame_buffer[alpha];
     }
     frame.frame_buffer[frame.frame_buffer[0] - 1] = frame.checksum;
-    write_frame(address);    //send frame
+    //write_frame(address);    //send frame
     return (1);                    //frame_sent, send notification back
   }
 
@@ -488,16 +543,16 @@ void Coms::print_frame() {
   Sprintln("");
 }
 
-virtual void Coms::write_frame(int address){
-
-#if defined(USE_SERIAL_TO_MEGAS)
-serial_write_frame(address);
-#elif defined(USE_I2C_TO_MEGAS)
-wire_write_frame(address);
-#else
-#error "Define a coms protocol"
-#endif
-}
+//void Coms::write_frame(int address){
+//
+//#if defined(USE_SERIAL_TO_MEGAS)
+//serial_write_frame(address);
+//#elif defined(USE_I2C_TO_MEGAS)
+//wire_write_frame(address);
+//#else
+//#error "Define a coms protocol"
+//#endif
+//}
 
 
 

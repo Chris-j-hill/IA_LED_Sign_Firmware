@@ -6,9 +6,9 @@
 #define Struct_H
 
 #include "Arduino.h"
-#ifndef Due_Pins_H              //declaration in pins to avoid double declarations
+//#ifndef Due_Pins_H              //declaration in pins to avoid double declarations
 #include "Due_Pins.h"
-#endif
+//#endif
 
 #include "Due_Libraries.h"
 

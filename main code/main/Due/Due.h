@@ -1,5 +1,5 @@
-
-
+#ifndef Due_H
+#define Due_H
 
 #include "Due_Pins.h"                     //list of pins used in each board
 #include "Config_Local.h"
@@ -16,14 +16,16 @@ Internet       internet;
 Fans           fans;
 Encoder        encoder;
 Led_Strip      led_strip;
+Current_Meter  current_meter;
+Light_Sensor   light_sensor;
 
-
+Timers timers;
 /*    --------------------------------------------------------------------------------
  *     timer struct variables, fjnd somewhere better for this
  *    --------------------------------------------------------------------------------
  */
 
-
+//bool debug = DEBUG;
 
 
 
@@ -87,5 +89,5 @@ void due_loop() {
  
 }
 
-
+#endif // Due_H
 

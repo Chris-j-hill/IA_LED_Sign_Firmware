@@ -89,7 +89,7 @@
 #define ENABLE_ETHERNET
 #define ENABLE_WIFI
 
-
+#define RUN_I2C_SCANNER_TEST  // identify connected addresses
 
 
 //bool enable_fans = true;       // variables to initialise specific functionality

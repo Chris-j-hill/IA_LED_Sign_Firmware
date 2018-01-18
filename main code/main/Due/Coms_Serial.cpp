@@ -1,13 +1,34 @@
-#ifndef Sign_coms_serial_CPP
-#define Sign_coms_serial_CPP 
+#ifndef Coms_serial_CPP
+#define Coms_serial_CPP 
 
 #include "Coms_Serial.h"
 #include "Coms.h"
-#include "Due.h"
+//#include "Due.h"
+#include "Due_Pins.h"
+
+extern struct Frame frame;
+
+#ifdef USE_SERIAL_TO_MEGAS
+bool enable_serial = true;   
+#else
+bool enable_serial = false;   
+#endif
+
+bool serial_enabled = false;
+
+
+serial_tc5_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_1=serial_tc5;
+serial_tc6_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_2=serial_tc6;
+serial_tc7_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_3=serial_tc7;
+serial_tc8_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
+auto& Serial_4=serial_tc8;
 
 
 
-//methods for led_strip class
+//methods for Coms_Serial class
 
 #ifdef USE_SERIAL_TO_MEGAS
 
@@ -104,10 +125,10 @@ int Coms_Serial::get_serial() {                   //function to interpret serial
   // an example would be: 'disp_string: display this string'
   // this is defined by the disp_string keyword meaning the associated data should be pushed to the screen, in which case the data is the string to be pushed
 
-  #error("function not implemented")
+  //#error("function not implemented")
 }
 
-int coms::Serial_write_frame(int address) {   //function to actually send the frame to given address
+int Coms_Serial::Serial_write_frame(int address) {   //function to actually send the frame to given address
 
   
   if (!mega_enabled[address - 1]) {
@@ -155,9 +176,9 @@ int coms::Serial_write_frame(int address) {   //function to actually send the fr
 }
 
 
-virtual void Coms_i2c::write_frame(int address){
+void Coms_Serial::write_frame(int address){
 #if defined(USE_SERIAL_TO_MEGAS)
-wire_write_frame(address);
+Serial_write_frame(address);
 #else
 #error "I2C coms protocol not defined, cant send frame"
 #endif

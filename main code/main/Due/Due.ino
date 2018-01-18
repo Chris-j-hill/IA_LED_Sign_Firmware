@@ -20,8 +20,9 @@ void setup() {
   due_loop();
 }
 
-void loop() {   //no need to execute code here
-}
+void loop() 
+{}   //no need to execute code here
+
 
 
 #else

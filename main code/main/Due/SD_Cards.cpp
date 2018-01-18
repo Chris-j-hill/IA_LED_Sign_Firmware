@@ -2,7 +2,56 @@
 #define SD_Cards_CPP 
 
 #include "SD_Cards.h"
-#include "Due.h"
+//#include "Due.h"
+
+
+SD_Strings SD_string;
+
+SdFile file1;                 // file handling objects, use two objects to address both open files at once
+SdFile file2;                 // nb: if modifying files, make sure to close at the end of function
+//sd card objects,
+SdFat external_sd_card;            //external sd card
+SdFat internal_sd_card;            //onboard sd card
+
+#ifdef ENABLE_SD_CARDS
+bool enable_sd_cards = true;
+#else
+bool enable_sd_cards = false;
+#endif
+
+bool sd_cards_enabled = false;
+
+
+const uint8_t SD2_CS = SD1_ENABLE;   // chip select for internal_sd_card
+const uint8_t SD1_CS = SD2_ENABLE;  // chip select for external_sd_card
+
+const uint8_t SD_FILE_COPY_BUF_SIZE = 100;
+uint8_t sd_file_copy_buffer[SD_FILE_COPY_BUF_SIZE];
+
+char sd_file_read_buffer[67];       //buffer to read some data, dont need to read whole file at once, and doing so could be problematic if file large,
+//read 15 bytes to recognise id word (eg Network) and have 50 bytes for string (default could be long) and two for \n type characters
+
+// put sd card file name strings here:
+
+const char *sd_ext_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;
+const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
+
+const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
+const char *sd_int_file = NETWORK_LOGIN_FILENAME;
+
+//const char *sd_ext_file2 = "Instructions.BIN";      //not implemented
+//const char *sd_int_file2 = "Instructions.BIN";
+//
+//const char *sd_ext_file3 = "bitmap.BIN";
+//const char *sd_int_file3 = "bitmap.BIN";
+
+bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
+bool sd_card2_detected = true;
+
+
+
+
+
 
 
 int Card::init_sd_cards() {      // code to init sd cards and copy data from external to internal card
@@ -19,7 +68,6 @@ int Card::init_sd_cards() {      // code to init sd cards and copy data from ext
   bool external_sd_card_initialised = false;
   bool internal_sd_card_initialised = false;
 
-  pinMode(notifier, OUTPUT);
   PgmPrint("\t FreeRam: ");
 
   Sprintln(FreeRam());
@@ -35,7 +83,7 @@ int Card::init_sd_cards() {      // code to init sd cards and copy data from ext
   // initialize the external card
   int alpha = 0;
   int beta = millis();
-  int theta = beta;
+
 
   while (millis() < beta + WAIT_TIME_FOR_SD_ON_STARTUP && external_sd_card_initialised == 0) {    //wait for 40 seconds or until card inserted
     if (external_sd_card.begin(SD1_CS)) {    //if card initialised sucessfully exit wait loop
@@ -50,16 +98,7 @@ int Card::init_sd_cards() {      // code to init sd cards and copy data from ext
       }
       delay(20);
       alpha++;
-      if (millis() >= theta + 3000) { //flash built in led while waiting as a notification if debug not enabled
-        digitalWrite(notifier, HIGH);
-        delay(200);
-        digitalWrite(notifier, LOW);
-        delay(200);
-        digitalWrite(notifier, HIGH);
-        delay(200);
-        digitalWrite(notifier, LOW);
-        theta = millis();
-      }
+
 #endif
       //send_frame... //display error on screen
     }
@@ -187,7 +226,7 @@ int Card::copy_sd_data(const char *ext_file, const char *int_file, const char *e
     if (n < 0) external_sd_card.errorExit("error reading external file");
     if (n == 0) break;
     if (file2.write(sd_file_copy_buffer, n) != n) internal_sd_card.errorExit("error writing internal file");
-    digitalWrite(notifier, !digitalRead(notifier));
+
   }
 
   
@@ -265,7 +304,7 @@ int Card::extract_network_data() {   // parse the file and extract network info 
           //ethernet_connect...
         }
 
-        else if (is_default()) {
+        else if (buffer_is_default()) {
           str_len = string_length();    
           beta = 0;
           while (beta != str_len) { //loop through default string 
@@ -348,16 +387,6 @@ int Card::remove_card_1() {  //function to stall code until the external sd is r
       alpha++;
     }
 
-    if (millis() >= theta + 3000) { //flash built in led while waiting as notification if serial not connected
-      digitalWrite(notifier, HIGH);
-      delay(200);
-      digitalWrite(notifier, LOW);
-      delay(200);
-      digitalWrite(notifier, HIGH);
-      delay(200);
-      digitalWrite(notifier, LOW);
-      theta = millis();
-    }
 #endif
   }
 }

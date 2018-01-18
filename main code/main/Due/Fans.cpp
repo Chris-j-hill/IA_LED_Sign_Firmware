@@ -2,7 +2,32 @@
 #define Fans_CPP 
 
 #include "Fans.h"
-#include "Due.h"
+//#include "Due.h"
+//#include "function_declarations.h"
+#include "DueTimer.h"
+
+
+
+Temp_sensor temp_parameters;
+Fan_Struct fan_parameters;        //create fan struct
+extern struct Timers timers;
+
+#ifdef ENABLE_FANS
+bool enable_fans = true;   //initialise on startup?   
+#else
+bool enable_fans = false; 
+#endif
+
+#ifdef ENABLE_TEMPERATURE_SENSORS
+bool enable_temp_sensor = true;
+#else
+bool enable_temp_sensor = false;
+#endif
+
+bool fans_enabled = false; //to check if initialised sucessfully
+bool temp_sensor_enabled = false;
+
+
 
 
 
@@ -26,15 +51,21 @@ int attach_timer_fan(){
 }
 
 
+void fade_fans(){}          // interrupt to change the current value of the fans to approach the target value
+
+int fans_set_freq(){}      //interrupt to set the frequency the fans are adjusted
+
+
+
 //methods for fans and temperature sensors
 
 // initialiser functions
 
-int due_class::init_fans() {          //initialise fans and set to starting value
-  pinMode(fan.fan_pin, OUTPUT);
+int Fans::init_fans() {          //initialise fans and set to starting value
+  pinMode(fan_parameters.fan_pin, OUTPUT);
   
   Sprintln(F("\t Set fans to value..."));
-  int fail = writeFanSpeed(fan.fan_target_speed);
+  int fail = writeFanSpeed(fan_parameters.fan_target_speed);
 
   if (fail != 0) {
     Sprintln(F("Failed to write initial fan speed"));
@@ -45,78 +76,103 @@ int due_class::init_fans() {          //initialise fans and set to starting valu
 
 }
 
-int due_class::init_temp_sensors() {    //code to initialise temp sensors
+int Fans::init_temp_sensors() {    //code to initialise temp sensors
 
-  //not much to initialise since the pin is set to output and input to request and recieve data
+  //not much to initialise since the pin is not specifically set to output or input
   // just test the sensor responds
 
-  int fail;
+  int current_temperature;
 
-  fail = temp_read_sensor(temp.pin1);
-
-  if (fail == -100) { //if the value is -100 -> error
-  return(-1);
+  current_temperature = get_temperature(temp_parameters.pin1);
+  if (current_temperature == -100) { //if the value is -100 -> error
+    Sprint(F("Error Reading temperature sensor 1"));
   }
   else {
-    Sprint(F("Read temp1 as:"));
-    Sprintln(fail);
+    Sprint(F("Read temperature sensor 1 as:"));
+    Sprintln(current_temperature);
+  }
+
+    current_temperature = get_temperature(temp_parameters.pin2);
+  if (current_temperature == -100) { 
+    Sprint(F("Error Reading temperature sensor 3"));
+  }
+  else {
+    Sprint(F("Read temperature sensor 2 as:"));
+    Sprintln(current_temperature);
+  }
+
+    current_temperature = get_temperature(temp_parameters.pin3);
+  if (current_temperature == -100) { 
+    Sprint(F("Error Reading temperature sensor 3"));
+  }
+  else {
+    Sprint(F("Read temperature sensor 3 as:"));
+    Sprintln(current_temperature);
   }
   return(0);
 }
 
-int due_class::writeFanSpeed(int newValue) {  //function to fade in fans from current value to new value
+int Fans::writeFanSpeed(int newValue) {  //function to fade in fans from current value to new value
 
   // function will set new value, and attach interrupt if not attached already
   // when target value is reached, isr will set ISR_attached to false and isr will be detached at the end of the loop
 }
 
-int due_class::get_temperature(int pin) {  //return the temperature as read by the specified pin
+int Fans::get_temperature(int pin) {  //return the temperature as read by the specified pin
 
   // call the poll_temperature_sensor to get it to return the data in its registers
   // then get the relavent value of dat[] array and return it
+  byte temp_byte0;
+  byte temp_byte1;
+  byte temp_byte2;
+  byte temp_byte3;
+
+  
 
 
-  poll_temperature_sensor(pin);      //update registers
-
+  if (pin == temp_parameters.pin1 && temp_parameters.temp1_enabled){
+  poll_temperature_sensor(pin);      
+  temp_byte0 = temp_parameters.dat1 [0];
+  temp_byte1 = temp_parameters.dat1 [1];
+  temp_byte2 = temp_parameters.dat1 [2];
+  temp_byte3 = temp_parameters.dat1 [3];
+}
+  else if (pin == temp_parameters.pin2 && temp_parameters.temp2_enabled){
+  temp_byte0 = temp_parameters.dat2 [0];
+  temp_byte1 = temp_parameters.dat2 [1];
+  temp_byte2 = temp_parameters.dat2 [2];
+  temp_byte3 = temp_parameters.dat2 [3];
+}
+  else if (pin == temp_parameters.pin3 && temp_parameters.temp3_enabled){
+  temp_byte0 = temp_parameters.dat3 [0];
+  temp_byte1 = temp_parameters.dat3 [1];
+  temp_byte2 = temp_parameters.dat3 [2];
+  temp_byte3 = temp_parameters.dat3 [3];
+}
+  else {
+  Sprintln(F("Error reading temperature sensor"));
+  return (-1);
+}
   //display results from function
-  #ifdef (DEBUG)
-  if (pin == TEMP1){
-  temp0 = temp.dat1 [0];
-  temp1 = temp.dat1 [1];
-  temp2 = temp.dat1 [2];
-  temp3 = temp.dat1 [3];
-}
-  else if (pin == TEMP2){
-   temp0 = temp.dat2 [0];
-  temp1 = temp.dat2 [1];
-  temp2 = temp.dat2 [2];
-  temp3 = temp.dat2 [3];
-}
-  else if (pin == TEMP3){
- temp0 = temp.dat3 [0];
-  temp1 = temp.dat3 [1];
-  temp2 = temp.dat3 [2];
-  temp3 = temp.dat3 [3];
-}
- 
+#ifdef DEBUG
   Sprint ("Current humdity =");
-  Serial.print (temp0, DEC); // display the humidity-bit integer;
+  Serial.print (temp_byte0, DEC); // display the humidity-bit integer;
   Sprint ('.');
-  Serial.print (temp1, DEC); // display the humidity decimal places;
+  Serial.print (temp_byte1, DEC); // display the humidity decimal places;
   Sprintln ('%');
 
   Sprint ("Current temperature =");
-  Serial.print (temp2, DEC); // display the temperature of integer bits;
+  Serial.print (temp_byte2, DEC); // display the temperature of integer bits;
   Sprint ('.');
-  Serial.print (temp3, DEC); // display the temperature of decimal paces;
+  Serial.print (temp_byte3, DEC); // display the temperature of decimal paces;
   Sprintln ('C');
-  #endif
+#endif
 
- // Sprintln(F("WARNING: function not fully implemented, only reading sensor 1")); 
+return(temp_byte0);
 
 }
 
-int due_class::poll_temperature_sensor (int pin) {    //adapted from this: https://tkkrlab.nl/wiki/Arduino_KY-015_Temperature_and_humidity_sensor_module
+int Fans::poll_temperature_sensor (int pin) {    //adapted from this: https://tkkrlab.nl/wiki/Arduino_KY-015_Temperature_and_humidity_sensor_module
 
   pinMode(pin, OUTPUT);      // confirm that the pin is an output
   digitalWrite (pin, LOW);   // bus down, send start signal, drive line to ground
@@ -131,25 +187,25 @@ int due_class::poll_temperature_sensor (int pin) {    //adapted from this: https
   if (digitalRead (pin) == LOW);
   delayMicroseconds (80);                // DHT11 80us after the bus pulled to start sending data
 
-  if (pin = TEMP1) {
+  if (pin = temp_parameters.pin1) {
     for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp.dat1[i] = read_temp_data_from_register (pin);               // data to global array
+      temp_parameters.dat1[i] = read_temp_data_from_register (pin);               // data to global array
 
     
       Sprintln(F("Read temp sensor 1"));
 
   }
 
-  else if (pin = TEMP2) {
+  else if (pin = temp_parameters.pin2) {
     for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp.dat2[i] = read_temp_data_from_register (pin);
+      temp_parameters.dat2[i] = read_temp_data_from_register (pin);
     
       Sprintln(F("Read temp sensor 2"));
   }
 
-  else if (pin = TEMP3) {
+  else if (pin = temp_parameters.pin3) {
     for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp.dat3[i] = read_temp_data_from_register (pin);
+      temp_parameters.dat3[i] = read_temp_data_from_register (pin);
 
    
       Sprintln(F("Read temp sensor 3"));
@@ -168,7 +224,7 @@ int due_class::poll_temperature_sensor (int pin) {    //adapted from this: https
   return (0);
 }
 
-byte due_class::read_temp_data_from_register (int pin) {   // read the data back from the register as bits and convert to a byte, call this for every byte to read
+byte Fans::read_temp_data_from_register (int pin) {   // read the data back from the register as bits and convert to a byte, call this for every byte to read
 
   byte data;
   for (int i = 0; i < 8; i ++) {

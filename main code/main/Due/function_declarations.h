@@ -16,6 +16,8 @@ class Fans;
 class Encoder;
 class Led_strip;
 class SdFat;
+class Current_Meter;
+class Light_Sensor;
 
 
 struct Timers{            //structer for all timers used and related variables
@@ -29,7 +31,7 @@ bool fan_timer_attached = false;
 bool pos_timer_attached = false;
 
 };
-Timers timers;
+
 
 
 
@@ -56,7 +58,7 @@ void send_pos_interrupt();
 int set_pos_speed(int x_speed, int y_speed);
 int set_pos_update_frequency(int freq);
 int attach_timer_interrupts();
-int wire_write_frame(int address);
+
 int send_pos_frame(int address);
 int pack_xy_coordinates();
 int send_disp_string_frame(int address);

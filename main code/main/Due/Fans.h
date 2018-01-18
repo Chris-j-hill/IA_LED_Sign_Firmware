@@ -4,44 +4,30 @@
 
 #include "Config_Local.h"
 #include "function_declarations.h"
+#include "Due_Pins.h"
 
-#ifdef ENABLE_FANS
-bool enable_fans = true;   //initialise on startup?   
-else
-bool enable_fans = false; 
-#endif
 
-#ifdef ENABLE_TEMPERATURE_SENSORS
-bool enable_temp_sensor = true;
-#else
-bool enable_temp_sensor = false;
-#endif
-
-bool fans_enabled = false; //to check if initialised sucessfully
-bool temp_sensor_enabled = false;
 
 #define FAN_DEFAULT_SPEED 180 
 
-byte temp1 = 4;
-byte temp2 = 5;
-byte temp3 = 6;
+
 
 
 struct Temp_sensor{
 
   int pin1 = TEMP1;
   int pin2 = TEMP2;
-  int pin3 = temp3;
+  int pin3 = TEMP3;
 
-  bool temp1_enable = true;
-  bool temp2_enable = true;
-  bool temp3_enable = true;
+  bool temp1_enabled = true;
+  bool temp2_enabled = true;
+  bool temp3_enabled = true;
 
   byte dat1[5];         //data array for temp and humidity
   byte dat2[5];
   byte dat3[5];
 
-  int temp1 = -100;   //current temperature as read by sensor, set to something rediculous to start
+  int temp1 = -100;   //current temperature as read by sensor, set to something unlikely to start
   int temp2 = -100;
   int temp3 = -100;
 
@@ -49,7 +35,7 @@ struct Temp_sensor{
   int humidity2 = -100;
   int humidity3 = -100;
 };
-Temp_sensor temp;
+
 
 //byte fan_speed = FAN_DEFAULT_SPEED;
 
@@ -63,15 +49,12 @@ struct Fan_Struct {
   bool fan_on  = true;                    // is fan enabled, if so, run functions
 
 };
-//Fan_Struct fan;        //create fan struct
 
 int attach_timer_fan();
 
-void fade_fans() {          // interrupt to change the current value of the fans to approach the target value
+void fade_fans();          // interrupt to change the current value of the fans to approach the target value
 
-}
-
-int fans_set_freq(){}      //interrupt to set the frequency the fans are adjusted
+int fans_set_freq();      //interrupt to set the frequency the fans are adjusted
 
 
 
@@ -85,7 +68,7 @@ class Fans{
     byte read_temp_data_from_register (int pin);        // convert incoming bits from temp sensor to a byte
     
   public:
-        Fan_Struct fan1;        //create fan struct
+        
         Fans(){}
         
           //initialisations of individual items, set pins, test if working if applicable, etc

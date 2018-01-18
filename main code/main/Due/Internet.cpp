@@ -4,7 +4,29 @@
 #include "Arduino.h"
 
 #include "Internet.h"
-#include "Due.h"
+//#include "Due.h"
+#include "SD_Cards.h"
+
+
+
+#ifdef ENABLE_ETHERNET
+bool enable_ethernet = true;
+#else
+bool enable_ethernet = false;
+#endif
+
+#ifdef ENABLE_WIFI
+bool enable_wifi = true;
+#else
+bool enable_wifi = false;
+#endif
+
+bool ethernet_enabled = false;
+bool wifi_enabled = false;
+
+bool ethernet_connected = true;   
+bool wifi_connected = true;
+
 
 
 
@@ -19,7 +41,6 @@ int Internet::init_wifi() {       //not implented
   }
 
   else {
-    if (debug)
       Sprintln(F("From init wifi: Sd cards not initialised, dont have network info"));
   }
 }
