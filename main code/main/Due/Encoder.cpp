@@ -46,13 +46,13 @@ int init_encoder() {
 
 int init_button() {
   if(enable_button && !button_enabled){
-  pinMode(button_parameters.button_pin, INPUT);
-  attachInterrupt(button_parameters.button_pin, update_button_ISR, CHANGE);
-  Serial.println(F("Button Initialised"));
-  return(0);
+    pinMode(button_parameters.button_pin, INPUT);
+    attachInterrupt(button_parameters.button_pin, update_button_ISR, CHANGE);
+    Serial.println(F("Button Initialised"));
+    return(0);
   }
-   else {
-    Sprintln(F("Conflict with enabling button: make sure only 'ENABLE_BUTTON' defined"));
+  else {
+    Sprintln(F("Conflict with enabling button: make sure only 'ENABLE_BUTTON' defined and init_button called once"));
     return (-1);
   }
 }
@@ -76,6 +76,7 @@ void update_encoder_ISR () {
 
   encoder_parameters.pinALast = encoder_parameters.aVal;
   encoder_parameters.encoder_moved = true;
+
 }
 
 void update_button_ISR() {

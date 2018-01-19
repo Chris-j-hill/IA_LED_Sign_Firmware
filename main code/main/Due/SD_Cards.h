@@ -68,7 +68,9 @@ class Card {
 
     int init_sd_cards();
     int check_for_SD_card_inserted();
-      //print the currently stored frame to the serial monitor
+    
+    void enable_external_port(){}
+    void disable_external_port(){}
 };
 
 

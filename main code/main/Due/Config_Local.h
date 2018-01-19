@@ -91,45 +91,7 @@
 
 #define RUN_I2C_SCANNER_TEST  // identify connected addresses
 
-
-//bool enable_fans = true;       // variables to initialise specific functionality
-//bool enable_led_strip = true;
-//bool enable_encoder = true;
-//bool enable_button = true;
-//bool enable_sd_cards = false;
-//bool enable_current_meter = true;
-//bool enable_temp_sensor = false;
-//bool enable_LDR = false;
-//bool enable_ethernet = false;
-//bool enable_wifi = false;
-//bool test_i2c = false;
-
-             //verification variables, if something failes to initialise code may continue (eg wifi), use this to not run related code later
-//bool led_strip_enabled = false;
-//bool encoder_enabled = false;
-//bool button_enabled = false;
-//bool sd_cards_enabled = false;
-//bool current_meter_enabled = false;
-//bool temp_sensor_enabled = false;
-//bool LDR_enabled = false;
-//bool ethernet_enabled = false;
-//bool wifi_enabled = false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//int notifier = NOTIFIER;      //led pin, set to indicate data stuff
-
+#define DISABLE_WARNING_MESSAGES  //option to disable warning messages within the menu system
 
 
 #endif // Config_Local_h

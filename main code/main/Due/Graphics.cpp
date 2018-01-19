@@ -30,4 +30,7 @@ char text_str[150] = "this is a test4 this is a test5 this is a test6";
 
 
 
+void Graphics::flip_direction(){}   //flip the direction currently scrolling
+
+
 #endif  // Graphics_CPP

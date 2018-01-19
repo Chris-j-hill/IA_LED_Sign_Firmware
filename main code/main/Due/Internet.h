@@ -18,6 +18,10 @@ class Internet {
     
     int init_ethernet();
     int init_wifi();
+    void ethernet_enable(){}
+    void ethernet_disable(){} 
+    void wifi_enable(){}
+    void wifi_disable(){} 
 };
 
 

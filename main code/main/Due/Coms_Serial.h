@@ -25,6 +25,7 @@ class Coms_Serial: public Coms {
     
     int Serial_write_frame(int address) ;                                  //function to actually send the frame to given address
     void write_frame(int address);
+    void send_menu_frame(int menu, int encoder_pos){};
 };
 
 

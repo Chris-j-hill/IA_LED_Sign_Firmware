@@ -52,7 +52,8 @@ class Led_Strip{
     int is_led_on();                    //useful in menus
     int return_led_brightness();
     int led_gradual_pulse(int minValue, int maxValue);  //code to fade the leds in and out in sinusoidal pattern
-    
+    void enable(){}
+    void disable(){}
      
 };
 

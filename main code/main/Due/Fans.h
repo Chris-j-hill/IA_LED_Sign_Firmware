@@ -87,7 +87,8 @@ class Fans{
     int get_humidity();       //because we can
     int set_temp_sensor_enable(int sensor);   //code to enable sensors, might be useful to toggle them, maybe autotoggle if not working?
     int set_temp_sensor_disable(int sensor);
-
+    int enable_fans(){}
+    int disable_fans(){}
 
 };
 

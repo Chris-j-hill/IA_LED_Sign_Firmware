@@ -356,93 +356,114 @@ int Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
 
   //switch statement to pack the frame;
   switch (sensor_prefix) {
-    case 10:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_CURRENT_1:
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
       break;
 
-    case 11:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_CURRENT_2:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
       break;
 
-    case 20:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEMP_1:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp1;
       break;
 
-    case 21:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEMP_2:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp2;
       break;
 
-    case 22:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEMP_3:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp3;
       break;
 
-    case 30:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_LDR_1:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading1;
       break;
 
-    case 31:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_LDR_2:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading2;
       break;
 
-    case 40:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_FAN_SPEED:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_target_speed;
       break;
 
-    case 50:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_LED_STRIP_BRIGHTNESS:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.target_brightness;
       break;
 
-    case 60:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_SD1_DETECTED:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card1_detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
       break;
 
-    case 61:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_SD2_DETECTED:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card2_detected ? (byte) 1 : (byte) 0;
       break;
 
-    case 70:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_EHTERNET_CONNECTED:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
       break;
 
-    case 80:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_WIFI_CONNECTED:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
       break;
 
-    case 90:  frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_SCREEN_BRIGHTNESS:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
       break;
 
-    case 100: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEXT_SIZE: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_size;
       break;
 
-    case 110: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEXT_COLOUR_R: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_r;
       break;
 
 
-    case 120: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEXT_COLOUR_G: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_g;
       break;
 
 
-    case 130: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEXT_COLOUR_B:  
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_b;
       break;
 
-    case 140: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to ge the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+    case PREFIX_TEXT_HUE_MSB: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
-    case 150: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEXT_HUE_LSB: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
       break;
 
-    case 160: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_TEXT_USE_HUE: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = use_hue ? (byte) 1 : (byte) 0;
       break;
 
-    case 170: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_DEBUG_STATE: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
 #ifdef DEBUG
       frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 1;
 #else
@@ -450,7 +471,8 @@ int Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool m
 #endif
       break;
 
-    case 180: frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+    case PREFIX_SCREEN_MODE: 
+      frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       frame.  frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_mode;
       break;
 

@@ -52,7 +52,14 @@ extern byte screen_mode;
 extern int  text_colour_hue;
 
 
+class Graphics{
 
+  private:
+
+  public:
+  Graphics(){}
+  void flip_direction();
+};
 
 
 

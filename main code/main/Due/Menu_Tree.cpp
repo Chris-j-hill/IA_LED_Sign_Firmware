@@ -3,43 +3,386 @@
 
 #include "Menu_Tree.h"
 #include "Config_Local.h"
-
+#include "Encoder.h"
+#include "Coms_Serial.h"
+#include "Coms.h"
+#include "Graphics.h"
+#include "Current_Control.h"
+#include "Fans.h"
+#include "Internet.h"
+#include "SD_Cards.h"
+#include "Led_Strip.h"
 
 Menu_tree_items menu_items;
-int time_since_menu_last_changed=0;  //time variable updated from encoder
+Menu_tree_menu_limits menu_limits;
+extern struct Button_Struct button_parameters;
+extern struct Encoder_Struct encoder_parameters;
+extern Encoder encoder;
+extern Graphics graphics;
+extern Coms_Serial coms_serial;
+extern Fans fans;
+extern Internet internet;
+extern Card card;
+extern Led_Strip led_strip;
+
+extern byte screen_mode;
+extern byte screen_brightness;
+
+
+int time_since_menu_last_changed = 0; //time variable updated from encoder
+
+int time_since_menu_startup_run = 0;
 
 bool supress_frame_to_this_screen = false;  // use this to supress text frame to screens covered fully by menu
-                                            // other screens will require a black box cover if menu visable
-bool menu_width = 64;
+// other screens will require a black box cover if menu visable
+int menu_width = 64;
+bool menu_just_changed = false;
 
 
+int Menu::init_menu_tree() {
 
+#ifdef SKIP_INTITAL_STARTUP_SEQUENCE
+  current_menu = 1;
+#else
+  current_menu = 0;
+#endif
 
+}
 
-
-
-int Menu::init_menu_tree(){
-    
+int Menu::display_menu() {
+  if (MENU_VISABLITIY_TIMOUT < millis() - time_since_menu_last_changed) {
+    current_menu = 1;
   }
 
+  switch (current_menu) {
+    case STARTUP:                     display_startup_sequence();
+    case DEFAULT_MENU:                default_display(); break;
+    case MAIN_MENU:                   display_main_menu(); break;
+    case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
+    case BRIGHTNESS_MENU:             display_brightness_menu(); break;
+    case TEXT_SETTINGS_MENU:          display_text_settings_menu(); break;
+    case FAN_SETTINGS_MENU:           display_fan_settings_menu(); break;
+    case INTERNET_CONFIG_MENU:        display_internet_config_menu(); break;
+    case SD_CARD_MENU:                display_SD_cards_menu(); break;
+    case LED_STRIP_MENU:              display_led_strip_menu(); break;
+    case TEXT_SIZE_MENU:              display_text_size_menu(); break;
+    case TEXT_COLOUR_MENU:            display_text_colour_menu(); break;
+    case SCROLL_SPEED_MENU:           display_scroll_speed_menu(); break;
+    case FAN_SPEED_MENU:              display_fan_speed_menu(); break;
+    case MIN_FAN_SPEED_MENU:          display_min_fan_sped_menu(); break;
+    case SD_FOLDERS_MENU:             display_sd_folder_menu(); break;
+    case LED_STRIP_BRIGHTNESS_MENU:   display_led_strip_brightness_menu(); break;
 
-int Menu::change_menu(){
-    if (MENU_VISABLITIY_TIMOUT>millis()-time_since_menu_last_changed){
-      current_menu=1;
-    }
-    
-    switch(current_menu){
-    case 0: {display_startup_sequence(); break;}
-    case 1: {default_display(); break;}
-    case 2: {display_menu_tree(); break;}
-
-    default: current_menu = 0;
+    default: current_menu = 0;    //restart, run startup
   }
 }
 
-void Menu::display_startup_sequence(){} 
-void Menu::default_display(){}
-void Menu::display_menu_tree(){}
+void Menu::display_startup_sequence() {
 
+  if (encoder_parameters.encoder_moved) {} //disregard encoder and button for this
+
+  if (button_parameters.button_pressed) {}
+
+  time_since_menu_startup_run = millis();  //log time this function was run
+  coms_serial.send_menu_frame(STARTUP, encoder_parameters.position);
+
+}
+
+void Menu::default_display() {
+  current_menu = DEFAULT_MENU;  //return to this menu until current_menu changed
+
+  //only run if startup finished
+  if (millis() - time_since_menu_startup_run > TIME_TO_DISPLAY_STARTUP) {
+    if (menu_just_changed = true) {
+      encoder.recenter_encoder();
+      coms_serial.send_menu_frame(DEFAULT_MENU, encoder_parameters.position);
+      menu_just_changed = false;
+    }
+
+    if (button_parameters.button_pressed) {
+      current_menu = MAIN_MENU;
+      menu_just_changed = true;
+      time_since_menu_last_changed = millis();
+      button_parameters.button_pressed = false;
+    }
+  }
+  else {
+    encoder_parameters.encoder_moved = false;   //ignore button presses and encoder input before startup finished
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_main_menu() {
+  current_menu = MAIN_MENU;
+
+  if (menu_just_changed = true) {
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(MAIN_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(MAIN_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = DEFAULT_MENU;         break;
+      case 1: current_menu = SCREEN_MODE_MENU;     break;
+      case 2: current_menu = BRIGHTNESS_MENU;      break;
+      case 3: current_menu = TEXT_SETTINGS_MENU;   break;
+      case 4: current_menu = FAN_SETTINGS_MENU;    break;
+      case 5: current_menu = INTERNET_CONFIG_MENU; break;
+      case 6: current_menu = SD_CARD_MENU;         break;
+      case 7: current_menu = LED_STRIP_MENU;       break;
+
+      default: current_menu = STARTUP;
+    }
+
+    menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_screen_mode_menu() {
+  current_menu = SCREEN_MODE_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(SCREEN_MODE_MENU, encoder_parameters.position);
+  } 
+   
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(SCREEN_MODE_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = MAIN_MENU;   break;    //return
+      case 1: screen_mode = 0 ;           break;
+      case 2: screen_mode = 1 ;           break;
+      case 3: screen_mode = 2 ;           break;
+      case 4: screen_mode = 3 ;           break;
+
+      default: current_menu = STARTUP;
+
+    }
+    if (encoder_parameters.position >= 1 && encoder_parameters.position <= 4) {
+      for (int i = 0; i < NUM_SCREENS; i++)
+        coms_serial.send_specific_calibration_data(PREFIX_SCREEN_MODE, i, false, 0);  //send screen_mode update to screens
+    }
+    if (encoder_parameters.position == 0)
+      menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_brightness_menu() {
+  current_menu = BRIGHTNESS_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(BRIGHTNESS_MENU, encoder_parameters.position);
+  }
+
+  if (button_parameters.button_pressed) {
+    current_menu = MAIN_MENU;
+    button_parameters.button_pressed = false;
+    time_since_menu_last_changed = millis();
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    screen_brightness = encoder_parameters.position;
+    encoder_parameters.encoder_moved = false;
+    time_since_menu_last_changed = millis();
+    for (int i = 0; i < NUM_SCREENS; i++)
+      coms_serial.send_specific_calibration_data(PREFIX_SCREEN_BRIGHTNESS, i, false, 0);  //send screen_mode update to screens
+  }
+}
+
+void Menu::display_text_settings_menu() {
+  current_menu = TEXT_SETTINGS_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(TEXT_SETTINGS_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(TEXT_SETTINGS_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = MAIN_MENU;          break;
+      case 1: current_menu = TEXT_SIZE_MENU;     break;
+      case 2: current_menu = TEXT_COLOUR_MENU;   break;
+      case 3: current_menu = SCROLL_SPEED_MENU;  break;
+      case 4: graphics.flip_direction();         break;
+
+      default: current_menu = STARTUP;
+    }
+
+    if (encoder_parameters.position != 4)
+      menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_fan_settings_menu() {
+  current_menu = FAN_SETTINGS_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(FAN_SETTINGS_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(FAN_SETTINGS_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+  
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = MAIN_MENU;          break;
+      case 1: current_menu = FAN_SPEED_MENU;     break;
+      case 2: fans.enable_fans();                break;
+      case 3: fans.disable_fans();               break;
+      case 4: current_menu = MIN_FAN_SPEED_MENU; break;
+
+      default: current_menu = STARTUP;
+    }
+
+    if (encoder_parameters.position == 0 || encoder_parameters.position == 3 || encoder_parameters.position == 4)
+      menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_internet_config_menu() {
+  current_menu = INTERNET_CONFIG_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(INTERNET_CONFIG_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(INTERNET_CONFIG_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = MAIN_MENU;          break;
+      case 1: /*manually connect*/               break;     // <- implement this
+      case 2: internet.ethernet_enable();        break;
+      case 3: internet.ethernet_disable();       break;
+      case 4: internet.wifi_enable();            break;
+      case 5: internet.wifi_disable();           break;
+
+      default: current_menu = STARTUP;
+    }
+    if (encoder_parameters.position == 0 || encoder_parameters.position == 1)
+      menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_SD_cards_menu() {
+  current_menu = SD_CARD_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(SD_CARD_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(SD_CARD_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+  
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = MAIN_MENU;          break;
+      case 1: card.enable_external_port();       break;
+      case 2: card.disable_external_port();      break;
+      case 3: SD_FOLDERS_MENU;                   break;
+
+      default: current_menu = STARTUP;
+    }
+    if (encoder_parameters.position == 0 || encoder_parameters.position == 3)
+      menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_led_strip_menu() {
+  current_menu = LED_STRIP_MENU;
+
+  if (menu_just_changed = true) {
+
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(LED_STRIP_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(LED_STRIP_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+
+  if (button_parameters.button_pressed) {
+    switch (encoder_parameters.position) {
+      case 0: current_menu = MAIN_MENU;          break;
+      case 1: led_strip.enable();                break;
+      case 2: led_strip.disable();               break;
+      case 3: LED_STRIP_BRIGHTNESS_MENU;         break;
+
+      default: current_menu = STARTUP;
+    }
+
+    if (encoder_parameters.position == 0 || encoder_parameters.position == 3)
+      menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::display_text_size_menu() {}
+void Menu::display_text_colour_menu() {}
+void Menu::display_scroll_speed_menu() {}
+void Menu::display_fan_speed_menu() {}
+void Menu::display_min_fan_sped_menu() {}
+void Menu::display_sd_folder_menu() {}
+void Menu::display_led_strip_brightness_menu() {}
 
 #endif  // Menu_CPP

@@ -18,6 +18,7 @@ Encoder        encoder;
 Led_Strip      led_strip;
 Current_Meter  current_meter;
 Light_Sensor   light_sensor;
+Graphics       graphics;
 
 Timers timers;
 /*    --------------------------------------------------------------------------------

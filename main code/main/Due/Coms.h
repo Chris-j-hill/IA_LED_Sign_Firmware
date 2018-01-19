@@ -36,9 +36,56 @@ using namespace arduino_due;
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 
+// NOTE: Prefix values must be within byte range (0-255)
+#define PREFIX_CURRENT_1                10
+#define PREFIX_CURRENT_2                11
+#define PREFIX_TEMP_1                   20
+#define PREFIX_TEMP_2                   21
+#define PREFIX_TEMP_3                   22
+#define PREFIX_LDR_1                    30
+#define PREFIX_LDR_2                    31
+#define PREFIX_FAN_SPEED                40
+#define PREFIX_LED_STRIP_BRIGHTNESS     50
+#define PREFIX_SD1_DETECTED             60
+#define PREFIX_SD2_DETECTED             61
+#define PREFIX_EHTERNET_CONNECTED       70
+#define PREFIX_WIFI_CONNECTED           80
+#define PREFIX_SCREEN_BRIGHTNESS        90
+#define PREFIX_TEXT_SIZE                100
+#define PREFIX_TEXT_COLOUR_R            110
+#define PREFIX_TEXT_COLOUR_G            120
+#define PREFIX_TEXT_COLOUR_B            130
+#define PREFIX_TEXT_HUE_MSB             140
+#define PREFIX_TEXT_HUE_LSB             150
+#define PREFIX_TEXT_USE_HUE             160
+#define PREFIX_DEBUG_STATE              170
+#define PREFIX_SCREEN_MODE              180
 
 
 
+//    Legacy structure, is this needed????
+//
+//struct Mega_variables {           //data related to each meags current state
+//
+//  int address = 0;                // set as zero, define on instanciation, different on each instance
+//
+//  int delay = 0;                  // time between recieving data and updating disply
+//  int brightness = 255;           // current brightness of this screen
+//  int cursor_x = 0;               // current x coordinate
+//  int cursor_y = 0;               // current y coordinate
+//  String SD_str = "Default: no string written from sd cards";     //current string  from sd cards
+//  String Web_str = "Default: no string written from web page";    // current string from a webpage
+//  String Serial_str = "Default: no string written from serial port"; //user specified string recieved from serial
+//  int displayed_string = 1;       // defines which string is displayed (1:SD_str, 2:Web_str, 3: Serial_str)
+//  Colour colour;                  // structure of text colours
+//  int text_size = 2;              // text size based off adaruit gfx library standard
+//
+//};
+//Mega_variables mega_var1;    //create four structs of mega variables
+//Mega_variables mega_var2;
+//Mega_variables mega_var3;
+//Mega_variables mega_var4;
+//
 
 
 
