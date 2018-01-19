@@ -1,13 +1,11 @@
 
 // sandboxed version of the due code, should not interfere with and mega code, 
-// should run independantly of main sing config
+// should run independantly of main sign config
 
-//include paths for libraries and .h files 
+ 
 #ifdef _SAM3XA_
 
-
-
-
+//include paths for libraries and .h files
 #include "Due.h"    
 
 
@@ -26,5 +24,5 @@ void loop()
 
 
 #else
-#error"This is the due code only, make sure the board selected is a due, or else run main.ino higher up folder tree"
+#error"This is the due code only, make sure the board selected is a due, or else run main.ino"
 #endif

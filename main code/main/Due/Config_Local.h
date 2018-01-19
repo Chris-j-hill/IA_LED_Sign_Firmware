@@ -34,7 +34,7 @@
 #define single_matrix_width 64
 #define single_matrix_height 32
 #define NUM_SCREENS 4    //per side
-#define total_width single_matrix_width * NUM_SCREENS
+#define TOTAL_WIDTH single_matrix_width * NUM_SCREENS
 
 // Select if the due is enabled or if all megas enabled, if not all megas enabled, choose which
 #define DUE_ENABLED                        
@@ -47,6 +47,9 @@
 #define MEGA_4_ENABLED true
 #endif
 
+//select one of these colour scales
+#define USING_COLOUR_SET_333
+//#define USING_COLOUR_SET_444    // NOT FINISHED IMPLEMENTATION
 
 
 

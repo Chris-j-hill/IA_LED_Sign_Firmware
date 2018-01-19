@@ -7,7 +7,20 @@
 #define ASCII_CHARACTER_BASIC_HEIGHT 9
 
 
+#if defined(USING_COLOUR_SET_333)
+#define RED_MAX_VALUE 7
+#define GREEN_MAX_VALUE 7
+#define BLUE_MAX_VALUE 7
+#elif defined(USING_COLOUR_SET_444)
+#error "Limits not configured fully for 444 colour range"
+#define RED_MAX_VALUE 15
+#define GREEN_MAX_VALUE 15
+#define BLUE_MAX_VALUE 15
+#endif
 
+#define HUE_MAX_VALUE 1535
+#define HUE_MIN_VALUE -1535
+#define HUE_ADJUSTMENT_STEP_SIZE 5    // step size in menu when adjusting hue
 
 struct Colour {
   int red = DEFAULT_TEXT_RED_BRIGHTNESS;
@@ -59,6 +72,9 @@ class Graphics{
   public:
   Graphics(){}
   void flip_direction();
+  void use_hue();
+  void use_rgb();
+  
 };
 
 

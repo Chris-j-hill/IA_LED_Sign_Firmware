@@ -42,6 +42,8 @@ void update_button_ISR();
 
 int init_encoder();
 int init_button();
+int get_text_encoder_position(int byte_number);
+
 
 class Encoder {
 
@@ -59,7 +61,8 @@ class Encoder {
     // if interrupt occured, if yes set interrupt bool to false and clean loop to true, functions in loop use clean loop run their code,
     // loop ends, handle interrupts sets clean loop false
 
-   
+   void encoder_position_limits(){}        // software limits on encoder range
+   void set_encoder_position(byte val){}    // take value input and set the encoder current position to this
 };
 
 #endif // Configuration_H

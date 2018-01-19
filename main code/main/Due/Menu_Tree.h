@@ -2,7 +2,7 @@
 #define Menu_H
 
 #include "Config_Local.h"
-
+#include "Graphics.h"
 
 #define MENU_VISABLITIY_TIMOUT 15000  //15 seconds until menu will disapear/default to standard view
 #define TIME_TO_DISPLAY_STARTUP 5000  // 5 second startup animation
@@ -31,9 +31,14 @@
 #define SD_FOLDERS_MENU               15
 #define LED_STRIP_BRIGHTNESS_MENU     16
 
-//todo
-#define SELECT_NETWORK_MANUALLY       17
-//...and all level 4 options
+//#define SELECT_NETWORK_MANUALLY       17
+
+// LEVEL 4
+#define TEXT_COLOUR_RED               18
+#define TEXT_COLOUR_GREEN             19
+#define TEXT_COLOUR_BLUE              20
+#define TEXT_COLOUR_HUE               21
+
 
 
 struct Menu_tree_items{
@@ -106,6 +111,10 @@ struct Menu_tree_items{
   String text_colour_red          PROGMEM           = "Red";
   String text_colour_green        PROGMEM           = "Green";
   String text_colour_blue         PROGMEM           = "Blue";
+  String text_colour_hue          PROGMEM           = "Hue";
+  String text_colour_use_hue      PROGMEM           = "Use Hue";
+  String text_colour_use_rgb      PROGMEM           = "Use RGB";
+
 
 // scroll speed
   String scroll_speed_menu        PROGMEM           = "Scroll Speed";
@@ -121,6 +130,21 @@ struct Menu_tree_items{
 
 // led brightness menu
   String led_strip_brightness_menu   PROGMEM        = "Set Brightness";
+
+//level 4
+//text_colour_red
+  String text_colour_red_menu     PROGMEM           = "Red";
+  
+//text_colour_green
+  String text_colour_green_menu     PROGMEM           = "Green";
+  
+//text_colour_blue
+  String text_colour_blue_menu     PROGMEM           = "Blue";
+  
+//text_colour_hue
+  String text_colour_hue_menu     PROGMEM           = "Hue";
+
+  
 
 };
 
@@ -143,6 +167,14 @@ struct Menu_tree_menu_limits{ // lengths of the menus to limit scroll distances
   byte minimum_fan_speed_menu           = 255;
   unsigned int SD_card_folders_menu     = 4294967295;    //32 bit number, assume there arent this many files on the card!!!
   byte led_strip_brightness_menu        = 255;
+  byte text_colour_red_menu             = RED_MAX_VALUE;
+  byte text_colour_green_menu           = GREEN_MAX_VALUE;
+  byte text_colour_blue_menu            = BLUE_MAX_VALUE;
+  byte text_colour_hue_min              = HUE_MIN_VALUE;
+  byte text_colour_hue_max              = HUE_MAX_VALUE;
+  
+  
+  
   
 };
 
@@ -158,9 +190,13 @@ private:
   // menu functions, these dont send menu option text, only pointers to the megas string of the same 
   //NB: menu items stored in LUT on both mega and due for display and feedback over com port note 
   //    menu options sent back irrespective of DEBUG, but rather dependant on NAVIGATE_MENU_OPTIONS_OVER_USB_SERIAL
+
+  //level 1
   void display_startup_sequence(); 
   void default_display();
   void display_main_menu();
+
+  //level 2
   void display_screen_mode_menu();
   void display_brightness_menu();
   void display_text_settings_menu();
@@ -168,15 +204,21 @@ private:
   void display_internet_config_menu();
   void display_SD_cards_menu();
   void display_led_strip_menu();
+
+  //level 3
   void display_text_size_menu();
   void display_text_colour_menu();
   void display_scroll_speed_menu();
   void display_fan_speed_menu();
-  void display_min_fan_sped_menu();
+  void display_min_fan_speed_menu();
   void display_sd_folder_menu();
   void display_led_strip_brightness_menu();
 
-  
+  //level 4  
+  void display_text_colour_red_menu();
+  void display_text_colour_green_menu();
+  void display_text_colour_blue_menu();
+  void display_text_colour_hue_menu();
 
 public:
 

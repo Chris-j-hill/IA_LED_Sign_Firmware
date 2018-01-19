@@ -88,4 +88,23 @@ void update_button_ISR() {
   }
 }
 
+
+int get_text_encoder_position(int byte_number) {  //function to return the MSB or LSB of the current hue value to send
+
+  if (byte_number == 1) { //looking for MSB
+    if (encoder_parameters.position < 0)
+      return (abs(encoder_parameters.position) / 256);    //get quotient of absolute value and 256 rounded down
+
+    else
+      return (abs(encoder_parameters.position) / 256 + 128); //add 128 to indicate positve number
+  }
+  else if (byte_number == 2) { //LSB
+    return (abs(encoder_parameters.position) % 256);    //get modulo of value and 256;
+  }
+  else {
+    Sprintln("Error, cant get hue MSB/LSB, invalid byte number presented");
+    return (-1);
+  }
+}
+
 #endif // Encoder_Cpp
