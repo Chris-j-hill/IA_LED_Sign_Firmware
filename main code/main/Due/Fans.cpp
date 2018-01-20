@@ -36,7 +36,7 @@ int attach_timer_fan(){
     if (!timers.fan_timer_attached & fans_enabled){
       timers.fan_timer_attached = true;       //indicate the timer is attached
       
-      Timer2.attachInterrupt(fade_fans);   //attach ISR
+      Timer2.attachInterrupt(fade_fans);   // attach ISR
       int fail = fans_set_freq();          // set the freq to based on the programmed interval
       
       if (fail !=0){
@@ -51,7 +51,29 @@ int attach_timer_fan(){
 }
 
 
-void fade_fans(){}          // interrupt to change the current value of the fans to approach the target value
+void fade_fans(){          // interrupt to change the current value of the fans to approach the target value
+
+if (fan_parameters.enabled) { //only write values if enabled
+    
+    //if theres a difference, do something, ohterwise skip to end
+    if (fan_parameters.target_speed != fan_parameters.current_speed) {
+      if (fan_parameters.current_speed + fan_parameters.change_increment < fan_parameters.target_speed) { //if after adding increment is less than target, increase current value and write to pin
+        fan_parameters.current_speed = fan_parameters.current_speed + fan_parameters.change_increment;
+        analogWrite(fan_parameters.pin, fan_parameters.current_speed);
+      }
+
+      else if (fan_parameters.current_speed - fan_parameters.change_increment > fan_parameters.target_speed) { //if after subtracting incrementing is grater than target, decrease current value and write to pin
+        fan_parameters.current_speed = fan_parameters.current_speed - fan_parameters.change_increment;
+        analogWrite(fan_parameters.pin, fan_parameters.current_speed);
+      }
+
+      else {      //otherwise we must be close to target, set equal
+        fan_parameters.current_speed = fan_parameters.target_speed;
+        analogWrite(fan_parameters.pin, fan_parameters.current_speed);
+      }
+    } 
+  }
+}
 
 int fans_set_freq(){}      //interrupt to set the frequency the fans are adjusted
 
@@ -62,18 +84,11 @@ int fans_set_freq(){}      //interrupt to set the frequency the fans are adjuste
 // initialiser functions
 
 int Fans::init_fans() {          //initialise fans and set to starting value
-  pinMode(fan_parameters.fan_pin, OUTPUT);
+  if (enable_fans)
+    this -> enable();
   
-  Sprintln(F("\t Set fans to value..."));
-  int fail = writeFanSpeed(fan_parameters.fan_target_speed);
-
-  if (fail != 0) {
-    Sprintln(F("Failed to write initial fan speed"));
-    return (-1);
-  }
   else
-    return (0);
-
+    this -> disable();
 }
 
 int Fans::init_temp_sensors() {    //code to initialise temp sensors
@@ -114,8 +129,8 @@ int Fans::init_temp_sensors() {    //code to initialise temp sensors
 
 int Fans::writeFanSpeed(int newValue) {  //function to fade in fans from current value to new value
 
-  // function will set new value, and attach interrupt if not attached already
-  // when target value is reached, isr will set ISR_attached to false and isr will be detached at the end of the loop
+  fan_parameters.target_speed = newValue;
+
 }
 
 int Fans::get_temperature(int pin) {  //return the temperature as read by the specified pin
@@ -238,5 +253,22 @@ byte Fans::read_temp_data_from_register (int pin) {   // read the data back from
   }
   return data;   //return one byte of data
 }
+
+void Fans::enable() {
+
+  pinMode(fan_parameters.pin, OUTPUT);
+  fan_parameters.enabled = true;
+  if (!timers.fan_timer_attached) {
+    attach_timer_fan();
+  }
+  
+}
+
+
+void Fans::disable() {
+  fan_parameters.enabled = false;       //disable interrupt analogWrite
+  pinMode(fan_parameters.pin, INPUT);   //disable pin
+}
+
 
 #endif

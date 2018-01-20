@@ -397,7 +397,7 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 
     case PREFIX_FAN_SPEED:  
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_target_speed;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.target_speed;
       break;
 
     case PREFIX_LED_STRIP_BRIGHTNESS:  

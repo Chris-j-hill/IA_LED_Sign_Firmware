@@ -17,7 +17,7 @@ struct Led_Strip_Struct {
   int change_interval = 40;           // interrupt period between incrementing value
   int led_stable_interval = 500;          // interrupt period when target=current brightness
   int minimum_on = 100;                  // minimum value where the leds are on
-  bool led_on  = true;                    // allow led to be set on
+  bool enabled = false;                   
   bool fast_interval = true;          // use change_interval if true as interrupt period, otherwise led_stable_interval
   bool sinusoidal = false;              //set true if using a sinusoidal method to change between 
   int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
@@ -45,15 +45,15 @@ class Led_Strip{
     Led_Strip(){}
     int init_led_strip();           //initialisations of individual items, set pins, test if working if applicable, etc
     int writeLedStrips(int newValue);       // change value of led strips, attach timers to fade in an out over period
-       
+    void enable();
+    void disable(); 
 
     //TODO
     int toggle_led();                   // toggle the on/off bool, detach interrupt if off
     int is_led_on();                    //useful in menus
     int return_led_brightness();
     int led_gradual_pulse(int minValue, int maxValue);  //code to fade the leds in and out in sinusoidal pattern
-    void enable(){}
-    void disable(){}
+
      
 };
 

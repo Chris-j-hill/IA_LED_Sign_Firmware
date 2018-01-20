@@ -291,8 +291,8 @@ void Menu::display_fan_settings_menu() {
     switch (encoder_parameters.position) {
       case 0: current_menu = MAIN_MENU;          break;
       case 1: current_menu = FAN_SPEED_MENU;     break;
-      case 2: fans.enable_fans();                break;
-      case 3: fans.disable_fans();               break;
+      case 2: fans.enable();                     break;
+      case 3: fans.disable();                    break;
       case 4: current_menu = MIN_FAN_SPEED_MENU; break;
 
       default: current_menu = STARTUP;
@@ -510,7 +510,7 @@ void Menu::display_fan_speed_menu() {
   if (menu_just_changed = true) {
 
     menu_just_changed = false;
-    encoder.set_encoder_position(map(fan_parameters.fan_target_speed, fan_parameters.fan_minimum, 255, 0, 100));
+    encoder.set_encoder_position(map(fan_parameters.target_speed, fan_parameters.fan_minimum, 255, 0, 100));
     coms_serial.send_menu_frame(FAN_SPEED_MENU, encoder_parameters.position);
   }
 
@@ -521,7 +521,7 @@ void Menu::display_fan_speed_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    fan_parameters.fan_target_speed = map(encoder_parameters.position, 0, 100, fan_parameters.fan_minimum, 255);   //map percentage to byte
+    fan_parameters.target_speed = map(encoder_parameters.position, 0, 100, fan_parameters.fan_minimum, 255);   //map percentage to byte
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 

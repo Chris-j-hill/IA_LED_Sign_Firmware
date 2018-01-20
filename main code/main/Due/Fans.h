@@ -40,13 +40,13 @@ struct Temp_sensor{
 //byte fan_speed = FAN_DEFAULT_SPEED;
 
 struct Fan_Struct {
-  int fan_pin = FAN_PIN;                  // pin num
-  int fan_target_speed = FAN_DEFAULT_SPEED;              // target value to approach, not necessicarily the current speed
-  int fan_current_speed = 0;              // current value written to fan
-  int fan_change_increment = 5;           // value to increment by to approach target
+  int pin = FAN_PIN;                  // pin num
+  int target_speed = FAN_DEFAULT_SPEED;              // target value to approach, not necessicarily the current speed
+  int current_speed = 0;              // current value written to fan
+  int change_increment = 10;           // value to increment by to approach target
   int fan_change_interval = 50;           // milliseconds to wait between incrementing value
   int fan_minimum = 100;                  // minimum value where the fans are on
-  bool fan_on  = true;                    // is fan enabled, if so, run functions
+  bool enabled  = false;                    // is fan enabled, if so, run functions
 
 };
 
@@ -87,8 +87,8 @@ class Fans{
     int get_humidity();       //because we can
     int set_temp_sensor_enable(int sensor);   //code to enable sensors, might be useful to toggle them, maybe autotoggle if not working?
     int set_temp_sensor_disable(int sensor);
-    int enable_fans(){}
-    int disable_fans(){}
+    void enable();
+    void disable();
 
 };
 
