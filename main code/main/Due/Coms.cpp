@@ -310,45 +310,6 @@ int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send t
   return (0);
 }
 
-//int Coms::send_all_calibration_data(int address) {     //function to send all data
-//
-//  //function to send all the sensor data. loop through all sensor values
-//  
-//  byte frameNum = 1;
-//  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
-//  int offset = 0;
-//  bool frame_was_sent = 0;
-//
-//  sensor_data_frame.frame_buffer[1] = frame_type;        //set frame starting bytes
-//  sensor_data_frame.frame_buffer[2] = numFrames;
-//  sensor_data_frame.frame_buffer[3] = frameNum;
-//
-//  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
-//
-//    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
-//      frame_was_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
-//
-//    }
-//    else
-//      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
-//
-//    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
-//      offset++;
-//
-//    else if (frame_to_be_sent) {
-//      frameNum++;     //increment the frame number
-//      offset = 0;     //reset offset for new frame
-//      write_sensor_data_frame();
-//      sensor_data_frame.frame_buffer[1] = type;        //set frame starting bytes
-//      sensor_data_frame.frame_buffer[2] = numFrames;
-//      sensor_data_frame.frame_buffer[3] = frameNum;
-//    }
-//
-//  }
-//  
-//  return (0);
-//
-//}
 
 bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
 
@@ -427,7 +388,8 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 
     case PREFIX_SCREEN_BRIGHTNESS:  
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
+      if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness = 100;
+      else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
       break;
 
     case PREFIX_TEXT_SIZE: 

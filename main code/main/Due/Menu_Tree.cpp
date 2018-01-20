@@ -524,6 +524,7 @@ void Menu::display_fan_speed_menu() {
     fan_parameters.target_speed = map(encoder_parameters.position, 0, 100, fan_parameters.fan_minimum, 255);   //map percentage to byte
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
+    fan_parameters.manual = true;     //set manual mode
 
     // not important for running megas, just update on the megas displaying the menu
     int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc

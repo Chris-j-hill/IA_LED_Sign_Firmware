@@ -6,15 +6,15 @@
 //#include "Due.h"
 
 #ifdef ENABLE_ENCODER
-bool enable_encoder = true;
+bool enable_encoder_on_startup = true;
 #else
-bool enable_encoder = false;
+bool enable_encoder_on_startup = false;
 #endif
 
 #ifdef ENABLE_BUTTON
-bool enable_button = true;
+bool enable_button_on_startup = true;
 #else
-bool enable_button = false;
+bool enable_button_on_startup = false;
 #endif
 
 bool encoder_enabled = false;
@@ -25,18 +25,15 @@ Encoder_Struct encoder_parameters;     //create encoder struct
 Button_Struct button_parameters;       //create button struct
 
 
-int init_encoder() {
-  if (enable_encoder && !encoder_enabled) {
-
+int init_encoder_ISR() {
+  
+  if (!encoder_enabled) {
     pinMode(encoder_parameters.pinA, INPUT);
     pinMode(encoder_parameters.pinB, INPUT);
-
     attachInterrupt(encoder_parameters.pinA, update_encoder_ISR, CHANGE);
-
-
+    encoder_parameters.is_attached = true;
     return (0);
   }
-
   else {
     Sprintln(F("Conflict with enabling encoder: make sure only enabled once and 'ENABLE_ENCODER' defined"));
     return (-1);
@@ -44,11 +41,11 @@ int init_encoder() {
 
 }
 
-int init_button() {
-  if(enable_button && !button_enabled){
+int init_button_ISR() {
+  
+  if(!button_enabled){
     pinMode(button_parameters.button_pin, INPUT);
     attachInterrupt(button_parameters.button_pin, update_button_ISR, CHANGE);
-    Serial.println(F("Button Initialised"));
     return(0);
   }
   else {
@@ -58,34 +55,36 @@ int init_button() {
 }
 
 void update_encoder_ISR () {
-  encoder_parameters.aVal = digitalRead(encoder_parameters.pinA);
-  if (encoder_parameters.aVal != encoder_parameters.pinALast) { // Means the knob is rotating
-    // if the knob is rotating, we need to determine direction
-    // We do that by reading pin B.
-    if (digitalRead(encoder_parameters.pinB) != encoder_parameters.aVal) {  // Means pin A Changed first - We're Rotating Clockwise
-      encoder_parameters.PosCount ++;
-
-    } else {// Otherwise B changed first and we're moving CCW
-
-      encoder_parameters.PosCount--;
-
+  if (encoder_parameters.enabled){
+    encoder_parameters.aVal = digitalRead(encoder_parameters.pinA);
+    if (encoder_parameters.aVal != encoder_parameters.pinALast) { // Means the knob is rotating
+      // if the knob is rotating, we need to determine direction
+      // We do that by reading pin B.
+      if (digitalRead(encoder_parameters.pinB) != encoder_parameters.aVal) {  // Means pin A Changed first - We're Rotating Clockwise
+        encoder_parameters.PosCount ++;
+  
+      } else {// Otherwise B changed first and we're moving CCW
+  
+        encoder_parameters.PosCount--;
+  
+      }
+      encoder_parameters.position = encoder_parameters.PosCount / 2;
+  
     }
-    encoder_parameters.position = encoder_parameters.PosCount / 2;
-
+  
+    encoder_parameters.pinALast = encoder_parameters.aVal;
+    encoder_parameters.encoder_moved = true;
   }
-
-  encoder_parameters.pinALast = encoder_parameters.aVal;
-  encoder_parameters.encoder_moved = true;
-
 }
 
 void update_button_ISR() {
-
-  if (digitalRead(button_parameters.button_pin) == false && millis() - button_parameters.last_button_pressed >= button_parameters.button_press_interval) {
-    Sprintln(F("Button Pressed"));
-    button_parameters.last_button_pressed = millis();
-    button_parameters.button_pressed = true;
-  }
+  if (button_parameters.enabled){
+    if (digitalRead(button_parameters.button_pin) == false && millis() - button_parameters.last_button_pressed >= button_parameters.button_press_interval) {
+      Sprintln(F("Button Pressed"));
+      button_parameters.last_button_pressed = millis();
+      button_parameters.button_pressed = true;
+    }
+}
 }
 
 
@@ -105,6 +104,46 @@ int get_text_encoder_position(int byte_number) {  //function to return the MSB o
     Sprintln("Error, cant get hue MSB/LSB, invalid byte number presented");
     return (-1);
   }
+}
+
+
+void Encoder::init_encoder(){   
+  if (enable_encoder_on_startup)
+    this -> enable_encoder();
+          
+}
+
+void Encoder::init_button(){
+  if (enable_button_on_startup)
+    this -> enable_button();
+
+}
+
+void Encoder::enable_encoder(){
+  if (!encoder_parameters.enabled)
+    encoder_parameters.enabled = true;
+
+  if(!encoder_parameters.is_attached)
+    init_encoder_ISR();  
+  
+}
+
+void Encoder::disable_encoder(){
+  if (encoder_parameters.enabled)
+    encoder_parameters.enabled = false;  
+}
+
+void Encoder::enable_button(){
+    if (!button_parameters.enabled)
+    button_parameters.enabled = true;
+
+  if(!button_parameters.is_attached)
+    init_button_ISR();  
+  
+}
+void Encoder::disable_button(){
+    if (button_parameters.enabled)
+    button_parameters.enabled = false;
 }
 
 #endif // Encoder_Cpp

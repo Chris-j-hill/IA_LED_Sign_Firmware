@@ -22,6 +22,9 @@
 #define HUE_MIN_VALUE -1535
 #define HUE_ADJUSTMENT_STEP_SIZE 5    // step size in menu when adjusting hue
 
+
+#define SCREEN_BRIGHTNESS_UPDATE_PERIOD 500
+
 struct Colour {
   int red = DEFAULT_TEXT_RED_BRIGHTNESS;
   int blue = DEFAULT_TEXT_BLUE_BRIGHTNESS;
@@ -74,6 +77,7 @@ class Graphics{
   void flip_direction();
   void use_hue();
   void use_rgb();
+  void update_brightness();
   
 };
 

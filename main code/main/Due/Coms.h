@@ -1,9 +1,9 @@
 
 /*
- * Parent class used to genreate the frames, parse them, do error checking and any other functionallity
- * Actually transmitting the frames is done in the daughter class of the protocol used
- * 
- */
+   Parent class used to genreate the frames, parse them, do error checking and any other functionallity
+   Actually transmitting the frames is done in the daughter class of the protocol used
+
+*/
 
 #ifndef Coms_H
 #define Coms_H
@@ -96,30 +96,30 @@ using namespace arduino_due;
 
 
 
-struct Frame{             //frame details for the due, seperate one for the mega below
+struct Frame {            //frame details for the due, seperate one for the mega below
 
-byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH];
-byte frame_length = 0;
-byte frame_type = 1;
-byte checksum = 0;
-byte num_frames = 0;
-byte this_frame = 0;
-byte header_checksum =0;    //can calculate in advance for some pos and menu frames to save time
-int checksum_address = 0;   // can also allocate in advance for pos and menu frames
-bool frame_queued = false;    //queue frame this loop to send at the beginning of next
+  byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH];
+  byte frame_length = 0;
+  byte frame_type = 1;
+  byte checksum = 0;
+  byte num_frames = 0;
+  byte this_frame = 0;
+  byte header_checksum = 0;   //can calculate in advance for some pos and menu frames to save time
+  int checksum_address = 0;   // can also allocate in advance for pos and menu frames
+  bool frame_queued = false;    //queue frame this loop to send at the beginning of next
 
 };
 
 
 
 #ifdef ENABLE_ERROR_CHECKING
-struct Nack_details{
+struct Nack_details {
   byte mega1_failed_frame_type = 0;   // the type of frame last sent, to recalculate
   byte mega2_failed_frame_type = 0;
   byte mega3_failed_frame_type = 0;
   byte mega4_failed_frame_type = 0;
-  
-  byte mega1_failed_frame_number = 0;   // the frame number that failed 
+
+  byte mega1_failed_frame_number = 0;   // the frame number that failed
   byte mega2_failed_frame_number = 0;
   byte mega3_failed_frame_number = 0;
   byte mega4_failed_frame_number = 0;
@@ -131,9 +131,9 @@ Nack_details nack;
 int attach_timer_pos_update();
 
 int set_pos_update_frequency(int freq);
- 
+
 int set_pos_speed(int x_speed, int y_speed);            //function to set the speed (pixels per second) the cursor postion is moving at
-                                                        //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
+//shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
 
 void send_pos_interrupt();     // interrupt to send pos data to all megas
 
@@ -147,41 +147,41 @@ class Coms {
 
   public:
 
-    Coms(){}
+    Coms() {}
 
     int init_software_serial_to_megas();            // init the software serial at 115200 baud rate
     int init_software_serial_to_megas(int speed);   // init the serial at a custom speed
     int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
     int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
-//    void write_frame(int address) = 0;
-//     void write_frame(int address)
+    //    void write_frame(int address) = 0;
+    //     void write_frame(int address)
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
     int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
     int build_pos_frame(int address);                                     //function to send the xy coordinates along with a number of other related variables
     int pack_xy_coordinates() ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
-//    int send_all_calibration_data(int address);                          //function to send all data calibration
+    //    int send_all_calibration_data(int address);                          //function to send all data calibration
     bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
     int send_all_pos_on_interrupt();     // function to send pos data to all megas periodically based on timer interrupt
     int send_all_pos_now();
     int send_all_text();    // send the text frame to all megas
     void print_frame();      //print the currently stored frame to the serial monitor
-   
+
     int get_text_colour_hue(int byte_number);                            //function to retrun the MSB or LSB of the current hue value to send over i2c
 
     int calc_delay();
 
 
-    #ifndef ALL_MEGAS_ENABLED
-bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};  
+#ifndef ALL_MEGAS_ENABLED
+    bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};
 #else
-bool mega_enabled[4] = {true, true, true, true};  // ignore communication if board is false
+    bool mega_enabled[4] = {true, true, true, true};  // ignore communication if board is false
 #endif
 
     int build_menu_data_frame(int menu_number, int encoder_position);    //function to build the frame to send menu info
     int init_frames();  //set length elements of frames
-    
-//  todo
+
+    //  todo
     void echo_menu();
     int generate_checksum();
     int error_check();
@@ -189,9 +189,9 @@ bool mega_enabled[4] = {true, true, true, true};  // ignore communication if boa
 
     int get_frame_code();
     int get_data();             //extract data from frame
-    
-//send menus back over usb interface
-   
+
+    //send menus back over usb interface
+
 };
 
 

@@ -140,7 +140,7 @@ void Led_Strip::enable() {
 
 void Led_Strip::disable() {
   led_strip_parameters.enabled = false;       //disable interrupt analogWrite
-  pinMode(led_strip_parameters.pin, INPUT);   //disable pin
+  pinMode(led_strip_parameters.pin, INPUT_PULLUP);   //disable pin
 }
 
 #endif //Led_Strip_Class_CPP

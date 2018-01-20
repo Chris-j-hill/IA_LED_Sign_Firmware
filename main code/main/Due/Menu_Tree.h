@@ -149,12 +149,12 @@ struct Menu_tree_items{
 };
 
 struct Menu_tree_menu_limits{ // lengths of the menus to limit scroll distances
-                              // rule of themb is number of items + return
+                              // rule of thumb is number of items + return (unless hidden menus?)
                               // adjustment menus are hard limited by byte 
                               // range (0-255) and use buton to return
   byte main_menu                        = 8;
   byte screen_mode_menu                 = 5;
-  byte brightness_menu                  = 255;
+  byte brightness_menu                  = 100;
   byte text_settings_menu               = 5;
   byte fan_settings_menu                = 5;
   byte internet_config_menu             = 6;
@@ -163,7 +163,7 @@ struct Menu_tree_menu_limits{ // lengths of the menus to limit scroll distances
   byte text_size_menu                   = 4;
   byte text_colour_menu                 = 4;
   byte scroll_speed_menu                = 255;
-  byte fan_speed_menu                   = 255;
+  byte fan_speed_menu                   = 100;
   byte minimum_fan_speed_menu           = 255;
   unsigned int SD_card_folders_menu     = 4294967295;    //32 bit number, assume there arent this many files on the card!!!
   byte led_strip_brightness_menu        = 255;
@@ -226,7 +226,7 @@ public:
   int init_menu_tree();
   int display_menu();
   int set_menu_width();   //change the width of the menu on the screen
-  
+  void LDR_configuration(){};
 //  void add_menu_to_send_queue(int menu);  
 };
 

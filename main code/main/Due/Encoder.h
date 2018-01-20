@@ -19,6 +19,8 @@ struct Encoder_Struct {   //structure for the encoder
   volatile bool encoder_moved = false;    // has the encoder moved, if so do functions
   bool clean_loop = false;                // interrupt will arrive mid loop, wait until end of loop check if encoder moved, 
                                           // set clean loop true, do functions on next loop then set both false when finished
+  bool enabled = false;
+  bool is_attached = false;
 };
 
 
@@ -30,6 +32,8 @@ struct Button_Struct {
   bool clean_loop = false;
   volatile int last_button_pressed = 0;     // when was the button last pressed
   int button_press_interval = 300;          // minimum period for button to be de-pressed to register 2 independant pressed
+  bool enabled = false;
+  bool is_attached = false;
 };
 
 
@@ -40,8 +44,8 @@ void update_encoder_ISR ();
 //interrrupt service routine for button press
 void update_button_ISR();
 
-int init_encoder();
-int init_button();
+int init_encoder_ISR();
+int init_button_ISR();
 int get_text_encoder_position(int byte_number);
 
 
@@ -49,9 +53,17 @@ class Encoder {
 
   private:
 
-
+    void enable_encoder();
+    void disable_encoder();
+    void enable_button();
+    void disable_button();
+    
   public:
     Encoder(){}
+    void init_encoder();
+    void init_button();
+
+
     
     int recenter_encoder();             // reset position to 0
 
@@ -60,7 +72,7 @@ class Encoder {
     // to execute their code. the proceedure should go, interrupt happens, interrupt bool set true, loop ends, handle interrupts checks
     // if interrupt occured, if yes set interrupt bool to false and clean loop to true, functions in loop use clean loop run their code,
     // loop ends, handle interrupts sets clean loop false
-
+   
    void encoder_position_limits(){}        // software limits on encoder range
    void set_encoder_position(byte val){}    // take value input and set the encoder current position to this
 };
