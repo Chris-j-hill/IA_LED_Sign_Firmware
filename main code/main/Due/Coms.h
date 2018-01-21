@@ -31,9 +31,15 @@ using namespace arduino_due;
 #define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
 
-#define MEGA_SERIAL_BUFFER_LENGTH 32
+//#define MEGA_SERIAL_BUFFER_LENGTH 32
 
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
+
+#define MEGA_SERIAL_BUFFER_LENGTH 32
+#define MAX_TWEET_SIZE 280
+#define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD) // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
+                                                                                                    // need different approach for bitmaps...
+
 
 
 // NOTE: Prefix values must be within byte range (0-255)
@@ -98,7 +104,8 @@ using namespace arduino_due;
 
 struct Frame {            //frame details for the due, seperate one for the mega below
 
-  byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH];
+  byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH]; // use to pack single frame
+  byte extended_frame_buffer[MAX_FRAME_SIZE];   // large buffer to store sequence of frames to transmit later, eg text_frame generated and in queue
   byte frame_length = 0;
   byte frame_type = 1;
   byte checksum = 0;
@@ -160,7 +167,7 @@ class Coms {
     int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
     int build_pos_frame(int address);                                     //function to send the xy coordinates along with a number of other related variables
     int pack_xy_coordinates() ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
-    //    int send_all_calibration_data(int address);                          //function to send all data calibration
+    int send_all_calibration_data(int address);                          //function to send all data calibration
     bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
     int send_all_pos_on_interrupt();     // function to send pos data to all megas periodically based on timer interrupt
     int send_all_pos_now();
@@ -192,6 +199,12 @@ class Coms {
 
     //send menus back over usb interface
 
+
+
+    void check_pos_frame_queue(){}
+    void check_sensor_date_frame_queue(){}
+    void check_text_frame_queue(){}
+    void check_menu_frame_queue(){}
 };
 
 

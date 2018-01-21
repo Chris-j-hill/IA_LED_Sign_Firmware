@@ -249,46 +249,6 @@ int Coms_Serial::Serial_write_frame(int address) {   //function to actually send
 
 
 
-int Coms_Serial::send_all_calibration_data(int address) {     //function to send all data
-
-  //function to send all the sensor data. loop through all sensor values
-  
-  byte frameNum = 1;
-  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
-  int offset = 0;
-  bool frame_to_be_sent = false;
-
-  sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
-  sensor_data_frame.frame_buffer[2] = numFrames;
-  sensor_data_frame.frame_buffer[3] = frameNum;
-
-  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
-
-    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
-      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
-
-    }
-    else
-      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
-
-    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
-      offset++;
-
-    else if (frame_to_be_sent) {
-      frameNum++;     //increment the frame number
-      offset = 0;     //reset offset for new frame
-      write_sensor_data_frame();
-      sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
-      sensor_data_frame.frame_buffer[2] = numFrames;
-      sensor_data_frame.frame_buffer[3] = frameNum;
-    }
-
-  }
-  
-  return (0);
-
-}
-
 void Coms_Serial::write_frame(int address){
 #if defined(USE_SERIAL_TO_MEGAS)
 Serial_write_frame(address);

@@ -64,8 +64,6 @@
 
 //byte frame_type;             // frame type defines what is to be done with info, ie where string should go or other operation
 //byte frame_length = 150;     // length of current frame
-#define max_frame_size = 150;    // max frame size 150, ie max length of a tweet plus some frame info
-// byte frame[150];             //frame array
 
 
 // ______ SD Variables _________
