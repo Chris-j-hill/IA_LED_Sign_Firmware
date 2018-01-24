@@ -1,59 +1,54 @@
+#ifndef LOCAL_CONFIG_H
+#define LOCAL_CONFIG_H      
+
+#ifndef CONFIGURATION_H   // if main file not compiled define these 
 
 
-#ifndef PINS_H
-#define PINS_H      //define to stop double declarations
-#include "Arduino.h"
+//  __________  Common Variables  ____________
+#define DEBUG       //enable debugging by default 
 
-    //      due pins
+#ifdef DEBUG
+#define Sprintln(a) (Serial.println(a))   // use to print debug errors
+#define Sprint(a) (Serial.print(a))
 
-    #ifdef _SAM3XA_
+#else
 
-        //also uses SDA1 and SCL1 and spi pins
-        #define PIN_A       5
-        #define PIN_B       6
-        #define BUTTON_PIN  7
-
-        #define LED_STRIP   8
-        #define FAN_PIN     9
-
-        #define CURRENT_METER_1 22    // change to analog pin...
-        #define CURRENT_METER_2 23
-
-        #define LDR1        24
-        #define LDR2        25
-        
-
-        #define TEMP1       26
-        #define TEMP2       27
-        #define TEMP3       28
+#define Sprintln(a)    // prints nothing if debug not defined
+#define Sprint(a)
+#endif
 
 
-        #define SD1_ENABLE  4
-        #define SD2_ENABLE  44
-  
-        #define NACK_PIN1   16      //pins for the due
-        #define NACK_PIN2   17
-        #define NACK_PIN3   18
-        #define NACK_PIN4   19
-        
-        #define NOTIFIER    13      //led pin, use to notify of data stuff happening
 
-        #define due_ready_pin        45   //startup handshake pins
-        #define mega1_ready_pin      46
-        #define mega2_ready_pin      47
-        #define mega3_ready_pin      48
-        #define mega4_ready_pin      49
+#define USE_SERIAL_TO_MEGAS
+#define USE_I2C_TO_MEGAS
 
-        #define RX_PIN_1 36 // software serial port's reception pin
-        #define TX_PIN_1 40 // software serial port's transmision pin
-        #define RX_PIN_2 37 // software serial port's reception pin
-        #define TX_PIN_2 41 // software serial port's transmision pin
-        #define RX_PIN_3 38 // software serial port's reception pin
-        #define TX_PIN_3 42 // software serial port's transmision pin
-        #define RX_PIN_4 39 // software serial port's reception pin
-        #define TX_PIN_4 43 // software serial port's transmision pin
 
-        
-    #endif // _SAM3XA_
+#define single_matrix_width 64
+#define single_matrix_height 32
+#define NUM_SCREENS 4    //per side
+#define TOTAL_WIDTH single_matrix_width * NUM_SCREENS
 
-#endif // PINS_H
+// Select if the due is enabled or if all megas enabled, if not all megas enabled, choose which
+#define DUE_ENABLED                        
+#define ALL_MEGAS_ENABLED
+
+#ifndef ALL_MEGAS_ENABLED
+#define MEGA_1_ENABLED true
+#define MEGA_2_ENABLED true
+#define MEGA_3_ENABLED true
+#define MEGA_4_ENABLED true
+#endif
+
+#define USING_COLOUR_SET_333
+//#define USING_COLOUR_SET_444    // NOT FINISHED IMPLEMENTATION
+
+
+#define DEFAULT_TEXT_SIZE 2
+#define DEFAULT_TEXT_RED_BRIGHTNESS 7
+#define DEFAULT_TEXT_GREEN_BRIGHTNESS 7
+#define DEFAULT_TEXT_BLUE_BRIGHTNESS 
+#endif
+
+// __________  Mega Specific Variables  ____________
+
+#endif // LOCAL_CONFIG_H

@@ -262,8 +262,6 @@ byte text_colour_hue_MSB = 0;   //value between +/- 1536 (god knows why)
 byte text_colour_hue_LSB = 0;
 bool use_hue = true;
 
-
-
 int  text_colour_hue = 1000;
 
 // list of valid sensor prefix's for sending non string data to the megas.

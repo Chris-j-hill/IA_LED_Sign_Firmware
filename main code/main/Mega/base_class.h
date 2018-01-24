@@ -273,28 +273,28 @@ int sign_coms::i2c_scanner(int address) { // test specific address
 //    debug = true;
 //}
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-int sign_coms::get_address() {             //function to get the i2c address based on the hardware pin configuration
-  pinMode(hardware_address_pin[1], INPUT);
-  pinMode(hardware_address_pin[2], INPUT);
-
-  int alpha = digitalRead(hardware_address_pin[0]);
-  int beta = digitalRead(hardware_address_pin[1]);
-
-
-  if (alpha == LOW && beta == LOW)
-    address = 1;
-
-  if (alpha == LOW && beta == HIGH)
-    address = 2;
-
-  if (alpha == HIGH && beta == LOW)
-    address = 3;
-
-  if (alpha == HIGH && beta == HIGH)
-    address = 4;
-}
-#endif
+//#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+//int sign_coms::get_address() {             //function to get the i2c address based on the hardware pin configuration
+//  pinMode(hardware_address_pin[1], INPUT);
+//  pinMode(hardware_address_pin[2], INPUT);
+//
+//  int alpha = digitalRead(hardware_address_pin[0]);
+//  int beta = digitalRead(hardware_address_pin[1]);
+//
+//
+//  if (alpha == LOW && beta == LOW)
+//    address = 1;
+//
+//  if (alpha == LOW && beta == HIGH)
+//    address = 2;
+//
+//  if (alpha == HIGH && beta == LOW)
+//    address = 3;
+//
+//  if (alpha == HIGH && beta == HIGH)
+//    address = 4;
+//}
+//#endif
 
 
 int sign_coms::startup_handshake() {  //code to delay the due in initialisation and enable mega startup
