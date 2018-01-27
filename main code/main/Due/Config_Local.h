@@ -94,5 +94,41 @@
 #define DISABLE_WARNING_MESSAGES  //option to disable warning messages within the menu system
 
 
+
+// ______ Prefixes for sensor data _______
+
+
+// NOTE: Prefix values must be within byte range (0-255)
+#define PREFIX_CURRENT_1                10
+#define PREFIX_CURRENT_2                11
+#define PREFIX_TEMP_1                   20
+#define PREFIX_TEMP_2                   21
+#define PREFIX_TEMP_3                   22
+#define PREFIX_LDR_1                    30
+#define PREFIX_LDR_2                    31
+#define PREFIX_FAN_SPEED                40
+#define PREFIX_LED_STRIP_BRIGHTNESS     50
+#define PREFIX_SD1_DETECTED             60
+#define PREFIX_SD2_DETECTED             61
+#define PREFIX_EHTERNET_CONNECTED       70
+#define PREFIX_WIFI_CONNECTED           80
+#define PREFIX_SCREEN_BRIGHTNESS        90
+#define PREFIX_TEXT_SIZE                100
+#define PREFIX_TEXT_COLOUR_R            110
+#define PREFIX_TEXT_COLOUR_G            120
+#define PREFIX_TEXT_COLOUR_B            130
+#define PREFIX_TEXT_HUE_MSB             140
+#define PREFIX_TEXT_HUE_LSB             150
+#define PREFIX_TEXT_USE_HUE             160
+#define PREFIX_DEBUG_STATE              170
+#define PREFIX_SCREEN_MODE              180
+
+
+// todo
+#define PREFIX_TEXT_SCROLL_SPEED        -1
+#define PREFIX_FAN_MINIMUM_SPEED        -1
+
+
+
 #endif // Config_Local_h
 #endif // Configuration_H

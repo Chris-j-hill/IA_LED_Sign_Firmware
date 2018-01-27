@@ -17,16 +17,16 @@
 #define Sprint(a)
 #endif
 
-
+//#define DO_ERROR_CHECKING
 
 #define USE_SERIAL_TO_MEGAS
 #define USE_I2C_TO_MEGAS
 
 
-#define single_matrix_width 64
-#define single_matrix_height 32
+#define SINGLE_MATRIX_WIDTH 64
+#define SINGLE_MATRIX_HEIGHT 32
 #define NUM_SCREENS 4    //per side
-#define TOTAL_WIDTH single_matrix_width * NUM_SCREENS
+#define TOTAL_WIDTH SINGLE_MATRIX_WIDTH * NUM_SCREENS
 
 // Select if the due is enabled or if all megas enabled, if not all megas enabled, choose which
 #define DUE_ENABLED                        
@@ -46,9 +46,48 @@
 #define DEFAULT_TEXT_SIZE 2
 #define DEFAULT_TEXT_RED_BRIGHTNESS 7
 #define DEFAULT_TEXT_GREEN_BRIGHTNESS 7
-#define DEFAULT_TEXT_BLUE_BRIGHTNESS 
-#endif
+#define DEFAULT_TEXT_BLUE_BRIGHTNESS 7
 
-// __________  Mega Specific Variables  ____________
 
+
+
+#define DEFAULT_REFRESH_RATE 20   // use this to define the interrupt rate of the matrix library
+
+
+
+// ______ Prefixes for sensor data _______
+
+// NOTE: Prefix values must be within byte range (0-255)
+#define PREFIX_CURRENT_1                10
+#define PREFIX_CURRENT_2                11
+#define PREFIX_TEMP_1                   20
+#define PREFIX_TEMP_2                   21
+#define PREFIX_TEMP_3                   22
+#define PREFIX_LDR_1                    30
+#define PREFIX_LDR_2                    31
+#define PREFIX_FAN_SPEED                40
+#define PREFIX_LED_STRIP_BRIGHTNESS     50
+#define PREFIX_SD1_DETECTED             60
+#define PREFIX_SD2_DETECTED             61
+#define PREFIX_EHTERNET_CONNECTED       70
+#define PREFIX_WIFI_CONNECTED           80
+#define PREFIX_SCREEN_BRIGHTNESS        90
+#define PREFIX_TEXT_SIZE                100
+#define PREFIX_TEXT_COLOUR_R            110
+#define PREFIX_TEXT_COLOUR_G            120
+#define PREFIX_TEXT_COLOUR_B            130
+#define PREFIX_TEXT_HUE_MSB             140
+#define PREFIX_TEXT_HUE_LSB             150
+#define PREFIX_TEXT_USE_HUE             160
+#define PREFIX_DEBUG_STATE              170
+#define PREFIX_SCREEN_MODE              180
+
+
+
+
+#define MEGA_SERIAL_BUFFER_LENGTH 32
+#define MAX_TWEET_SIZE 280
+#define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
+                          
+#endif //CONFIGURATION_H
 #endif // LOCAL_CONFIG_H
