@@ -6,11 +6,12 @@
 
 #include <Wire.h>
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
-#include "libs/RGBmatrixPanel.h"
+#include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
 #else
 #include "RGBmatrixPanel.h"
 #endif
 
+#include "libs/Timer3/TimerThree.h"
 
 #include "Coms.h"
 #include "Coms_Serial.h"

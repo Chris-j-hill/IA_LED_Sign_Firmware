@@ -5,7 +5,44 @@
 #include "Local_Config.h"
 #include "Arduino.h"
 
-struct Menu{
+#define MENU_VISABLITIY_TIMOUT 15000  //15 seconds until menu will disapear/default to standard view
+#define TIME_TO_DISPLAY_STARTUP 5000  // 5 second startup animation
+
+
+// LEVEL 1
+#define STARTUP                       0
+#define DEFAULT_MENU                  1
+#define MAIN_MENU                     2
+
+//LEVEL 2
+#define SCREEN_MODE_MENU              3
+#define BRIGHTNESS_MENU               4
+#define TEXT_SETTINGS_MENU            5
+#define FAN_SETTINGS_MENU             6
+#define INTERNET_CONFIG_MENU          7 
+#define SD_CARD_MENU                  8
+#define LED_STRIP_MENU                9
+
+//LEVEL 3
+#define TEXT_SIZE_MENU                10
+#define TEXT_COLOUR_MENU              11
+#define SCROLL_SPEED_MENU             12
+#define FAN_SPEED_MENU                13
+#define MIN_FAN_SPEED_MENU            14
+#define SD_FOLDERS_MENU               15
+#define LED_STRIP_BRIGHTNESS_MENU     16
+
+//#define SELECT_NETWORK_MANUALLY       17
+
+// LEVEL 4
+#define TEXT_COLOUR_RED               18
+#define TEXT_COLOUR_GREEN             19
+#define TEXT_COLOUR_BLUE              20
+#define TEXT_COLOUR_HUE               21
+
+
+
+struct Menu_Struct{
   byte current1 =0;
   byte current2 =0;
   byte light1 = 0;
@@ -19,15 +56,7 @@ struct Menu{
   bool sd_card2_detected = false;
   bool ethernet_connected = false;
   bool wifi_connected = false;
-  byte screen_brightness = 0;
-  byte text_size = 1;
-  byte text_colour_r = 0;
-  byte text_colour_g = 0;
-  byte text_colour_b = 0;
-  int text_colour_hue = 0;
-  bool use_hue = false;
   bool debug = false;
-  byte screen_mode =0;
 
   uint32_t sensor_value_received =0;    //use as array of 32 bits to detect if value has been transmitted
                                         // bits to save space, bool is 8 bits so wasteful 
@@ -143,12 +172,49 @@ struct Menu_tree_items{
 
 
 
-class Menus{
-
+class Menu{
+  
 private:
+  
+  byte current_menu = DEFAULT_MENU;
+    
+  //level 1
+  void display_startup_sequence(); 
+  void default_display();
+  void display_main_menu();
 
+  //level 2
+  void display_screen_mode_menu();
+  void display_brightness_menu();
+  void display_text_settings_menu();
+  void display_fan_settings_menu();
+  void display_internet_config_menu();
+  void display_SD_cards_menu();
+  void display_led_strip_menu();
+
+  //level 3
+  void display_text_size_menu();
+  void display_text_colour_menu();
+  void display_scroll_speed_menu();
+  void display_fan_speed_menu();
+  void display_min_fan_speed_menu();
+  void display_sd_folder_menu();
+  void display_led_strip_brightness_menu();
+
+  //level 4  
+  void display_text_colour_red_menu();
+  void display_text_colour_green_menu();
+  void display_text_colour_blue_menu();
+  void display_text_colour_hue_menu();
 public:
-Menus(){}
+  
+  Menu(){}
+
+  int init_menu_tree();
+  void display_menu();;
+
+
+
   
 };
 

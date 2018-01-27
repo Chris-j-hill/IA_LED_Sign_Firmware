@@ -19,5 +19,6 @@
     #define C     A2
     #define D     A3
 
-       
+    #define DELAY_FEEDBACK_X_PIN   46
+    #define DELAY_FEEDBACK_Y_PIN   47
 #endif // PINS_H

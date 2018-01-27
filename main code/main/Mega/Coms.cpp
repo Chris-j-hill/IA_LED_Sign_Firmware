@@ -12,7 +12,7 @@
 Frame menu_frame;
 Frame pos_frame;
 Frame sensor_data_frame;
-extern struct Menu menu_parameters;
+extern struct Menu_Struct menu_parameters;
 extern struct Cursor_Struct cursor_parameters;
 extern struct Screen_Struct screen_parameters;
 extern struct Text_Struct text_parameters;
@@ -174,13 +174,17 @@ void Coms::extract_pos_frame(){
 
   this -> calc_local_pos();
 
+  cursor_parameters.x_dir = pos_frame.frame_buffer[8]-128;
+  cursor_parameters.y_dir = pos_frame.frame_buffer[9]-128;
 
+  
+  
 //  pos_frame.frame_buffer[4] = x_pos_MSB;   //write new values to frame
 //  pos_frame.frame_buffer[5] = x_pos_LSB;
 //  pos_frame.frame_buffer[6] = y_pos_MSB;
 //  pos_frame.frame_buffer[7] = y_pos_LSB;
 //  pos_frame.frame_buffer[8] = (byte) x_pos_dir;
-//  pos_frame.frame_buffer[9] = (byte) x_pos_dir;
+//  pos_frame.frame_buffer[9] = (byte) y  _pos_dir;
 //  pos_frame.frame_buffer[10] = (byte) comms_delay;
 //  pos_frame.frame_buffer[11] = (byte) pos_update_freq;
 }
