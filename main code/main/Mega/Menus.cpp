@@ -4,8 +4,20 @@
 #define MENUS_CPP
 
 #include "Menus.h"
+#include "Graphics.h"
+
 
 Menu_Struct menu_parameters;
+extern Graphics graphics;
+
+
+byte current_menu = 0;
+byte previous_menu = 255;
+
+uint16_t time_since_menu_last_changed = 0;
+uint16_t time_since_menu_startup_run = 0;
+uint16_t startup_counter = 0;
+
 
 
 int Menu::init_menu_tree() {
@@ -45,4 +57,26 @@ void Menu::display_menu() {
     default: current_menu = STARTUP;    //restart, run startup
   }
 }
+
+void Menu::display_startup_sequence() { // startup is to draw a circle expnding from the screen global centre
+
+  graphics.set_object_colour(STARTUP_R, STARTUP_G, STARTUP_B);
+
+  if (current_menu != previous_menu) {
+    previous_menu = current_menu;   //edge detecter
+    startup_counter = 1;
+    time_since_menu_startup_run = millis();
+  }
+  if (startup_counter < STARTUP_RING_MAX_RADIUS) {} // do nothing
+
+  else if (millis() - time_since_menu_startup_run > STARTUP_RING_EXPANSION_RATE - graphics.non_linear_startup_function(startup_counter)) { //otherwise increment counter at non linear rate
+    time_since_menu_startup_run = millis();
+    startup_counter++;
+  }
+
+  graphics.draw_circle(TOTAL_WIDTH / 2, SINGLE_MATRIX_HEIGHT, startup_counter);
+}
+
+
+
 #endif // MENUS_CPP

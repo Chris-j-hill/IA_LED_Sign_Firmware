@@ -5,6 +5,7 @@
 #define MEGA_LIBS_H
 
 #include <Wire.h>
+
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
 #include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
 #else

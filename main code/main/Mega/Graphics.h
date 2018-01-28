@@ -46,6 +46,14 @@ struct Screen_Struct{
   byte node_address =0;
 };
 
+struct Object_Struct{   //colours of thing that isnt text
+
+byte red =0;
+byte green =0;
+byte blue =0;
+  
+};
+
 
 void pos_update_ISR();    //ISR for updating the cursor position
 // this ISR runs fast and updates a counter. Once the counter has 
@@ -69,6 +77,11 @@ public:
     void set_text_min();
     void set_text_max();
 
+    
+    void set_object_colour(byte new_r, byte new_g, byte new_b);
+    void draw_circle(byte x_center, byte y_center, uint16_t radius);         //global x/y coordinates
+
+    byte non_linear_startup_function(uint16_t x);
 //    int set_refresh_rate(int rate);  //refresh rate of matrix library ( modify library to access this value)
 };
 

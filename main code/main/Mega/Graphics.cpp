@@ -6,11 +6,20 @@
 #include "Graphics.h"
 #include "Mega_Pins.h"
 #include "libs/Timer3/TimerThree.h"
+
+#ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
+#include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
+#else
+#include "RGBmatrixPanel.h"
+#endif
+
+
 Text_Struct text_parameters;
 Screen_Struct screen_parameters;
 Cursor_Struct cursor_parameters;
+Object_Struct object;   //general purpose object colour, so as not to overwrite text colour 
 extern Graphics graphics;
-
+extern RGBmatrixPanel matrix;
 
 volatile byte x_pos_ISR_counter = 0;
 volatile byte x_pos_isr_counter_overflow = 255;
@@ -164,6 +173,38 @@ void Graphics::set_text_min() {
 void Graphics::set_text_max() {
   //how far to the left will the text scroll
   cursor_parameters.local_max_x_pos = screen_parameters.node_address * SINGLE_MATRIX_WIDTH;
+}
+
+
+void Graphics::draw_circle(byte x_center, byte y_center, uint16_t radius){
+
+  int16_t local_x; 
+  
+   switch (screen_parameters.node_address){
+    case 0:   local_x = x_center; break;                    // global top left is this screens top left
+    case 1:   local_x = x_center - SINGLE_MATRIX_WIDTH;     // global top left is -64
+    case 2:   local_x = x_center - (2*SINGLE_MATRIX_WIDTH); // global top left is -128
+    case 3:   local_x = x_center - (3*SINGLE_MATRIX_WIDTH);
+   }
+   
+   matrix.drawCircle(local_x, y_center, radius, matrix.Color333(object.red, object.green, object.blue));
+  
+}
+
+void Graphics::set_object_colour(byte new_r, byte new_g, byte new_b){
+  object.red = new_r;
+  object.blue = new_b;
+  object.green = new_g;
+}
+
+
+byte Graphics::non_linear_startup_function(uint16_t x){
+//  float a = 0.000000000000010658 //<- tiny effect, not included
+  float b =-0.151;
+  float c = 0.0127;
+  float d = -0.000066;
+  return (byte) round(abs(b*x + c*(x*x) + d*(x*x*x)));
+  
 }
 
 #endif //GRAPHICS_CPP

@@ -41,6 +41,11 @@
 #define TEXT_COLOUR_HUE               21
 
 
+#define STARTUP_R 1   //expanding rings startup, blue/purple colour
+#define STARTUP_G 0
+#define STARTUP_B 5
+#define STARTUP_RING_EXPANSION_RATE 100
+#define STARTUP_RING_MAX_RADIUS 150 // max number of pixels the ring will expand to, save time rendering if its definitely off the screen
 
 struct Menu_Struct{
   byte current1 =0;
