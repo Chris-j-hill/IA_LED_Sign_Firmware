@@ -33,7 +33,7 @@
 #include "Menu_tree.h"
 #include "SD_Cards.h"
 #include "Current_control.h"
-
+#include "EEPROM.h"
 
 
 #endif //Due_Libraries_H

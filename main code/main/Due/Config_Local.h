@@ -128,7 +128,7 @@
 #define PREFIX_TEXT_SCROLL_SPEED        -1
 #define PREFIX_FAN_MINIMUM_SPEED        -1
 
-
+//#define SKIP_INTITAL_STARTUP_SEQUENCE
 
 #endif // Config_Local_h
 #endif // Configuration_H

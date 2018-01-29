@@ -253,7 +253,7 @@ int Coms::build_pos_frame(int address) {
 
   pack_xy_coordinates();        //seperate function to bit shift values to correct order.
   pos_frame.frame_buffer[8] = (byte) x_pos_dir;
-  pos_frame.frame_buffer[9] = (byte) x_pos_dir;
+  pos_frame.frame_buffer[9] = (byte) y_pos_dir;
   pos_frame.frame_buffer[10] = (byte) comms_delay;
   pos_frame.frame_buffer[11] = (byte) pos_update_freq;
 

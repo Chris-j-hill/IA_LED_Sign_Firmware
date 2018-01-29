@@ -58,16 +58,16 @@ bool menu_just_changed = false;
 int Menu::init_menu_tree() {
 
 #ifdef SKIP_INTITAL_STARTUP_SEQUENCE
-  current_menu = 1;
+  current_menu = DEFUALT_MENU;
 #else
-  current_menu = 0;
+  current_menu = STARTUP;
 #endif
 
 }
 
 
 //level 1 menus
-int Menu::display_menu() {
+void Menu::display_menu() {
   if (encoder_parameters.encoder_moved) {
     encoder.encoder_position_limits();    //make sure encoder position is within the range limits of the current menu
   }
@@ -110,7 +110,7 @@ void Menu::display_startup_sequence() {
 
   time_since_menu_startup_run = millis();  //log time this function was run
   coms_serial.send_menu_frame(STARTUP, encoder_parameters.position);
-
+  current_menu = DEFAULT_MENU;  // force this as next menu
 }
 
 void Menu::default_display() {

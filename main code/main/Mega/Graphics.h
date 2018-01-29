@@ -46,14 +46,29 @@ struct Screen_Struct{
   byte node_address =0;
 };
 
-struct Object_Struct{   //colours of thing that isnt text
+struct Object_Struct_Polygons{   //colours of thing that isnt text
 
 byte red =0;
 byte green =0;
 byte blue =0;
-  
+bool enabled = false;
+int16_t x_pos = 0;      //coordinates of object
+int16_t y_pos = 0;
+byte size1=0;
+byte size2=0;     
 };
 
+struct Object_Struct_Circles{   //colours of thing that isnt text
+
+byte red =0;
+byte green =0;
+byte blue =0;
+bool enabled = false;
+int16_t x_pos = 0;      //coordinates of object
+int16_t y_pos = 0;
+byte radius=0;
+
+};
 
 void pos_update_ISR();    //ISR for updating the cursor position
 // this ISR runs fast and updates a counter. Once the counter has 
@@ -79,7 +94,14 @@ public:
 
     
     void set_object_colour(byte new_r, byte new_g, byte new_b);
-    void draw_circle(byte x_center, byte y_center, uint16_t radius);         //global x/y coordinates
+    void draw_ring(byte x_center, byte y_center, uint16_t radius);         //global x/y coordinates
+
+    void draw_objects(); // draw all enabled objects
+    void set_text_colour(byte new_r, byte new_g, byte new_b);
+    void draw_text();
+
+    void write_title(byte title);
+    void write_menu_option(byte first, byte second, byte third, byte line_config);   //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
 
     byte non_linear_startup_function(uint16_t x);
 //    int set_refresh_rate(int rate);  //refresh rate of matrix library ( modify library to access this value)

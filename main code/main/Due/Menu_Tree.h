@@ -55,7 +55,7 @@ struct Menu_tree_items{
   String led_strip_settings       PROGMEM           = "LED Strip";
 
 
-//level 2 mennu items
+//level 2 menu items
 //change mode folder
   String screen_mode_menu         PROGMEM           = "Mode Menu";
   String screen_mode0             PROGMEM           = "Both on";
@@ -224,7 +224,7 @@ public:
 
   Menu(){};
   int init_menu_tree();
-  int display_menu();
+  void display_menu();
   int set_menu_width();   //change the width of the menu on the screen
   void LDR_configuration(){};
 //  void add_menu_to_send_queue(int menu);  

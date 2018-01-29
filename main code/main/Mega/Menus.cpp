@@ -9,16 +9,16 @@
 
 Menu_Struct menu_parameters;
 extern Graphics graphics;
-
-
+extern struct Object_Struct_Circles startup_ring;
+Menu_tree_items menu_items;
 byte current_menu = 0;
 byte previous_menu = 255;
 
 uint16_t time_since_menu_last_changed = 0;
-uint16_t time_since_menu_startup_run = 0;
+uint16_t startup_menu_timer = 0;
 uint16_t startup_counter = 0;
 
-
+byte encoder_position=0;
 
 int Menu::init_menu_tree() {
 
@@ -65,18 +65,50 @@ void Menu::display_startup_sequence() { // startup is to draw a circle expnding 
   if (current_menu != previous_menu) {
     previous_menu = current_menu;   //edge detecter
     startup_counter = 1;
-    time_since_menu_startup_run = millis();
+    startup_menu_timer = millis();
+    startup_ring.enabled = true;
   }
   if (startup_counter < STARTUP_RING_MAX_RADIUS) {} // do nothing
 
-  else if (millis() - time_since_menu_startup_run > STARTUP_RING_EXPANSION_RATE - graphics.non_linear_startup_function(startup_counter)) { //otherwise increment counter at non linear rate
-    time_since_menu_startup_run = millis();
+//otherwise increment counter at non linear rate (based on 3rd order function)
+  else if ((millis() - startup_menu_timer) > (STARTUP_RING_EXPANSION_RATE - graphics.non_linear_startup_function(startup_counter))) { 
+    startup_menu_timer = millis();
     startup_counter++;
   }
-
-  graphics.draw_circle(TOTAL_WIDTH / 2, SINGLE_MATRIX_HEIGHT, startup_counter);
+  startup_ring.radius = startup_counter;
+  graphics.draw_ring(TOTAL_WIDTH / 2, SINGLE_MATRIX_HEIGHT, startup_ring.radius);
 }
 
+void Menu::default_display(){
+
+  if (current_menu != previous_menu){
+    previous_menu = current_menu;   
+    startup_ring.enabled = false;   // likely came from startup animation, force annimation off
+  }
+  
+  graphics.set_object_colour(STARTUP_R, STARTUP_G, STARTUP_B);  //draw a set of all enabled objects
+  graphics.draw_objects();
+  graphics.set_text_colour(STARTUP_R, STARTUP_G, STARTUP_B);
+  graphics.draw_text();
+  
+}
+
+void Menu::display_main_menu(){
+    this -> display_background_text();    // check if menu covers whole area, if not display partial background
+    graphics.write_title(MAIN_MENU);
+
+    switch(encoder_position){
+      case 1: graphics.write_menu_option(NULL_STRING,           RETURN_MENU,          SCREEN_MODE_MENU,     1);  break;
+      case 2: graphics.write_menu_option(RETURN_MENU,           SCREEN_MODE_MENU,     BRIGHTNESS_MENU,      2);  break;
+      case 3: graphics.write_menu_option(SCREEN_MODE_MENU,      BRIGHTNESS_MENU,      TEXT_SETTINGS_MENU,   2);  break;
+      case 4: graphics.write_menu_option(BRIGHTNESS_MENU,       TEXT_SETTINGS_MENU,   FAN_SETTINGS_MENU,    2);  break;
+      case 5: graphics.write_menu_option(TEXT_SETTINGS_MENU,    FAN_SETTINGS_MENU,    INTERNET_CONFIG_MENU, 2);  break;      
+      case 6: graphics.write_menu_option(FAN_SETTINGS_MENU,     INTERNET_CONFIG_MENU, SD_CARD_MENU,         2);  break;
+      case 7: graphics.write_menu_option(INTERNET_CONFIG_MENU,  SD_CARD_MENU,         LED_STRIP_MENU,       2);  break;     
+      case 8: graphics.write_menu_option(SD_CARD_MENU,          LED_STRIP_MENU,       NULL_STRING,          3);  break;
+    }
+  
+}
 
 
 #endif // MENUS_CPP

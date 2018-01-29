@@ -6,6 +6,7 @@
 #include "Graphics.h"
 #include "Mega_Pins.h"
 #include "libs/Timer3/TimerThree.h"
+#include "Menus.h"
 
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
 #include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
@@ -17,7 +18,10 @@
 Text_Struct text_parameters;
 Screen_Struct screen_parameters;
 Cursor_Struct cursor_parameters;
-Object_Struct object;   //general purpose object colour, so as not to overwrite text colour 
+Object_Struct_Circles startup_ring;   //general purpose object parameters, so as not to overwrite text parameters when displaying several things at once 
+Object_Struct_Polygons menu_select_bar;
+extern struct Menu_tree_items menu_items;
+
 extern Graphics graphics;
 extern RGBmatrixPanel matrix;
 
@@ -176,7 +180,7 @@ void Graphics::set_text_max() {
 }
 
 
-void Graphics::draw_circle(byte x_center, byte y_center, uint16_t radius){
+void Graphics::draw_ring(byte x_center, byte y_center, uint16_t radius){
 
   int16_t local_x; 
   
@@ -187,18 +191,18 @@ void Graphics::draw_circle(byte x_center, byte y_center, uint16_t radius){
     case 3:   local_x = x_center - (3*SINGLE_MATRIX_WIDTH);
    }
    
-   matrix.drawCircle(local_x, y_center, radius, matrix.Color333(object.red, object.green, object.blue));
+   matrix.drawCircle(local_x, y_center, radius, matrix.Color333(startup_ring.red, startup_ring.green, startup_ring.blue));
   
 }
 
 void Graphics::set_object_colour(byte new_r, byte new_g, byte new_b){
-  object.red = new_r;
-  object.blue = new_b;
-  object.green = new_g;
+  startup_ring.red = new_r;
+  startup_ring.blue = new_b;
+  startup_ring.green = new_g;
 }
 
 
-byte Graphics::non_linear_startup_function(uint16_t x){
+byte Graphics::non_linear_startup_function(uint16_t x){  
 //  float a = 0.000000000000010658 //<- tiny effect, not included
   float b =-0.151;
   float c = 0.0127;

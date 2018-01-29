@@ -4,6 +4,7 @@
 #define MENUS_H
 #include "Local_Config.h"
 #include "Arduino.h"
+#include <avr/pgmspace.h>
 
 #define MENU_VISABLITIY_TIMOUT 15000  //15 seconds until menu will disapear/default to standard view
 #define TIME_TO_DISPLAY_STARTUP 5000  // 5 second startup animation
@@ -40,6 +41,10 @@
 #define TEXT_COLOUR_BLUE              20
 #define TEXT_COLOUR_HUE               21
 
+#define NULL_STRING                   22
+#define RETURN_MENU                   23
+
+
 
 #define STARTUP_R 1   //expanding rings startup, blue/purple colour
 #define STARTUP_G 0
@@ -70,107 +75,108 @@ struct Menu_Struct{
 struct Menu_tree_items{
 
 //level 1 menu items  
-  String main_menu                PROGMEM           = "Main Menu";
-  String RETURN                   PROGMEM           = "RETURN";
-  String screen_mode              PROGMEM           = "Screen Mode";
-  String brightness               PROGMEM           = "Brightness";
-  String text_settings            PROGMEM           = "Text Settings";
-  String fan_settings             PROGMEM           = "Fan Settings";
-  String internet_settings        PROGMEM           = "Internet Config";
-  String sd_card_settings         PROGMEM           = "Sd Cards"; 
-  String led_strip_settings       PROGMEM           = "LED Strip";
+  const char main_menu[]                PROGMEM           = "Main Menu";
+  const char RETURN[]                   PROGMEM           = "RETURN";
+  const char screen_mode[]              PROGMEM           = "Screen Mode";
+  const char brightness[]               PROGMEM           = "Brightness";
+  const char text_settings[]            PROGMEM           = "Text Settings";
+  const char fan_settings[]             PROGMEM           = "Fan Settings";
+  const char internet_settings[]        PROGMEM           = "Internet Config";
+  const char sd_card_settings[]         PROGMEM           = "Sd Cards"; 
+  const char led_strip_settings[]       PROGMEM           = "LED Strip";
 
 
-//level 2 mennu items
+//level 2 menu items
 //change mode folder
-  String screen_mode_menu         PROGMEM           = "Mode Menu";
-  String screen_mode0             PROGMEM           = "Both on";
-  String screen_mode1             PROGMEM           = "Front Side";
-  String screen_mode3             PROGMEM           = "Back Side";
-  String screen_mode2             PROGMEM           = "Both Off";
+  const char screen_mode_menu[]         PROGMEM           = "Mode Menu";
+  const char screen_mode0[]             PROGMEM           = "Both on";
+  const char screen_mode1[]             PROGMEM           = "Front Side";
+  const char screen_mode3[]             PROGMEM           = "Back Side";
+  const char screen_mode2[]             PROGMEM           = "Both Off";
 
 // brightness folder
 
-  String brightness_menu          PROGMEM           = "Brightness";  
+  const char brightness_menu[]          PROGMEM           = "Brightness";  
 
 //text adjustment folder
-  String text_settings_menu       PROGMEM           = "Text Settings";
-  String text_size_settings       PROGMEM           = "Text Size";
-  String text_colour_settings     PROGMEM           = "Text Colour";
-  String scroll_speed_settings    PROGMEM           = "Scroll Speed";
-  String flip_dir_settings        PROGMEM           = "Flip Direction";
+  const char text_settings_menu[]       PROGMEM           = "Text Settings";
+  const char text_size_settings[]       PROGMEM           = "Text Size";
+  const char text_colour_settings[]     PROGMEM           = "Text Colour";
+  const char scroll_speed_settings[]    PROGMEM           = "Scroll Speed";
+  const char flip_dir_settings[]        PROGMEM           = "Flip Direction";
 
 //fan settings folder
-  String fan_settings_menu        PROGMEM           = "Fan Settings";
-  String fan_speed_settings       PROGMEM           = "Fan Speed";
-  String fan_enable               PROGMEM           = "Enable";
-  String fan_disable              PROGMEM           = "Disable";
-  String minimum_rotating_speed   PROGMEM           = "Minimum speed";
+  const char fan_settings_menu[]        PROGMEM           = "Fan Settings";
+  const char fan_speed_settings[]       PROGMEM           = "Fan Speed";
+  const char fan_enable[]               PROGMEM           = "Enable";
+  const char fan_disable[]              PROGMEM           = "Disable";
+  const char minimum_rotating_speed[]   PROGMEM           = "Minimum speed";
 
 // internet configuration folder  
-  String internet_config_menu     PROGMEM           = "Internet";
-  String select_network_manually  PROGMEM           = "Connect";
-  String ethernet_enable          PROGMEM           = "Enable Eth";
-  String ethernet_disable         PROGMEM           = "Disable Eth";
-  String wifi_enable              PROGMEM           = "Enable Wifi";
-  String wifi_disable             PROGMEM           = "Disable Wifi";
+  const char internet_config_menu[]     PROGMEM           = "Internet";
+  const char select_network_manually[]  PROGMEM           = "Connect";
+  const char ethernet_enable[]          PROGMEM           = "Enable Eth";
+  const char ethernet_disable[]         PROGMEM           = "Disable Eth";
+  const char wifi_enable[]              PROGMEM           = "Enable Wifi";
+  const char wifi_disable[]             PROGMEM           = "Disable Wifi";
   
 // SD cards folder
-  String sd_cards_menu            PROGMEM           = "SD Cards";
-  String enable_ext_card          PROGMEM           = "Enable Port";
-  String disable_ext_card         PROGMEM           = "Disable Port";
-  String sd_card_folders          PROGMEM           = "Read Folders";
+  const char sd_cards_menu[]            PROGMEM           = "SD Cards";
+  const char enable_ext_card[]          PROGMEM           = "Enable Port";
+  const char disable_ext_card[]         PROGMEM           = "Disable Port";
+  const char sd_card_folders[]          PROGMEM           = "Read Folders";
 
 // Led Strip folder
-  String led_strip_menu           PROGMEM           = "Led Strip";
-  String enable_led_strip         PROGMEM           = "Enable LED Strip";
-  String disable_led_strip        PROGMEM           = "Disable LED Strip";
-  String led_strip_brightness     PROGMEM           = "Brightness";
+  const char led_strip_menu[]           PROGMEM           = "Led Strip";
+  const char enable_led_strip[]         PROGMEM           = "Enable LED Strip";
+  const char disable_led_strip[]        PROGMEM           = "Disable LED Strip";
+  const char led_strip_brightness[]     PROGMEM           = "Brightness";
 
 
 //level 3 folders
 //text size
-  String text_size_menu           PROGMEM           = "Text Size";
+  const char text_size_menu[]           PROGMEM           = "Text Size";
 
 //text colour
-  String text_colour_menu         PROGMEM           = "Text Colour";
-  String text_colour_red          PROGMEM           = "Red";
-  String text_colour_green        PROGMEM           = "Green";
-  String text_colour_blue         PROGMEM           = "Blue";
-  String text_colour_hue          PROGMEM           = "Hue";
-  String text_colour_use_hue      PROGMEM           = "Use Hue";
-  String text_colour_use_rgb      PROGMEM           = "Use RGB";
+  const char text_colour_menu[]         PROGMEM           = "Text Colour";
+  const char text_colour_red[]          PROGMEM           = "Red";
+  const char text_colour_green[]        PROGMEM           = "Green";
+  const char text_colour_blue[]         PROGMEM           = "Blue";
+  const char text_colour_hue[]          PROGMEM           = "Hue";
+  const char text_colour_use_hue[]      PROGMEM           = "Use Hue";
+  const char text_colour_use_rgb[]      PROGMEM           = "Use RGB";
 
 
 // scroll speed
-  String scroll_speed_menu        PROGMEM           = "Scroll Speed";
+  const char scroll_speed_menu[]        PROGMEM           = "Scroll Speed";
 
 //set fan speed
-  String fan_speed_menu           PROGMEM           = "Set Fan Speed";
+  const char fan_speed_menu[]           PROGMEM           = "Set Fan Speed";
   
 // fan minimum speed
-  String minimum_fan_speed_menu   PROGMEM           = "Set Min Speed";  
+  const char minimum_fan_speed_menu[]   PROGMEM           = "Set Min Speed";  
 
 // read sd card folders 
-  String SD_card_folders_menu     PROGMEM           = "Card Files";
+  const char SD_card_folders_menu[]     PROGMEM           = "Card Files";
 
 // led brightness menu
-  String led_strip_brightness_menu   PROGMEM        = "Set Brightness";
+  const char led_strip_brightness_menu[]   PROGMEM        = "Set Brightness";
 
 //level 4
 //text_colour_red
-  String text_colour_red_menu     PROGMEM           = "Red";
+  const char text_colour_red_menu[]     PROGMEM           = "Red";
   
 //text_colour_green
-  String text_colour_green_menu     PROGMEM           = "Green";
+  const char text_colour_green_menu[]     PROGMEM           = "Green";
   
 //text_colour_blue
-  String text_colour_blue_menu     PROGMEM           = "Blue";
+  const char text_colour_blue_menu[]     PROGMEM           = "Blue";
   
 //text_colour_hue
-  String text_colour_hue_menu     PROGMEM           = "Hue";
+  const char text_colour_hue_menu[]     PROGMEM           = "Hue";
 
-  
+//dummy string
+  const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder 
 
 };
 
@@ -182,7 +188,7 @@ class Menu{
 private:
   
   byte current_menu = DEFAULT_MENU;
-    
+  void display_background_text();  
   //level 1
   void display_startup_sequence(); 
   void default_display();
