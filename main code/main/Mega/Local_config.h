@@ -92,6 +92,7 @@
 //#define SKIP_INTITAL_STARTUP_SEQUENCE
 
 
+#define DEFAULT_MENU_WIDTH 64
                           
 #endif //CONFIGURATION_H
 #endif // LOCAL_CONFIG_H

@@ -16,6 +16,9 @@
 
 
 
+// Similar to F(), but for PROGMEM string pointers rather than literals
+#define F2(progmem_ptr) (const __FlashStringHelper *)progmem_ptr
+
 
 struct Text_Struct{
   byte string [MAX_TWEET_SIZE];
@@ -25,6 +28,11 @@ struct Text_Struct{
   byte colour_b = DEFAULT_TEXT_RED_BRIGHTNESS;
   byte hue = 0;
   bool use_hue = false;
+  
+  byte x_min =0; //region to allow text to be displayed
+  byte x_max = SINGLE_MATRIX_WIDTH;
+  bool hard_limit = false;
+  bool limit_enabled = false;
 };
 
 struct Cursor_Struct{
@@ -82,6 +90,7 @@ private:
 
     int pos_isr_period();
     void pos_isr_counter_overflow();
+    byte menu_pixels_right_of_node();
 public:
     Graphics(){};
     int init_matrix();
@@ -99,11 +108,19 @@ public:
     void draw_objects(); // draw all enabled objects
     void set_text_colour(byte new_r, byte new_g, byte new_b);
     void draw_text();
+    void draw_text_restricted_width(byte x_min, byte x_max, bool hard_limit);   // draw text from min to max. hard_limit is used to prevent anything being written beyond limits if true
+                                                                            // full characters will be completed beyond limits if hard_limit is false 
 
+    void init_menu_title_colour();    //since common struct cant define defualt there, needs seperate function
+    void init_menu_optoin_colour();
     void write_title(byte title);
+    uint16_t set_title_colour();  //set the colour as the title colour
     void write_menu_option(byte first, byte second, byte third, byte line_config);   //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
-
+    uint16_t set_menu_colour();   
     byte non_linear_startup_function(uint16_t x);
+
+    void draw_background();   //if menu visible, draw partial background if screen not entirely covered
+    void clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x, byte bottom_right_y);  // clear any data in this part of the matrix, useful for clearing menu but not background etc
 //    int set_refresh_rate(int rate);  //refresh rate of matrix library ( modify library to access this value)
 };
 

@@ -6,6 +6,8 @@
 #include "Arduino.h"
 #include <avr/pgmspace.h>
 
+
+
 #define MENU_VISABLITIY_TIMOUT 15000  //15 seconds until menu will disapear/default to standard view
 #define TIME_TO_DISPLAY_STARTUP 5000  // 5 second startup animation
 
@@ -33,7 +35,7 @@
 #define SD_FOLDERS_MENU               15
 #define LED_STRIP_BRIGHTNESS_MENU     16
 
-//#define SELECT_NETWORK_MANUALLY       17
+#define SELECT_NETWORK_MANUALLY       17
 
 // LEVEL 4
 #define TEXT_COLOUR_RED               18
@@ -44,11 +46,34 @@
 #define NULL_STRING                   22
 #define RETURN_MENU                   23
 
+#define SCREEN_MODE_0                 24
+#define SCREEN_MODE_1                 25
+#define SCREEN_MODE_2                 26
+#define SCREEN_MODE_3                 27
 
 
 #define STARTUP_R 1   //expanding rings startup, blue/purple colour
 #define STARTUP_G 0
 #define STARTUP_B 5
+#define MENU_OPTION_R 4
+#define MENU_OPTION_G 0
+#define MENU_OPTION_B 2
+#define MENU_TITLE_R 5
+#define MENU_TITLE_G 5
+#define MENU_TITLE_B 5
+
+
+#define MENU_POINTER_X0 1   //NOTE: x coordinates are relative to left side of menu area
+#define MENU_POINTER_Y0 17
+#define MENU_POINTER_X1 1
+#define MENU_POINTER_Y1 17+9
+#define MENU_POINTER_X2 5
+#define MENU_POINTER_Y2 17+5
+
+#define MENU_POINTER_COLOUR_R 5
+#define MENU_POINTER_COLOUR_G 5
+#define MENU_POINTER_COLOUR_B 5
+
 #define STARTUP_RING_EXPANSION_RATE 100
 #define STARTUP_RING_MAX_RADIUS 150 // max number of pixels the ring will expand to, save time rendering if its definitely off the screen
 
@@ -114,7 +139,7 @@ struct Menu_tree_items{
 
 // internet configuration folder  
   const char internet_config_menu[]     PROGMEM           = "Internet";
-  const char select_network_manually[]  PROGMEM           = "Connect";
+  const char select_network_manually[]  PROGMEM           = "Connect To...";
   const char ethernet_enable[]          PROGMEM           = "Enable Eth";
   const char ethernet_disable[]         PROGMEM           = "Disable Eth";
   const char wifi_enable[]              PROGMEM           = "Enable Wifi";
@@ -177,10 +202,15 @@ struct Menu_tree_items{
 
 //dummy string
   const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder 
+  const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function 
 
 };
 
-
+struct Menu_colour_struct{
+  byte red = 7;    //default is bright white
+  byte green = 7;
+  byte blue = 7;
+};
 
 
 class Menu{
@@ -217,6 +247,8 @@ private:
   void display_text_colour_green_menu();
   void display_text_colour_blue_menu();
   void display_text_colour_hue_menu();
+
+  
 public:
   
   Menu(){}
