@@ -9,11 +9,14 @@
 
 Menu_Struct menu_parameters;
 
-Menu_colour_struct menu_option_colour;
-Menu_colour_struct title_colour;
-extern Graphics graphics;
-extern struct Object_Struct_Circles startup_ring;
-Menu_tree_items menu_items;
+Menu_colour_struct    menu_option_colour;
+Menu_colour_struct    title_colour;
+Menu_tree_items       menu_items;
+
+extern struct Object_Struct_Circles  startup_ring;
+
+extern Graphics  graphics;
+
 byte current_menu = 0;
 byte previous_menu = current_menu + 1; //force startup sequency by initialising pervious_menu!= startup
 byte menu_width = DEFAULT_MENU_WIDTH;

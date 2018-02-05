@@ -167,14 +167,8 @@ class Coms {
     int get_frame_code();
     int get_data();             //extract data from frame
 
-    //send menus back over usb interface
 
 
-
-    void check_pos_frame_queue(){}
-    void check_sensor_date_frame_queue(){}
-    void check_text_frame_queue(){}
-    void check_menu_frame_queue(){}
 };
 
 

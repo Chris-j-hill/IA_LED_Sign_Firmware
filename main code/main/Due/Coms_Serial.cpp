@@ -1,5 +1,5 @@
 #ifndef Coms_serial_CPP
-#define Coms_serial_CPP 
+#define Coms_serial_CPP
 
 #include "Coms_Serial.h"
 #include "Coms.h"
@@ -15,27 +15,29 @@ extern struct Text_cursor text_cursor;
 extern struct Text text;
 
 extern char text_str[150];
-extern const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};  
+extern const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
 
 extern byte time_since_last_sent_text_frame;
+extern byte menu_width;
+
 
 #ifdef USE_SERIAL_TO_MEGAS
-bool enable_serial = true;   
+bool enable_serial = true;
 #else
-bool enable_serial = false;   
+bool enable_serial = false;
 #endif
 
 bool serial_enabled = false;
 
 
-serial_tc5_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_1=serial_tc5;
-serial_tc6_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_2=serial_tc6;
-serial_tc7_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_3=serial_tc7;
-serial_tc8_declaration(RX_BUF_LENGTH,TX_BUF_LENGTH);
-auto& Serial_4=serial_tc8;
+serial_tc5_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
+auto& Serial_1 = serial_tc5;
+serial_tc6_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
+auto& Serial_2 = serial_tc6;
+serial_tc7_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
+auto& Serial_3 = serial_tc7;
+serial_tc8_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
+auto& Serial_4 = serial_tc8;
 
 
 
@@ -89,7 +91,7 @@ int Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise seri
   //if (debug){      //if debug mode, init serial, if debug false dont bether with this
   int alpha = millis();
 
-    Serial_1.begin(
+  Serial_1.begin(
     RX_PIN_1,
     TX_PIN_1,
     speed,
@@ -141,13 +143,13 @@ int Coms_Serial::get_serial() {                   //function to interpret serial
 
 int Coms_Serial::send_all_text_frames() {   // send the text frame to all megas
 
-  if (millis()>time_since_last_sent_text_frame+TEXT_TRANSMIT_PERIOD){
+  if (millis() > time_since_last_sent_text_frame + TEXT_TRANSMIT_PERIOD) {
     time_since_last_sent_text_frame = millis();
     for (int alpha = 1; alpha <= NUM_SCREENS; alpha++) {
-     
-        Sprint(F("Sending text frame to address "));
-        Sprintln(alpha);
-      
+
+      Sprint(F("Sending text frame to address "));
+      Sprintln(alpha);
+
       int fail = send_text_frame(alpha);
       if (fail != 0) {
         Sprint(F("Failed to send string to mega"));
@@ -164,10 +166,10 @@ int Coms_Serial::send_text_frame(int address) {   //function to send strings to 
   // function calculates the number of frames required to send the string, then loops,
   // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
   // it also calls the send frame function to send it on to the specified address when frame complete
-  
-  
 
-  text_cursor.x_min = -text.text_width*strlen(text_str)*2; // set this based on size of string being sent, will update if string changed
+
+
+  text_cursor.x_min = -text.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
 
   text_frame.num_frames = 1 + (strlen(text_str) / (FRAME_DATA_LENGTH)); //send this many frames
   text_frame.this_frame = 1;
@@ -189,36 +191,36 @@ int Coms_Serial::send_text_frame(int address) {   //function to send strings to 
     pack_disp_string_frame(text_frame.frame_type, text_frame.this_frame);//function to pack the frame with which ever data is relevant
     text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
 
-    write_text_frame();
-    
+    //    write_text_frame();
+
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
     delayMicroseconds(10000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
 
   } while (text_frame.this_frame <= text_frame.num_frames);
-  
+
   return (0);
 }
 
 
 int Coms_Serial::Serial_write_frame(int address) {   //function to actually send the frame to given address
 
-  
+
   if (!mega_enabled[address - 1]) {
-    
-      Sprintln(F("Mega disabled, did not attempt transmission"));
-      return (-1);
+
+    Sprintln(F("Mega disabled, did not attempt transmission"));
+    return (-1);
   }
 
   if (address == 1) {
     for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
       Serial_1.write(text_frame.frame_buffer[i]);
- 
+
     }
   }
   else if (address == 2) {
     for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
       Serial_2.write(text_frame.frame_buffer[i]);
- 
+
     }
   }
   else if (address == 3) {
@@ -237,8 +239,8 @@ int Coms_Serial::Serial_write_frame(int address) {   //function to actually send
     Sprintln(F("Address invalid"));
     return -1;
   }
-  
-  
+
+
   //clear frame from last iteration
   for (int beta = 0; beta < MEGA_SERIAL_BUFFER_LENGTH; beta++) {
     text_frame.frame_buffer[beta] = 0;
@@ -249,12 +251,169 @@ int Coms_Serial::Serial_write_frame(int address) {   //function to actually send
 
 
 
-void Coms_Serial::write_frame(int address){
+void Coms_Serial::write_frame(int address) {
 #if defined(USE_SERIAL_TO_MEGAS)
-Serial_write_frame(address);
+  Serial_write_frame(address);
 #else
 #error "I2C coms protocol not defined, cant send frame"
 #endif
+}
+
+
+
+void Coms_Serial::send_menu_frame(int menu, int encoder_pos) { // build frame and call write_menu_frame for relevant addresses
+
+  this -> build_menu_data_frame(menu, encoder_pos);
+
+  if (menu_width != 0) {   //not sure why it would be this but include for completeness
+    this -> write_menu_frame(3);  //write frame to address 3
+  }
+
+  if (menu_width > 64) {
+    this -> write_menu_frame(2);
+  }
+
+  if (menu_width > 128) {
+    this -> write_menu_frame(1);
+  }
+
+  if (menu_width > 192) {
+    this -> write_menu_frame(0);
+  }
+
+
+
+}
+
+void Coms_Serial::send_pos_frame() {  //build frame andsend position to all megas
+
+}
+
+
+
+void Coms_Serial::write_menu_frame(byte address) {   //function to actually send the frame to given address
+
+
+  if (!mega_enabled[address]) {
+
+    Sprint(F("Mega disabled, no menu sent \t address: "));
+    Sprintln(address);
+  }
+
+  if (address == 0) {
+    for (int i = 0; i < menu_frame.frame_length; i++) {
+      Serial_1.write(menu_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 1) {
+    for (int i = 0; i < menu_frame.frame_length; i++) {
+      Serial_2.write(menu_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 2) {
+    for (int i = 0; i < menu_frame.frame_length; i++) {
+      Serial_3.write(menu_frame.frame_buffer[i]);
+
+    }
+  }
+  else  if (address == 3) {
+    for (int i = 0; i < menu_frame.frame_length; i++) {
+      Serial_4.write(menu_frame.frame_buffer[i]);
+
+    }
+  }
+  else {
+    Sprint(F("Address invalid, no menu sent to mega \t attempted address:"));
+    Sprintln(address);
+  }
+
+}
+
+void Coms_Serial::write_pos_frame(byte address) {
+  if (!mega_enabled[address]) {
+
+    Sprint(F("Mega disabled, no pos sent \t address: "));
+    Sprintln(address);
+  }
+
+  if (address == 0) {
+    for (int i = 0; i < pos_frame.frame_length; i++) {
+      Serial_1.write(pos_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 1) {
+    for (int i = 0; i < pos_frame.frame_length; i++) {
+      Serial_2.write(pos_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 2) {
+    for (int i = 0; i < pos_frame.frame_length; i++) {
+      Serial_3.write(pos_frame.frame_buffer[i]);
+
+    }
+  }
+  else  if (address == 3) {
+    for (int i = 0; i < pos_frame.frame_length; i++) {
+      Serial_4.write(pos_frame.frame_buffer[i]);
+
+    }
+  }
+  else {
+    Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
+    Sprintln(address);
+  }
+}
+
+
+
+
+void Coms_Serial::check_queues() {
+
+  check_pos_frame_queue();
+  check_sensor_date_frame_queue();
+  check_text_frame_queue();
+  check_menu_frame_queue();
+
+}
+
+void Coms_Serial::check_sensor_date_frame_queue() {
+  if (sensor_data_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
+    sensor_data_frame.frame_queued = false;
+    for (int i = 0; i < 4; i++) {
+      write_sensor_data_frame(i);
+    }
+  }
+}
+
+void Coms_Serial::check_text_frame_queue() {
+  if (text_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
+    text_frame.frame_queued = false;
+    for (int i = 0; i < 4; i++) {
+      write_text_frame(i);
+    }
+  }
+}
+
+void Coms_Serial::check_pos_frame_queue() {
+  if (pos_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
+    pos_frame.frame_queued = false;
+    for (int i = 0; i < 4; i++) {
+      write_pos_frame(i);
+    }
+  }
+}
+
+void Coms_Serial::check_menu_frame_queue() {
+  if (menu_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
+    menu_frame.frame_queued = false;
+    for (int i = 0; i < 4; i++) {
+      write_menu_frame(i);
+    }
+  }
 }
 
 

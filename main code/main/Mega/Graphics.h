@@ -112,11 +112,14 @@ public:
                                                                             // full characters will be completed beyond limits if hard_limit is false 
 
     void init_menu_title_colour();    //since common struct cant define defualt there, needs seperate function
-    void init_menu_optoin_colour();
+    void init_menu_option_colour();
     void write_title(byte title);
-    uint16_t set_title_colour();  //set the colour as the title colour
+    void set_title_colour();  //set the colour as the title colour
     void write_menu_option(byte first, byte second, byte third, byte line_config);   //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
-    uint16_t set_menu_colour();   
+    void set_menu_colour();
+
+    void write_adjustment_menu(byte item);
+    void write_enable_menu_item(byte item);   // animation to confirm click on enable/disable menu items   
     byte non_linear_startup_function(uint16_t x);
 
     void draw_background();   //if menu visible, draw partial background if screen not entirely covered

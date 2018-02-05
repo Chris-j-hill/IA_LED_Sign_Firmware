@@ -49,7 +49,7 @@ int time_since_menu_startup_run = 0;
 
 bool supress_frame_to_this_screen = false;  // use this to supress text frame to screens covered fully by menu
 // other screens will require a black box cover if menu visable
-int menu_width = 64;
+byte menu_width = DEFAULT_MENU_WIDTH;
 bool menu_just_changed = false;
 
 

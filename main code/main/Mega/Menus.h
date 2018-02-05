@@ -52,6 +52,11 @@
 #define SCREEN_MODE_3                 27
 
 
+
+
+
+
+
 #define STARTUP_R 1   //expanding rings startup, blue/purple colour
 #define STARTUP_G 0
 #define STARTUP_B 5
@@ -77,6 +82,8 @@
 #define STARTUP_RING_EXPANSION_RATE 100
 #define STARTUP_RING_MAX_RADIUS 150 // max number of pixels the ring will expand to, save time rendering if its definitely off the screen
 
+
+//struct for menu items that need to be displayable but not directly used by the megas
 struct Menu_Struct{
   byte current1 =0;
   byte current2 =0;
@@ -86,7 +93,7 @@ struct Menu_Struct{
   byte temp2 = 0;
   byte temp3 = 0;
   byte fan_speed = 0;
-  byte led_strip_brightness= false;
+  byte led_strip_brightness= 0;
   bool sd_card1_detected = false;
   bool sd_card2_detected = false;
   bool ethernet_connected = false;
@@ -95,6 +102,11 @@ struct Menu_Struct{
 
   uint32_t sensor_value_received =0;    //use as array of 32 bits to detect if value has been transmitted
                                         // bits to save space, bool is 8 bits so wasteful 
+
+
+//  to implement
+  byte scroll_speed = 0;
+  byte min_fan_speed=0;                                      
 };
 
 struct Menu_tree_items{
@@ -203,6 +215,7 @@ struct Menu_tree_items{
 //dummy string
   const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder 
   const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function 
+  const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function 
 
 };
 

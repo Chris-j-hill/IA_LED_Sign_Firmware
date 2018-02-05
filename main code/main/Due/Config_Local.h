@@ -23,7 +23,7 @@
 
 
 #define USE_SERIAL_TO_MEGAS
-#define USE_I2C_TO_MEGAS
+//#define USE_I2C_TO_MEGAS
 
 #define NAVIGATE_MENU_OPTIONS_OVER_USB_SERIAL   //initialises serial regardless of DEBUG
 #define USING_SIMPLE_BINARY_NODE_READY_PROTOCOL   // one wire protocol to establish sync boards 
@@ -129,6 +129,10 @@
 #define PREFIX_FAN_MINIMUM_SPEED        -1
 
 //#define SKIP_INTITAL_STARTUP_SEQUENCE
+
+#define DEFAULT_MENU_WIDTH 64
+
+
 
 #endif // Config_Local_h
 #endif // Configuration_H
