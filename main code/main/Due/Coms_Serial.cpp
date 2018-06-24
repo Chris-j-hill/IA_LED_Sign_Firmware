@@ -251,13 +251,13 @@ int Coms_Serial::Serial_write_frame(int address) {   //function to actually send
 
 
 
-void Coms_Serial::write_frame(int address) {
-#if defined(USE_SERIAL_TO_MEGAS)
-  Serial_write_frame(address);
-#else
-#error "I2C coms protocol not defined, cant send frame"
-#endif
-}
+//void Coms_Serial::write_frame(int address) {
+//#if defined(USE_SERIAL_TO_MEGAS)
+//  Serial_write_frame(address);
+//#else
+//#error "I2C coms protocol not defined, cant send frame"
+//#endif
+//}
 
 
 
@@ -369,6 +369,95 @@ void Coms_Serial::write_pos_frame(byte address) {
 }
 
 
+void Coms_Serial::write_text_frame(byte address){
+if (!mega_enabled[address]) {
+
+    Sprint(F("Mega disabled, no pos sent \t address: "));
+    Sprintln(address);
+  }
+
+  if (text_frame.send_extended_buffer){
+    this -> send_long_text_frame(address);
+  } 
+  else{
+    this -> send_short_text_frame(address);
+  }
+}
+
+
+void write_short_text_frame(){ 
+  if (address == 0) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_1.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 1) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_2.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 2) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_3.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else  if (address == 3) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_4.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else {
+    Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
+    Sprintln(address);
+  }
+}
+
+
+void write_long_text_frame(){ 
+  if (address == 0) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_1.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 1) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_2.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else if (address == 2) {
+    for (int i = 0; i < text_frame.frame_length; i++) {
+      Serial_3.write(text_frame.frame_buffer[i]);
+
+    }
+  }
+  else  if (address == 3) {
+    for(byte j = 1; j<text_frame.num_frames; j++){   
+      int offset = MEGA_SERIAL_BUFFER_LENGTH*(j-1);
+      for (byte i = 0; i < text_frame.frame_length; i++) {
+        Serial_4.write(text_frame.frame_buffer[i+offset]);
+  
+      }
+      delay(5); //short delay after sending each 32 byte frame
+    }
+    offset = MEGA_SERIAL_BUFFER_LENGTH*(text_frame.num_frames-1)-MEGA_SERIAL_BUFFER_LENGTH   // offset of final
+      for (byte i = 1; i < text_frame.frame_buffer[offset+3]; i++) {
+        Serial_4.write(text_frame.frame_buffer[i+offset]);
+  
+      }    
+  }
+  else {
+    Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
+    Sprintln(address);
+  }
+}
+
+void Coms_Serial::write_text_frame(){}   // send to all at once
 
 
 void Coms_Serial::check_queues() {

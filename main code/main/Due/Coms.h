@@ -76,6 +76,7 @@ struct Frame {            //frame details for the due, seperate one for the mega
 
   byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH]; // use to pack single frame
   byte extended_frame_buffer[MAX_FRAME_SIZE];   // large buffer to store sequence of frames to transmit later, eg text_frame generated and in queue
+  bool send_extended_buffer = false;
   byte frame_length = 0;
   byte frame_type = 1;
   byte checksum = 0;
