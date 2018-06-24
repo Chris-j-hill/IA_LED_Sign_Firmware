@@ -30,7 +30,7 @@ struct Temp_sensor{
   int pin3 = TEMP3;
 
   bool enabled1 = true;
-  bool enabled2 = true;
+  bool enabled2 = false;
   bool enabled3 = true;
 
   byte dat1[5];         //data array for temp and humidity

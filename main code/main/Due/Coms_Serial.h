@@ -13,12 +13,16 @@ class Coms_Serial: public Coms {
     void write_menu_frame(byte address);
     void write_pos_frame(byte address);
     void write_text_frame(byte address);
-    void write_text_frame(){}   // send to all at once
+    void write_text_frame();   // send to all at once
     
     void check_pos_frame_queue();
     void check_sensor_date_frame_queue();
     void check_text_frame_queue();
     void check_menu_frame_queue();
+
+    void send_long_text_frame(byte address);
+    void send_short_text_frame(byte address);
+    
 
   public:
 

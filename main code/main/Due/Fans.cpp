@@ -1,5 +1,5 @@
 #ifndef Fans_CPP
-#define Fans_CPP 
+#define Fans_CPP
 
 #include "Fans.h"
 //#include "Due.h"
@@ -13,9 +13,9 @@ Fan_Struct fan_parameters;        //create fan struct
 extern struct Timers timers;
 
 #ifdef ENABLE_FANS
-bool enable_fans = true;   //initialise on startup?   
+bool enable_fans = true;   //initialise on startup?
 #else
-bool enable_fans = false; 
+bool enable_fans = false;
 #endif
 
 #ifdef ENABLE_TEMPERATURE_SENSORS
@@ -31,30 +31,30 @@ bool temp_sensor_enabled = false;
 
 
 
-int attach_timer_fan(){
+int attach_timer_fan() {
   //attach fan interrupt
-    if (!timers.fan_timer_attached & fans_enabled){
-      timers.fan_timer_attached = true;       //indicate the timer is attached
-      
-      Timer2.attachInterrupt(fade_fans);   // attach ISR
-      int fail = fans_set_freq();          // set the freq to based on the programmed interval
-      
-      if (fail !=0){
-        Sprintln("Failed to attach fan timer");
-        timers.fan_timer_attached = false;       
-        return(-1);     //stop code   
-      }
-           
-      Timer2.start();
-      Sprintln("Attached fan timer");      
-    } 
+  if (!timers.fan_timer_attached & fans_enabled) {
+    timers.fan_timer_attached = true;       //indicate the timer is attached
+
+    Timer2.attachInterrupt(fade_fans);   // attach ISR
+    int fail = fans_set_freq();          // set the freq to based on the programmed interval
+
+    if (fail != 0) {
+      Sprintln("Failed to attach fan timer");
+      timers.fan_timer_attached = false;
+      return (-1);    //stop code
+    }
+
+    Timer2.start();
+    Sprintln("Attached fan timer");
+  }
 }
 
 
-void fade_fans(){          // interrupt to change the current value of the fans to approach the target value
+void fade_fans() {         // interrupt to change the current value of the fans to approach the target value
 
-if (fan_parameters.enabled) { //only write values if enabled
-    
+  if (fan_parameters.enabled) { //only write values if enabled
+
     //if theres a difference, do something, ohterwise skip to end
     if (fan_parameters.target_speed != fan_parameters.current_speed) {
       if (fan_parameters.current_speed + fan_parameters.change_increment < fan_parameters.target_speed) { //if after adding increment is less than target, increase current value and write to pin
@@ -71,11 +71,11 @@ if (fan_parameters.enabled) { //only write values if enabled
         fan_parameters.current_speed = fan_parameters.target_speed;
         analogWrite(fan_parameters.pin, fan_parameters.current_speed);
       }
-    } 
+    }
   }
 }
 
-int fans_set_freq(){}      //interrupt to set the frequency the fans are adjusted
+int fans_set_freq() {}     //interrupt to set the frequency the fans are adjusted
 
 
 
@@ -86,7 +86,7 @@ int fans_set_freq(){}      //interrupt to set the frequency the fans are adjuste
 int Fans::init_fans() {          //initialise fans and set to starting value
   if (enable_fans)
     this -> enable();
-  
+
   else
     this -> disable();
 }
@@ -97,37 +97,45 @@ int Fans::init_temp_sensors() {    //code to initialise temp sensors
   // just test the sensor responds
 
   int current_temperature;
+  Sprintln(temp_parameters.pin1);
 
-  current_temperature = get_temperature(temp_parameters.pin1);
-  if (current_temperature == -100) { //if the value is -100 -> error
-    Sprint(F("Error Reading temperature sensor 1"));
-  }
-  else {
-    Sprint(F("Read temperature sensor 1 as:"));
-    Sprintln(current_temperature);
-  }
+  Sprintln(temp_parameters.pin2);
+  Sprintln(temp_parameters.pin3);
 
+  if (temp_parameters.enabled1) {
+    current_temperature = get_temperature(temp_parameters.pin1);
+    if (current_temperature == -100) { //if the value is -100 -> error
+      Sprintln(F("Error Reading temperature sensor 1"));
+    }
+    else {
+      Sprint(F("Read temperature sensor 1 as:"));
+      Sprintln(current_temperature);
+    }
+  }
+  if (temp_parameters.enabled2) {
     current_temperature = get_temperature(temp_parameters.pin2);
-  if (current_temperature == -100) { 
-    Sprint(F("Error Reading temperature sensor 3"));
+    if (current_temperature == -100) {
+      Sprintln(F("Error Reading temperature sensor 2"));
+    }
+    else {
+      Sprint(F("Read temperature sensor 2 as:"));
+      Sprintln(current_temperature);
+    }
   }
-  else {
-    Sprint(F("Read temperature sensor 2 as:"));
-    Sprintln(current_temperature);
-  }
-
+  if (temp_parameters.enabled3) {
     current_temperature = get_temperature(temp_parameters.pin3);
-  if (current_temperature == -100) { 
-    Sprint(F("Error Reading temperature sensor 3"));
+    if (current_temperature == -100) {
+      Sprintln(F("Error Reading temperature sensor 3"));
+    }
+    else {
+      Sprint(F("Read temperature sensor 3 as:"));
+      Sprintln(current_temperature);
+    }
   }
-  else {
-    Sprint(F("Read temperature sensor 3 as:"));
-    Sprintln(current_temperature);
-  }
-  return(0);
+  return (0);
 }
 
-int Fans::set_fan_speed() { 
+int Fans::set_fan_speed() {
 
   if (temp_parameters.enabled1)
     this -> get_temperature(temp_parameters.pin1);
@@ -137,7 +145,7 @@ int Fans::set_fan_speed() {
     this -> get_temperature(temp_parameters.pin3);
 
   this -> calculate_avg_temp();
-  
+
   this -> calculate_fan_speed();
 
 }
@@ -151,43 +159,46 @@ int Fans::get_temperature(int pin) {  //return the temperature as read by the sp
   byte temp_byte2;
   byte temp_byte3;
 
-  
+
   poll_temperature_sensor(pin);
 
-  if (pin == temp_parameters.pin1 && temp_parameters.enabled1){
-    if (temp_parameters.dat1 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat1 [3] < MIN_OPERATING_TEMPERATURE){
+  if (pin == temp_parameters.pin1 && temp_parameters.enabled1) {
+    if (temp_parameters.dat1 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat1 [3] < MIN_OPERATING_TEMPERATURE) {
       temp_parameters.bad_connection1 = true;
-      return(-1);
+      return (-100);
     }
+    temp_parameters.bad_connection1 = false;
     temp_byte0 = temp_parameters.dat1 [0];
     temp_byte1 = temp_parameters.dat1 [1];
     temp_byte2 = temp_parameters.dat1 [2];
     temp_byte3 = temp_parameters.dat1 [3];
-}
-  else if (pin == temp_parameters.pin2 && temp_parameters.enabled2){
-    if (temp_parameters.dat2 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat2 [3] < MIN_OPERATING_TEMPERATURE){
+  }
+  else if (pin == temp_parameters.pin2 && temp_parameters.enabled2) {
+    if (temp_parameters.dat2 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat2 [3] < MIN_OPERATING_TEMPERATURE) {
       temp_parameters.bad_connection2 = true;
-      return(-1);
+      return (-100);
     }
+    temp_parameters.bad_connection2 = false;
     temp_byte0 = temp_parameters.dat2 [0];
     temp_byte1 = temp_parameters.dat2 [1];
     temp_byte2 = temp_parameters.dat2 [2];
     temp_byte3 = temp_parameters.dat2 [3];
-}
-  else if (pin == temp_parameters.pin3 && temp_parameters.enabled3){
-    if (temp_parameters.dat3 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat3 [3] < MIN_OPERATING_TEMPERATURE){
+  }
+  else if (pin == temp_parameters.pin3 && temp_parameters.enabled3) {
+    if (temp_parameters.dat3 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat3 [3] < MIN_OPERATING_TEMPERATURE) {
       temp_parameters.bad_connection3 = true;
-      return(-1);
+      return (-100);
     }
+    temp_parameters.bad_connection3 = false;
     temp_byte0 = temp_parameters.dat3 [0];
     temp_byte1 = temp_parameters.dat3 [1];
     temp_byte2 = temp_parameters.dat3 [2];
     temp_byte3 = temp_parameters.dat3 [3];
-}
+  }
   else {
-  Sprintln(F("Error reading temperature sensor"));
-  return (-1);
-}
+    Sprintln(F("Error reading temperature sensor"));
+    return (-100);
+  }
   //display results from function
 #ifdef DEBUG
   Sprint ("Current humdity =");
@@ -203,12 +214,12 @@ int Fans::get_temperature(int pin) {  //return the temperature as read by the sp
   Sprintln ('C');
 #endif
 
-return(temp_byte0);
+  return (temp_byte0);
 
 }
 
 int Fans::poll_temperature_sensor (int pin) {    //adapted from this: https://tkkrlab.nl/wiki/Arduino_KY-015_Temperature_and_humidity_sensor_module
-
+  
   pinMode(pin, OUTPUT);      // confirm that the pin is an output
   digitalWrite (pin, LOW);   // bus down, send start signal, drive line to ground
   delay (30);                   // delay greater than 18ms, so DHT11 start signal can be detected
@@ -217,28 +228,34 @@ int Fans::poll_temperature_sensor (int pin) {    //adapted from this: https://tk
 
 
   pinMode (pin, INPUT);               // set pin to recieve data
-  while (digitalRead (pin) == HIGH);  // wait for sensor
+  int poll_start_time = millis();
+  byte timout = 10;
+  while (digitalRead (pin) == HIGH && millis() < timout + poll_start_time); // wait for sensor
+  if (millis() >= timout + poll_start_time) {
+    Sprintln(F("Error: Timeout. Temp sensor did not respond"));
+    return (-1);
+  }
   delayMicroseconds (80);                // DHT11 response, pulled the bus 80us
   if (digitalRead (pin) == LOW);
   delayMicroseconds (80);                // DHT11 80us after the bus pulled to start sending data
 
   if (pin = temp_parameters.pin1) {
     for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp_parameters.dat1[i] = read_temp_data_from_register (pin);               // data to global array 
-      Sprintln(F("Read temp sensor 1"));
+      temp_parameters.dat1[i] = read_temp_data_from_register (pin);               // data to global array
+    Sprintln(F("Read temp sensor 1"));
 
   }
 
   else if (pin = temp_parameters.pin2) {
     for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp_parameters.dat2[i] = read_temp_data_from_register (pin);  
-      Sprintln(F("Read temp sensor 2"));
+      temp_parameters.dat2[i] = read_temp_data_from_register (pin);
+    Sprintln(F("Read temp sensor 2"));
   }
 
   else if (pin = temp_parameters.pin3) {
     for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
       temp_parameters.dat3[i] = read_temp_data_from_register (pin);
-      Sprintln(F("Read temp sensor 3"));
+    Sprintln(F("Read temp sensor 3"));
   }
 
   else {
@@ -276,7 +293,7 @@ void Fans::enable() {
   if (!timers.fan_timer_attached) {
     attach_timer_fan();
   }
-  
+
 }
 
 void Fans::disable() {
@@ -285,7 +302,7 @@ void Fans::disable() {
   fan_parameters.manual = false;    // once enabled again, revert to automatic control
 }
 
-void Fans::enable_temp(){
+void Fans::enable_temp() {
 #if defined(TEMPERATURE_SENSOR_1_CONNECTED)
   if (!temp_parameters.bad_connection1 && !temp_parameters.enabled1)  //not enalbed and not broken connection
     this -> enable_temp1();
@@ -303,19 +320,19 @@ void Fans::enable_temp(){
 }
 
 
-void Fans::enable_temp1(){
-  temp_parameters.enabled1 = true;  
-}
- 
-void Fans::enable_temp2(){
-  temp_parameters.enabled2 = true;  
-}
-  
-void Fans::enable_temp3(){  
-  temp_parameters.enabled3 = true;  
+void Fans::enable_temp1() {
+  temp_parameters.enabled1 = true;
 }
 
-void Fans::disable_temp(){
+void Fans::enable_temp2() {
+  temp_parameters.enabled2 = true;
+}
+
+void Fans::enable_temp3() {
+  temp_parameters.enabled3 = true;
+}
+
+void Fans::disable_temp() {
 #if defined(TEMPERATURE_SENSOR_1_CONNECTED)
   if (!temp_parameters.bad_connection1 || temp_parameters.enabled1)  //not enalbed and not broken connection
     this -> disable_temp1();
@@ -331,64 +348,66 @@ void Fans::disable_temp(){
     this -> disable_temp3();
 #endif
 }
-  
-void Fans::disable_temp1(){
+
+void Fans::disable_temp1() {
   pinMode(temp_parameters.pin1, INPUT_PULLUP);
   temp_parameters.enabled1 = false;
 }
 
-void Fans::disable_temp2(){
+void Fans::disable_temp2() {
   pinMode(temp_parameters.pin2, INPUT_PULLUP);
   temp_parameters.enabled2 = false;
 }
 
-void Fans::disable_temp3(){
+void Fans::disable_temp3() {
   pinMode(temp_parameters.pin3, INPUT_PULLUP);
   temp_parameters.enabled3 = false;
 }
 
 
-void Fans::calculate_avg_temp(){
-  
+void Fans::calculate_avg_temp() {
+
   int num_enabled = 0;
+  int temp_avg = 0;
   temp_parameters.avg = 0;
-  if (temp_parameters.enabled1 && !temp_parameters.bad_connection1){
+  if (temp_parameters.enabled1 && !temp_parameters.bad_connection1) {
     num_enabled++;
-    temp_parameters.avg += temp_parameters.temp1;
+    temp_avg += temp_parameters.temp1;
   }
-  if (temp_parameters.enabled2 && !temp_parameters.bad_connection2){
+  if (temp_parameters.enabled2 && !temp_parameters.bad_connection2) {
     num_enabled++;
-    temp_parameters.avg += temp_parameters.temp2;
+    temp_avg += temp_parameters.temp2;
   }
 
-  if (temp_parameters.enabled3 && !temp_parameters.bad_connection3){
+  if (temp_parameters.enabled3 && !temp_parameters.bad_connection3) {
     num_enabled++;
-    temp_parameters.avg += temp_parameters.temp3;
+    temp_avg += temp_parameters.temp3;
   }
-  temp_parameters.avg /= num_enabled; 
-  
-  }
-void Fans::calculate_fan_speed(){
+  temp_parameters.avg = temp_avg / num_enabled;
+  Sprint("Average temp reading:");
+  Sprintln(temp_parameters.avg);
+}
+void Fans::calculate_fan_speed() {
 
 #if defined(ALLOW_SMART_MANUAL_OVERRIDE)
-    if (temp_parameters.avg <= FAN_TURN_ON_TEMPERATURE)
-      fan_parameters.target_speed =0;
-      
-    else if(temp_parameters.avg > FAN_TURN_ON_TEMPERATURE)
-      fan_parameters.target_speed = map(temp_parameters.avg, FAN_TURN_ON_TEMPERATURE, FAN_MAX_SPEED_TEMPERATURE, 0, 100);
-      
-    else  
-      fan_parameters.target_speed = 100;
-    
-    if (fan_parameters.manual && fan_parameters.target_speed<fan_parameters.manual_set_value){ //smart override
-      fan_parameters.target_speed = fan_parameters.manual_set_value;
-    }
+  if (temp_parameters.avg <= FAN_TURN_ON_TEMPERATURE)
+    fan_parameters.target_speed = 0;
+
+  else if (temp_parameters.avg > FAN_TURN_ON_TEMPERATURE)
+    fan_parameters.target_speed = map(temp_parameters.avg, FAN_TURN_ON_TEMPERATURE, FAN_MAX_SPEED_TEMPERATURE, 0, 100);
+
+  else
+    fan_parameters.target_speed = 100;
+
+  if (fan_parameters.manual && fan_parameters.target_speed < fan_parameters.manual_set_value) { //smart override
+    fan_parameters.target_speed = fan_parameters.manual_set_value;
+  }
 
 #elif defined(ALLOW_FULL_MANUAL_OVERRIDE) //full manual
-    fan_parameters.target_speed = fan_parameters.manual_set_value;  //always this temperature, can turn in menu
-     
+  fan_parameters.target_speed = fan_parameters.manual_set_value;  //always this temperature, can turn in menu
+
 #endif
-    
+
 }
 
 #endif

@@ -17,15 +17,14 @@
 
 // variables
 
-
+//create these structs
 Frame text_frame;
 Frame menu_frame;
 Frame pos_frame;
 Frame sensor_data_frame;
 
-
+//give access to these structs
 extern struct Led_Strip_Struct led_strip_parameters;
-
 extern struct Temp_sensor temp_parameters;
 extern struct Fan_Struct fan_parameters;        //create fan struct
 extern struct Text text;
@@ -35,6 +34,7 @@ extern struct Encoder_Struct encoder_parameters;     //create encoder struct
 extern struct Button_Struct button_parameters;       //create button struct
 extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
+
 
 // list of valid sensor prefix's for sending non string data to the megas.
 // append this as required and add to switch statements in due and mega code

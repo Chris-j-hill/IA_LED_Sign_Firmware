@@ -13,8 +13,8 @@
 #include "SD_Cards.h"
 #include "Led_Strip.h"
 #include "Encoder.h"
-
-// class constructors      
+#include "Host.h"
+// class constructors
 
 Coms_Serial    coms_serial;
 Coms_i2c       coms_i2c;
@@ -27,37 +27,41 @@ Led_Strip      led_strip;
 Current_Meter  current_meter;
 Light_Sensor   light_sensor;
 Graphics       graphics;
-
+Host           host;
 Timers timers;
 
 
 void due_setup() {
-//  if (!DUE_ENABLED){    //stop code imidiately if due disabled
-//    while(1){}
-//  }
+#ifndef DUE_ENABLED    //stop code imidiately if due disabled
+  while (1) {}
+#endif
+  host.init_serial();
+  Serial.println("host init done");
+  fans.init_fans();
+  Serial.println("fans init done");
 
-fans.init_fans();
-fans.init_temp_sensors();
+  fans.init_temp_sensors();
+  Serial.println("temp sensor init done");
 
-  
+
 }
 
 
 void due_loop() {
-// //do these periodically based on config
-// cards.check_for_sd_card_inserted();   
-// internet.check_connection();       
-// fans.get_temperature();            
-// fans.set_fan_speed();
-// graphics.update_brightness();
-// encoder.update_encoder_postion();
-// encoder.pressed();
-// update_display();  //push additional data to screens as required
-//
-// //do this based speed variable
-// update_text_location(); //write location variable to be sent by interrupt
+  // //do these periodically based on config
+  // cards.check_for_sd_card_inserted();
+  // internet.check_connection();
+  // fans.get_temperature();
+  fans.set_fan_speed();
+  // graphics.update_brightness();
+  // encoder.update_encoder_postion();
+  // encoder.pressed();
+  // update_display();  //push additional data to screens as required
+  //
+  // //do this based speed variable
+  // update_text_location(); //write location variable to be sent by interrupt
 
- 
+
 }
 
 #endif // Due_CPP
