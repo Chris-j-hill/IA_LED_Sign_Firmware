@@ -22,8 +22,8 @@ int set_text_string();    //if got new string, save to text_str variable
 
 void Host::check_serial() {   //to read incomming data
 
-  if (Serial.available()>0){
-    
+  if (Serial.available() > 0) {
+
     String rx = Serial.readString();
     rx.trim();  //trim off return carraige
 
@@ -32,9 +32,9 @@ void Host::check_serial() {   //to read incomming data
     else if (rx == "strip") data_to_report = REPORT_LED_STRIP;
     else if (rx == "temp") data_to_report = REPORT_TEMPS;
     else if (rx == "stop") data_to_report = STOP_REPORT;
-   
+
   }
-  
+
 
 }
 
@@ -43,30 +43,37 @@ void transmit_modes();   //send back available modes and setting commands
 void stop_debug_mode();
 
 void Host::print_messages() {
+  static uint16_t last_message_print_time;
   static byte previously_reporting = 0; // reset header counter if just changed printing messages
-  switch (data_to_report) {
-    case STOP_REPORT:
-      break;
-    case REPORT_FANS:
-      print_fans();
-      break;
-    case REPORT_TEMPS:
-      print_temps();
-      break;
-    case REPORT_LED_STRIP:
-      print_led_strip();
-      break;
 
-    default: break;
+  if (millis() > last_message_print_time + MEGGAGE_DELAY_PERIOD) { // check if specified time delay elapsed
+
+    last_message_print_time = millis();
+
+    switch (data_to_report) {
+      case STOP_REPORT:
+        break;
+      case REPORT_FANS:
+        print_fans();
+        break;
+      case REPORT_TEMPS:
+        print_temps();
+        break;
+      case REPORT_LED_STRIP:
+        print_led_strip();
+        break;
+
+      default: break;
+    }
+
+    // increment counter for printing header info message
+    if (previously_reporting != data_to_report)
+      header_print_counter = 0;
+    else
+      header_print_counter += HEADER_PRINT_INCREMENT;
+
+    previously_reporting = data_to_report;
   }
-
-// increment counter for printing header info message
-  if (previously_reporting != data_to_report)
-    header_print_counter = 0;
-  else
-    header_print_counter += HEADER_PRINT_INCREMENT;
-    
-  previously_reporting = data_to_report;    
 }
 
 
@@ -107,6 +114,82 @@ void Host::print_fans() {
 
 }
 
-void Host::print_temps() {}
+void Host::print_temps() {
+
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Pins \t     Sensors Enabled \t Good Connection \t Current Temp Readings \t Average Temp"));
+  }
+
+  Serial.print(temp_parameters.pin1);
+  Serial.print(F(" "));
+
+  Serial.print(temp_parameters.pin2);
+  Serial.print(F(" "));
+
+  Serial.print(temp_parameters.pin3);
+  Serial.print(F("     "));
+
+  //Serial.print(F("\t"));
+
+  if (temp_parameters.enabled1)
+    Serial.print(F("Y "));
+  else
+    Serial.print(F("N "));
+
+  if (temp_parameters.enabled2)
+    Serial.print(F("Y "));
+  else
+    Serial.print(F("N "));
+
+  if (temp_parameters.enabled3)
+    Serial.print(F("Y\t"));
+  else
+    Serial.print(F("N\t"));
+
+  Serial.print(F("\t "));
+
+  if (!temp_parameters.enabled1)  
+    Serial.print(F("- "));
+  else {
+    if (temp_parameters.bad_connection1)
+      Serial.print(F("N "));    
+    else
+      Serial.print(F("Y "));
+  }
+
+  if (!temp_parameters.enabled2)
+    Serial.print(F("- "));
+  else {
+    if (temp_parameters.bad_connection2)
+      Serial.print(F("N "));
+    else
+      Serial.print(F("Y "));
+  }
+
+  if (!temp_parameters.enabled3)
+    Serial.print(F("- "));
+  else {
+    if (temp_parameters.bad_connection3)
+      Serial.print(F("N\t"));
+    else
+      Serial.print(F("Y\t"));
+  }
+  Serial.print(F("\t\t "));
+
+  Serial.print(temp_parameters.temp1);
+  Serial.print(F(" "));
+
+  Serial.print(temp_parameters.temp2);
+  Serial.print(F(" "));
+
+  Serial.print(temp_parameters.temp3);
+  Serial.print(F("\t\t"));
+
+  Serial.print(temp_parameters.avg);
+  Serial.println();
+
+
+}
 void Host::print_led_strip() {}
 #endif // Host_CPP

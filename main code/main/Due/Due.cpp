@@ -63,7 +63,6 @@ void due_loop() {
     // update_text_location(); //write location variable to be sent by interrupt
     host.check_serial();
     host.print_messages();
-    delay(10);
   }
 
 }

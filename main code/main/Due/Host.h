@@ -8,8 +8,8 @@
 #define REPORT_TEMPS          2
 #define REPORT_LED_STRIP      3
 
-#define HEADER_PRINT_INCREMENT  8 // make this a power of 2, auto overflow
-
+#define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow
+#define MEGGAGE_DELAY_PERIOD    200   //delay this many ms between message prints
 //class to manage all functions regarding communication with due host device (probably a pi)
 class Host{
 
