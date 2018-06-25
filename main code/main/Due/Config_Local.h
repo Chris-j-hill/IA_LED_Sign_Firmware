@@ -8,7 +8,7 @@
 
 
 
-#define DEBUG       //enable debugging by default 
+//#define DEBUG       //enable debugging by default 
 
 #ifdef DEBUG
 #define Sprintln(a) (Serial.println(a))   // use to print debug errors

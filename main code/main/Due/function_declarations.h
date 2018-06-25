@@ -53,7 +53,7 @@ void reset_button();
 void fade_led_strip();
 int led_strip_set_freq();
 void fade_fans();
-int fans_set_freq();      //interrupt to set the frequency the fans are adjusted
+//bool fans_set_freq();      //interrupt to set the frequency the fans are adjusted
 void send_pos_interrupt();
 int set_pos_speed(int x_speed, int y_speed);
 int set_pos_update_frequency(int freq);

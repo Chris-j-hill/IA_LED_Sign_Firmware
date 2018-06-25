@@ -36,31 +36,35 @@ void due_setup() {
   while (1) {}
 #endif
   host.init_serial();
-  Serial.println("host init done");
+  host.check_serial();  //force into defined mode
+  host.print_messages();
+
   fans.init_fans();
-  Serial.println("fans init done");
-
   fans.init_temp_sensors();
-  Serial.println("temp sensor init done");
 
+  host.print_messages();
 
 }
 
 
 void due_loop() {
-  // //do these periodically based on config
-  // cards.check_for_sd_card_inserted();
-  // internet.check_connection();
-  // fans.get_temperature();
-  fans.set_fan_speed();
-  // graphics.update_brightness();
-  // encoder.update_encoder_postion();
-  // encoder.pressed();
-  // update_display();  //push additional data to screens as required
-  //
-  // //do this based speed variable
-  // update_text_location(); //write location variable to be sent by interrupt
-
+  while (1) {
+    // //do these periodically based on config
+    // cards.check_for_sd_card_inserted();
+    // internet.check_connection();
+    // fans.get_temperature();
+    fans.set_fan_speed();
+    // graphics.update_brightness();
+    // encoder.update_encoder_postion();
+    // encoder.pressed();
+    // update_display();  //push additional data to screens as required
+    //
+    // //do this based speed variable
+    // update_text_location(); //write location variable to be sent by interrupt
+    host.check_serial();
+    host.print_messages();
+    delay(10);
+  }
 
 }
 

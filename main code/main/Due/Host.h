@@ -3,12 +3,25 @@
 
 #define HOST_SERIAL_SPEED 115200
 
+#define STOP_REPORT           0
+#define REPORT_FANS           1
+#define REPORT_TEMPS          2
+#define REPORT_LED_STRIP      3
+
+#define HEADER_PRINT_INCREMENT  8 // make this a power of 2, auto overflow
 
 //class to manage all functions regarding communication with due host device (probably a pi)
 class Host{
 
   private:
 
+  byte data_to_report = STOP_REPORT;    //default to not printing 
+  byte header_print_counter =0;
+  void print_fans();
+  void print_temps();
+  void print_led_strip();
+
+ 
   public:
   Host(){}
   void init_serial();

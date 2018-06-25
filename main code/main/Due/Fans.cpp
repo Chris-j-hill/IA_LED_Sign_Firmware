@@ -24,7 +24,7 @@ bool enable_temp_sensor = true;
 bool enable_temp_sensor = false;
 #endif
 
-bool fans_enabled = false; //to check if initialised sucessfully
+//bool fans_enabled = false; //to check if initialised sucessfully
 bool temp_sensor_enabled = false;
 
 
@@ -33,15 +33,16 @@ bool temp_sensor_enabled = false;
 
 int attach_timer_fan() {
   //attach fan interrupt
-  if (!timers.fan_timer_attached & fans_enabled) {
+  if (!timers.fan_timer_attached & fan_parameters.enabled) {
     timers.fan_timer_attached = true;       //indicate the timer is attached
 
     Timer2.attachInterrupt(fade_fans);   // attach ISR
-    int fail = fans_set_freq();          // set the freq to based on the programmed interval
-
-    if (fail != 0) {
+    bool fail = fans_set_freq();          // set the freq to based on the programmed interval
+    
+    if (fail) {
       Sprintln("Failed to attach fan timer");
       timers.fan_timer_attached = false;
+      fan_parameters.enabled = false;
       return (-1);    //stop code
     }
 
@@ -75,9 +76,10 @@ void fade_fans() {         // interrupt to change the current value of the fans 
   }
 }
 
-int fans_set_freq() {}     //interrupt to set the frequency the fans are adjusted
-
-
+bool fans_set_freq() {     //interrupt to set the frequency the fans are adjusted
+  Timer2.setPeriod(fan_parameters.fan_change_interval*1000);
+  return (Timer2.getPeriod() != fan_parameters.fan_change_interval*1000);
+}
 
 //methods for fans and temperature sensors
 
@@ -97,10 +99,6 @@ int Fans::init_temp_sensors() {    //code to initialise temp sensors
   // just test the sensor responds
 
   int current_temperature;
-  Sprintln(temp_parameters.pin1);
-
-  Sprintln(temp_parameters.pin2);
-  Sprintln(temp_parameters.pin3);
 
   if (temp_parameters.enabled1) {
     current_temperature = get_temperature(temp_parameters.pin1);
@@ -219,7 +217,7 @@ int Fans::get_temperature(int pin) {  //return the temperature as read by the sp
 }
 
 int Fans::poll_temperature_sensor (int pin) {    //adapted from this: https://tkkrlab.nl/wiki/Arduino_KY-015_Temperature_and_humidity_sensor_module
-  
+
   pinMode(pin, OUTPUT);      // confirm that the pin is an output
   digitalWrite (pin, LOW);   // bus down, send start signal, drive line to ground
   delay (30);                   // delay greater than 18ms, so DHT11 start signal can be detected
@@ -293,13 +291,12 @@ void Fans::enable() {
   if (!timers.fan_timer_attached) {
     attach_timer_fan();
   }
-
 }
 
 void Fans::disable() {
   fan_parameters.enabled = false;       //disable interrupt analogWrite
   pinMode(fan_parameters.pin, INPUT_PULLUP);   //disable pin
-  fan_parameters.manual = false;    // once enabled again, revert to automatic control
+  fan_parameters.manual = false;        // once enabled again, revert to automatic control
 }
 
 void Fans::enable_temp() {
@@ -334,17 +331,17 @@ void Fans::enable_temp3() {
 
 void Fans::disable_temp() {
 #if defined(TEMPERATURE_SENSOR_1_CONNECTED)
-  if (!temp_parameters.bad_connection1 || temp_parameters.enabled1)  //not enalbed and not broken connection
+  if (!temp_parameters.bad_connection1 || temp_parameters.enabled1)  //not enabled and not broken connection
     this -> disable_temp1();
 #endif
 
 #if defined(TEMPERATURE_SENSOR_2_CONNECTED)
-  if (!temp_parameters.bad_connection2 || temp_parameters.enabled2)  //not enalbed and not broken connection
+  if (!temp_parameters.bad_connection2 || temp_parameters.enabled2)  //not enabled and not broken connection
     this -> disable_temp2();
 #endif
 
 #if defined(TEMPERATURE_SENSOR_3_CONNECTED)
-  if (!temp_parameters.bad_connection3 || temp_parameters.enabled3)  //not enalbed and not broken connection
+  if (!temp_parameters.bad_connection3 || temp_parameters.enabled3)  //not enabled and not broken connection
     this -> disable_temp3();
 #endif
 }
@@ -387,27 +384,60 @@ void Fans::calculate_avg_temp() {
   Sprint("Average temp reading:");
   Sprintln(temp_parameters.avg);
 }
+
+
 void Fans::calculate_fan_speed() {
+  //if no sensors reporting, set to max speed for safety
+  if (check_for_bad_connections())
+    fan_parameters.target_speed = 255;
 
+    // else allow manual or smart speed setting
+  else {
 #if defined(ALLOW_SMART_MANUAL_OVERRIDE)
-  if (temp_parameters.avg <= FAN_TURN_ON_TEMPERATURE)
-    fan_parameters.target_speed = 0;
+    if (temp_parameters.avg <= FAN_TURN_ON_TEMPERATURE)
+      fan_parameters.target_speed = 0;
 
-  else if (temp_parameters.avg > FAN_TURN_ON_TEMPERATURE)
-    fan_parameters.target_speed = map(temp_parameters.avg, FAN_TURN_ON_TEMPERATURE, FAN_MAX_SPEED_TEMPERATURE, 0, 100);
+    else if (temp_parameters.avg > FAN_TURN_ON_TEMPERATURE)
+      fan_parameters.target_speed = map(temp_parameters.avg, FAN_TURN_ON_TEMPERATURE, FAN_MAX_SPEED_TEMPERATURE, 0, 100);
 
-  else
-    fan_parameters.target_speed = 100;
+    else
+      fan_parameters.target_speed = fan_parameters.fan_minimum;
 
-  if (fan_parameters.manual && fan_parameters.target_speed < fan_parameters.manual_set_value) { //smart override
-    fan_parameters.target_speed = fan_parameters.manual_set_value;
-  }
+    if (fan_parameters.manual && fan_parameters.target_speed < fan_parameters.manual_set_value) { //smart override
+      fan_parameters.target_speed = fan_parameters.manual_set_value;
+    }
 
-#elif defined(ALLOW_FULL_MANUAL_OVERRIDE) //full manual
-  fan_parameters.target_speed = fan_parameters.manual_set_value;  //always this temperature, can turn in menu
+#else //full manual
+    fan_parameters.target_speed = fan_parameters.manual_set_value;  //always this temperature, can turn in menu
 
 #endif
-
+  }
 }
 
+
+
+bool Fans::check_for_bad_connections() {
+  //if all disabled
+  byte bad_sensor_count = 0;
+
+  if (!temp_parameters.enabled1)  //if disabled
+    bad_sensor_count++;
+  else if (temp_parameters.bad_connection1) // or enabled and not connected correctly
+    bad_sensor_count++;
+
+  if (!temp_parameters.enabled2)
+    bad_sensor_count++;
+  else if (temp_parameters.bad_connection2)
+    bad_sensor_count++;
+
+  if (!temp_parameters.enabled3)
+    bad_sensor_count++;
+  else if (temp_parameters.bad_connection3)
+    bad_sensor_count++;
+
+  if (bad_sensor_count == 3)  //if all temp sensors fail set to max
+    return true;
+  return false;   // one or more sensors ok
+
+}
 #endif

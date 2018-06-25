@@ -11,8 +11,7 @@
 #define FAN_DEFAULT_SPEED 180 
 #define FAN_TURN_ON_TEMPERATURE 30
 #define FAN_MAX_SPEED_TEMPERATURE 40
-#define ALLOW_FULL_MANUAL_OVERRIDE  // will stay at manually set speed regardless of temperature
-#define ALLOW_SMART_MANUAL_OVERRIDE // allow override, but will increase temperature to avoid thermal run away
+#define ALLOW_SMART_MANUAL_OVERRIDE // allow override, but will increase temperature to avoid thermal run away, full manual control if not defined
 #define MANUAL_START_SPEED 0
 
 
@@ -25,9 +24,9 @@
 
 struct Temp_sensor{
 
-  int pin1 = TEMP1;
-  int pin2 = TEMP2;
-  int pin3 = TEMP3;
+  byte pin1 = TEMP1;
+  byte pin2 = TEMP2;
+  byte pin3 = TEMP3;
 
   bool enabled1 = true;
   bool enabled2 = false;
@@ -37,32 +36,32 @@ struct Temp_sensor{
   byte dat2[5];
   byte dat3[5];
 
-  int temp1 = -100;   //current temperature as read by sensor, set to something unlikely to start
-  int temp2 = -100;
-  int temp3 = -100;
+  byte temp1 = 254;   //current temperature as read by sensor, set to something unlikely to start, (nb values not read as all high)
+  byte temp2 = 254;
+  byte temp3 = 254;
 
-  int humidity1 = -100;   //current humidity as read by sensor
-  int humidity2 = -100;
-  int humidity3 = -100;
+  byte humidity1 = 0;   //current humidity as read by sensor
+  byte humidity2 = 0;
+  byte humidity3 = 0;
 
-  int bad_connection1 = false;  // detect fault based on temp returned, if outside min/max range defined above, presume fault
-  int bad_connection2 = false;
-  int bad_connection3 = false;
+  bool bad_connection1 = false;  // detect fault based on temp returned, if outside min/max range defined above, presume fault
+  bool bad_connection2 = false;
+  bool bad_connection3 = false;
   
-  int avg=0;
+  byte avg=0;
 };
 
 
 //byte fan_speed = FAN_DEFAULT_SPEED;
 
 struct Fan_Struct {
-  int pin = FAN_PIN;                  // pin num
-  int manual_set_value = MANUAL_START_SPEED;
-  int target_speed = FAN_DEFAULT_SPEED;              // target value to approach, not necessicarily the current speed
-  int current_speed = 0;              // current value written to fan
-  int change_increment = 10;           // value to increment by to approach target
-  int fan_change_interval = 50;           // milliseconds to wait between incrementing value
-  int fan_minimum = 100;                  // minimum value where the fans are on
+  byte pin = FAN_PIN;                  // pin num
+  byte manual_set_value = MANUAL_START_SPEED;
+  byte target_speed = FAN_DEFAULT_SPEED;              // target value to approach, not necessicarily the current speed
+  byte current_speed = 0;              // current value written to fan
+  byte change_increment = 10;           // value to increment by to approach target
+  uint16_t fan_change_interval = 50;           // milliseconds to wait between incrementing value
+  byte fan_minimum = 100;                  // minimum value where the fans are on
   bool enabled  = false;                    // is fan enabled, if so, run functions
   bool manual = false;
 };
@@ -71,7 +70,7 @@ int attach_timer_fan();
 
 void fade_fans();          // interrupt to change the current value of the fans to approach the target value
 
-int fans_set_freq();      //interrupt to set the frequency the fans are adjusted
+bool fans_set_freq();      //interrupt to set the frequency the fans are adjusted
 
 
 
@@ -92,7 +91,7 @@ class Fans{
     void disable_temp3();
     void calculate_avg_temp();
     void calculate_fan_speed();
-    
+    bool check_for_bad_connections(); //when calculating, check sensors working
   public:
     
     Fans(){}
