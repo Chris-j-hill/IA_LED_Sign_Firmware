@@ -5,8 +5,11 @@
 //#include "Due.h"
 //#include "function_declarations.h"
 #include "DueTimer.h"
+#include "Due_DHT11.h"
 
-
+dht11 Temp1;    //objects for using dht library functions
+dht11 Temp2;
+dht11 Temp3;
 
 Temp_sensor temp_parameters;
 Fan_Struct fan_parameters;        //create fan struct
@@ -24,12 +27,6 @@ bool enable_temp_sensor = true;
 bool enable_temp_sensor = false;
 #endif
 
-//bool fans_enabled = false; //to check if initialised sucessfully
-bool temp_sensor_enabled = false;
-
-
-
-
 
 int attach_timer_fan() {
   //attach fan interrupt
@@ -38,7 +35,7 @@ int attach_timer_fan() {
 
     Timer2.attachInterrupt(fade_fans);   // attach ISR
     bool fail = fans_set_freq();          // set the freq to based on the programmed interval
-    
+
     if (fail) {
       Sprintln("Failed to attach fan timer");
       timers.fan_timer_attached = false;
@@ -77,15 +74,17 @@ void fade_fans() {         // interrupt to change the current value of the fans 
 }
 
 bool fans_set_freq() {     //interrupt to set the frequency the fans are adjusted
-  Timer2.setPeriod(fan_parameters.fan_change_interval*1000);
-  return (Timer2.getPeriod() != fan_parameters.fan_change_interval*1000);
+  Timer2.setPeriod(fan_parameters.fan_change_interval * 1000);
+  return (Timer2.getPeriod() != fan_parameters.fan_change_interval * 1000);
 }
+
+
 
 //methods for fans and temperature sensors
 
 // initialiser functions
 
-int Fans::init_fans() {          //initialise fans and set to starting value
+void Fans::init_fans() {          //initialise fans and set to starting value
   if (enable_fans)
     this -> enable();
 
@@ -93,195 +92,64 @@ int Fans::init_fans() {          //initialise fans and set to starting value
     this -> disable();
 }
 
-int Fans::init_temp_sensors() {    //code to initialise temp sensors
+void Fans::init_temp_sensors() {    //code to initialise temp sensors
 
-  //not much to initialise since the pin is not specifically set to output or input
-  // just test the sensor responds
+  if (enable_temp_sensor) {
+    int current_temperature;
 
-  int current_temperature;
-
-  if (temp_parameters.enabled1) {
-    current_temperature = get_temperature(temp_parameters.pin1);
-    if (current_temperature == -100) { //if the value is -100 -> error
-      Sprintln(F("Error Reading temperature sensor 1"));
+    if (temp_parameters.enabled1) {
+      Temp1.init(temp_parameters.pin1); //attach sensor
+      Temp1.scan(); //get values from this sensor
+      current_temperature = Temp1.get_temperature();  //read value out from class variable
+      if (current_temperature == 0) { //if the value is 0 -> error
+        Sprintln(F("Error Reading temperature sensor 1"));
+        temp_parameters.bad_connection1 = true;
+      }
+      else {
+        Sprint(F("Read temperature sensor 1 as:"));
+        Sprintln(current_temperature);
+        temp_parameters.bad_connection3 = false;
+      }
     }
-    else {
-      Sprint(F("Read temperature sensor 1 as:"));
-      Sprintln(current_temperature);
+
+    if (temp_parameters.enabled2) {
+      Temp2.init(temp_parameters.pin2);
+      Temp2.scan();
+      current_temperature = Temp2.get_temperature();
+      if (current_temperature == 0) {
+        Sprintln(F("Error Reading temperature sensor 2"));
+        temp_parameters.bad_connection2 = true;
+      }
+      else {
+        Sprint(F("Read temperature sensor 2 as:"));
+        Sprintln(current_temperature);
+        temp_parameters.bad_connection3 = false;
+      }
+    }
+
+    if (temp_parameters.enabled3) {
+      Temp3.init(temp_parameters.pin3);
+      Temp3.scan();
+      current_temperature = Temp3.get_temperature();
+      if (current_temperature == 0) {
+        Sprintln(F("Error Reading temperature sensor 3"));
+        temp_parameters.bad_connection3 = true;
+      }
+      else {
+        Sprint(F("Read temperature sensor 3 as:"));
+        Sprintln(current_temperature);
+        temp_parameters.bad_connection3 = false;
+      }
     }
   }
-  if (temp_parameters.enabled2) {
-    current_temperature = get_temperature(temp_parameters.pin2);
-    if (current_temperature == -100) {
-      Sprintln(F("Error Reading temperature sensor 2"));
-    }
-    else {
-      Sprint(F("Read temperature sensor 2 as:"));
-      Sprintln(current_temperature);
-    }
-  }
-  if (temp_parameters.enabled3) {
-    current_temperature = get_temperature(temp_parameters.pin3);
-    if (current_temperature == -100) {
-      Sprintln(F("Error Reading temperature sensor 3"));
-    }
-    else {
-      Sprint(F("Read temperature sensor 3 as:"));
-      Sprintln(current_temperature);
-    }
-  }
-  return (0);
 }
 
 int Fans::set_fan_speed() {
-
-  if (temp_parameters.enabled1)
-    this -> get_temperature(temp_parameters.pin1);
-  if (temp_parameters.enabled2)
-    this -> get_temperature(temp_parameters.pin2);
-  if (temp_parameters.enabled3)
-    this -> get_temperature(temp_parameters.pin3);
 
   this -> calculate_avg_temp();
 
   this -> calculate_fan_speed();
 
-}
-
-int Fans::get_temperature(int pin) {  //return the temperature as read by the specified pin
-
-  // call the poll_temperature_sensor to get it to return the data in its registers
-  // then get the relavent value of dat[] array and return it
-  byte temp_byte0;
-  byte temp_byte1;
-  byte temp_byte2;
-  byte temp_byte3;
-
-
-  poll_temperature_sensor(pin);
-
-  if (pin == temp_parameters.pin1 && temp_parameters.enabled1) {
-    if (temp_parameters.dat1 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat1 [3] < MIN_OPERATING_TEMPERATURE) {
-      temp_parameters.bad_connection1 = true;
-      return (-100);
-    }
-    temp_parameters.bad_connection1 = false;
-    temp_byte0 = temp_parameters.dat1 [0];
-    temp_byte1 = temp_parameters.dat1 [1];
-    temp_byte2 = temp_parameters.dat1 [2];
-    temp_byte3 = temp_parameters.dat1 [3];
-  }
-  else if (pin == temp_parameters.pin2 && temp_parameters.enabled2) {
-    if (temp_parameters.dat2 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat2 [3] < MIN_OPERATING_TEMPERATURE) {
-      temp_parameters.bad_connection2 = true;
-      return (-100);
-    }
-    temp_parameters.bad_connection2 = false;
-    temp_byte0 = temp_parameters.dat2 [0];
-    temp_byte1 = temp_parameters.dat2 [1];
-    temp_byte2 = temp_parameters.dat2 [2];
-    temp_byte3 = temp_parameters.dat2 [3];
-  }
-  else if (pin == temp_parameters.pin3 && temp_parameters.enabled3) {
-    if (temp_parameters.dat3 [3] > MAX_OPERATING_TEMPERATURE || temp_parameters.dat3 [3] < MIN_OPERATING_TEMPERATURE) {
-      temp_parameters.bad_connection3 = true;
-      return (-100);
-    }
-    temp_parameters.bad_connection3 = false;
-    temp_byte0 = temp_parameters.dat3 [0];
-    temp_byte1 = temp_parameters.dat3 [1];
-    temp_byte2 = temp_parameters.dat3 [2];
-    temp_byte3 = temp_parameters.dat3 [3];
-  }
-  else {
-    Sprintln(F("Error reading temperature sensor"));
-    return (-100);
-  }
-  //display results from function
-#ifdef DEBUG
-  Sprint ("Current humdity =");
-  Serial.print (temp_byte0, DEC); // display the humidity-bit integer;
-  Sprint ('.');
-  Serial.print (temp_byte1, DEC); // display the humidity decimal places;
-  Sprintln ('%');
-
-  Sprint ("Current temperature =");
-  Serial.print (temp_byte2, DEC); // display the temperature of integer bits;
-  Sprint ('.');
-  Serial.print (temp_byte3, DEC); // display the temperature of decimal paces;
-  Sprintln ('C');
-#endif
-
-  return (temp_byte0);
-
-}
-
-int Fans::poll_temperature_sensor (int pin) {    //adapted from this: https://tkkrlab.nl/wiki/Arduino_KY-015_Temperature_and_humidity_sensor_module
-
-  pinMode(pin, OUTPUT);      // confirm that the pin is an output
-  digitalWrite (pin, LOW);   // bus down, send start signal, drive line to ground
-  delay (30);                   // delay greater than 18ms, so DHT11 start signal can be detected
-  digitalWrite (pin, HIGH);  // drive bus to logic high again
-  delayMicroseconds (40);       // Wait for DHT11 response
-
-
-  pinMode (pin, INPUT);               // set pin to recieve data
-  int poll_start_time = millis();
-  byte timout = 10;
-  while (digitalRead (pin) == HIGH && millis() < timout + poll_start_time); // wait for sensor
-  if (millis() >= timout + poll_start_time) {
-    Sprintln(F("Error: Timeout. Temp sensor did not respond"));
-    return (-1);
-  }
-  delayMicroseconds (80);                // DHT11 response, pulled the bus 80us
-  if (digitalRead (pin) == LOW);
-  delayMicroseconds (80);                // DHT11 80us after the bus pulled to start sending data
-
-  if (pin = temp_parameters.pin1) {
-    for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp_parameters.dat1[i] = read_temp_data_from_register (pin);               // data to global array
-    Sprintln(F("Read temp sensor 1"));
-
-  }
-
-  else if (pin = temp_parameters.pin2) {
-    for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp_parameters.dat2[i] = read_temp_data_from_register (pin);
-    Sprintln(F("Read temp sensor 2"));
-  }
-
-  else if (pin = temp_parameters.pin3) {
-    for (int i = 0; i < 4; i ++)           // receive temperature and humidity data, the parity bit is not considered
-      temp_parameters.dat3[i] = read_temp_data_from_register (pin);
-    Sprintln(F("Read temp sensor 3"));
-  }
-
-  else {
-
-    Sprintln(F("Pin not defined as a temperature sensor, define as input to avoid possible damage"));
-    pinMode(pin, INPUT);
-    return (-1);
-  }
-
-
-  pinMode (pin, OUTPUT);
-  digitalWrite (pin, HIGH);            // send data once after releasing the bus, wait for the host to open the next Start signal
-  return (0);
-}
-
-byte Fans::read_temp_data_from_register (int pin) {   // read the data back from the register as bits and convert to a byte, call this for every byte to read
-
-  byte data;
-  for (int i = 0; i < 8; i ++) {
-    if (digitalRead (pin) == LOW) {
-      while (digitalRead (pin) == LOW);    // wait for 50us
-      delayMicroseconds (30);                 // determine the duration of the high level to determine the data is '0 'or '1'
-      if (digitalRead (pin) == HIGH)
-        data |= (1 << (7 - i));               // high front and low in the post
-      while (digitalRead (pin) == HIGH);   // data '1 ', wait for the next one receiver
-    }
-  }
-  return data;   //return one byte of data
 }
 
 void Fans::enable() {
@@ -391,14 +259,14 @@ void Fans::calculate_fan_speed() {
   if (check_for_bad_connections())
     fan_parameters.target_speed = 255;
 
-    // else allow manual or smart speed setting
+  // else allow manual or smart speed setting
   else {
 #if defined(ALLOW_SMART_MANUAL_OVERRIDE)
     if (temp_parameters.avg <= FAN_TURN_ON_TEMPERATURE)
       fan_parameters.target_speed = 0;
 
     else if (temp_parameters.avg > FAN_TURN_ON_TEMPERATURE)
-      fan_parameters.target_speed = map(temp_parameters.avg, FAN_TURN_ON_TEMPERATURE, FAN_MAX_SPEED_TEMPERATURE, 0, 100);
+      fan_parameters.target_speed = map(temp_parameters.avg, (FAN_TURN_ON_TEMPERATURE - 1), FAN_MAX_SPEED_TEMPERATURE, fan_parameters.fan_minimum, 255);
 
     else
       fan_parameters.target_speed = fan_parameters.fan_minimum;
@@ -413,7 +281,6 @@ void Fans::calculate_fan_speed() {
 #endif
   }
 }
-
 
 
 bool Fans::check_for_bad_connections() {
@@ -439,5 +306,48 @@ bool Fans::check_for_bad_connections() {
     return true;
   return false;   // one or more sensors ok
 
+}
+
+
+void Fans::update_temperatures() {
+  static uint32_t last_temp_update_time = millis();
+  byte newest_value;
+
+  if (millis() > last_temp_update_time + TEMP_UPDATE_DELAY_PERIOD) {
+    if (temp_parameters.enabled1) {
+      Temp1.scan();
+      newest_value = Temp1.get_temperature();
+      if (newest_value != 0) {
+        temp_parameters.temp1 = newest_value;
+        temp_parameters.bad_connection1 = false;
+      }
+      else
+        temp_parameters.bad_connection1 = true;
+    }
+
+    if (temp_parameters.enabled2) {
+      Temp2.scan();
+      newest_value = Temp2.get_temperature();
+      if (newest_value != 0) {
+        temp_parameters.temp2 = newest_value;
+        temp_parameters.bad_connection2 = false;
+      }
+      else
+        temp_parameters.bad_connection2 = true;
+    }
+
+    if (temp_parameters.enabled3) {
+      Temp3.scan();
+      newest_value = Temp3.get_temperature();
+
+      if (newest_value != 0) {
+        temp_parameters.temp3 = newest_value;
+        temp_parameters.bad_connection3 = false;
+      }
+      else
+        temp_parameters.bad_connection3 = true;
+    }
+
+  }
 }
 #endif

@@ -9,7 +9,7 @@
 
 
 #define FAN_DEFAULT_SPEED 180 
-#define FAN_TURN_ON_TEMPERATURE 30
+#define FAN_TURN_ON_TEMPERATURE 28
 #define FAN_MAX_SPEED_TEMPERATURE 40
 #define ALLOW_SMART_MANUAL_OVERRIDE // allow override, but will increase temperature to avoid thermal run away, full manual control if not defined
 #define MANUAL_START_SPEED 0
@@ -19,8 +19,10 @@
 #define TEMPERATURE_SENSOR_2_CONNECTED
 #define TEMPERATURE_SENSOR_3_CONNECTED
 
-#define MAX_OPERATING_TEMPERATURE 50    // max value, if bigger assume sensor broken
+#define MAX_OPERATING_TEMPERATURE 50    // max value sensor can return, if bigger assume sensor broken
 #define MIN_OPERATING_TEMPERATURE 5
+
+#define TEMP_UPDATE_DELAY_PERIOD 500
 
 struct Temp_sensor{
 
@@ -29,7 +31,7 @@ struct Temp_sensor{
   byte pin3 = TEMP3;
 
   bool enabled1 = true;
-  bool enabled2 = false;
+  bool enabled2 = true;
   bool enabled3 = true;
 
   byte dat1[5];         //data array for temp and humidity
@@ -80,8 +82,6 @@ class Fans{
 
   private:
 
-    int poll_temperature_sensor (int pin);       // read temp sensor registers, used to update stored value to most recent
-    byte read_temp_data_from_register (int pin);        // convert incoming bits from temp sensor to a byte
     void enable_temp1();
     void enable_temp2();
     void enable_temp3();
@@ -89,30 +89,27 @@ class Fans{
     void disable_temp1();
     void disable_temp2();
     void disable_temp3();
+    
     void calculate_avg_temp();
     void calculate_fan_speed();
     bool check_for_bad_connections(); //when calculating, check sensors working
+  
   public:
     
     Fans(){}
     
-      //initialisations of individual items, set pins, test if working if applicable, etc
-    int init_fans();
-    int init_temp_sensors();            
-    int set_fan_speed();   
-    int get_temperature (int pin);       // read temperature based on specified pin, return value in degrees C
+    //initialisations of individual items, set pins, test if working if applicable, etc
+    void init_fans();
+    void init_temp_sensors();            
+    int set_fan_speed();
+    void enable();
+    void disable();   
     void enable_temp();
     void disable_temp();
-//TODO
 
-    int set_fan(int newValue);
-    int is_fan_on();                  //useful for menu display
-    int return_fan_speed();
-    int get_humidity();       //because we can
-    int set_temp_sensor_enable(int sensor);   //code to enable sensors, might be useful to toggle them, maybe autotoggle if not working?
-    int set_temp_sensor_disable(int sensor);
-    void enable();
-    void disable();
+    void update_temperatures();
+
+
 
 };
 

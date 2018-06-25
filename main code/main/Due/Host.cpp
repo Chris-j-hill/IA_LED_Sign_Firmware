@@ -7,11 +7,13 @@
 #include "Config_local.h"
 #include "Fans.h"
 #include "function_declarations.h"
+#include "Led_strip.h"
 
 //access to structs
 extern Temp_sensor temp_parameters;
 extern Fan_Struct fan_parameters;
 extern Timers timers;
+extern Led_Strip_Struct led_strip_parameters;
 
 void Host::init_serial() {
   Serial.begin(HOST_SERIAL_SPEED);
@@ -32,7 +34,7 @@ void Host::check_serial() {   //to read incomming data
     else if (rx == "strip") data_to_report = REPORT_LED_STRIP;
     else if (rx == "temp") data_to_report = REPORT_TEMPS;
     else if (rx == "stop") data_to_report = STOP_REPORT;
-
+    else if (rx == "ldr") led_strip_parameters.target_brightness += 128;
   }
 
 
@@ -130,8 +132,6 @@ void Host::print_temps() {
   Serial.print(temp_parameters.pin3);
   Serial.print(F("     "));
 
-  //Serial.print(F("\t"));
-
   if (temp_parameters.enabled1)
     Serial.print(F("Y "));
   else
@@ -149,11 +149,11 @@ void Host::print_temps() {
 
   Serial.print(F("\t "));
 
-  if (!temp_parameters.enabled1)  
+  if (!temp_parameters.enabled1)
     Serial.print(F("- "));
   else {
     if (temp_parameters.bad_connection1)
-      Serial.print(F("N "));    
+      Serial.print(F("N "));
     else
       Serial.print(F("Y "));
   }
@@ -191,5 +191,29 @@ void Host::print_temps() {
 
 
 }
-void Host::print_led_strip() {}
+void Host::print_led_strip() {
+
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Pin \tLED Strip Enabled \tCurrent Brightness \tTarget Brightness \tUse Fast ISR Interval"));
+  }
+  Serial.print(led_strip_parameters.pin);
+  Serial.print(F("\t"));
+
+  if (led_strip_parameters.enabled)
+    Serial.print(F("Yes\t\t\t"));
+  else
+    Serial.print(F("No\t\t\t"));
+
+  Serial.print(led_strip_parameters.current_brightness);
+  Serial.print(F("\t\t\t"));
+
+  Serial.print(led_strip_parameters.target_brightness);
+  Serial.print(F("\t\t\t"));
+  if (led_strip_parameters.fast_interval)
+    Serial.println(F("Yes"));
+  else
+    Serial.println(F("No"));
+
+}
 #endif // Host_CPP

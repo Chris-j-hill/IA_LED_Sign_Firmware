@@ -17,11 +17,6 @@ bool enable_led_strip = true;
 bool enable_led_strip = false;
 #endif
 
-bool led_strip_enabled = false;
-
-byte led_strip_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;
-
-
 
 
 // ______  non class functions _______
@@ -29,42 +24,57 @@ byte led_strip_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;
 int attach_timer_led_strip() {
 
   //attach led strip interrupt
-  if (!timers.led_strip_timer_attached && led_strip_enabled) {
+  if (!timers.led_strip_timer_attached && led_strip_parameters.enabled) {
     timers.led_strip_timer_attached = true;       //indicate the timer is attached
 
     Timer1.attachInterrupt(fade_led_strip);   //attach ISR
-    int fail = led_strip_set_freq();          // set the freq to based on the programmed interval
+    byte fail = led_strip_init_freq();          // set the freq to based on the programmed interval
 
     if (fail != 0) {
       Sprintln(F("Failed to attach led strip timer"));
       timers.led_strip_timer_attached = false;      //failed to attach
-      return (-1);    //stop code
+      return (1);    //stop code
     }
 
     timers.led_strip_timer_attached = true;       //indicate the timer is attached
     Timer1.start();
     Sprintln(F("Attached led strip timer"));
   }
+  return (0);
 }
 
-int led_strip_set_freq() {      //function to set the frequency of the led strip interrupt, use at the end of a main loop iteration
+byte led_strip_init_freq() {
+  Timer1.setPeriod(led_strip_parameters.change_interval * 1000);    //initially set fast, and slow later if needed
+  return (Timer1.getPeriod() != led_strip_parameters.change_interval * 1000);
+}
 
+byte Led_Strip::led_strip_set_freq() {      //function to set the frequency of the led strip interrupt, use at the end of a main loop iteration
 
-  if (!timers.led_strip_timer_attached) {
-    Sprintln(F("From 'led_strip_set_freq': trying to set frequency but timer not attached"));
-    return (-1);
-  }
-  else {
-    if (led_strip_parameters.target_brightness == led_strip_parameters.current_brightness) {
-      if (led_strip_parameters.fast_interval)  //if values the same and using fast interval, set to slow interval
-        Timer1.setPeriod(led_strip_parameters.led_stable_interval * 1000); //period in microseconds
-      return (0);
+  static int led_strip_period_update_timer = millis();
+
+  if (millis() > led_strip_period_update_timer + LED_STRIP_PERIOD_UPDATE_INTERVAL) {
+    if (!timers.led_strip_timer_attached) {
+      Sprintln(F("From 'led_strip_set_freq': trying to set frequency but timer not attached"));
+      return (1);
     }
+    else {
+      if (led_strip_parameters.target_brightness == led_strip_parameters.current_brightness) {
+        if (led_strip_parameters.fast_interval) { //if values the same and using fast interval, set to slow interval
+          Timer1.setPeriod(led_strip_parameters.led_stable_interval * 1000); //period in microseconds
+          Timer1.start();
+        }
+        led_strip_parameters.fast_interval = false;
+        return (0);
+      }
 
-    if (led_strip_parameters.target_brightness != led_strip_parameters.current_brightness) {
-      if (!led_strip_parameters.fast_interval)  //if values not the same and using slow interval, set to fast interval
-        Timer1.setPeriod(led_strip_parameters.change_interval * 1000);
-      return (0);
+      if (led_strip_parameters.target_brightness != led_strip_parameters.current_brightness) {
+        if (!led_strip_parameters.fast_interval) { //if values not the same and using slow interval, set to fast interval
+          Timer1.setPeriod(led_strip_parameters.change_interval * 1000);
+          Timer1.start();
+        }
+        led_strip_parameters.fast_interval = true;
+        return (0);
+      }
     }
   }
 }
@@ -78,7 +88,7 @@ void fade_led_strip() {         //ISR functon to fade led strip between current 
   // led_fast_interrupt dictates which is used, this is changed in function
 
   if (led_strip_parameters.enabled) { //only write values if enabled
-    
+
     //if theres a difference, do something, ohterwise skip to end
     if (led_strip_parameters.target_brightness != led_strip_parameters.current_brightness) {
       if (!led_strip_parameters.sinusoidal) {   //linear fade
@@ -107,17 +117,13 @@ void fade_led_strip() {         //ISR functon to fade led strip between current 
 }
 
 
-
-
-// ______  non class functions _______
-
 int Led_Strip::init_led_strip() {     // initialise the led strip and set it to starting value
 
   if (enable_led_strip)
     this -> enable();
   else
     this -> disable();
-  
+
 }
 
 

@@ -41,7 +41,7 @@ void due_setup() {
 
   fans.init_fans();
   fans.init_temp_sensors();
-
+  led_strip.init_led_strip();
   host.print_messages();
 
 }
@@ -52,8 +52,9 @@ void due_loop() {
     // //do these periodically based on config
     // cards.check_for_sd_card_inserted();
     // internet.check_connection();
-    // fans.get_temperature();
+    fans.update_temperatures();
     fans.set_fan_speed();
+    led_strip.led_strip_set_freq();
     // graphics.update_brightness();
     // encoder.update_encoder_postion();
     // encoder.pressed();
@@ -63,6 +64,7 @@ void due_loop() {
     // update_text_location(); //write location variable to be sent by interrupt
     host.check_serial();
     host.print_messages();
+
   }
 
 }
