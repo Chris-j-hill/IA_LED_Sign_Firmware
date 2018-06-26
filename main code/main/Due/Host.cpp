@@ -16,6 +16,39 @@ extern Temp_sensor temp_parameters;
 extern Fan_Struct fan_parameters;
 extern Timers timers;
 extern Led_Strip_Struct led_strip_parameters;
+Serial_Sub_Menu serial_sub_menu_items;
+
+
+String space_colon_string PROGMEM = " : ";
+String dash_space_string PROGMEM = "- ";
+String tab_string PROGMEM = "\t";
+String space_string PROGMEM = " ";
+
+inline void space(){
+  Serial.print(space_string);
+};
+inline void tab(){
+  Serial.print(tab_string);
+};
+
+inline void space_colon(){
+  Serial.print(space_colon_string);
+};
+
+inline void dash_space(){
+  Serial.print(dash_space_string);
+};
+
+inline void print_command_name(String command_data){
+  Serial.print(command_data);
+  space_colon();
+};
+
+inline void print_new_command_name(String command_data){
+  Serial.println(F("New Value"));
+  print_command_name(command_data);
+};
+
 
 void Host::init_serial() {
   Serial.begin(HOST_SERIAL_SPEED);
@@ -29,13 +62,13 @@ void Host::check_serial() {   //to read incomming data
     rx.trim();  //trim off return carraige
 
     //set message printing mode
-    if (rx == "fans") data_to_report = REPORT_FANS;
-    else if (rx == "strip")   data_to_report = REPORT_LED_STRIP;
-    else if (rx == "temp")    data_to_report = REPORT_TEMPS;
-    else if (rx == "stop")    data_to_report = STOP_REPORT;
-    else if (rx == "ldr")     data_to_report = REPORT_LDRS;
-    else if (rx == "menu")    data_to_report = REPORT_MENU_TREE;
-    else if (rx == "encoder") data_to_report = REPORT_ENCODER;
+    if      (rx == serial_sub_menu_items.items[REPORT_FANS])          data_to_report = REPORT_FANS;
+    else if (rx == serial_sub_menu_items.items[REPORT_LED_STRIP])     data_to_report = REPORT_LED_STRIP;
+    else if (rx == serial_sub_menu_items.items[REPORT_TEMPS])         data_to_report = REPORT_TEMPS;
+    else if (rx == serial_sub_menu_items.items[STOP_REPORT])          data_to_report = STOP_REPORT;
+    else if (rx == serial_sub_menu_items.items[REPORT_LDRS])          data_to_report = REPORT_LDRS;
+    else if (rx == serial_sub_menu_items.items[REPORT_MENU_TREE])     data_to_report = REPORT_MENU_TREE;
+    else if (rx == serial_sub_menu_items.items[REPORT_ENCODER])       data_to_report = REPORT_ENCODER;
 
 
     else { //input might be to directly change value
@@ -47,35 +80,211 @@ void Host::check_serial() {   //to read incomming data
 }
 
 void Host::serial_sub_menu(String rx) {
-  if (rx == "-h") {
+
+  //split input into strings based on these delimiters
+  byte first_delimiter = rx.indexOf(' ');
+  byte second_delimiter = rx.indexOf(' ', first_delimiter + 1);
+  byte third_delimiter = rx.indexOf(' ', second_delimiter + 1);
+
+  String data_set = rx.substring(0, first_delimiter);
+  String command_mode = rx.substring(first_delimiter + 1, second_delimiter);
+  String command_data = rx.substring(second_delimiter + 1, third_delimiter);
+  String command_arg =  rx.substring(third_delimiter + 1); //value to write as a string
+
+  int value = command_arg.toInt();  //value as an int
+
+
+  //    Serial.print("data set: ");
+  //    Serial.println(data_set);
+  //
+  //    Serial.print("Value: ");
+  //    Serial.println(value);
+  //    Serial.println(command_mode);
+  //    Serial.println(command_data);
+  //    Serial.println(command_arg);
+
+  if (command_mode == "-h") {
+    data_to_report = data_set_LUT(data_set);  //convert string to data to display
     print_help_options();
+    data_to_report = STOP_REPORT;   // stop printing to keep options on screen
   }
 
-  else {
-    //split input into two strings
-    String command = rx.substring(0, rx.indexOf(' '));
-    String command_arg = rx.substring(rx.indexOf(' ') + 1, rx.length());
-    int value = command_arg.toInt();
-    
-//    Serial.print("String: ");
-//    Serial.println(rx);
-//    Serial.print("Command: ");
-//    Serial.println(command);
-//
-//    Serial.print("Value: ");
-//    Serial.println(value);
-//    if (command == "-asdf")
-//    Serial.println("True");
-
-
-
+  else if (command_mode == "-r") {
+    byte temp = data_to_report;
+    data_to_report = data_set_LUT(data_set);
+    return_data(command_data);
+    data_to_report = temp;    //return to whatever we were doing before
   }
+
+  else if (command_mode == "-w") {
+    byte temp = data_to_report;
+    data_to_report = data_set_LUT(data_set);
+    write_data(command_data, value);
+    data_to_report = temp;    //return to whatever we were doing before
+  }
+}
+
+
+byte Host::data_set_LUT(String data_set) {
+
+  if (data_set == serial_sub_menu_items.items[REPORT_FANS])
+    return REPORT_FANS;
+  else if (data_set == serial_sub_menu_items.items[REPORT_TEMPS])
+    return REPORT_TEMPS;
+  else if (data_set == serial_sub_menu_items.items[REPORT_LED_STRIP])
+    return REPORT_LED_STRIP;
+  else if (data_set == serial_sub_menu_items.items[REPORT_ENCODER])
+    return REPORT_ENCODER;
 }
 
 void Host::print_help_options() {
 
+  switch (data_to_report) {
+    case REPORT_FANS:
+      Serial.println();
+      Serial.println(F("Command \t   Description"));
+
+      for (int i = 0; i < NUM_FAN_MENU_OPTIONS; i++) {
+        Serial.print(serial_sub_menu_items.fans[i]);
+
+        //tab out
+        Serial.print("\t");
+        if (serial_sub_menu_items.fans[i].length() < 8)
+          Serial.print("\t");
+
+        space_colon();
+
+        Serial.println(serial_sub_menu_items.fans_descriptions[i]);
+      }
+
+      Serial.println();
+      Serial.println(serial_sub_menu_items.prepend_commands);
+      Serial.println();
+      data_to_report = STOP_REPORT;
+      break;
+
+    case REPORT_TEMPS:
+
+
+      break;
+
+    case REPORT_LED_STRIP:
+
+
+      break;
+  }
+
 }
 
+void Host::write_data(String command_data, int value) {
+
+
+  
+  String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation";
+
+  Serial.println(F("Original Value"));
+  return_data(command_data);
+
+  switch (data_to_report) {
+    case REPORT_FANS:
+      if (command_data == serial_sub_menu_items.fans[0]) {
+        Serial.println(pin_error_msg);
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.pin);
+      }
+      else if (command_data == serial_sub_menu_items.fans[1]) {
+        fan_parameters.manual_set_value = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.manual_set_value);
+      }
+      else if (command_data == serial_sub_menu_items.fans[2]) {
+        fan_parameters.target_speed = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.target_speed);
+      }
+      else if (command_data == serial_sub_menu_items.fans[3]) {
+        fan_parameters.current_speed = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.current_speed);
+      }
+      else if (command_data == serial_sub_menu_items.fans[4]) {
+        fan_parameters.change_increment = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.change_increment);
+      }
+      else if (command_data == serial_sub_menu_items.fans[5]) {
+        fan_parameters.fan_change_interval = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.fan_change_interval);
+      }
+      else if (command_data == serial_sub_menu_items.fans[6]) {
+        fan_parameters.fan_minimum = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.fan_minimum);
+      }
+      else if (command_data == serial_sub_menu_items.fans[7]) {
+        fan_parameters.enabled = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.enabled);
+      }
+      else if (command_data == serial_sub_menu_items.fans[8]) {
+        fan_parameters.manual = value;
+        print_new_command_name(command_data);
+        Serial.println(fan_parameters.manual);
+      }
+
+      break;
+
+  }
+
+}
+
+void Host::return_data(String command_data) {
+
+  switch (data_to_report) {
+    case REPORT_FANS:
+      if (command_data == serial_sub_menu_items.fans[0]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.pin);
+      }
+      else if (command_data == serial_sub_menu_items.fans[1]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.manual_set_value);
+      }
+      else if (command_data == serial_sub_menu_items.fans[2]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.target_speed);
+      }
+      else if (command_data == serial_sub_menu_items.fans[3]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.current_speed);
+      }
+      else if (command_data == serial_sub_menu_items.fans[4]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.change_increment);
+      }
+      else if (command_data == serial_sub_menu_items.fans[5]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.fan_change_interval);
+      }
+      else if (command_data == serial_sub_menu_items.fans[6]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.fan_minimum);
+      }
+      else if (command_data == serial_sub_menu_items.fans[7]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.enabled);
+      }
+      else if (command_data == serial_sub_menu_items.fans[8]) {
+        print_command_name(command_data);
+        Serial.println(fan_parameters.manual);
+      }
+
+      break;
+
+  }
+
+}
 
 void Host::print_messages() {
   static uint16_t last_message_print_time;
@@ -143,7 +352,7 @@ void Host::print_fans() {
   Serial.print(fan_parameters.current_speed);
   Serial.print(F("\t\t "));
   Serial.print(fan_parameters.target_speed);
-  Serial.print(F("\t\t "));
+  tab(); tab();
   Serial.print(temp_parameters.avg);
   Serial.println();
 
@@ -157,73 +366,79 @@ void Host::print_temps() {
   }
 
   Serial.print(temp_parameters.pin1);
-  Serial.print(F(" "));
+  space();
 
   Serial.print(temp_parameters.pin2);
-  Serial.print(F(" "));
+  space();
 
   Serial.print(temp_parameters.pin3);
-  Serial.print(F("     "));
+  
+  space();space();space();space();space();
 
   if (temp_parameters.enabled1)
-    Serial.print(F("Y "));
+    Serial.print(F("Y"));
   else
-    Serial.print(F("N "));
-
+    Serial.print(F("N"));
+  space();
   if (temp_parameters.enabled2)
-    Serial.print(F("Y "));
+    Serial.print(F("Y"));
   else
-    Serial.print(F("N "));
-
+    Serial.print(F("N"));
+  space();
   if (temp_parameters.enabled3)
-    Serial.print(F("Y\t"));
+    Serial.print(F("Y"));
   else
-    Serial.print(F("N\t"));
+    Serial.print(F("N"));
 
-  Serial.print(F("\t "));
+  tab();tab();space();
 
   if (!temp_parameters.enabled1)
-    Serial.print(F("- "));
+    dash_space();
   else {
     if (temp_parameters.bad_connection1)
-      Serial.print(F("N "));
+      Serial.print(F("N"));
     else
-      Serial.print(F("Y "));
+      Serial.print(F("Y"));
+      space();
   }
 
   if (!temp_parameters.enabled2)
-    Serial.print(F("- "));
+    dash_space();
   else {
     if (temp_parameters.bad_connection2)
-      Serial.print(F("N "));
+      Serial.print(F("N"));
     else
-      Serial.print(F("Y "));
+      Serial.print(F("Y"));
+      space();
   }
 
-  if (!temp_parameters.enabled3)
-    Serial.print(F("- "));
+  if (!temp_parameters.enabled3){
+    dash_space();tab();
+    }
   else {
     if (temp_parameters.bad_connection3)
-      Serial.print(F("N\t"));
+      Serial.print(F("N"));
     else
-      Serial.print(F("Y\t"));
+      Serial.print(F("Y"));
+      tab();
   }
-  Serial.print(F("\t\t "));
+  tab();tab();space();
 
   Serial.print(temp_parameters.temp1);
-  Serial.print(F(" "));
+  space();
 
   Serial.print(temp_parameters.temp2);
-  Serial.print(F(" "));
+  space();
 
   Serial.print(temp_parameters.temp3);
-  Serial.print(F("\t\t"));
+  tab();tab();space();
 
   Serial.print(temp_parameters.avg);
   Serial.println();
 
 
 }
+
 void Host::print_led_strip() {
 
   if (header_print_counter == 0) {
@@ -231,18 +446,18 @@ void Host::print_led_strip() {
     Serial.println(F("Pin \tLED Strip Enabled \tCurrent Brightness \tTarget Brightness \tUse Fast ISR Interval"));
   }
   Serial.print(led_strip_parameters.pin);
-  Serial.print(F("\t"));
+  tab();
 
   if (led_strip_parameters.enabled)
-    Serial.print(F("Yes\t\t\t"));
+    Serial.print(F("Yes"));
   else
-    Serial.print(F("No\t\t\t"));
-
+    Serial.print(F("No"));
+  tab();tab();tab();
   Serial.print(led_strip_parameters.current_brightness);
-  Serial.print(F("\t\t\t"));
+  tab();tab();tab();
 
   Serial.print(led_strip_parameters.target_brightness);
-  Serial.print(F("\t\t\t"));
+  tab();tab();tab();
   if (led_strip_parameters.fast_interval)
     Serial.println(F("Yes"));
   else
