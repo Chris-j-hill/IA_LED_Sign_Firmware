@@ -8,8 +8,8 @@
 
 
         //also uses SDA1 and SCL1 and spi pins
-        #define PIN_A       5
-        #define PIN_B       6
+        #define PIN_A       5   //clk
+        #define PIN_B       6   //dt
         #define BUTTON_PIN  7
 
         #define LED_STRIP   8

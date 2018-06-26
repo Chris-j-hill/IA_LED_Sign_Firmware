@@ -13,13 +13,14 @@
 #define REPORT_MENU_TREE      4
 #define REPORT_LDRS           5
 #define REPORT_ENCODER        6
+#define REPORT_BUTTON         7
 
 #define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow
 #define MEGGAGE_DELAY_PERIOD    200   //delay this many ms between message prints
 //class to manage all functions regarding communication with due host device (probably a pi)
 
 #define NUM_FAN_MENU_OPTIONS 9
-#define NUM_MENU_ITEMS 7
+#define NUM_MENU_ITEMS 8
 
 struct Serial_Sub_Menu {
   String prepend_commands PROGMEM = "to read a value above, type -r followed by the command, to write a new value type -w and append the value(eg fans -w pin 10)";
@@ -28,7 +29,7 @@ struct Serial_Sub_Menu {
 
 
 
-  String items[NUM_MENU_ITEMS] = {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder"};
+  String items[NUM_MENU_ITEMS] = {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button"};
 
 };
 //
@@ -47,13 +48,17 @@ class Host {
     void print_fans();
     void print_temps();
     void print_led_strip();
+    void print_encoder();
+    void print_button();
+    void print_ldrs();
+    void print_menu_tree();
     void serial_sub_menu(String rx);
     void print_help_options();
     byte data_set_LUT(String data_set);
     void return_data(String command_data); //prints current value to screen
     void write_data(String command_data, int value); // updates specific data
 
-    
+
   public:
     Host() {}
     void init_serial();

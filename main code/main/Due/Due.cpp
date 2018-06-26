@@ -37,12 +37,15 @@ void due_setup() {
 #endif
   host.init_serial();
   host.check_serial();  //force into defined mode
-  host.print_messages();
+  //host.print_messages();
 
   fans.init_fans();
   fans.init_temp_sensors();
   led_strip.init_led_strip();
-  host.print_messages();
+  encoder.init_encoder();
+  encoder.init_button();
+  
+  //host.print_messages();
 
 }
 
@@ -56,8 +59,7 @@ void due_loop() {
     fans.set_fan_speed();
     led_strip.led_strip_set_freq();
     // graphics.update_brightness();
-    // encoder.update_encoder_postion();
-    // encoder.pressed();
+    encoder.handle_interupts();  
     // update_display();  //push additional data to screens as required
     //
     // //do this based speed variable
