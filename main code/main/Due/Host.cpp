@@ -31,6 +31,7 @@ String space_string PROGMEM = " ";
 inline void space() {
   Serial.print(space_string);
 };
+
 inline void tab() {
   Serial.print(tab_string);
 };
@@ -80,8 +81,6 @@ void Host::check_serial() {   //to read incomming data
       serial_sub_menu(rx);
     }
   }
-
-
 }
 
 void Host::serial_sub_menu(String rx) {
@@ -132,159 +131,108 @@ void Host::serial_sub_menu(String rx) {
 
 byte Host::data_set_LUT(String data_set) {
 
-  if (data_set == serial_sub_menu_items.items[REPORT_FANS])
+  if (data_set == serial_sub_menu_items.data_elements[0][REPORT_FANS])
     return REPORT_FANS;
-  else if (data_set == serial_sub_menu_items.items[REPORT_TEMPS])
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_TEMPS])
     return REPORT_TEMPS;
-  else if (data_set == serial_sub_menu_items.items[REPORT_LED_STRIP])
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_LED_STRIP])
     return REPORT_LED_STRIP;
-  else if (data_set == serial_sub_menu_items.items[REPORT_ENCODER])
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_MENU_TREE])
+    return REPORT_MENU_TREE;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_LDRS])
+    return REPORT_LDRS;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_ENCODER])
     return REPORT_ENCODER;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_BUTTON])
+    return REPORT_BUTTON;
+
 }
 
 void Host::print_help_options() {
 
-  switch (data_to_report) {
-    case REPORT_FANS:
-      Serial.println();
-      Serial.println(F("Command \t   Description"));
+  Serial.println();
+  Serial.println(F("Command \t   Description"));
 
-      for (int i = 0; i < NUM_FAN_MENU_OPTIONS; i++) {
-        Serial.print(serial_sub_menu_items.fans[i]);
+  //loop through commands
+  for (int i = 0; i < serial_sub_menu_items.active_elements_by_row[data_to_report]; i++) {
+    Serial.print(serial_sub_menu_items.data_elements[data_to_report][i]);
 
-        //tab out
-        Serial.print("\t");
-        if (serial_sub_menu_items.fans[i].length() < 8)
-          Serial.print("\t");
+    //tab out
+    tab();
+    if (serial_sub_menu_items.data_elements[data_to_report][i].length() < 8)
+      tab();
 
-        space_colon();
+    space_colon();
 
-        Serial.println(serial_sub_menu_items.fans_descriptions[i]);
-      }
-
-      Serial.println();
-      Serial.println(serial_sub_menu_items.prepend_commands);
-      Serial.println();
-      data_to_report = STOP_REPORT;
-      break;
-
-    case REPORT_TEMPS:
-
-
-      break;
-
-    case REPORT_LED_STRIP:
-
-
-      break;
+    Serial.println(serial_sub_menu_items.data_descriptions[data_to_report][i]);
   }
 
+  Serial.println();
+  if (data_to_report != STOP_REPORT)
+  Serial.println(serial_sub_menu_items.prepend_commands);
+  else
+  Serial.println(serial_sub_menu_items.top_level_commands);
+  Serial.println();
+  data_to_report = STOP_REPORT;
 }
 
 void Host::write_data(String command_data, int value) {
 
-  String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation";
+  for (int i = 0; i < serial_sub_menu_items.active_elements_by_row[data_to_report]; i++) {
+    if (command_data == serial_sub_menu_items.data_elements[data_to_report][i]) {
+      Serial.println(F("Original Value"));
+      print_command_name(command_data);
+      read_write_LUT(i, 'r');
 
-  Serial.println(F("Original Value"));
-  return_data(command_data);
+      read_write_LUT(i, 'w', value);
 
-  switch (data_to_report) {
-    case REPORT_FANS:
-      if (command_data == serial_sub_menu_items.fans[0]) {
-        Serial.println(pin_error_msg);
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.pin);
-      }
-      else if (command_data == serial_sub_menu_items.fans[1]) {
-        fan_parameters.manual_set_value = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.manual_set_value);
-      }
-      else if (command_data == serial_sub_menu_items.fans[2]) {
-        fan_parameters.target_speed = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.target_speed);
-      }
-      else if (command_data == serial_sub_menu_items.fans[3]) {
-        fan_parameters.current_speed = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.current_speed);
-      }
-      else if (command_data == serial_sub_menu_items.fans[4]) {
-        fan_parameters.change_increment = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.change_increment);
-      }
-      else if (command_data == serial_sub_menu_items.fans[5]) {
-        fan_parameters.fan_change_interval = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.fan_change_interval);
-      }
-      else if (command_data == serial_sub_menu_items.fans[6]) {
-        fan_parameters.fan_minimum = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.fan_minimum);
-      }
-      else if (command_data == serial_sub_menu_items.fans[7]) {
-        fan_parameters.enabled = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.enabled);
-      }
-      else if (command_data == serial_sub_menu_items.fans[8]) {
-        fan_parameters.manual = value;
-        print_new_command_name(command_data);
-        Serial.println(fan_parameters.manual);
-      }
-
+      print_new_command_name(command_data);
+      read_write_LUT(i, 'r');
       break;
-
+    }
   }
-
 }
 
 void Host::return_data(String command_data) {
 
+  for (int i = 0; i < serial_sub_menu_items.active_elements_by_row[data_to_report]; i++) {
+    if (command_data == serial_sub_menu_items.data_elements[data_to_report][i]) {
+      print_command_name(command_data);
+      read_write_LUT(i, 'r');
+      ;
+    }
+  }
+}
+
+void Host::read_write_LUT(byte index, char r_w, int value) {
+
+  String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
+
   switch (data_to_report) {
     case REPORT_FANS:
-      if (command_data == serial_sub_menu_items.fans[0]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.pin);
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(fan_parameters.pin)                          : Serial.println(pin_error_msg);                   break;
+        case 1: (r_w == 'r')  ?  Serial.println(fan_parameters.manual_set_value)             : fan_parameters.manual_set_value = value;         break;
+        case 2: (r_w == 'r')  ?  Serial.println(fan_parameters.target_speed)                 : fan_parameters.target_speed = value;             break;
+        case 3: (r_w == 'r')  ?  Serial.println(fan_parameters.current_speed)                : fan_parameters.current_speed = value;            break;
+        case 4: (r_w == 'r')  ?  Serial.println(fan_parameters.change_increment)             : fan_parameters.change_increment = value;         break;
+        case 5: (r_w == 'r')  ?  Serial.println(fan_parameters.fan_change_interval)          : fan_parameters.fan_change_interval = value;      break;
+        case 6: (r_w == 'r')  ?  Serial.println(fan_parameters.fan_minimum)                  : fan_parameters.fan_minimum = value;              break;
+        case 7: (r_w == 'r')  ?  Serial.println(fan_parameters.enabled)                      : fan_parameters.enabled = value;                  break;
+        case 8: (r_w == 'r')  ?  Serial.println(fan_parameters.manual)                       : fan_parameters.manual = value;                   break;
       }
-      else if (command_data == serial_sub_menu_items.fans[1]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.manual_set_value);
-      }
-      else if (command_data == serial_sub_menu_items.fans[2]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.target_speed);
-      }
-      else if (command_data == serial_sub_menu_items.fans[3]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.current_speed);
-      }
-      else if (command_data == serial_sub_menu_items.fans[4]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.change_increment);
-      }
-      else if (command_data == serial_sub_menu_items.fans[5]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.fan_change_interval);
-      }
-      else if (command_data == serial_sub_menu_items.fans[6]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.fan_minimum);
-      }
-      else if (command_data == serial_sub_menu_items.fans[7]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.enabled);
-      }
-      else if (command_data == serial_sub_menu_items.fans[8]) {
-        print_command_name(command_data);
-        Serial.println(fan_parameters.manual);
-      }
-
       break;
 
+    case REPORT_TEMPS:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(temp_parameters.pin1)                        : Serial.println(pin_error_msg);                   break;
+        case 1: (r_w == 'r')  ?  Serial.println(temp_parameters.pin2)                        : Serial.println(pin_error_msg);                   break;
+        case 2: (r_w == 'r')  ?  Serial.println(temp_parameters.pin3)                        : Serial.println(pin_error_msg);                   break;
+        case 3: (r_w == 'r')  ?  Serial.println(temp_parameters.enabled1)                    : temp_parameters.enabled1 = value;                break;
+        case 4: (r_w == 'r')  ?  Serial.println(temp_parameters.enabled2)                    : temp_parameters.enabled2 = value;                break;
+        case 5: (r_w == 'r')  ?  Serial.println(temp_parameters.enabled3)                    : temp_parameters.enabled3 = value;                break;
+      }
+      break;
   }
 
 }
@@ -529,7 +477,7 @@ void Host::print_button() {
   else
     Serial.print(F("No "));
 
-   tab; tab(); tab();
+  tab; tab(); tab();
 
   if (button_parameters.is_attached)
     Serial.print(F("Yes"));
