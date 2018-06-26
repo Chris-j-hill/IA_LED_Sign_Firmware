@@ -151,7 +151,7 @@ byte Host::data_set_LUT(String data_set) {
 void Host::print_help_options() {
 
   Serial.println();
-  Serial.println(F("Command \t   Description"));
+  Serial.println(F("Command \t\t   Description"));
 
   //loop through commands
   for (int i = 0; i < serial_sub_menu_items.active_elements_by_row[data_to_report]; i++) {
@@ -159,6 +159,8 @@ void Host::print_help_options() {
 
     //tab out
     tab();
+    if (serial_sub_menu_items.data_elements[data_to_report][i].length() < 16)
+      tab();
     if (serial_sub_menu_items.data_elements[data_to_report][i].length() < 8)
       tab();
 
@@ -169,9 +171,9 @@ void Host::print_help_options() {
 
   Serial.println();
   if (data_to_report != STOP_REPORT)
-  Serial.println(serial_sub_menu_items.prepend_commands);
+    Serial.println(serial_sub_menu_items.prepend_commands);
   else
-  Serial.println(serial_sub_menu_items.top_level_commands);
+    Serial.println(serial_sub_menu_items.top_level_commands);
   Serial.println();
   data_to_report = STOP_REPORT;
 }
@@ -199,7 +201,7 @@ void Host::return_data(String command_data) {
     if (command_data == serial_sub_menu_items.data_elements[data_to_report][i]) {
       print_command_name(command_data);
       read_write_LUT(i, 'r');
-      ;
+      break;
     }
   }
 }
@@ -233,7 +235,37 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 5: (r_w == 'r')  ?  Serial.println(temp_parameters.enabled3)                    : temp_parameters.enabled3 = value;                break;
       }
       break;
+
+    case REPORT_LED_STRIP:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(led_strip_parameters.pin)                       : Serial.println(pin_error_msg);                              break;
+        case 1: (r_w == 'r')  ?  Serial.println(led_strip_parameters.target_brightness)         : led_strip_parameters.target_brightness = value;             break;
+        case 2: (r_w == 'r')  ?  Serial.println(led_strip_parameters.current_brightness)        : led_strip_parameters.current_brightness = value;            break;     
+        case 3: (r_w == 'r')  ?  Serial.println(led_strip_parameters.change_increment)          : led_strip_parameters.change_increment = value;              break;
+        case 4: (r_w == 'r')  ?  Serial.println(led_strip_parameters.change_interval)           : led_strip_parameters.change_interval = value;               break;        
+        case 5: (r_w == 'r')  ?  Serial.println(led_strip_parameters.led_stable_interval)       : led_strip_parameters.led_stable_interval = value;           break;
+        case 6: (r_w == 'r')  ?  Serial.println(led_strip_parameters.minimum_on)                : led_strip_parameters.minimum_on = value;                    break;     
+        case 7: (r_w == 'r')  ?  Serial.println(led_strip_parameters.enabled)                   : led_strip_parameters.enabled = value;                       break;
+        case 8: (r_w == 'r')  ?  Serial.println(led_strip_parameters.fast_interval)             : led_strip_parameters.fast_interval = value;                 break;
+        case 9: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal)                : led_strip_parameters.sinusoidal = value;                    break;
+        case 10:(r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+      }
+      break;
   }
+
+
+  byte pin = LED_STRIP;                  // attached to
+  byte target_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;        // value to approach
+  byte current_brightness = 0;       // current value written to strip
+  byte change_increment = 5;           // value to increment by to approach target
+  uint16_t change_interval = 50;           // interrupt period between incrementing value
+  uint16_t led_stable_interval = 500;          // interrupt period when target=current brightness
+  byte minimum_on = 100;                  // minimum value where the leds are on
+  bool enabled = true;                   
+  bool fast_interval = true;          // use change_interval if true as interrupt period, otherwise led_stable_interval
+  bool sinusoidal = false;              //set true if using a sinusoidal method to change between 
+  int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
+
 
 }
 
