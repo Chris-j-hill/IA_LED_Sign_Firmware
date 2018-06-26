@@ -75,6 +75,7 @@ void fade_fans() {         // interrupt to change the current value of the fans 
 
 bool fans_set_freq() {     //interrupt to set the frequency the fans are adjusted
   Timer2.setPeriod(fan_parameters.fan_change_interval * 1000);
+  //Timer2.start();   //<- not needed unless resetting freq after initial setup
   return (Timer2.getPeriod() != fan_parameters.fan_change_interval * 1000);
 }
 

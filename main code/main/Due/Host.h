@@ -7,6 +7,9 @@
 #define REPORT_FANS           1
 #define REPORT_TEMPS          2
 #define REPORT_LED_STRIP      3
+#define REPORT_MENU_TREE      4
+#define REPORT_LDRS           5
+#define REPORT_ENCODER        6
 
 #define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow
 #define MEGGAGE_DELAY_PERIOD    200   //delay this many ms between message prints
@@ -20,7 +23,8 @@ class Host{
   void print_fans();
   void print_temps();
   void print_led_strip();
-
+  void serial_sub_menu(String rx);
+  void print_help_options();
  
   public:
   Host(){}

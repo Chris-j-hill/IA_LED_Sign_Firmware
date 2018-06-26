@@ -165,7 +165,7 @@ struct Menu_tree_menu_limits{ // lengths of the menus to limit scroll distances
   byte scroll_speed_menu                = 255;
   byte fan_speed_menu                   = 100;
   byte minimum_fan_speed_menu           = 255;
-  unsigned int SD_card_folders_menu     = 4294967295;    //32 bit number, assume there arent this many files on the card!!!
+  unsigned int SD_card_folders_menu     = 2^32;    // assume there arent this many files on the card!!!
   byte led_strip_brightness_menu        = 255;
   byte text_colour_red_menu             = RED_MAX_VALUE;
   byte text_colour_green_menu           = GREEN_MAX_VALUE;

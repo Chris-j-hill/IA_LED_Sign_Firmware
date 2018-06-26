@@ -9,6 +9,8 @@
 #include "function_declarations.h"
 #include "Led_strip.h"
 
+
+
 //access to structs
 extern Temp_sensor temp_parameters;
 extern Fan_Struct fan_parameters;
@@ -19,9 +21,6 @@ void Host::init_serial() {
   Serial.begin(HOST_SERIAL_SPEED);
 }
 
-int request_data();
-int set_text_string();    //if got new string, save to text_str variable
-
 void Host::check_serial() {   //to read incomming data
 
   if (Serial.available() > 0) {
@@ -31,18 +30,52 @@ void Host::check_serial() {   //to read incomming data
 
     //set message printing mode
     if (rx == "fans") data_to_report = REPORT_FANS;
-    else if (rx == "strip") data_to_report = REPORT_LED_STRIP;
-    else if (rx == "temp") data_to_report = REPORT_TEMPS;
-    else if (rx == "stop") data_to_report = STOP_REPORT;
-    else if (rx == "ldr") led_strip_parameters.target_brightness += 128;
+    else if (rx == "strip")   data_to_report = REPORT_LED_STRIP;
+    else if (rx == "temp")    data_to_report = REPORT_TEMPS;
+    else if (rx == "stop")    data_to_report = STOP_REPORT;
+    else if (rx == "ldr")     data_to_report = REPORT_LDRS;
+    else if (rx == "menu")    data_to_report = REPORT_MENU_TREE;
+    else if (rx == "encoder") data_to_report = REPORT_ENCODER;
+
+
+    else { //input might be to directly change value
+      serial_sub_menu(rx);
+    }
   }
 
 
 }
 
-void set_debug_mode();   //set the mode, what data to print
-void transmit_modes();   //send back available modes and setting commands
-void stop_debug_mode();
+void Host::serial_sub_menu(String rx) {
+  if (rx == "-h") {
+    print_help_options();
+  }
+
+  else {
+    //split input into two strings
+    String command = rx.substring(0, rx.indexOf(' '));
+    String command_arg = rx.substring(rx.indexOf(' ') + 1, rx.length());
+    int value = command_arg.toInt();
+    
+//    Serial.print("String: ");
+//    Serial.println(rx);
+//    Serial.print("Command: ");
+//    Serial.println(command);
+//
+//    Serial.print("Value: ");
+//    Serial.println(value);
+//    if (command == "-asdf")
+//    Serial.println("True");
+
+
+
+  }
+}
+
+void Host::print_help_options() {
+
+}
+
 
 void Host::print_messages() {
   static uint16_t last_message_print_time;
