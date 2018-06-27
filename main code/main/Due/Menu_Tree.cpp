@@ -358,7 +358,7 @@ void Menu::display_SD_cards_menu() {
       case 0: current_menu = MAIN_MENU;          break;
       case 1: card.enable_external_port();       break;
       case 2: card.disable_external_port();      break;
-      case 3: SD_FOLDERS_MENU;                   break;
+      case 3: current_menu = SD_FOLDERS_MENU;    break;
 
       default: current_menu = STARTUP;
     }
@@ -386,10 +386,10 @@ void Menu::display_led_strip_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0: current_menu = MAIN_MENU;          break;
-      case 1: led_strip.enable();                break;
-      case 2: led_strip.disable();               break;
-      case 3: LED_STRIP_BRIGHTNESS_MENU;         break;
+      case 0: current_menu = MAIN_MENU;                   break;
+      case 1: led_strip.enable();                         break;
+      case 2: led_strip.disable();                        break;
+      case 3: current_menu = LED_STRIP_BRIGHTNESS_MENU;   break;
 
       default: current_menu = STARTUP;
     }
@@ -416,6 +416,7 @@ void Menu::display_text_size_menu() {
     current_menu = TEXT_SETTINGS_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(1);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -479,6 +480,7 @@ void Menu::display_scroll_speed_menu() {
     current_menu = TEXT_SETTINGS_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(3);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -511,6 +513,7 @@ void Menu::display_fan_speed_menu() {
     current_menu = FAN_SETTINGS_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(1);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -539,6 +542,7 @@ void Menu::display_min_fan_speed_menu() {
     current_menu = FAN_SETTINGS_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(4);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -569,6 +573,7 @@ void Menu::display_sd_folder_menu() {
     current_menu = SD_CARD_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(3);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -596,6 +601,7 @@ void Menu::display_led_strip_brightness_menu() {
     current_menu = LED_STRIP_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(3);    
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -625,6 +631,7 @@ void Menu::display_text_colour_red_menu() {
     current_menu = TEXT_COLOUR_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(1);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -652,6 +659,7 @@ void Menu::display_text_colour_green_menu() {
     current_menu = TEXT_COLOUR_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(2);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -680,6 +688,7 @@ void Menu::display_text_colour_blue_menu() {
     current_menu = TEXT_COLOUR_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(3);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -706,6 +715,7 @@ void Menu::display_text_colour_hue_menu(){
     current_menu = TEXT_COLOUR_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
+    encoder.set_encoder_position(4);
   }
 
   if (encoder_parameters.encoder_moved) {
