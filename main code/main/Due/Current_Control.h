@@ -12,30 +12,30 @@
 
 extern byte screen_brightness;
 
-struct LDR_Struct{
+struct LDR_Struct {
   int pin1 = LDR1;
   int pin2 = LDR2;
-  
-  byte reading1 =7;
-  byte reading2 =8;
+
+  byte reading1 = 7;
+  byte reading2 = 8;
 
   bool enabled1 = true;
   bool enabled2 = true;
-  
+
   bool bad_connection1 = false;   //use if one sensor has a bad connection but the other is fine
   bool bad_connection2 = false;
 
-  byte avg_reading = 0; 
-  byte large_disparity = 100;   // 10% of potiential range
+  byte avg_reading = 0;
+  byte large_disparity = 100;   // ~10% of potiential range
 };
 
-struct Current_Meter_Struct{
+struct Current_Meter_Struct {
   int pin1 = CURRENT_METER_1;
   int pin2 = CURRENT_METER_2;
   byte reading1 = 2;
   byte reading2 = 3;
   int max_current_limit = MAX_CURRENT_DRAW;
-  
+
   bool meter1_enabled = true;
   bool meter2_enabled = true;
 
@@ -43,47 +43,47 @@ struct Current_Meter_Struct{
 };
 
 
-class Light_Sensor{
+class Light_Sensor {
 
-private:
-  
-  void read_sensor(int sensor);
-  void enable1();
-  void disable1();
-  void enable2();
-  void disable2();
- void avg_sensor_result();
+  private:
 
-public:
-  Light_Sensor(){}
-  int init_LDR();
-  void read_sensors();
-  void enable();
-  void disable();
-  byte calculate_target_brightness(); //use sensor readings to calculate the scaling value for brightness, returns percentage
+    void read_sensor(int sensor);
+    void enable1();
+    void disable1();
+    void enable2();
+    void disable2();
+    void avg_sensor_result();
+
+  public:
+    Light_Sensor() {}
+    int init_LDR();
+    void read_sensors();
+    void enable();
+    void disable();
+    byte calculate_target_brightness(); //use sensor readings to calculate the scaling value for brightness, returns percentage
 
 };
 
-class Current_Meter{
+class Current_Meter {
 
-private:
+  private:
 
-public:
-  Current_Meter(){}
+  public:
+    Current_Meter() {}
 
-  int init_current_meter();
-  void set_current_limit(int value);    //software limit, can only be less than MAX_CURRENT_DRAW
-    
+    int init_current_meter();
+    void set_current_limit(int value);    //software limit, can only be less than MAX_CURRENT_DRAW
+
 };
 
 
 
 
-    int read_current_meter(int pin);  // read the current sensor
-    float reading_to_amps(int value);   // convert 10 bit analog reading to amps
+int read_current_meter(int pin);  // read the current sensor
+float reading_to_amps(int value);   // convert 10 bit analog reading to amps
 
-    //int LDR_calibration();        //calibrate maximum minimum and room brightness lights
-    
+//int LDR_calibration();        //calibrate maximum minimum and room brightness lights
+
 
 
 

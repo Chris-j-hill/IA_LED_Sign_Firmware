@@ -9,7 +9,7 @@
 #include "function_declarations.h"
 #include "Led_strip.h"
 #include "Encoder.h"
-
+#include "Menu_Tree.h"
 
 //access to structs
 extern Temp_sensor temp_parameters;
@@ -18,6 +18,9 @@ extern Timers timers;
 extern Led_Strip_Struct led_strip_parameters;
 extern Encoder_Struct encoder_parameters;
 extern Button_Struct button_parameters;
+extern Menu_tree_items menu_items;
+extern Menu_tree_menu_limits menu_limits;
+extern Menu menu;
 
 
 Serial_Sub_Menu serial_sub_menu_items;
@@ -67,14 +70,14 @@ void Host::check_serial() {   //to read incomming data
     rx.trim();  //trim off return carraige
 
     //set message printing mode
-    if      (rx == serial_sub_menu_items.items[REPORT_FANS])          data_to_report = REPORT_FANS;
-    else if (rx == serial_sub_menu_items.items[REPORT_LED_STRIP])     data_to_report = REPORT_LED_STRIP;
-    else if (rx == serial_sub_menu_items.items[REPORT_TEMPS])         data_to_report = REPORT_TEMPS;
-    else if (rx == serial_sub_menu_items.items[STOP_REPORT])          data_to_report = STOP_REPORT;
-    else if (rx == serial_sub_menu_items.items[REPORT_LDRS])          data_to_report = REPORT_LDRS;
-    else if (rx == serial_sub_menu_items.items[REPORT_MENU_TREE])     data_to_report = REPORT_MENU_TREE;
-    else if (rx == serial_sub_menu_items.items[REPORT_ENCODER])       data_to_report = REPORT_ENCODER;
-    else if (rx == serial_sub_menu_items.items[REPORT_BUTTON])        data_to_report = REPORT_BUTTON;
+    if      (rx == serial_sub_menu_items.data_elements[0][STOP_REPORT])          data_to_report = STOP_REPORT;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_FANS])          data_to_report = REPORT_FANS;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_TEMPS])         data_to_report = REPORT_TEMPS;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LED_STRIP])     data_to_report = REPORT_LED_STRIP;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_MENU_TREE])     data_to_report = REPORT_MENU_TREE;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LDRS])          data_to_report = REPORT_LDRS;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_ENCODER])       data_to_report = REPORT_ENCODER;
+    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_BUTTON])        data_to_report = REPORT_BUTTON;
 
 
     else { //input might be to directly change value
@@ -85,10 +88,12 @@ void Host::check_serial() {   //to read incomming data
 
 void Host::serial_sub_menu(String rx) {
 
+  char delimiter_char = ' ';
+
   //split input into strings based on these delimiters
-  byte first_delimiter = rx.indexOf(' ');
-  byte second_delimiter = rx.indexOf(' ', first_delimiter + 1);
-  byte third_delimiter = rx.indexOf(' ', second_delimiter + 1);
+  byte first_delimiter = rx.indexOf(delimiter_char);
+  byte second_delimiter = rx.indexOf(delimiter_char, first_delimiter + 1);
+  byte third_delimiter = rx.indexOf(delimiter_char, second_delimiter + 1);
 
   String data_set = rx.substring(0, first_delimiter);
   String command_mode = rx.substring(first_delimiter + 1, second_delimiter);
@@ -131,7 +136,9 @@ void Host::serial_sub_menu(String rx) {
 
 byte Host::data_set_LUT(String data_set) {
 
-  if (data_set == serial_sub_menu_items.data_elements[0][REPORT_FANS])
+  if (data_set == serial_sub_menu_items.data_elements[0][STOP_REPORT])
+    return STOP_REPORT;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_FANS])
     return REPORT_FANS;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_TEMPS])
     return REPORT_TEMPS;
@@ -240,32 +247,39 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(led_strip_parameters.pin)                       : Serial.println(pin_error_msg);                              break;
         case 1: (r_w == 'r')  ?  Serial.println(led_strip_parameters.target_brightness)         : led_strip_parameters.target_brightness = value;             break;
-        case 2: (r_w == 'r')  ?  Serial.println(led_strip_parameters.current_brightness)        : led_strip_parameters.current_brightness = value;            break;     
+        case 2: (r_w == 'r')  ?  Serial.println(led_strip_parameters.current_brightness)        : led_strip_parameters.current_brightness = value;            break;
         case 3: (r_w == 'r')  ?  Serial.println(led_strip_parameters.change_increment)          : led_strip_parameters.change_increment = value;              break;
-        case 4: (r_w == 'r')  ?  Serial.println(led_strip_parameters.change_interval)           : led_strip_parameters.change_interval = value;               break;        
+        case 4: (r_w == 'r')  ?  Serial.println(led_strip_parameters.change_interval)           : led_strip_parameters.change_interval = value;               break;
         case 5: (r_w == 'r')  ?  Serial.println(led_strip_parameters.led_stable_interval)       : led_strip_parameters.led_stable_interval = value;           break;
-        case 6: (r_w == 'r')  ?  Serial.println(led_strip_parameters.minimum_on)                : led_strip_parameters.minimum_on = value;                    break;     
+        case 6: (r_w == 'r')  ?  Serial.println(led_strip_parameters.minimum_on)                : led_strip_parameters.minimum_on = value;                    break;
         case 7: (r_w == 'r')  ?  Serial.println(led_strip_parameters.enabled)                   : led_strip_parameters.enabled = value;                       break;
         case 8: (r_w == 'r')  ?  Serial.println(led_strip_parameters.fast_interval)             : led_strip_parameters.fast_interval = value;                 break;
         case 9: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal)                : led_strip_parameters.sinusoidal = value;                    break;
-        case 10:(r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+        case 10: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+      }
+      break;
+
+    case REPORT_ENCODER:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinA)                        : Serial.println(pin_error_msg);                              break;
+        case 1: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinA)                        : Serial.println(pin_error_msg);                              break;
+        case 2: (r_w == 'r')  ?  Serial.println(encoder_parameters.PosCount / 2)                  : encoder_parameters.PosCount = value * 2;
+          (r_w == 'r')  ?                                                                 : encoder_parameters.position = value;                        break;
+        case 3: (r_w == 'r')  ?  Serial.println(encoder_parameters.enabled)                     : encoder_parameters.enabled = value;                         break;
+        case 4: (r_w == 'r')  ?  Serial.println(encoder_parameters.is_attached)                 : encoder_parameters.is_attached = value;                     break;
+      }
+      break;
+
+    case REPORT_BUTTON:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(button_parameters.button_pin)                   : Serial.println(pin_error_msg);                              break;
+        case 1: (r_w == 'r')  ?  Serial.println(button_parameters.button_pressed_ISR)           : button_parameters.button_pressed_ISR = value;               break;
+        case 2: (r_w == 'r')  ?  Serial.println(button_parameters.button_press_interval)        : button_parameters.button_press_interval = value;            break;
+        case 3: (r_w == 'r')  ?  Serial.println(button_parameters.enabled)                      : button_parameters.enabled = value;                           break;
+        case 4: (r_w == 'r')  ?  Serial.println(button_parameters.is_attached)                  : button_parameters.is_attached = value;                      break;
       }
       break;
   }
-
-
-  byte pin = LED_STRIP;                  // attached to
-  byte target_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;        // value to approach
-  byte current_brightness = 0;       // current value written to strip
-  byte change_increment = 5;           // value to increment by to approach target
-  uint16_t change_interval = 50;           // interrupt period between incrementing value
-  uint16_t led_stable_interval = 500;          // interrupt period when target=current brightness
-  byte minimum_on = 100;                  // minimum value where the leds are on
-  bool enabled = true;                   
-  bool fast_interval = true;          // use change_interval if true as interrupt period, otherwise led_stable_interval
-  bool sinusoidal = false;              //set true if using a sinusoidal method to change between 
-  int sinusoidal_half_frequency = 1;         // time, in seconds, to go from one value to another, changing values will be a half sign wave 
-
 
 }
 
@@ -527,15 +541,135 @@ void Host::print_button() {
   function_called_last = millis();
 }
 
-
-int button_pin = BUTTON_PIN;              // pin num
-volatile bool button_pressed_ISR = false;     // has the button been pressed recently
-bool button_pressed = false;
-volatile int last_button_pressed = 0;     // when was the button last pressed
-int button_press_interval = 300;          // minimum period for button to be de-pressed to register 2 independant pressed
-bool enabled = false;
-bool is_attached = false;
-
 void Host::print_ldrs() {}
-void Host::print_menu_tree() {}
+
+
+void Host::print_menu_tree() {
+
+  static int previous_menu_displayed = menu.get_current_menu();
+  if (previous_menu_displayed != menu.get_current_menu()) //if we changed menu for menu auto changed by other process, push all menu options to host
+    print_menu_tree_options();
+
+
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Current Menu \tLast Menu \tValue Selected"));
+  }
+
+  print_menu_tree_options(menu.get_current_menu());
+  tab();
+
+  print_menu_tree_options(menu.get_previous_menu());
+  tab();
+
+  position_to_menu_value();
+
+
+}
+
+
+void Host::print_menu_tree_options(int cur_menu) {
+
+  if (cur_menu == -1) {
+    switch (menu.get_current_menu()) {
+      case DEFAULT_MENU:
+        Serial.print(F("default menu, press encoder to enter menu tree"));
+        break;
+
+      case MAIN_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.screen_mode);
+        Serial.println(menu_items.brightness);
+        Serial.println(menu_items.text_settings);
+        Serial.println(menu_items.fan_settings);
+        Serial.println(menu_items.internet_settings);
+        Serial.println(menu_items.sd_card_settings);
+        Serial.println(menu_items.led_strip_settings);
+        break;
+
+      case SCREEN_MODE_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.screen_mode0);
+        Serial.println(menu_items.screen_mode1);
+        Serial.println(menu_items.screen_mode3);
+        Serial.println(menu_items.screen_mode2);
+        break;
+
+      case BRIGHTNESS_MENU:
+        Serial.println(menu_items.brightness_menu);
+        break;
+
+      case TEXT_SETTINGS_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.text_settings_menu);
+        Serial.println(menu_items.text_size_settings);
+        Serial.println(menu_items.text_colour_settings);
+        Serial.println(menu_items.scroll_speed_settings);
+        Serial.println(menu_items.flip_dir_settings);
+        break;
+
+      case FAN_SETTINGS_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.fan_settings_menu);
+        Serial.println(menu_items.fan_speed_settings);
+        Serial.println(menu_items.fan_enable);
+        Serial.println(menu_items.fan_disable);
+        Serial.println(menu_items.minimum_rotating_speed);
+        break;
+
+      case INTERNET_CONFIG_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.internet_config_menu);
+        Serial.println(menu_items.select_network_manually);
+        Serial.println(menu_items.ethernet_enable);
+        Serial.println(menu_items.ethernet_disable);
+        Serial.println(menu_items.wifi_enable);
+        Serial.println(menu_items.wifi_disable);
+        break;
+
+      case SD_CARD_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.sd_cards_menu);
+        Serial.println(menu_items.enable_ext_card);
+        Serial.println(menu_items.disable_ext_card);
+        Serial.println(menu_items.sd_card_folders);
+        break;
+
+      case LED_STRIP_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.led_strip_menu);
+        Serial.println(menu_items.enable_led_strip);
+        Serial.println(menu_items.disable_led_strip);
+        Serial.println(menu_items.led_strip_brightness);
+        break;
+
+
+        ////LEVEL 3
+        //#define TEXT_SIZE_MENU                10
+        //#define TEXT_COLOUR_MENU              11
+        //#define SCROLL_SPEED_MENU             12
+        //#define FAN_SPEED_MENU                13
+        //#define MIN_FAN_SPEED_MENU            14
+        //#define SD_FOLDERS_MENU               15
+        //#define LED_STRIP_BRIGHTNESS_MENU     16
+        //
+        ////#define SELECT_NETWORK_MANUALLY       17
+        //
+        //// LEVEL 4
+        //#define TEXT_COLOUR_RED               18
+        //#define TEXT_COLOUR_GREEN             19
+        //#define TEXT_COLOUR_BLUE              20
+        //#define TEXT_COLOUR_HUE               21
+
+    }
+
+  }
+  else {}
+
+
+
+}
+
+void Host::position_to_menu_value() {}
+
 #endif // Host_CPP
