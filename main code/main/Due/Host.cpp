@@ -11,6 +11,11 @@
 #include "Encoder.h"
 #include "Menu_Tree.h"
 
+
+
+Serial_Sub_Menu serial_sub_menu_items;
+
+
 //access to structs
 extern Temp_sensor temp_parameters;
 extern Fan_Struct fan_parameters;
@@ -22,14 +27,24 @@ extern Menu_tree_items menu_items;
 extern Menu_tree_menu_limits menu_limits;
 extern Menu menu;
 
+extern byte screen_mode;
+extern byte screen_brightness;
+extern byte text_size;
+extern byte current_scroll_direction;
+extern byte x_pos_dir;
+extern byte y_pos_dir;
+extern byte text_colour_r;
+extern byte text_colour_g;
+extern byte text_colour_b;
 
-Serial_Sub_Menu serial_sub_menu_items;
 
-
+//some frequenly used strings
 String space_colon_string PROGMEM = " : ";
 String dash_space_string PROGMEM = "- ";
 String tab_string PROGMEM = "\t";
 String space_string PROGMEM = " ";
+String percent_string PROGMEM = "%";
+String divide_string PROGMEM = "/";
 
 inline void space() {
   Serial.print(space_string);
@@ -550,21 +565,21 @@ void Host::print_menu_tree() {
   if (previous_menu_displayed != menu.get_current_menu()) //if we changed menu for menu auto changed by other process, push all menu options to host
     print_menu_tree_options();
 
+  previous_menu_displayed = menu.get_current_menu();
 
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Current Menu \tLast Menu \tValue Selected"));
+    Serial.println(F("Pos \t Current Menu  \t Value Selected"));
   }
-
+  Serial.print(encoder_parameters.position);
+  tab();
   print_menu_tree_options(menu.get_current_menu());
   tab();
 
-  print_menu_tree_options(menu.get_previous_menu());
-  tab();
-
+  //convert encoder position to menu item
   position_to_menu_value();
 
-
+  Serial.println();
 }
 
 
@@ -595,13 +610,8 @@ void Host::print_menu_tree_options(int cur_menu) {
         Serial.println(menu_items.screen_mode2);
         break;
 
-      case BRIGHTNESS_MENU:
-        Serial.println(menu_items.brightness_menu);
-        break;
-
       case TEXT_SETTINGS_MENU:
         Serial.println(menu_items.RETURN);
-        Serial.println(menu_items.text_settings_menu);
         Serial.println(menu_items.text_size_settings);
         Serial.println(menu_items.text_colour_settings);
         Serial.println(menu_items.scroll_speed_settings);
@@ -610,7 +620,6 @@ void Host::print_menu_tree_options(int cur_menu) {
 
       case FAN_SETTINGS_MENU:
         Serial.println(menu_items.RETURN);
-        Serial.println(menu_items.fan_settings_menu);
         Serial.println(menu_items.fan_speed_settings);
         Serial.println(menu_items.fan_enable);
         Serial.println(menu_items.fan_disable);
@@ -619,7 +628,6 @@ void Host::print_menu_tree_options(int cur_menu) {
 
       case INTERNET_CONFIG_MENU:
         Serial.println(menu_items.RETURN);
-        Serial.println(menu_items.internet_config_menu);
         Serial.println(menu_items.select_network_manually);
         Serial.println(menu_items.ethernet_enable);
         Serial.println(menu_items.ethernet_disable);
@@ -629,7 +637,6 @@ void Host::print_menu_tree_options(int cur_menu) {
 
       case SD_CARD_MENU:
         Serial.println(menu_items.RETURN);
-        Serial.println(menu_items.sd_cards_menu);
         Serial.println(menu_items.enable_ext_card);
         Serial.println(menu_items.disable_ext_card);
         Serial.println(menu_items.sd_card_folders);
@@ -637,39 +644,223 @@ void Host::print_menu_tree_options(int cur_menu) {
 
       case LED_STRIP_MENU:
         Serial.println(menu_items.RETURN);
-        Serial.println(menu_items.led_strip_menu);
         Serial.println(menu_items.enable_led_strip);
         Serial.println(menu_items.disable_led_strip);
         Serial.println(menu_items.led_strip_brightness);
         break;
 
+      case TEXT_COLOUR_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.text_colour_red);
+        Serial.println(menu_items.text_colour_green);
+        Serial.println(menu_items.text_colour_blue);
+        Serial.println(menu_items.text_colour_hue);
+        Serial.println(menu_items.text_colour_use_hue);
+        Serial.println(menu_items.text_colour_use_rgb);
+        break;
 
-        ////LEVEL 3
-        //#define TEXT_SIZE_MENU                10
-        //#define TEXT_COLOUR_MENU              11
-        //#define SCROLL_SPEED_MENU             12
-        //#define FAN_SPEED_MENU                13
-        //#define MIN_FAN_SPEED_MENU            14
-        //#define SD_FOLDERS_MENU               15
-        //#define LED_STRIP_BRIGHTNESS_MENU     16
-        //
-        ////#define SELECT_NETWORK_MANUALLY       17
-        //
-        //// LEVEL 4
-        //#define TEXT_COLOUR_RED               18
-        //#define TEXT_COLOUR_GREEN             19
-        //#define TEXT_COLOUR_BLUE              20
-        //#define TEXT_COLOUR_HUE               21
+      //if any of these just print same string, these have no sub menu list
+      case BRIGHTNESS_MENU:
+      case TEXT_SIZE_MENU:
+      case SCROLL_SPEED_MENU:
+      case FAN_SPEED_MENU:
+      case MIN_FAN_SPEED_MENU:
+      //      case SD_FOLDERS_MENU:
+      case LED_STRIP_BRIGHTNESS_MENU:
+      case TEXT_COLOUR_RED:
+      case TEXT_COLOUR_GREEN:
+      case TEXT_COLOUR_BLUE:
+      case TEXT_COLOUR_HUE:
 
+        Serial.println(F("Variable adjustment menu, click button to return"));
+        break;
     }
 
   }
-  else {}
-
-
-
+  else
+  {
+    switch (cur_menu) {
+      case STARTUP:                     Serial.print(F("System Starting, Please wait..."));     break;  
+      case DEFAULT_MENU:                Serial.print(F("Menu Minimised, Press button"));        break;  
+      case MAIN_MENU:                   Serial.print(menu_items.main_menu);                     break;
+      case SCREEN_MODE_MENU:            Serial.print(menu_items.screen_mode_menu);              break;
+      case TEXT_SETTINGS_MENU:          Serial.print(menu_items.text_settings_menu);            break;
+      case FAN_SETTINGS_MENU:           Serial.print(menu_items.fan_settings_menu);             break;
+      case INTERNET_CONFIG_MENU:        Serial.print(menu_items.internet_config_menu);          break;
+      case SD_CARD_MENU:                Serial.print(menu_items.sd_cards_menu);                 break;
+      case LED_STRIP_MENU:              Serial.print(menu_items.led_strip_menu);                break;
+      case TEXT_COLOUR_MENU:            Serial.print(menu_items.text_colour_menu);              break;
+      case BRIGHTNESS_MENU:             Serial.print(menu_items.brightness_menu);               break;
+      case TEXT_SIZE_MENU:              Serial.print(menu_items.text_size_menu);                break;
+      case SCROLL_SPEED_MENU:           Serial.print(menu_items.scroll_speed_menu);             break;
+      case FAN_SPEED_MENU:              Serial.print(menu_items.fan_speed_menu);                break;
+      case MIN_FAN_SPEED_MENU:          Serial.print(menu_items.minimum_fan_speed_menu);        break;
+      //      case SD_FOLDERS_MENU:             Serial.print(menu_items.SD_card_folders_menu);          break;
+      case LED_STRIP_BRIGHTNESS_MENU:   Serial.print(menu_items.led_strip_brightness_menu);     break;
+      case TEXT_COLOUR_RED:             Serial.print(menu_items.text_colour_red_menu);          break;
+      case TEXT_COLOUR_GREEN:           Serial.print(menu_items.text_colour_green_menu);        break;
+      case TEXT_COLOUR_BLUE:            Serial.print(menu_items.text_colour_blue_menu);         break;
+      case TEXT_COLOUR_HUE:             Serial.print(menu_items.text_colour_hue_menu);          break;
+    }
+  }
 }
 
-void Host::position_to_menu_value() {}
+
+void Host::position_to_menu_value() {
+  //given our current menu, what item is the encoder selecting
+  switch (menu.get_current_menu()) {
+    case MAIN_MENU:  
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                   break;
+        case 1: Serial.print(menu_items.screen_mode);              break;
+        case 2: Serial.print(menu_items.brightness);               break;
+        case 3: Serial.print(menu_items.text_settings);            break;
+        case 4: Serial.print(menu_items.fan_settings);             break;
+        case 5: Serial.print(menu_items.internet_settings);        break;
+        case 6: Serial.print(menu_items.sd_card_settings);         break;
+        case 7: Serial.print(menu_items.led_strip_settings);       break;
+      }
+      break;
+
+    case SCREEN_MODE_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.screen_mode0);              break;
+        case 2: Serial.print(menu_items.screen_mode1);              break;
+        case 3: Serial.print(menu_items.screen_mode3);              break;
+        case 4: Serial.print(menu_items.screen_mode2);              break;
+      }
+      break;
+
+    case TEXT_SETTINGS_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.text_size_settings);        break;
+        case 2: Serial.print(menu_items.text_colour_settings);      break;
+        case 3: Serial.print(menu_items.scroll_speed_settings);     break;
+        case 4: Serial.print(menu_items.flip_dir_settings);         break;
+      }
+      break;
+
+    case FAN_SETTINGS_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.fan_speed_settings);        break;
+        case 2: Serial.print(menu_items.fan_enable);                break;
+        case 3: Serial.print(menu_items.fan_disable);               break;
+        case 4: Serial.print(menu_items.minimum_rotating_speed);    break;
+      }
+      break;
+
+    case INTERNET_CONFIG_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.select_network_manually);   break;
+        case 2: Serial.print(menu_items.ethernet_enable);           break;
+        case 3: Serial.print(menu_items.ethernet_disable);          break;
+        case 4: Serial.print(menu_items.wifi_enable);               break;
+        case 5: Serial.print(menu_items.wifi_disable);              break;
+      }
+      break;
+
+    case SD_CARD_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.enable_ext_card);           break;
+        case 2: Serial.print(menu_items.disable_ext_card);          break;
+        case 3: Serial.print(menu_items.sd_card_folders);           break;
+      }
+      break;
+
+    case LED_STRIP_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.enable_led_strip);          break;
+        case 2: Serial.print(menu_items.disable_led_strip);         break;
+        case 3: Serial.print(menu_items.led_strip_brightness);      break;
+      }
+      break;
+
+    case TEXT_COLOUR_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.text_colour_red);           break;
+        case 2: Serial.print(menu_items.text_colour_green);         break;
+        case 3: Serial.print(menu_items.text_colour_blue);          break;
+        case 4: Serial.print(menu_items.text_colour_hue);           break;
+        case 5: Serial.print(menu_items.text_colour_use_hue);       break;
+        case 6: Serial.print(menu_items.text_colour_use_rgb);       break;
+      }
+      break;
+
+    case BRIGHTNESS_MENU:
+      Serial.print(screen_brightness);
+      Serial.print(percent_string);
+      break;
+
+    case TEXT_SIZE_MENU:
+      Serial.print(text_size);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.text_size_menu);
+      break;
+
+    case SCROLL_SPEED_MENU:
+      if (current_scroll_direction == 1)       Serial.print(x_pos_dir-128);
+      else                                     Serial.print(y_pos_dir-128);
+      Serial.print(" -> range: -");
+      Serial.print(menu_limits.scroll_speed_menu-129);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.scroll_speed_menu-128);
+      break;
+
+    case FAN_SPEED_MENU:
+      Serial.print(encoder_parameters.position);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.fan_speed_menu);
+      break;
+
+    case MIN_FAN_SPEED_MENU:
+      Serial.print(fan_parameters.fan_minimum);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.minimum_fan_speed_menu);
+      break;
+
+    //      case SD_FOLDERS_MENU:
+
+
+    case LED_STRIP_BRIGHTNESS_MENU:
+      Serial.print(led_strip_parameters.target_brightness);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.led_strip_brightness_menu);
+      break;
+
+    case TEXT_COLOUR_RED:
+      Serial.print(text_colour_r);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.text_colour_red_menu);
+      break;
+
+    case TEXT_COLOUR_GREEN:
+      Serial.print(text_colour_g);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.text_colour_green_menu);
+      break;
+
+    case TEXT_COLOUR_BLUE:
+      Serial.print(text_colour_b);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.text_colour_blue_menu);
+      break;
+
+    case TEXT_COLOUR_HUE:
+      Serial.print(text_colour_hue);
+      Serial.print(" -> range: ");
+      Serial.print(menu_limits.text_colour_hue_min);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.text_colour_hue_max);
+      break;
+  }
+
+}
 
 #endif // Host_CPP

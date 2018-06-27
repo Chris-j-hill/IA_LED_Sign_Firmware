@@ -149,19 +149,17 @@ struct Menu_tree_items {
 };
 
 struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
-  // rule of thumb is number of items + return (unless hidden menus?)
-  // adjustment menus are hard limited by byte
-  // range (0-255) and use buton to return
-  byte main_menu                        = 8;
-  byte screen_mode_menu                 = 5;
+
+  byte main_menu                        = 7;
+  byte screen_mode_menu                 = 4;
   byte brightness_menu                  = 100;
-  byte text_settings_menu               = 5;
-  byte fan_settings_menu                = 5;
-  byte internet_config_menu             = 6;
-  byte sd_cards_menu                    = 4;
-  byte led_strip_menu                   = 4;
-  byte text_size_menu                   = 4;
-  byte text_colour_menu                 = 4;
+  byte text_settings_menu               = 4;
+  byte fan_settings_menu                = 4;
+  byte internet_config_menu             = 5;
+  byte sd_cards_menu                    = 3;
+  byte led_strip_menu                   = 3;
+  byte text_size_menu                   = 4;    //size of text characters
+  byte text_colour_menu                 = 6;
   byte scroll_speed_menu                = 255;
   byte fan_speed_menu                   = 100;
   byte minimum_fan_speed_menu           = 255;
@@ -170,8 +168,8 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
   byte text_colour_red_menu             = RED_MAX_VALUE;
   byte text_colour_green_menu           = GREEN_MAX_VALUE;
   byte text_colour_blue_menu            = BLUE_MAX_VALUE;
-  byte text_colour_hue_min              = HUE_MIN_VALUE;
-  byte text_colour_hue_max              = HUE_MAX_VALUE;
+  uint16_t text_colour_hue_min          = HUE_MIN_VALUE;
+  uint16_t text_colour_hue_max              = HUE_MAX_VALUE;
 
 
 
@@ -227,6 +225,7 @@ class Menu {
     void display_menu();
     int set_menu_width();   //change the width of the menu on the screen
     void LDR_configuration() {};
+    
     int get_current_menu() {
       return current_menu;
     }

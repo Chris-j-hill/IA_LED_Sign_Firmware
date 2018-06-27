@@ -14,7 +14,7 @@ dht11 Temp3;
 Temp_sensor temp_parameters;
 Fan_Struct fan_parameters;        //create fan struct
 extern struct Timers timers;
-
+extern 
 #ifdef ENABLE_FANS
 bool enable_fans = true;   //initialise on startup?
 #else

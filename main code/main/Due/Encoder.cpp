@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "Encoder.h"
 //#include "Due.h"
+#include "Menu_Tree.h"
 
 #ifdef ENABLE_ENCODER
 bool enable_encoder_on_startup = true;
@@ -17,15 +18,15 @@ bool enable_button_on_startup = true;
 bool enable_button_on_startup = false;
 #endif
 
-bool button_enabled = false;
 
+extern Menu menu;
+extern Menu_tree_menu_limits menu_limits;
 
 Encoder_Struct encoder_parameters;     //create encoder struct
 Button_Struct button_parameters;       //create button struct
 
 
 void init_encoder_ISR() {
-
 
   pinMode(encoder_parameters.pinA, INPUT);
   pinMode(encoder_parameters.pinB, INPUT);
@@ -38,7 +39,7 @@ void init_encoder_ISR() {
 void init_button_ISR() {
 
   pinMode(button_parameters.button_pin, INPUT_PULLUP);
-  attachInterrupt(button_parameters.button_pin, update_button_ISR,RISING);
+  attachInterrupt(button_parameters.button_pin, update_button_ISR, RISING);
   button_parameters.is_attached = true;
   button_parameters.enabled = true;
 }
@@ -172,6 +173,120 @@ void Encoder::handle_interupts() {   // function to repond to an ISR.
 
       Sprintln(F("button interrupt handler completed"));
     }
+  }
+}
+
+
+void Encoder::recenter_encoder() {
+
+  encoder_parameters.position = encoder_parameters.center;
+  encoder_parameters.PosCount = encoder_parameters.center << 1;
+
+}
+
+
+void Encoder::set_encoder_position(int val)      // take value input and set the encoder current position to this
+{
+  encoder_parameters.position = val;
+  encoder_parameters.PosCount = val << 1;
+}
+
+void Encoder::encoder_position_limits() {
+  switch (menu.get_current_menu()) {
+    case MAIN_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.main_menu) set_encoder_position(menu_limits.main_menu);
+      break;
+
+    case SCREEN_MODE_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.screen_mode_menu) set_encoder_position(menu_limits.screen_mode_menu);
+      break;
+
+    case BRIGHTNESS_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.brightness_menu) set_encoder_position(menu_limits.brightness_menu);
+      break;
+
+    case TEXT_SETTINGS_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.text_settings_menu) set_encoder_position(menu_limits.text_settings_menu);
+      break;
+
+    case FAN_SETTINGS_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.fan_settings_menu) set_encoder_position(menu_limits.fan_settings_menu);
+      break;
+
+    case INTERNET_CONFIG_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.internet_config_menu) set_encoder_position(menu_limits.internet_config_menu);
+      break;
+
+    case SD_CARD_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.sd_cards_menu) set_encoder_position(menu_limits.sd_cards_menu);
+      break;
+
+    case LED_STRIP_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.led_strip_menu) set_encoder_position(menu_limits.led_strip_menu);
+      break;
+
+    case TEXT_SIZE_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.text_size_menu) set_encoder_position(menu_limits.text_size_menu);
+      break;
+
+    case TEXT_COLOUR_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.text_colour_menu) set_encoder_position(menu_limits.text_colour_menu);
+      break;
+
+    case SCROLL_SPEED_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) set_encoder_position(menu_limits.scroll_speed_menu);
+      break;
+
+    case FAN_SPEED_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.fan_speed_menu) set_encoder_position(menu_limits.fan_speed_menu);
+      break;
+
+    case MIN_FAN_SPEED_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.minimum_fan_speed_menu) set_encoder_position(menu_limits.minimum_fan_speed_menu);
+      break;
+
+    case SD_FOLDERS_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.SD_card_folders_menu) set_encoder_position(menu_limits.SD_card_folders_menu);
+      break;
+
+    case LED_STRIP_BRIGHTNESS_MENU:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.led_strip_brightness_menu) set_encoder_position(menu_limits.led_strip_brightness_menu);
+      break;
+
+    case TEXT_COLOUR_RED:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.text_colour_red_menu) set_encoder_position(menu_limits.text_colour_red_menu);
+      break;
+
+    case TEXT_COLOUR_GREEN:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.text_colour_green_menu) set_encoder_position(menu_limits.text_colour_green_menu);
+      break;
+
+    case TEXT_COLOUR_BLUE:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.text_colour_blue_menu) set_encoder_position(menu_limits.text_colour_blue_menu);
+      break;
+
+    case TEXT_COLOUR_HUE:
+      if (encoder_parameters.position < menu_limits.text_colour_hue_min) set_encoder_position(menu_limits.text_colour_hue_min);
+      else if (encoder_parameters.position > menu_limits.text_colour_hue_max) set_encoder_position(menu_limits.text_colour_hue_max);
+      break;
   }
 }
 

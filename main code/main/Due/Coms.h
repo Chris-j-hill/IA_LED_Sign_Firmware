@@ -145,7 +145,7 @@ class Coms {
     int send_all_text();    // send the text frame to all megas
     void print_frame();      //print the currently stored frame to the serial monitor
 
-    int get_text_colour_hue(int byte_number);                            //function to retrun the MSB or LSB of the current hue value to send over i2c
+    int get_text_colour_hue(int byte_number){};                            //function to return the MSB or LSB of the current hue value to send over i2c
 
     int calc_delay();
 

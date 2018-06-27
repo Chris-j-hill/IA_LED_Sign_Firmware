@@ -75,8 +75,8 @@ class Graphics{
   public:
   Graphics(){}
   void flip_direction();
-  void use_hue();
-  void use_rgb();
+  void use_hue(){};
+  void use_rgb(){};
   void update_brightness();
   
 };

@@ -63,7 +63,7 @@ class Encoder {
 
 
     
-    int recenter_encoder();             // reset position to 0
+    void recenter_encoder();             // reset position to encoder_parameters.center
 
     void handle_interupts();            // handle interrupt interpretation in code. Use structures  interrupt bool value (eg encoder_moved) to identify if an interrupt occured in the last loop.
     // If corresponding structure variable "clean loop" is false, set true for one loop. this is an indicator to other functions
@@ -71,8 +71,9 @@ class Encoder {
     // if interrupt occured, if yes set interrupt bool to false and clean loop to true, functions in loop use clean loop run their code,
     // loop ends, handle interrupts sets clean loop false
    
-   void encoder_position_limits(){}        // software limits on encoder range
-   void set_encoder_position(byte val){}    // take value input and set the encoder current position to this
+   void encoder_position_limits();        // software limits on encoder range
+   void set_encoder_position(int val);      // take value input and set the encoder current position to this
+   
 };
 
 #endif // Configuration_H

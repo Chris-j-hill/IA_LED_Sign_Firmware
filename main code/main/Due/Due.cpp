@@ -44,7 +44,7 @@ void due_setup() {
   led_strip.init_led_strip();
   encoder.init_encoder();
   encoder.init_button();
-  
+  menu.init_menu_tree();
   //host.print_messages();
 
 }
@@ -60,6 +60,7 @@ void due_loop() {
     led_strip.led_strip_set_freq();
     // graphics.update_brightness();
     encoder.handle_interupts();  
+    menu.display_menu();
     // update_display();  //push additional data to screens as required
     //
     // //do this based speed variable
