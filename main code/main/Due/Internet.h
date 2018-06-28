@@ -25,7 +25,7 @@ class Internet {
     void ping();
     void get_string();
     void get_ip();
-    void run_instructions();    // <- run instructions in file on host 
+    void run_instructions();    // <- run instructions in file on host device
     void connect_to_network();
      
 };

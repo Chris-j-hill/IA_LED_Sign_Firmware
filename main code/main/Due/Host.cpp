@@ -12,7 +12,7 @@
 #include "Menu_Tree.h"
 #include "Graphics.h"
 #include "Coms.h"
-
+#include "Current_Control.h"
 Serial_Sub_Menu serial_sub_menu_items;
 
 
@@ -27,6 +27,11 @@ extern Menu_tree_items menu_items;
 extern Menu_tree_menu_limits menu_limits;
 extern Menu menu;
 extern Frame text_frame;
+extern LDR_Struct light_sensor_parameters;
+extern Current_Meter_Struct current_meter_parameters;
+
+
+
 
 extern byte screen_mode;
 extern byte screen_brightness;
@@ -90,19 +95,22 @@ void Host::check_serial() {   //to read incomming data
     rx.trim();  //trim off return carraige
 
     //set message printing mode
-    if      (rx == serial_sub_menu_items.data_elements[0][STOP_REPORT])          data_to_report = STOP_REPORT;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_FANS])          data_to_report = REPORT_FANS;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_TEMPS])         data_to_report = REPORT_TEMPS;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LED_STRIP])     data_to_report = REPORT_LED_STRIP;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_MENU_TREE])     data_to_report = REPORT_MENU_TREE;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LDRS])          data_to_report = REPORT_LDRS;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_ENCODER])       data_to_report = REPORT_ENCODER;
-    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_BUTTON])        data_to_report = REPORT_BUTTON;
+    //    if      (rx == serial_sub_menu_items.data_elements[0][STOP_REPORT])          data_to_report = STOP_REPORT;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_FANS])          data_to_report = REPORT_FANS;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_TEMPS])         data_to_report = REPORT_TEMPS;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LED_STRIP])     data_to_report = REPORT_LED_STRIP;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_MENU_TREE])     data_to_report = REPORT_MENU_TREE;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LDRS])          data_to_report = REPORT_LDRS;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_ENCODER])       data_to_report = REPORT_ENCODER;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_BUTTON])        data_to_report = REPORT_BUTTON;
+    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER]) data_to_report = REPORT_CURRENT_METER;
 
-
-    else { //input might be to directly change value
+    data_to_report = data_set_LUT(rx);
+    Serial.println(data_to_report);
+    //input might be to directly change value
+    if (data_to_report == 255)
       serial_sub_menu(rx);
-    }
+
   }
 }
 
@@ -172,7 +180,12 @@ byte Host::data_set_LUT(String data_set) {
     return REPORT_ENCODER;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_BUTTON])
     return REPORT_BUTTON;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER])
+    return REPORT_CURRENT_METER;
 
+
+
+  else return 255;
 }
 
 void Host::print_help_options() {
@@ -343,6 +356,13 @@ void Host::print_messages() {
       case REPORT_BUTTON:
         print_button();
         break;
+
+      case REPORT_CURRENT_METER:
+        print_current_meters();
+        break;
+
+
+
       default: break;
     }
 
@@ -561,8 +581,66 @@ void Host::print_button() {
   function_called_last = millis();
 }
 
-void Host::print_ldrs() {}
+void Host::print_ldrs() {
 
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Pins \tLDR's Enabled \tGood Connection \tReading \tAvg Reading"));
+  }
+
+  Serial.print(light_sensor_parameters.pin1);
+  space();
+  Serial.print(light_sensor_parameters.pin1);
+  tab();
+
+  if (light_sensor_parameters.enabled1)
+    Serial.print(F("Y"));
+  else
+    Serial.print(F("N"));
+
+  space();
+
+  if (light_sensor_parameters.enabled2)
+    Serial.print(F("Y"));
+  else
+    Serial.print(F("N"));
+
+  tab; tab(); tab();
+  if (light_sensor_parameters.enabled2)
+    dash_space();
+  else {
+    if (light_sensor_parameters.bad_connection1)
+      Serial.print(F("N"));
+    else
+      Serial.print(F("Y"));
+
+    space();
+  }
+  if (light_sensor_parameters.enabled2)
+    dash_space();
+  else {
+    if (light_sensor_parameters.bad_connection2)
+      Serial.print(F("N"));
+    else
+      Serial.print(F("Y"));
+    space();
+  }
+  tab(); tab; tab(); tab();
+
+  Serial.print(light_sensor_parameters.reading1);
+  space();
+  Serial.print(light_sensor_parameters.reading2);
+  tab();tab();
+  Serial.print(light_sensor_parameters.avg_reading);
+  Serial.println();
+
+}
+
+
+void Host::print_current_meters() {
+
+
+}
 
 void Host::print_menu_tree() {
 
@@ -869,6 +947,13 @@ void Host::position_to_menu_value() {
 }
 
 
+
+
+
+
+
+
+
 //________HostNativeUSB__________
 
 void HostNativeUSB::init_native_usb() {
@@ -993,6 +1078,12 @@ void HostNativeUSB::put_data_into_loc(String rx_string, int loc) {
       Serial.println(F("Git commit auther not implemented"));
 
       break;
+    case 7:
+      Serial.print(F("Ping Requested:"));
+
+
+
+      break;
 
     default:
       Serial.print(F("Did not recognise host command: "));
@@ -1016,6 +1107,8 @@ int HostNativeUSB::type_ok(String rx_type)
     return 5;
   else if (rx_type == types[6])   //git commit auther
     return 6;
+  else if (rx_type == types[7])   //ping
+    return 7;
   else
     return -1;
 }

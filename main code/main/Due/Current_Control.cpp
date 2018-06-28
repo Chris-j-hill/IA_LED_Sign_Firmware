@@ -14,11 +14,6 @@ bool enable_LDR = true;
 bool enable_LDR = false;
 #endif
 
-bool current_meter_enabled = false;
-bool LDR_enabled = false;
-
-
-
 byte screen_brightness = 100;
 
 LDR_Struct light_sensor_parameters;
@@ -103,7 +98,9 @@ void Light_Sensor::disable2(){
 void Light_Sensor::read_sensor(int sensor) {       // read the average value of the LDR's, if one fails to read correctly or large disparity fail returned
 
   if (sensor==1 && light_sensor_parameters.enabled1 && light_sensor_parameters.bad_connection1){
+    
     light_sensor_parameters.reading1 = map(analogRead(light_sensor_parameters.pin1), 0, 1024, 0, 255);
+
     if (light_sensor_parameters.reading1 == 0 || light_sensor_parameters.reading1 == 255) {  
       Sprintln(F("From Light_Sensor.read_sensor: \t Problem reading light sensor 1, check wiring"));
       light_sensor_parameters.bad_connection1 = true;

@@ -23,7 +23,8 @@
 
 #define MAX_NUM_MENU_OPTIONS 11
 #define NUM_MENU_ITEMS 9
-#define NUM_USB_COMMANDS 7
+#define NUM_USB_COMMANDS 8
+
 struct Serial_Sub_Menu {
   String prepend_commands PROGMEM = "to read a value above, type -r followed by the command, to write a new value type -w and append the value(eg fans -w pin 10)";
   String top_level_commands PROGMEM = "for live feedback type the command above, append with -h for a list of specific variables to read/modify";
@@ -32,7 +33,7 @@ struct Serial_Sub_Menu {
 
   //these are the terminal input commands to type
   String data_elements [NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button"},
+   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current"},
    {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
    {"pin1", "pin2", "pin3", "enable1", "enable2", "enable3"},
    {"pin", "target_brightness", "current_brightness", "increment", "change_interval", "stable_interval", "minimum", "enabled","fast_interval_on", "sinusoidal", "freq"},
@@ -75,6 +76,9 @@ class Host {
     void print_button();
     void print_ldrs();
     void print_menu_tree();
+    void print_current_meters();
+
+    
     void serial_sub_menu(String rx);
     void print_help_options();
     byte data_set_LUT(String data_set);
@@ -107,7 +111,7 @@ class HostNativeUSB{
   private:
     int type_ok(String rx_type);  //function to return a number corresponding to the location of the data about to be received
 
-    String types[NUM_USB_COMMANDS] PROGMEM = {"disp_text", "command", "ip_addr", "network", "git_commit_msg", "git_commit_tag", "git_commit_auther"};
+    String types[NUM_USB_COMMANDS] PROGMEM = {"disp_text", "command", "ip_addr", "network", "git_commit_msg", "git_commit_tag", "git_commit_auther", "ping"};
     String push_keyword PROGMEM = "push";
     String request_keyword PROGMEM = "request";
      

@@ -36,14 +36,17 @@ void due_setup() {
 #ifndef DUE_ENABLED    //stop code imidiately if due disabled
   while (1) {}
 #endif
+
   host.init_serial();
+//  host.check_serial();
+//  host.print_messages();
   //fans.init_fans();
   //fans.init_temp_sensors();
   //led_strip.init_led_strip();
   //encoder.init_encoder();
   //encoder.init_button();
   //menu.init_menu_tree();
-  nativeUsb.init_native_usb();
+  //nativeUsb.init_native_usb();
 }
 
 
