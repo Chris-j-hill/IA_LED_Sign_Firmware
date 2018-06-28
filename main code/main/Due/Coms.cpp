@@ -61,6 +61,26 @@ byte current_scroll_direction = 1;    // direction of scroll, x=1/y=2
 //char menu_frame[FRAME_OVERHEAD+3] ={0};   // initialise menu_frame, overhead +menu numeber + 2 bytes for encoder position 
 //                                          // should only send references to strings already in megas LUT. Names from files need to be handled seperately
 
+extern char text_str[MAX_TWEET_SIZE];
+
+extern byte text_size;
+extern byte text_colour_r;
+extern byte text_colour_g;
+extern byte text_colour_b;
+extern bool use_hue;
+
+
+extern int  text_colour_hue;
+extern byte screen_mode;   //mode of operation on startup should be both displaying
+                      //mode0: both on
+                      //mode1: one side on
+                      //mode2: both off
+                      //mode3: other side on
+
+
+
+
+
 
 
 // ______  non class functions _______

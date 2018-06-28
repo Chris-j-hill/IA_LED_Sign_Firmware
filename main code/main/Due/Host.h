@@ -23,7 +23,7 @@
 
 #define MAX_NUM_MENU_OPTIONS 11
 #define NUM_MENU_ITEMS 9
-
+#define NUM_USB_COMMANDS 7
 struct Serial_Sub_Menu {
   String prepend_commands PROGMEM = "to read a value above, type -r followed by the command, to write a new value type -w and append the value(eg fans -w pin 10)";
   String top_level_commands PROGMEM = "for live feedback type the command above, append with -h for a list of specific variables to read/modify";
@@ -99,5 +99,26 @@ class Host {
 
 };
 
+// class for any data transfer over functions over native usb port
+// use this port for automatic data transfer between pi and due
+// allows this port to be open and communicating which not overloading the 
+// users serial monitor or preventing firmware updates
+class HostNativeUSB{
+  private:
+    int type_ok(String rx_type);  //function to return a number corresponding to the location of the data about to be received
 
+    String types[NUM_USB_COMMANDS] PROGMEM = {"disp_text", "command", "ip_addr", "network", "git_commit_msg", "git_commit_tag", "git_commit_auther"};
+    String push_keyword PROGMEM = "push";
+    String request_keyword PROGMEM = "request";
+     
+  public:
+
+  HostNativeUSB(){}
+  void init_native_usb();
+  void push_serial(int loc, String data);   //push data to pi, possibly login info or for non volatile storage?
+  void get_serial();      //two step, first type, due confirms if recognised type, data read into specific location (might be a lot)
+  void request_data(byte location);    //due requests
+  void put_data_into_loc(String rx_string, int loc);
+
+};
 #endif //Host_H

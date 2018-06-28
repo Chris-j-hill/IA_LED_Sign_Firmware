@@ -28,6 +28,7 @@ Current_Meter  current_meter;
 Light_Sensor   light_sensor;
 Graphics       graphics;
 Host           host;
+HostNativeUSB  nativeUsb;
 Timers timers;
 
 
@@ -36,31 +37,34 @@ void due_setup() {
   while (1) {}
 #endif
   host.init_serial();
-  host.check_serial();  //force into defined mode
-  //host.print_messages();
-
-  fans.init_fans();
-  fans.init_temp_sensors();
-  led_strip.init_led_strip();
-  encoder.init_encoder();
-  encoder.init_button();
-  menu.init_menu_tree();
-  //host.print_messages();
-
+  //fans.init_fans();
+  //fans.init_temp_sensors();
+  //led_strip.init_led_strip();
+  //encoder.init_encoder();
+  //encoder.init_button();
+  //menu.init_menu_tree();
+  nativeUsb.init_native_usb();
 }
 
 
 void due_loop() {
   while (1) {
+
+
+    
     // //do these periodically based on config
     // cards.check_for_sd_card_inserted();
     // internet.check_connection();
-    fans.update_temperatures();
-    fans.set_fan_speed();
-    led_strip.led_strip_set_freq();
     // graphics.update_brightness();
-    encoder.handle_interupts();  
-    menu.display_menu();
+    
+    //fans.update_temperatures();
+    //fans.set_fan_speed();
+    //led_strip.led_strip_set_freq();
+    
+    //encoder.handle_interupts();  
+    //menu.display_menu();
+
+   
     // update_display();  //push additional data to screens as required
     //
     // //do this based speed variable

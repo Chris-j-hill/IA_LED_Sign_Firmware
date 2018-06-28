@@ -116,8 +116,6 @@ int set_pos_speed(int x_speed, int y_speed);            //function to set the sp
 void send_pos_interrupt();     // interrupt to send pos data to all megas
 
 
-
-
 class Coms {
 
   private:
@@ -163,8 +161,7 @@ class Coms {
     void echo_menu();
     int generate_checksum();
     int error_check();
-    int get_serial();                     //function to interpret serial data recieved without a user prompt
-
+    
     int get_frame_code();
     int get_data();             //extract data from frame
 

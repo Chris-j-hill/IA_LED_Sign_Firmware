@@ -21,7 +21,13 @@ class Internet {
     void ethernet_enable(){}
     void ethernet_disable(){} 
     void wifi_enable(){}
-    void wifi_disable(){} 
+    void wifi_disable(){}
+    void ping();
+    void get_string();
+    void get_ip();
+    void run_instructions();    // <- run instructions in file on host 
+    void connect_to_network();
+     
 };
 
 

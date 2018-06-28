@@ -56,17 +56,6 @@ struct Text_cursor {        //xy coordinates of cursor position
 
 
 
-//declare variables used outside of this cpp file
-
-extern char text_str[150];
-extern byte text_size;
-extern byte text_colour_r;
-extern byte text_colour_g;
-extern byte text_colour_b;
-extern bool use_hue;
-extern byte screen_mode;
-extern int  text_colour_hue;
-
 
 class Graphics{
 

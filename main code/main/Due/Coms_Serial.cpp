@@ -14,7 +14,7 @@ extern struct Frame pos_frame;
 extern struct Text_cursor text_cursor;
 extern struct Text text;
 
-extern char text_str[150];
+extern char text_str[MAX_TWEET_SIZE];
 extern const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
 
 extern byte time_since_last_sent_text_frame;
@@ -127,19 +127,7 @@ int Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise seri
 
 }
 
-int Coms_Serial::get_serial() {                   //function to interpret serial data recieved without a user prompt
 
-  // function to interpret any serial data recieved during the main loop (ie without a user prompt)
-  // the function should work on a key word basis whereby any recieved data should be of the form 'keyword: data'
-  // where 'keyword' defines the type of data recieved, such as displayable string, instruction, sensor get request etc
-  // and 'data' is any relevant string for the specified keyword. The function should return an error message if the keyword isnt defined.
-
-
-  // an example would be: 'disp_string: display this string'
-  // this is defined by the disp_string keyword meaning the associated data should be pushed to the screen, in which case the data is the string to be pushed
-
-  //#error("function not implemented")
-}
 
 int Coms_Serial::send_all_text_frames() {   // send the text frame to all megas
 

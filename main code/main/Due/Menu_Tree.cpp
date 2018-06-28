@@ -38,7 +38,8 @@ extern byte y_pos_dir;
 extern byte text_colour_r;
 extern byte text_colour_g;
 extern byte text_colour_b;
-
+extern bool use_hue;
+extern int  text_colour_hue;
 
 
 //declare local variables

@@ -10,8 +10,8 @@
 #include "Led_strip.h"
 #include "Encoder.h"
 #include "Menu_Tree.h"
-
-
+#include "Graphics.h"
+#include "Coms.h"
 
 Serial_Sub_Menu serial_sub_menu_items;
 
@@ -26,6 +26,7 @@ extern Button_Struct button_parameters;
 extern Menu_tree_items menu_items;
 extern Menu_tree_menu_limits menu_limits;
 extern Menu menu;
+extern Frame text_frame;
 
 extern byte screen_mode;
 extern byte screen_brightness;
@@ -37,6 +38,10 @@ extern byte text_colour_r;
 extern byte text_colour_g;
 extern byte text_colour_b;
 
+extern int  text_colour_hue;
+
+
+extern char text_str[MAX_TWEET_SIZE];
 
 //some frequenly used strings
 String space_colon_string PROGMEM = " : ";
@@ -561,11 +566,11 @@ void Host::print_ldrs() {}
 
 void Host::print_menu_tree() {
 
-  static int previous_menu_displayed = menu.get_current_menu();
-  if (previous_menu_displayed != menu.get_current_menu()) //if we changed menu for menu auto changed by other process, push all menu options to host
-    print_menu_tree_options();
-
-  previous_menu_displayed = menu.get_current_menu();
+  //  static int previous_menu_displayed = menu.get_current_menu();
+  //  if (previous_menu_displayed != menu.get_current_menu()) //if we changed menu for menu auto changed by other process, push all menu options to host
+  //    print_menu_tree_options();
+  //
+  //  previous_menu_displayed = menu.get_current_menu();
 
   if (header_print_counter == 0) {
     Serial.println();
@@ -680,8 +685,8 @@ void Host::print_menu_tree_options(int cur_menu) {
   else
   {
     switch (cur_menu) {
-      case STARTUP:                     Serial.print(F("System Starting, Please wait..."));     break;  
-      case DEFAULT_MENU:                Serial.print(F("Menu Minimised, Press button"));        break;  
+      case STARTUP:                     Serial.print(F("System Starting, Please wait..."));     break;
+      case DEFAULT_MENU:                Serial.print(F("Menu Minimised, Press button"));        break;
       case MAIN_MENU:                   Serial.print(menu_items.main_menu);                     break;
       case SCREEN_MODE_MENU:            Serial.print(menu_items.screen_mode_menu);              break;
       case TEXT_SETTINGS_MENU:          Serial.print(menu_items.text_settings_menu);            break;
@@ -709,7 +714,7 @@ void Host::print_menu_tree_options(int cur_menu) {
 void Host::position_to_menu_value() {
   //given our current menu, what item is the encoder selecting
   switch (menu.get_current_menu()) {
-    case MAIN_MENU:  
+    case MAIN_MENU:
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                   break;
         case 1: Serial.print(menu_items.screen_mode);              break;
@@ -805,12 +810,12 @@ void Host::position_to_menu_value() {
       break;
 
     case SCROLL_SPEED_MENU:
-      if (current_scroll_direction == 1)       Serial.print(x_pos_dir-128);
-      else                                     Serial.print(y_pos_dir-128);
+      if (current_scroll_direction == 1)       Serial.print(x_pos_dir - 128);
+      else                                     Serial.print(y_pos_dir - 128);
       Serial.print(" -> range: -");
-      Serial.print(menu_limits.scroll_speed_menu-129);
+      Serial.print(menu_limits.scroll_speed_menu - 129);
       Serial.print(divide_string);
-      Serial.print(menu_limits.scroll_speed_menu-128);
+      Serial.print(menu_limits.scroll_speed_menu - 128);
       break;
 
     case FAN_SPEED_MENU:
@@ -862,5 +867,158 @@ void Host::position_to_menu_value() {
   }
 
 }
+
+
+//________HostNativeUSB__________
+
+void HostNativeUSB::init_native_usb() {
+
+  SerialUSB.begin(115200);
+  while (!SerialUSB) {} // wait for serial port to connect. Needed for native USB port only
+  //clear any bytes
+  //SerialUSB.print('N');
+  while (SerialUSB.available() > 0)SerialUSB.read();
+  Serial.println(F("Native usb init done"));
+}
+
+void HostNativeUSB::push_serial(int loc, String data) {
+
+  String tx = push_keyword + space_colon_string + types[loc] + space_colon_string + data;
+  SerialUSB.print(tx);
+
+}
+
+
+
+void HostNativeUSB::get_serial() {
+
+  if (SerialUSB.available() > 0) {
+
+    Serial.println("recieved request");
+
+    String rx_type = SerialUSB.readString();    //pi sends type first
+    int loc = type_ok(rx_type);
+    if (loc == -1)
+      SerialUSB.print('N');
+    else    {
+      SerialUSB.print('Y');
+
+      int timeout = micros() + 10000;
+
+      while (SerialUSB.available() == 0 && micros() < timeout) {} //wait for pi response
+      if (!micros() >= timeout) { //if timeout skip to end
+        delay(2); //short delay to allow some data to arrive
+
+        String rx_string = SerialUSB.readString();
+        put_data_into_loc(rx_string, loc);
+      }
+      else
+        Serial.print(F("Native usb timeout waiting for pi"));
+    }
+  }
+}
+
+
+void HostNativeUSB::request_data(byte location) {
+
+  if (location >= 0 && location < NUM_USB_COMMANDS) { //sanity check location
+    String tx = request_keyword + space_colon_string + location;
+    SerialUSB.print(tx);
+    int timeout = micros() + 10000; //more fidelity using micros() for small time period
+    while (SerialUSB.available() == 0 && micros() < timeout) {}
+    if (!micros() >= timeout) {
+      delay(2); //short delay to allow some data to arrive
+
+      String rx_string = SerialUSB.readString();
+      put_data_into_loc(rx_string, location);
+    }
+    else
+      Serial.print(F("Native usb timeout waiting for pi"));
+  }
+}
+
+
+void HostNativeUSB::put_data_into_loc(String rx_string, int loc) {
+
+  switch (loc) {
+    case 0:
+      Serial.print(F("New display text: "));
+      Serial.println(rx_string);
+      for (int i = 0; i < rx_string.length(); i++) {
+        if (i < MAX_TWEET_SIZE - 3)
+          text_str[i] = rx_string[i];
+        else if (i >= MAX_TWEET_SIZE - 5 && i < MAX_TWEET_SIZE) {
+          if (i >= MAX_TWEET_SIZE - 4 && i < MAX_TWEET_SIZE - 1)
+            text_str[i] = '.'; //add ellipsis at the end of a long string
+          else
+            text_str[i] = '\0';  // and endstirng character
+        }
+      }
+      break;
+
+    case 1:
+      Serial.print(F("New instruciton: "));
+      Serial.println(rx_string);
+      Serial.println(F("Instructions not implemented"));
+
+      break;
+
+    case 2:
+      Serial.print(F("IP address: "));
+      Serial.println(rx_string);
+      Serial.println(F("IP address not implemented"));
+
+      break;
+    case 3:
+      Serial.print(F("Network: "));
+      Serial.println(rx_string);
+      Serial.println(F("Network not implemented"));
+
+      break;
+    case 4:
+      Serial.print(F("Git commit message: "));
+      Serial.println(rx_string);
+      Serial.println(F("Git commit message not implemented"));
+
+      break;
+    case 5:
+      Serial.print(F("Git commit tag: "));
+      Serial.println(rx_string);
+      Serial.println(F("Git commit tag not implemented"));
+
+      break;
+    case 6:
+      Serial.print(F("Git commit auther: "));
+      Serial.println(rx_string);
+      Serial.println(F("Git commit auther not implemented"));
+
+      break;
+
+    default:
+      Serial.print(F("Did not recognise host command: "));
+      Serial.println(rx_string);
+  }
+}
+
+int HostNativeUSB::type_ok(String rx_type)
+{
+  if (rx_type == types[0])     //new string to display
+    return 0;
+  else if (rx_type == types[1])  //coded instruction
+    return 1;
+  else if (rx_type == types[2])  // current ip address
+    return 2;
+  else if (rx_type == types[3])  //network pi currently connected to
+    return 3;
+  else if (rx_type == types[4])   //git commit mgs
+    return 4;
+  else if (rx_type == types[5])   //git commit tag
+    return 5;
+  else if (rx_type == types[6])   //git commit auther
+    return 6;
+  else
+    return -1;
+}
+
 
 #endif // Host_CPP

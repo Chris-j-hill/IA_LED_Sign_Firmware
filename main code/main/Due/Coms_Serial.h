@@ -33,8 +33,6 @@ class Coms_Serial: public Coms {
 
     int init_software_serial_to_megas();
     int init_software_serial_to_megas(int speed);
-     
-    int get_serial();                     //function to interpret serial data recieved without a user prompt
     
     int Serial_write_frame(int address) ;                                  //function to actually send the frame to given address
     void write_frame(int address);
