@@ -47,6 +47,7 @@ void due_setup() {
   //encoder.init_button();
   //menu.init_menu_tree();
   //nativeUsb.init_native_usb();
+  light_sensor.init_LDR();
 }
 
 
@@ -74,7 +75,7 @@ void due_loop() {
     // update_text_location(); //write location variable to be sent by interrupt
     host.check_serial();
     host.print_messages();
-
+    light_sensor.get_readings();
   }
 
 }

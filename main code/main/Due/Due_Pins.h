@@ -15,12 +15,11 @@
         #define LED_STRIP   8
         #define FAN_PIN     9
 
-        #define CURRENT_METER_1 22    // change to analog pin...
-        #define CURRENT_METER_2 23
+        #define LDR1        A0      // these require external pullup resistors
+        #define LDR2        A1      // maybe change to none adjacent pins, adjacent pins seem to interfere significantly if one is floating
 
-        #define LDR1        24
-        #define LDR2        25
-        
+        #define CURRENT_METER_1 A2
+        #define CURRENT_METER_2 A3      
 
         #define TEMP1       26
         #define TEMP2       27

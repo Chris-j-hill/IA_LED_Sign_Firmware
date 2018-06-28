@@ -317,7 +317,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
 }
 
 void Host::print_messages() {
-  static uint16_t last_message_print_time;
+  static uint32_t last_message_print_time;
   static byte previously_reporting = 0; // reset header counter if just changed printing messages
 
   if (millis() > last_message_print_time + MEGGAGE_DELAY_PERIOD) { // check if specified time delay elapsed
@@ -590,7 +590,7 @@ void Host::print_ldrs() {
 
   Serial.print(light_sensor_parameters.pin1);
   space();
-  Serial.print(light_sensor_parameters.pin1);
+  Serial.print(light_sensor_parameters.pin2);
   tab();
 
   if (light_sensor_parameters.enabled1)
@@ -606,17 +606,18 @@ void Host::print_ldrs() {
     Serial.print(F("N"));
 
   tab; tab(); tab();
-  if (light_sensor_parameters.enabled2)
+  
+  if (!light_sensor_parameters.enabled2)
     dash_space();
   else {
     if (light_sensor_parameters.bad_connection1)
       Serial.print(F("N"));
     else
       Serial.print(F("Y"));
-
     space();
   }
-  if (light_sensor_parameters.enabled2)
+  
+  if (!light_sensor_parameters.enabled2)
     dash_space();
   else {
     if (light_sensor_parameters.bad_connection2)
@@ -625,6 +626,7 @@ void Host::print_ldrs() {
       Serial.print(F("Y"));
     space();
   }
+  
   tab(); tab; tab(); tab();
 
   Serial.print(light_sensor_parameters.reading1);
