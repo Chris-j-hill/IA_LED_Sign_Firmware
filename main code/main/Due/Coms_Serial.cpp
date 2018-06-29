@@ -273,7 +273,7 @@ void Coms_Serial::send_menu_frame(int menu, int encoder_pos) { // build frame an
 
 }
 
-void Coms_Serial::send_pos_frame() {  //build frame andsend position to all megas
+void Coms_Serial::send_pos_frame() {  //build frame and send position to all megas
 
 }
 

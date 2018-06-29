@@ -32,6 +32,7 @@
 #define NUM_MENU_ITEMS 14
 
 #define NUM_USB_COMMANDS 8
+#define NATIVE_USB_TIMEOUT_PERIOD 10
 
 struct Serial_Sub_Menu {
   String prepend_commands PROGMEM = "to read a value above, type -r followed by the command, to write a new value type -w and append the value(eg fans -w pin 10)";
@@ -75,8 +76,6 @@ struct Serial_Sub_Menu {
 /*13*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"}};
 
   byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS,9,6,11, 0,5,5,5, 0,0,0,0, 0, 4}; //number of columns in each row of the above two arrays
-
-  //String items[NUM_MENU_ITEMS] = {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button"};
 
 };
 
@@ -142,6 +141,6 @@ class HostNativeUSB{
   void get_serial();      //two step, first type, due confirms if recognised type, data read into specific location (might be a lot)
   void request_data(byte location);    //due requests
   void put_data_into_loc(String rx_string, int loc);
-
+  void check_connection();
 };
 #endif //Host_H

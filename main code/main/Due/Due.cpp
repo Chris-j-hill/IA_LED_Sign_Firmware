@@ -40,13 +40,13 @@ void due_setup() {
   host.init_serial();
 //  host.check_serial();
 //  host.print_messages();
-  //fans.init_fans();
-  //fans.init_temp_sensors();
-  //led_strip.init_led_strip();
-  //encoder.init_encoder();
-  //encoder.init_button();
-  //menu.init_menu_tree();
-  //nativeUsb.init_native_usb();
+  fans.init_fans();
+  fans.init_temp_sensors();
+  led_strip.init_led_strip();
+  encoder.init_encoder();
+  encoder.init_button();
+  menu.init_menu_tree();
+  nativeUsb.init_native_usb();
   light_sensor.init_LDR();
 }
 
@@ -61,12 +61,12 @@ void due_loop() {
     // internet.check_connection();
     // graphics.update_brightness();
     
-    //fans.update_temperatures();
-    //fans.set_fan_speed();
-    //led_strip.led_strip_set_freq();
+    fans.update_temperatures();
+    fans.set_fan_speed();
+    led_strip.led_strip_set_freq();
     
-    //encoder.handle_interupts();  
-    //menu.display_menu();
+    encoder.handle_interupts();  
+    menu.display_menu();
 
    
     // update_display();  //push additional data to screens as required

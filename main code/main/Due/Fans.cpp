@@ -5,7 +5,8 @@
 //#include "Due.h"
 //#include "function_declarations.h"
 #include "DueTimer.h"
-#include "Due_DHT11.h"
+//#include "Due_DHT11.h"
+#include "Due_Libraries.h"
 
 dht11 Temp1;    //objects for using dht library functions
 dht11 Temp2;

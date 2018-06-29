@@ -4,7 +4,7 @@
 #ifndef Due_Libraries_H
 #define Due_Libraries_H
 
-#include <Wire.h>
+//#include <Wire.h>
 
  
 
@@ -21,6 +21,7 @@
 //https://github.com/antodom/soft_uart
 #include "soft_uart.h"
 
+#include "Due_DHT11.h"
 
 #include "Coms.h"
 #include "Coms_I2C.h"
@@ -34,6 +35,7 @@
 #include "SD_Cards.h"
 #include "Current_control.h"
 #include "EEPROM.h"
+#include "Host.h"
 
 
 #endif //Due_Libraries_H

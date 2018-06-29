@@ -130,8 +130,6 @@ class Coms {
     int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
     int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
-    //    void write_frame(int address) = 0;
-    //     void write_frame(int address)
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
     int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
     int build_pos_frame(int address);                                     //function to send the xy coordinates along with a number of other related variables

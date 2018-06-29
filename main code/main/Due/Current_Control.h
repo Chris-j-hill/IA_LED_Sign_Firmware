@@ -14,7 +14,7 @@
 #define RING_BUFFER_LENGTH 2^RING_BUFFER_SHIFT
 
 #define LDR_UPDATE_PERIOD (int16_t)5000/RING_BUFFER_LENGTH  // ring buffer filter cutoff frequency approximately 5s
-
+#define CURRENT_METER_UPDATE_PERIOD (int16_t)15000/RING_BUFFER_LENGTH // approximately 1s sampling rate
 
 
 struct LDR_Struct {
@@ -33,9 +33,9 @@ struct LDR_Struct {
   byte avg_reading = 0;
   byte large_disparity = 25;   // ~10% of potiential range
 
-  byte config_max1 =200;
-  byte config_max2 =200;
-  
+  byte config_max1 = 200;
+  byte config_max2 = 200;
+
   byte config_min1 = 0;
   byte config_min2 = 0;
 };
@@ -45,16 +45,16 @@ struct Current_Meter_Struct {
   byte pin2 = CURRENT_METER_2;
   byte reading1 = 0;
   byte reading2 = 0;
-  int max_current_limit = MAX_CURRENT_DRAW;
+  byte max_current_limit = MAX_CURRENT_DRAW;
 
-  bool meter1_enabled = true;
-  bool meter2_enabled = true;
+  bool enabled1 = true;
+  bool enabled2 = true;
 
   byte total = 0;
-  
-  byte config_max1 =200;
-  byte config_max2 =200;
-  
+
+  byte config_max1 = 200;
+  byte config_max2 = 200;
+
   byte config_min1 = 0;
   byte config_min2 = 0;
 };
@@ -65,10 +65,10 @@ class Light_Sensor {
   private:
 
     void read_sensor(byte sensor);
-    void enable1();
-    void disable1();
-    void enable2();
-    void disable2();
+    inline void enable1();
+    inline void disable1();
+    inline void enable2();
+    inline void disable2();
     void avg_sensor_result();
     void read_sensors();
 
@@ -86,30 +86,22 @@ class Current_Meter {
 
   private:
 
+    inline void enable1();
+    inline void enable2();
+    inline void disable1();
+    inline void disable2();
+
+    void read_current_meter(byte sensor);  // read the current sensor
+    double reading_to_amps(uint16_t value);   // convert 10 bit analog reading to amps
+    void avg_sensor_result();
   public:
     Current_Meter() {}
 
-    int init_current_meter();
-    void set_current_limit(int value);    //software limit, can only be less than MAX_CURRENT_DRAW
-    int read_current_meter(int pin);  // read the current sensor
-    float reading_to_amps(int value);   // convert 10 bit analog reading to amps
-
+    void init_current_meter();
+    void set_current_limit(byte value);    //software limit, can only be less than MAX_CURRENT_DRAW
+    void enable();
+    void disable();
+    void get_readings();
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif  // Current_Control_H

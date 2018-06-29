@@ -661,14 +661,14 @@ void Host::print_current_meters() {
   Serial.print(current_meter_parameters.pin2);
   tab();
 
-  if (current_meter_parameters.meter1_enabled)
+  if (current_meter_parameters.enabled1)
     Serial.print(F("Y"));
   else
     Serial.print(F("N"));
 
   space();
 
-  if (current_meter_parameters.meter2_enabled)
+  if (current_meter_parameters.enabled2)
     Serial.print(F("Y"));
   else
     Serial.print(F("N"));
@@ -1061,10 +1061,10 @@ void Host::print_ldr_config() {
 void HostNativeUSB::init_native_usb() {
 
   SerialUSB.begin(115200);
-  while (!SerialUSB) {} // wait for serial port to connect. Needed for native USB port only
-  //clear any bytes
-  //SerialUSB.print('N');
-  while (SerialUSB.available() > 0)SerialUSB.read();
+  int USB_timeout = millis() + NATIVE_USB_TIMEOUT_PERIOD;
+  while (!SerialUSB && millis()<USB_timeout) {} // wait for serial port to connect. Needed for native USB port only
+
+  while (SerialUSB.available() > 0) SerialUSB.read();
   Serial.println(F("Native usb init done"));
 }
 
@@ -1215,5 +1215,18 @@ int HostNativeUSB::type_ok(String rx_type)
     return -1;
 }
 
+
+void HostNativeUSB::check_connection(){
+
+  int USB_timeout = millis() + NATIVE_USB_TIMEOUT_PERIOD;
+
+  while (!SerialUSB && millis()<USB_timeout) {} // wait for serial port to connect
+
+    if(millis()>=USB_timeout)
+      return;
+    else
+        request_data(7);  //send ping command
+        return;
+}
 
 #endif // Host_CPP

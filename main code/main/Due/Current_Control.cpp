@@ -22,22 +22,22 @@ Current_Meter_Struct current_meter_parameters;
 int Light_Sensor::init_LDR() {
 
   if (enable_LDR) {
-    this -> enable();
-    this -> read_sensor(1); //check connection
+    enable();
+    read_sensors();
   }
   else
-    this -> disable();
-  this -> read_sensor(2);
+    disable();
+
 }
 
 void Light_Sensor::read_sensors() {
 
   delayMicroseconds(50);    //delay to allow accurate ADC reading
-  this -> read_sensor(1);
+  read_sensor(1);
   delayMicroseconds(50);
-  this -> read_sensor(2);
+  read_sensor(2);
 
-  this -> avg_sensor_result();
+  avg_sensor_result();
 
 }
 
@@ -78,23 +78,23 @@ void Light_Sensor::disable() {
 
 }
 
-void Light_Sensor::enable1() {
+inline void Light_Sensor::enable1() {
 
   pinMode(light_sensor_parameters.pin1, INPUT);
   light_sensor_parameters.enabled1 = true;
 }
 
-void Light_Sensor::enable2() {
+inline void Light_Sensor::enable2() {
 
   pinMode(light_sensor_parameters.pin2, INPUT);
   light_sensor_parameters.enabled2 = true;
 }
 
-void Light_Sensor::disable1() {
+inline void Light_Sensor::disable1() {
   light_sensor_parameters.enabled1 = false;
 }
 
-void Light_Sensor::disable2() {
+inline void Light_Sensor::disable2() {
   light_sensor_parameters.enabled1 = false;
 }
 
@@ -199,5 +199,78 @@ void Light_Sensor::get_readings() {
   }
 }
 
+
+
+
+
+
+// ___________Current_Meter_____________
+
+void Current_Meter::init_current_meter() {
+
+  if (enable_current_meter) {
+    enable();
+    read_current_meter(current_meter_parameters.pin1);
+    read_current_meter(current_meter_parameters.pin2);
+  }
+  else
+    disable();
+}
+
+
+void Current_Meter::enable() {
+  if (!current_meter_parameters.enabled1)
+    enable1();
+  if (!current_meter_parameters.enabled2)
+    enable2();
+}
+
+inline void Current_Meter::enable1() {
+  pinMode(current_meter_parameters.pin1, INPUT);
+  current_meter_parameters.enabled1 = true;
+}
+inline void Current_Meter::enable2() {
+  pinMode(current_meter_parameters.pin1, INPUT);
+  current_meter_parameters.enabled1 = true;
+}
+
+
+void Current_Meter::disable() {
+  if (current_meter_parameters.enabled1)
+    disable1();
+  if (current_meter_parameters.enabled2)
+    disable2();
+}
+inline void Current_Meter::disable1() {
+  current_meter_parameters.enabled1 = false;
+}
+inline void Current_Meter::disable2() {
+  current_meter_parameters.enabled1 = false;
+}
+
+void Current_Meter::set_current_limit(byte value) {
+  if (value >= MAX_CURRENT_DRAW) {
+    current_meter_parameters.max_current_limit = MAX_CURRENT_DRAW;
+  }
+  else
+    current_meter_parameters.max_current_limit = value;
+}
+
+
+void Current_Meter::get_readings() {
+  
+  static int previous_current_read_time = millis();
+  
+  if (millis() > previous_current_read_time + CURRENT_METER_UPDATE_PERIOD) {
+    previous_current_read_time = millis();
+    delayMicroseconds(50);    //delay to allow accurate ADC reading
+    read_current_meter(1);
+    delayMicroseconds(50);
+    read_current_meter(2);
+
+    avg_sensor_result();
+  }
+
+}
 
 #endif  // Current_Control_CPP
