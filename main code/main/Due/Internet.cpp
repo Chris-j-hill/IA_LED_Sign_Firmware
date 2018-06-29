@@ -28,6 +28,7 @@ bool ethernet_connected = true;
 bool wifi_connected = true;
 
 
+extern bool sd_cards_enabled;
 
 
 //methods for internet_class

@@ -31,27 +31,42 @@
 #define DEFAULT_STARTUP_STRING_NO_SD_CARD "Not searching for sd card, heres some text instead"
 #endif
 
+//#define ENCRYPT_LOCAL           // encrypt copied data
+#define DISABLE_EXTERNAL_PORT   // disable external port once data copied
 
 
+struct SD_Strings {
 
-struct SD_Strings{
+  String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
+  String Network = "init network";    //store current network
+  String Password = "init password";   //store current password
+
+};
+
+struct SD_Card {
+  byte pin = 0;
+  bool enabled = false;
+  bool detected = false;
+  const char *working_dir = "123456789 123456789 "; // <- 20 characters for working dir name
+
+  bool directory_exists = false;
   
-String str_sd ="123456789 123456789 123456789 123456789 123456789 ";   //<- 60 bytes, sample default string, needed to set the length correctly
-String Network = "init network";    //store current network
-String Password = "init password";   //store current password
- 
+  bool network_file_exists = false;       //types of files that we might work with
+  bool disp_string_file_exists = false;
+  bool log_file_exists = false;
+  bool instruction_file_exists = false;
+  bool calibration_file_exists = false;
+  bool bitmap_file_exists = false;
 };
 
 
-//declare variables used outside of this cpp file
 
-extern bool sd_card1_detected;
-extern bool sd_card2_detected;
-extern bool sd_cards_enabled;
 
 class Card {
 
   private:
+
+
     int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
     int extract_network_data();
     int buffer_in_header();         // return 1 if the colon is in the header, otherwise 0
@@ -62,15 +77,24 @@ class Card {
     int remove_card_1();
     int log_temp_to_sd();               // log data to the sd card data related to temps over time
 
+
+
+    void check_for_files(byte check_card);
+
+
+
   public:
 
-    Card() {}
+    Card();
+
+    void check_for_sd_card(); //check if can .begin
+
 
     int init_sd_cards();
     int check_for_SD_card_inserted();
-    
-    void enable_external_port(){}
-    void disable_external_port(){}
+
+    void enable_external_port() {}
+    void disable_external_port() {}
 };
 
 

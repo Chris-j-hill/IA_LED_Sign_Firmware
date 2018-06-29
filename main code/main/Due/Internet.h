@@ -22,7 +22,7 @@ class Internet {
     void ethernet_disable(){} 
     void wifi_enable(){}
     void wifi_disable(){}
-    void ping();
+    uint16_t ping();
     void get_string();
     void get_ip();
     void run_instructions();    // <- run instructions in file on host device

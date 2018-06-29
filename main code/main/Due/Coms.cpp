@@ -78,7 +78,8 @@ extern byte screen_mode;   //mode of operation on startup should be both display
                       //mode3: other side on
 
 
-
+extern bool sd_card1_detected;
+extern bool sd_card2_detected;
 
 
 

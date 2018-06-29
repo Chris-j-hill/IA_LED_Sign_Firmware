@@ -19,6 +19,17 @@ bool enable_sd_cards = true;
 bool enable_sd_cards = false;
 #endif
 
+
+//#define ALLOW_INSTRUCTION_FILES
+//#define ALLOW_BITMAP_FILES
+//#define ALLOW_CALIBRATION_FILES
+//#define ALLOW_DATA_LOG_FILES
+#define ALLOW_DISP_STRING_FILES
+#define ALLOW_NETWORK_FILES
+
+
+
+
 bool sd_cards_enabled = false;
 
 
@@ -36,23 +47,60 @@ char sd_file_read_buffer[67];       //buffer to read some data, dont need to rea
 const char *sd_ext_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;
 const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 
+#ifdef ALLOW_NETWORK_FILES
+
 const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
 const char *sd_int_file = NETWORK_LOGIN_FILENAME;
+#endif
 
-//const char *sd_ext_file2 = "Instructions.BIN";      //not implemented
-//const char *sd_int_file2 = "Instructions.BIN";
-//
-//const char *sd_ext_file3 = "bitmap.BIN";
-//const char *sd_int_file3 = "bitmap.BIN";
+#ifdef ALLOW_DISP_STRING_FILES
+
+const char *ext_string_file = "Display String.BIN";      
+const char *int_string_file = "Display String.BIN";
+#endif
+
+#ifdef ALLOW_DATA_LOG_FILES
+const char *ext_log_file = "Data Log.BIN";      
+const char *int_log_file = "Data Log.BIN";
+#endif
+
+#ifdef ALLOW_CALIBRATION_FILES
+const char *ext_calibration_file = "Calibration.BIN";      
+const char *int_calibration_file = "Calibration.BIN";
+#endif
+
+#ifdef ALLOW_INSTRUCTION_FILES
+const char *ext_instruction_file = "Instructions.BIN";      
+const char *ext_instruction_file = "Instructions.BIN";
+#endif
+
+#ifdef ALLOW_BITMAP_FILES
+const char *ext_bitmap_file = "bitmap.BIN";
+const char *int_bitmap_file = "bitmap.BIN";
+#endif
+
+
+const char *sd_ext_file3 = "bitmap.BIN";
+const char *sd_int_file3 = "bitmap.BIN";
 
 bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
 bool sd_card2_detected = true;
 
 
+SD_Card card1;
+SD_Card card2;
 
 
+Card::Card() {
+  card1.pin = SD1_ENABLE;
+  card2.pin = SD2_ENABLE;
 
+  card1.enabled = enable_sd_cards;
+  card2.enabled = enable_sd_cards;
 
+  card1.working_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;
+  card2.working_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
+}
 
 int Card::init_sd_cards() {      // code to init sd cards and copy data from external to internal card
 
@@ -370,7 +418,7 @@ int Card::remove_card_1() {  //function to stall code until the external sd is r
 
   int alpha = 0;
   int theta = millis();
-  bool external_sd_card_initialised = false;
+  static bool external_sd_card_initialised = false;
 
   while (external_sd_card_initialised == 0) {
     if (!external_sd_card.begin(SD1_CS)) {
@@ -391,4 +439,86 @@ int Card::remove_card_1() {  //function to stall code until the external sd is r
 }
 
 
+void Card::check_for_sd_card() {
+
+  if (external_sd_card.begin(card1.pin) && !card1.detected) {
+    card1.detected = true;
+    check_for_files(1);  //check if files exist on external card
+  }
+  else
+    card1.detected = false;
+
+  if (external_sd_card.begin(card2.pin) && !card2.detected) {
+    card2.detected = true;
+    check_for_files(2);  //check if files exist on external card
+  }
+  else
+    card2.detected = false;
+
+}
+
+void Card::check_for_files(byte check_card) {
+
+  if (check_card == 1) {//checking external card
+
+    //check if dir exists
+    if (external_sd_card.exists(card1.working_dir)) {
+      card1.directory_exists = true;
+
+#ifdef ALLOW_NETWORK_FILES
+      if (external_sd_card.exists(sd_ext_file))
+        card1.network_file_exists = true;
+      else
+        card1.network_file_exists = false;
+#endif
+
+#ifdef ALLOW_DISP_STRING_FILES
+      if (external_sd_card.exists(ext_string_file))
+        card1.disp_string_file_exists = true;
+      else
+        card1.disp_string_file_exists = false;
+#endif
+
+#ifdef ALLOW_DATA_LOG_FILES
+      if (external_sd_card.exists(ext_log_file))
+        card1.log_file_exists = true;
+      else
+        card1.log_file_exists = false;
+#endif
+
+#ifdef ALLOW_CALIBRATION_FILES
+      if (external_sd_card.exists(ext_calibration_file))
+        card1.calibration_file_exists = true;
+      else
+        card1.calibration_file_exists = false;
+#endif
+
+#ifdef ALLOW_INSTRUCTION_FILES
+      if (external_sd_card.exists(ext_instruction_file))
+        card1.instruction_file_exists = true;
+      else
+        card1.instruction_file_exists = false;
+#endif
+
+#ifdef ALLOW_BITMAP_FILES
+      if (external_sd_card.exists(ext_bitmap_file))
+        card1.bitmap_file_exists = true;
+      else
+        card1.bitmap_file_exists = false;
+#endif
+
+    }
+    else
+      card1.directory_exists = false;
+  }
+
+  else { //checking internal card
+
+
+    if (!internal_sd_card.exists(sd_int_dir)) {
+      if (!internal_sd_card.mkdir(sd_int_dir)) internal_sd_card.errorExit("internal_sd_card.mkdir");
+    }
+    
+  }
+}
 #endif // SD_Cards_CPP
