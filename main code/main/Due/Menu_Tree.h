@@ -22,6 +22,7 @@
 #define SD_CARD_MENU                  8
 #define LED_STRIP_MENU                9
 
+//#define SYSTEM_OVERRIDES
 //LEVEL 3
 #define TEXT_SIZE_MENU                10
 #define TEXT_COLOUR_MENU              11
@@ -39,6 +40,13 @@
 #define TEXT_COLOUR_BLUE              20
 #define TEXT_COLOUR_HUE               21
 
+
+//TO DO
+
+#define FAN_MIN_TEMP
+#define FAN_MAX_TEMP
+#define CURRENT_DRAW_MAX
+#define SCREEN_BRIGHTNESS
 
 
 struct Menu_tree_items {

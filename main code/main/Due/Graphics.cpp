@@ -31,14 +31,15 @@ byte screen_mode=0;   //mode of operation on startup should be both displaying
 
 char text_str[MAX_TWEET_SIZE] = "this is a test4 this is a test5 this is a test6";
 
-
+extern byte screen_brightness;
 
 void Graphics::flip_direction(){}   //flip the direction currently scrolling
 
 void Graphics::update_brightness(){
   
-  byte target_brightness = light_sensor.calculate_target_brightness();
+  byte target_brightness = light_sensor.calculate_target_brightness();  //
   if (screen_brightness != target_brightness && (millis()-SCREEN_BRIGHTNESS_UPDATE_PERIOD) > last_brightness_update){
+    screen_brightness = target_brightness;
     for (int i=0;i<NUM_SCREENS;i++)
       coms_serial.send_specific_calibration_data(PREFIX_SCREEN_BRIGHTNESS, i, false, 0);  //push to screens
     last_brightness_update = millis();

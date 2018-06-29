@@ -9,19 +9,20 @@
 
 #define MAX_CURRENT_DRAW 35   // limit of the psu-10%
 #define SCREEN_BRIGHTNESS_UPDATE_THRESHOLD 5  // require 5% difference in target screen brightness and actual brightness before update pushed to megas
+
 #define RING_BUFFER_SHIFT 4
 #define RING_BUFFER_LENGTH 2^RING_BUFFER_SHIFT
 
 #define LDR_UPDATE_PERIOD (int16_t)5000/RING_BUFFER_LENGTH  // ring buffer filter cutoff frequency approximately 5s
 
-extern byte screen_brightness;
+
 
 struct LDR_Struct {
-  int pin1 = LDR1;
-  int pin2 = LDR2;
+  byte pin1 = LDR1;
+  byte pin2 = LDR2;
 
-  byte reading1 = 7;
-  byte reading2 = 8;
+  byte reading1 = 0;
+  byte reading2 = 0;
 
   bool enabled1 = true;
   bool enabled2 = true;
@@ -40,16 +41,22 @@ struct LDR_Struct {
 };
 
 struct Current_Meter_Struct {
-  int pin1 = CURRENT_METER_1;
-  int pin2 = CURRENT_METER_2;
-  byte reading1 = 2;
-  byte reading2 = 3;
+  byte pin1 = CURRENT_METER_1;
+  byte pin2 = CURRENT_METER_2;
+  byte reading1 = 0;
+  byte reading2 = 0;
   int max_current_limit = MAX_CURRENT_DRAW;
 
   bool meter1_enabled = true;
   bool meter2_enabled = true;
 
   byte total = 0;
+  
+  byte config_max1 =200;
+  byte config_max2 =200;
+  
+  byte config_min1 = 0;
+  byte config_min2 = 0;
 };
 
 
@@ -72,7 +79,6 @@ class Light_Sensor {
     void enable();
     void disable();
     byte calculate_target_brightness(); //use sensor readings to calculate the scaling value for brightness, returns percentage
-    void LDR_calibration();
     void get_readings();
 };
 
@@ -85,16 +91,14 @@ class Current_Meter {
 
     int init_current_meter();
     void set_current_limit(int value);    //software limit, can only be less than MAX_CURRENT_DRAW
+    int read_current_meter(int pin);  // read the current sensor
+    float reading_to_amps(int value);   // convert 10 bit analog reading to amps
 
 };
 
 
 
 
-int read_current_meter(int pin);  // read the current sensor
-float reading_to_amps(int value);   // convert 10 bit analog reading to amps
-
-//int LDR_calibration();        //calibrate maximum minimum and room brightness lights
 
 
 

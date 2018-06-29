@@ -32,9 +32,9 @@ int Light_Sensor::init_LDR() {
 
 void Light_Sensor::read_sensors() {
 
-  delayMicroseconds(250);
+  delayMicroseconds(50);    //delay to allow accurate ADC reading
   this -> read_sensor(1);
-  delayMicroseconds(250);
+  delayMicroseconds(50);
   this -> read_sensor(2);
 
   this -> avg_sensor_result();
@@ -43,12 +43,16 @@ void Light_Sensor::read_sensors() {
 
 
 byte Light_Sensor::calculate_target_brightness() {
-
+  static int scaler = 0;
   byte temp_brightness = map(light_sensor_parameters.avg_reading, 0, 255, 0, 100);
-  if (current_meter_parameters.total > current_meter_parameters.max_current_limit) {
-    temp_brightness = temp_brightness - 2;      //reduce by 2% every loop until under current limit
 
-  }
+  if (current_meter_parameters.total > current_meter_parameters.max_current_limit)
+    scaler -= 2;      //reduce by 2% every loop until under current limit
+  else if (scaler < 100)
+    scaler += 2;
+
+  temp_brightness += scaler; //scale the target brightness, scaler should fluctuate around 0
+  temp_brightness = constrain(temp_brightness, 0, 100); // constrain result to range 0-100
   //require difference between target_brightness and current birghtness to be above threshold before update gets pushed to megas
   if (abs(screen_brightness - temp_brightness) > SCREEN_BRIGHTNESS_UPDATE_THRESHOLD)
     return temp_brightness;
@@ -189,117 +193,10 @@ void Light_Sensor::avg_sensor_result() {
 void Light_Sensor::get_readings() {
   static int previous_ldr_read_time = millis();
 
-  if (millis() > LDR_UPDATE_PERIOD + previous_ldr_read_time){
+  if (millis() > LDR_UPDATE_PERIOD + previous_ldr_read_time) {
     previous_ldr_read_time = millis();
     read_sensors();
   }
-}
-void Light_Sensor::LDR_calibration() {        // code to set ambient brightness, max and min values
-  //
-  //  // since the lrd likely will never read near the rail voltage when in light or darkness
-  //  // ambient, max and min will need to be calibrated. this could be calculated roughly too, based on
-  //  // approximate series resistor values, but will vary depending on component tollerances
-  //  // TO DO: 1) add screen interface not just serial feedback
-  //  //        2) configure sensors individually not just the average, in case using non identical components
-  //
-  //    char accept_val = 'w';    //variable to detect if serial input given, if val == x -> quit
-  //    //                                          id val == s -> skip current
-  //    int reading1;             // variables to store readings from ldr's
-  //    int reading2;
-  //    // configure ambient
-  //    Sprintln (F("LDR configuration tool:"));
-  //
-  //    // set ambient brightness value
-  //    Sprint(F("Set the ambient brightness, make sure neither ldr's covered"));
-  //    while (Serial.available() == 0) { //wait until some serial data arrives
-  //      // give prompt on value read from pins
-  //      delay(500);
-  //      Sprint(F("LDR 1 value: "));
-  //      Sprint(analogRead(LDR.pin1));
-  //      Sprint(F("LDR 2 value: "));
-  //      Sprintln(analogRead(LDR.pin2));
-  //    }
-  //
-  //    accept_val = Serial.read();    //read one byte
-  //    Serial.flush();                  //empty buffer
-  //    if (accept_val == 'x')
-  //      return (0);                      // if user quits, return 0
-  //    if (accept_val != 's') {      // if not skipping this stage
-  //      reading1 = analogRead(LDR.pin1);
-  //      reading2 = analogRead(LDR.pin2);
-  //      LDR.ambient = (reading1 + reading2) / 2; //set average as ambient
-  //      if (abs(reading1 - reading2) >= LDR.large_disparity) //if large disparity, give warning
-  //        Sprintln(F("Warning, large disparity on readings"));
-  //    }
-  //
-  //
-  //    //set maximum brightness value
-  //
-  //    Sprint(F("Set the maximum brightness, make sure neither ldr's covered, shine light on ldr 1"));
-  //    while (Serial.available() == 0) { //wait until some serial data arrives
-  //      // give prompt on value read from pin, help to identify pin
-  //      delay(500);
-  //      Sprint(F("LDR 1 value: "));
-  //      Sprintln(analogRead(LDR.pin1));
-  //    }
-  //
-  //    accept_val = Serial.read();
-  //    Serial.flush();
-  //    if (accept_val == 'x')
-  //      return (0);                      // if user quits, return 0
-  //
-  //    if (accept_val != 's') {
-  //
-  //      LDR.max_reading1 = analogRead(LDR.pin1);
-  //
-  //      Sprint(F("Set the maximum brightness, make sure neither ldr's covered, shine light on ldr 2"));
-  //      while (Serial.available() == 0) { //wait until some serial data arrives
-  //        // give prompt on value read from pin, help to identify pin
-  //        delay(500);
-  //        Sprint(F("LDR 2 value: "));
-  //        Sprintln(analogRead(LDR.pin2));
-  //      }
-  //
-  //      accept_val = Serial.read();
-  //      Serial.flush();
-  //      if (accept_val == 'x')
-  //        return (0);                      // if user quits, return 0
-  //      LDR.max_reading2 = analogRead(LDR.pin2);
-  //      if (abs(LDR.max_reading1 - LDR.max_reading2) >= LDR.large_disparity)
-  //        Sprintln(F("Warning, large disparity on readings"));
-  //    }
-  //
-  //    //set minimum brightness value
-  //    Sprint(F("Set the minimum brightness, cover ldr 1"));
-  //    while (Serial.available() == 0) { //wait until some serial data arrives
-  //      // give prompt on value read from pin, help to identify pin
-  //      delay(500);
-  //      Sprint(F("LDR 1 value: "));
-  //      Sprintln(analogRead(LDR.pin1));
-  //    }
-  //    accept_val = Serial.read();
-  //    Serial.flush();
-  //    if (accept_val == 'x')
-  //      return (0);                      // if user quits, return 0
-  //    if (accept_val != 's') {
-  //      LDR.min_reading1 = analogRead(LDR.pin1);
-  //      Sprint(F("Set the maximum brightness, cover ldr 2"));
-  //      while (Serial.available() == 0) { //wait until some serial data arrives
-  //        // give prompt on value read from pin, help to identify pin
-  //        delay(500);
-  //        Sprint(F("LDR 2 value: "));
-  //        Sprintln(analogRead(LDR.pin2));
-  //      }
-  //      accept_val = Serial.read();
-  //      Serial.flush();
-  //      if (accept_val == 'x')
-  //        return (0);                      // if user quits, return 0
-  //      LDR.min_reading2 = analogRead(LDR.pin2);
-  //      if (abs(LDR.min_reading1 - LDR.min_reading2) >= LDR.large_disparity)
-  //        Sprintln(F("Warning, large disparity on readings"));
-  //    }
-  //  }
-
 }
 
 

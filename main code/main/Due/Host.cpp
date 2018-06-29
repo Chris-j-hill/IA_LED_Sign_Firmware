@@ -94,22 +94,16 @@ void Host::check_serial() {   //to read incomming data
     String rx = Serial.readString();
     rx.trim();  //trim off return carraige
 
-    //set message printing mode
-    //    if      (rx == serial_sub_menu_items.data_elements[0][STOP_REPORT])          data_to_report = STOP_REPORT;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_FANS])          data_to_report = REPORT_FANS;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_TEMPS])         data_to_report = REPORT_TEMPS;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LED_STRIP])     data_to_report = REPORT_LED_STRIP;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_MENU_TREE])     data_to_report = REPORT_MENU_TREE;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_LDRS])          data_to_report = REPORT_LDRS;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_ENCODER])       data_to_report = REPORT_ENCODER;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_BUTTON])        data_to_report = REPORT_BUTTON;
-    //    else if (rx == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER]) data_to_report = REPORT_CURRENT_METER;
+    byte temp = data_to_report; // log what we were doing in case we only want 
 
+        //set message printing mode
     data_to_report = data_set_LUT(rx);
-    Serial.println(data_to_report);
+
     //input might be to directly change value
-    if (data_to_report == 255)
+    if (data_to_report == 255){
+      data_to_report = temp;
       serial_sub_menu(rx);
+    }
 
   }
 }
@@ -131,14 +125,14 @@ void Host::serial_sub_menu(String rx) {
   int value = command_arg.toInt();  //value as an int
 
 
-  //    Serial.print("data set: ");
-  //    Serial.println(data_set);
-  //
-  //    Serial.print("Value: ");
-  //    Serial.println(value);
-  //    Serial.println(command_mode);
-  //    Serial.println(command_data);
-  //    Serial.println(command_arg);
+//      Serial.print("data set: ");
+//      Serial.println(data_set);
+//  
+//      Serial.print("Value: ");
+//      Serial.println(value);
+//      Serial.println(command_mode);
+//      Serial.println(command_data);
+//      Serial.println(command_arg);
 
   if (command_mode == "-h") {
     data_to_report = data_set_LUT(data_set);  //convert string to data to display
@@ -154,11 +148,12 @@ void Host::serial_sub_menu(String rx) {
   }
 
   else if (command_mode == "-w") {
-    byte temp = data_to_report;
+    byte temp_data_to_report = data_to_report;
+    
     data_to_report = data_set_LUT(data_set);
     write_data(command_data, value);
-    data_to_report = temp;    //return to whatever we were doing before
-  }
+    data_to_report = temp_data_to_report;    //return to whatever we were doing before
+    }
 }
 
 
@@ -183,9 +178,11 @@ byte Host::data_set_LUT(String data_set) {
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER])
     return REPORT_CURRENT_METER;
 
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_LDR_CONFIG])
+    return REPORT_LDR_CONFIG;
 
-
-  else return 255;
+  else
+    return 255;
 }
 
 void Host::print_help_options() {
@@ -288,7 +285,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 7: (r_w == 'r')  ?  Serial.println(led_strip_parameters.enabled)                   : led_strip_parameters.enabled = value;                       break;
         case 8: (r_w == 'r')  ?  Serial.println(led_strip_parameters.fast_interval)             : led_strip_parameters.fast_interval = value;                 break;
         case 9: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal)                : led_strip_parameters.sinusoidal = value;                    break;
-        case 10: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+        case 10:(r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
       }
       break;
 
@@ -308,10 +305,22 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 0: (r_w == 'r')  ?  Serial.println(button_parameters.button_pin)                   : Serial.println(pin_error_msg);                              break;
         case 1: (r_w == 'r')  ?  Serial.println(button_parameters.button_pressed_ISR)           : button_parameters.button_pressed_ISR = value;               break;
         case 2: (r_w == 'r')  ?  Serial.println(button_parameters.button_press_interval)        : button_parameters.button_press_interval = value;            break;
-        case 3: (r_w == 'r')  ?  Serial.println(button_parameters.enabled)                      : button_parameters.enabled = value;                           break;
+        case 3: (r_w == 'r')  ?  Serial.println(button_parameters.enabled)                      : button_parameters.enabled = value;                          break;
         case 4: (r_w == 'r')  ?  Serial.println(button_parameters.is_attached)                  : button_parameters.is_attached = value;                      break;
       }
       break;
+
+
+    case REPORT_LDR_CONFIG:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max1)            : light_sensor_parameters.config_max1 = value;               break;
+        case 1: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min1)            : light_sensor_parameters.config_min1 = value;               break;
+        case 2: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max2)            : light_sensor_parameters.config_max2 = value;               break;
+        case 3: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min2)            : light_sensor_parameters.config_min2 = value;               break;
+      }
+      break;
+
+
   }
 
 }
@@ -320,7 +329,7 @@ void Host::print_messages() {
   static uint32_t last_message_print_time;
   static byte previously_reporting = 0; // reset header counter if just changed printing messages
 
-  if (millis() > last_message_print_time + MEGGAGE_DELAY_PERIOD) { // check if specified time delay elapsed
+  if (millis() > last_message_print_time + MESSAGE_DELAY_PERIOD) { // check if specified time delay elapsed
 
     last_message_print_time = millis();
 
@@ -361,7 +370,9 @@ void Host::print_messages() {
         print_current_meters();
         break;
 
-
+      case REPORT_LDR_CONFIG:
+        print_ldr_config();
+        break;
 
       default: break;
     }
@@ -606,7 +617,7 @@ void Host::print_ldrs() {
     Serial.print(F("N"));
 
   tab; tab(); tab();
-  
+
   if (!light_sensor_parameters.enabled2)
     dash_space();
   else {
@@ -616,7 +627,7 @@ void Host::print_ldrs() {
       Serial.print(F("Y"));
     space();
   }
-  
+
   if (!light_sensor_parameters.enabled2)
     dash_space();
   else {
@@ -626,23 +637,57 @@ void Host::print_ldrs() {
       Serial.print(F("Y"));
     space();
   }
-  
+
   tab(); tab; tab(); tab();
 
   Serial.print(light_sensor_parameters.reading1);
   space();
   Serial.print(light_sensor_parameters.reading2);
-  tab();tab();
+  tab(); tab();
   Serial.print(light_sensor_parameters.avg_reading);
   Serial.println();
 
 }
 
-
 void Host::print_current_meters() {
 
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Pins \tMeters Enabled \tMax Current \tAmp Drawn \tAvg Reading"));
+  }
+
+  Serial.print(current_meter_parameters.pin1);
+  space();
+  Serial.print(current_meter_parameters.pin2);
+  tab();
+
+  if (current_meter_parameters.meter1_enabled)
+    Serial.print(F("Y"));
+  else
+    Serial.print(F("N"));
+
+  space();
+
+  if (current_meter_parameters.meter2_enabled)
+    Serial.print(F("Y"));
+  else
+    Serial.print(F("N"));
+
+  tab; tab(); tab();
+
+  Serial.print(current_meter_parameters.max_current_limit);
+
+  tab(); tab; tab();
+
+  Serial.print(current_meter_parameters.reading1);
+  space();
+  Serial.print(current_meter_parameters.reading2);
+  tab(); tab();
+  Serial.print(current_meter_parameters.total);
+  Serial.println();
 
 }
+
 
 void Host::print_menu_tree() {
 
@@ -950,6 +995,61 @@ void Host::position_to_menu_value() {
 
 
 
+
+void Host::print_ldr_config() {
+
+
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Pins \tMax1 \tMin1 \tMax2 \tMin2 \tAdjusted Reading \tLive Raw Readings \tInstruction"));
+  }
+
+  Serial.print(light_sensor_parameters.pin1);
+  space();
+  Serial.print(light_sensor_parameters.pin2);
+  tab();
+
+  Serial.print(light_sensor_parameters.config_max1);
+  tab();
+  Serial.print(light_sensor_parameters.config_min1);
+  tab();
+  Serial.print(light_sensor_parameters.config_max2);
+  tab();
+  Serial.print(light_sensor_parameters.config_min2);
+
+  tab();
+
+  Serial.print(light_sensor_parameters.reading1);
+  if (light_sensor_parameters.reading1 < 100)
+    space();
+  space();
+  Serial.print(light_sensor_parameters.reading2);
+
+  tab(); tab(); tab();
+  int temp_reading = map(analogRead(light_sensor_parameters.pin1), 0, 1024, 0, 255);
+
+  Serial.print(temp_reading);
+  if (temp_reading < 100)
+    space();
+  space();
+  Serial.print(map(analogRead(light_sensor_parameters.pin2), 0, 1024, 0, 255));
+  tab(); tab(); tab();
+
+  if (light_sensor_parameters.reading1 >= 255)
+    Serial.print(F("WARNING: sensor 1 saturating, increase max1 threshold"));
+  else if (light_sensor_parameters.reading2 >= 255)
+    Serial.print(F("WARNING: sensor 2 saturating, increase max2 threshold"));
+
+  else if (light_sensor_parameters.reading1 <= 0)
+    Serial.print(F("WARNING: sensor 1 saturating, decrease min1 threshold"));
+  else if (light_sensor_parameters.reading2 <= 0)
+    Serial.print(F("WARNING: sensor 2 saturating, decrease min2 threshold"));
+  else
+    Serial.print(F("Set range of max and min greater than range of raw readings"));
+  Serial.println();
+
+
+}
 
 
 

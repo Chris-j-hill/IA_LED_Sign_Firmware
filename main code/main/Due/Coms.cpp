@@ -69,7 +69,7 @@ extern byte text_colour_g;
 extern byte text_colour_b;
 extern bool use_hue;
 
-
+extern byte screen_brightness;
 extern int  text_colour_hue;
 extern byte screen_mode;   //mode of operation on startup should be both displaying
                       //mode0: both on

@@ -16,13 +16,21 @@
 #define REPORT_BUTTON         7
 #define REPORT_CURRENT_METER  8
 
+#define REPORT_TEXT           9
+#define REPORT_POS            10
+#define REPORT_SERIAL         11
+#define REPORT_SD_CARD        12
 
-#define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow
-#define MEGGAGE_DELAY_PERIOD    200   //delay this many ms between message prints
+#define REPORT_LDR_CONFIG     13
+
+
+#define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow...
+#define MESSAGE_DELAY_PERIOD    200   //delay this many ms between message prints
 //class to manage all functions regarding communication with due host device (probably a pi)
 
-#define MAX_NUM_MENU_OPTIONS 11
-#define NUM_MENU_ITEMS 9
+#define MAX_NUM_MENU_OPTIONS 14
+#define NUM_MENU_ITEMS 14
+
 #define NUM_USB_COMMANDS 8
 
 struct Serial_Sub_Menu {
@@ -33,29 +41,40 @@ struct Serial_Sub_Menu {
 
   //these are the terminal input commands to type
   String data_elements [NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current"},
-   {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
-   {"pin1", "pin2", "pin3", "enable1", "enable2", "enable3"},
-   {"pin", "target_brightness", "current_brightness", "increment", "change_interval", "stable_interval", "minimum", "enabled","fast_interval_on", "sinusoidal", "freq"},
-      {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
-   {"pin1", "pin2", "enabled1", "enabled2", "large_diff"},
-   {"pin1", "pin2", "pos","enabled","attached"},
-   {"pin", "pressed", "interval", "enabled", "attached"},
-   {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"}};
+/*0 */   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current", "text", "position", "serial", "card", "ldr_config"},
+/*1 */   {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
+/*2 */   {"pin1", "pin2", "pin3", "enable1", "enable2", "enable3"},
+/*3 */   {"pin", "target_brightness", "current_brightness", "increment", "change_interval", "stable_interval", "minimum", "enabled","fast_interval_on", "sinusoidal", "freq"},
+/*4 */      {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
+/*5 */   {"pin1", "pin2", "enabled1", "enabled2", "large_diff"},
+/*6 */   {"pin1", "pin2", "pos","enabled","attached"},
+/*7 */   {"pin", "pressed", "interval", "enabled", "attached"},
+/*8 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+/*9 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+/*10*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+/*11*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+/*12*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+/*13*/   {"max1", "min1", "max2", "min2"}};
+
 
    //these are the help notes for above commands                                          
   String data_descriptions[NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-    {"stop printing data", "data related to fans", "data related to temperature sensors", "data related to led strip", "data related to the menu tree", "data related to the LDR's", "data related to the encoder wheel", "data related to encoder's button"},
-    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
-    {"sensor 1 attached to this digital pin number", "as above...", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "as above..."},
-    {"led strip attached to this digital pin number", "the target brightness", "the current brightness", "ISR increment magnitude", "interval period between ISR when changing brightness", "interval period between ISR when stable", "minimum brightness of led strip", "is the led strip enabled", "can the interval period be set to fast", "set the led behaviour to sinusoidal pulsing", "pulse at this freq if in sinusoidal mode"},
-        {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
-    {"LDR 1 attached to this digital pin number", "LDR 2 attached to this digital pin number", "set to 1 to enable this sensor, 0 to disable", "as above...", "if greater difference in readings than this assume one sensor covered and rely on higher returned value (10 bit value)"},
-    {"pin 1 attached to this digital pin number, CLK or DT", "as above...", "encoder wheel current position", "set to 1 to enable the encoder, 0 to disable", "set to 1 to attach ISR, 0 to detatch"},
-    {"button attached to this digital pin number", "has the button pressed, use to force response from other functions", "interval, in ms, between button presses, used to avoid bounce", "set to 1 to enable button, 0 to disable", "set to 1 to attach ISR, 0 to detatch"},
-    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"}};
+/*0 */    {"stop printing data", "data related to fans", "data related to temperature sensors", "data related to led strip", "data related to the menu tree", "data related to the LDR's", "data related to the encoder wheel", "data related to encoder's button", "data related to current meters", "current text setting", "current text position settings", "serial link settings to megas", "sd card settings", "to configure range of ldr readings"},
+/*1 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*2 */    {"sensor 1 attached to this digital pin number", "as above...", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "as above..."},
+/*3 */    {"led strip attached to this digital pin number", "the target brightness", "the current brightness", "ISR increment magnitude", "interval period between ISR when changing brightness", "interval period between ISR when stable", "minimum brightness of led strip", "is the led strip enabled", "can the interval period be set to fast", "set the led behaviour to sinusoidal pulsing", "pulse at this freq if in sinusoidal mode"},
+/*4 */    {""}, //<- menu handled differently
+/*5 */    {"LDR 1 attached to this digital pin number", "LDR 2 attached to this digital pin number", "set to 1 to enable this sensor, 0 to disable", "as above...", "if greater difference in readings than this assume one sensor covered and rely on higher returned value (10 bit value)"},
+/*6 */    {"pin 1 attached to this digital pin number, CLK or DT", "as above...", "encoder wheel current position", "set to 1 to enable the encoder, 0 to disable", "set to 1 to attach ISR, 0 to detatch"},
+/*7 */    {"button attached to this digital pin number", "has the button pressed, use to force response from other functions", "interval, in ms, between button presses, used to avoid bounce", "set to 1 to enable button, 0 to disable", "set to 1 to attach ISR, 0 to detatch"},
+/*8 */    {"Current meter 1 attached to this digital pin number", "as above...", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*9 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*10*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*11*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*12*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*13*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"}};
 
-  byte active_elements_by_row[NUM_MENU_ITEMS] = {8,9,6,11,0,5,5,5,0};
+  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS,9,6,11, 0,5,5,5, 0,0,0,0, 0, 4}; //number of columns in each row of the above two arrays
 
   //String items[NUM_MENU_ITEMS] = {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button"};
 
@@ -77,7 +96,7 @@ class Host {
     void print_ldrs();
     void print_menu_tree();
     void print_current_meters();
-
+    void print_ldr_config();
     
     void serial_sub_menu(String rx);
     void print_help_options();
