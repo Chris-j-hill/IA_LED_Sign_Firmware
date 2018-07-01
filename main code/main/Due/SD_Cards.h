@@ -35,6 +35,17 @@
 #define DISABLE_EXTERNAL_PORT   // disable external port once data copied
 
 
+
+#define ALLOW_INSTRUCTION_FILES
+#define ALLOW_BITMAP_FILES
+#define ALLOW_CALIBRATION_FILES
+#define ALLOW_DATA_LOG_FILES
+#define ALLOW_DISP_STRING_FILES
+#define ALLOW_NETWORK_FILES
+
+
+
+
 struct SD_Strings {
 
   String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
@@ -51,9 +62,9 @@ struct SD_Card {
 
   bool directory_exists = false;
   
-  bool network_file_exists = false;       //types of files that we might work with
-  bool disp_string_file_exists = false;
-  bool log_file_exists = false;
+  byte network_file_exists = false;       //types of files that we might work with
+  byte disp_string_file_exists = false;
+  byte log_file_exists = false;
   bool instruction_file_exists = false;
   bool calibration_file_exists = false;
   bool bitmap_file_exists = false;
@@ -80,7 +91,7 @@ class Card {
 
 
     void check_for_files(byte check_card);
-
+    
 
 
   public:
@@ -89,8 +100,13 @@ class Card {
 
     void check_for_sd_card(); //check if can .begin
 
+    void init_sd_cards();
 
-    int init_sd_cards();
+
+
+
+    
+    int og_init_sd_cards();
     int check_for_SD_card_inserted();
 
     void enable_external_port() {}

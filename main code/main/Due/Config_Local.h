@@ -71,8 +71,8 @@
 #define EXPECTS_SD_ON_STARTUP   //if not defined, will not search for sd card, will carry on with default string since no internet connectivity
 
 
-#define EXTERNAL_SD_CARD_DIRECTORY_NAME "EXTERNAL"
-#define INTERNAL_SD_CARD_DIRECTORY_NAME "INTERNAL"
+#define EXTERNAL_SD_CARD_DIRECTORY_NAME "/EXTERNAL"
+#define INTERNAL_SD_CARD_DIRECTORY_NAME "/INTERNAL"
 
 #define NETWORK_LOGIN_FILENAME "Networks.BIN"
 

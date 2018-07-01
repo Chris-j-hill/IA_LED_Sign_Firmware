@@ -20,14 +20,6 @@ bool enable_sd_cards = false;
 #endif
 
 
-//#define ALLOW_INSTRUCTION_FILES
-//#define ALLOW_BITMAP_FILES
-//#define ALLOW_CALIBRATION_FILES
-//#define ALLOW_DATA_LOG_FILES
-#define ALLOW_DISP_STRING_FILES
-#define ALLOW_NETWORK_FILES
-
-
 
 
 bool sd_cards_enabled = false;
@@ -51,37 +43,38 @@ const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 
 const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
 const char *sd_int_file = NETWORK_LOGIN_FILENAME;
+
+
+#define  EXT_NETWORK_FILE NETWORK_LOGIN_FILENAME
+#define  INT_NETWORK_FILE NETWORK_LOGIN_FILENAME
+
 #endif
 
 #ifdef ALLOW_DISP_STRING_FILES
 
-const char *ext_string_file = "Display String.BIN";      
-const char *int_string_file = "Display String.BIN";
+#define EXT_STRING_FILE "String.BIN"
+#define INT_STRING_FILE "String.BIN"
 #endif
 
 #ifdef ALLOW_DATA_LOG_FILES
-const char *ext_log_file = "Data Log.BIN";      
-const char *int_log_file = "Data Log.BIN";
+#define EXT_LOG_FILE "DataLog.BIN"
+#define INT_LOG_FILE "DataLog.BIN"
 #endif
 
 #ifdef ALLOW_CALIBRATION_FILES
-const char *ext_calibration_file = "Calibration.BIN";      
-const char *int_calibration_file = "Calibration.BIN";
+#define EXT_CALIBRATION_FILE "Cal.BIN"
+#define INT_CALIBRATION_FILE "Cal.BIN"
 #endif
 
 #ifdef ALLOW_INSTRUCTION_FILES
-const char *ext_instruction_file = "Instructions.BIN";      
-const char *ext_instruction_file = "Instructions.BIN";
+#define EXT_INSTRUCTION_FILE "Instruct.BIN"
+#define INT_INSTRUCTION_FILE "Instruct.BIN"
 #endif
 
 #ifdef ALLOW_BITMAP_FILES
-const char *ext_bitmap_file = "bitmap.BIN";
-const char *int_bitmap_file = "bitmap.BIN";
+#define EXT_BITMAP_FILE "bitmap.BIN"
+#define INT_BITMAP_FILE "bitmap.BIN"
 #endif
-
-
-const char *sd_ext_file3 = "bitmap.BIN";
-const char *sd_int_file3 = "bitmap.BIN";
 
 bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
 bool sd_card2_detected = true;
@@ -98,11 +91,12 @@ Card::Card() {
   card1.enabled = enable_sd_cards;
   card2.enabled = enable_sd_cards;
 
-  card1.working_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;
+  //card1.working_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;      
+  card1.working_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;    //change this line when using two cards
   card2.working_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 }
 
-int Card::init_sd_cards() {      // code to init sd cards and copy data from external to internal card
+int Card::og_init_sd_cards() {      // code to init sd cards and copy data from external to internal card
 
   // code for initialising sd cards, waits for both cards to be active then copies files from
   // the external one to the internal one. listas are made of all files in directory and errors are
@@ -438,70 +432,81 @@ int Card::remove_card_1() {  //function to stall code until the external sd is r
   }
 }
 
+void Card::init_sd_cards() {
+  pinMode(card1.pin, OUTPUT);
+  digitalWrite(card1.pin, HIGH);
+
+
+  pinMode(card2.pin, OUTPUT);
+  digitalWrite(card2.pin, HIGH);
+
+
+}
 
 void Card::check_for_sd_card() {
 
-  if (external_sd_card.begin(card1.pin) && !card1.detected) {
-    card1.detected = true;
-    check_for_files(1);  //check if files exist on external card
-  }
-  else
-    card1.detected = false;
+    if (external_sd_card.begin(card1.pin) && !card1.detected) {
+      card1.detected = true;
+      check_for_files(1);  //check if files exist on external card
+    }
+    else if (!external_sd_card.begin(card1.pin) && card1.detected) //card was previously detected but not initialising now
+      card1.detected = false;
 
-  if (external_sd_card.begin(card2.pin) && !card2.detected) {
+  if (internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && !card2.detected) {
     card2.detected = true;
     check_for_files(2);  //check if files exist on external card
   }
-  else
+  else if (!internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && card2.detected)
     card2.detected = false;
 
 }
 
-void Card::check_for_files(byte check_card) {
+void Card::check_for_files(byte card_to_check) {
 
-  if (check_card == 1) {//checking external card
+  if (card_to_check == 1) {//checking external card
 
     //check if dir exists
     if (external_sd_card.exists(card1.working_dir)) {
       card1.directory_exists = true;
-
+      external_sd_card.chdir(card1.working_dir); //open dir if exists
+      
 #ifdef ALLOW_NETWORK_FILES
-      if (external_sd_card.exists(sd_ext_file))
+      if (external_sd_card.exists(EXT_NETWORK_FILE))
         card1.network_file_exists = true;
       else
         card1.network_file_exists = false;
 #endif
 
 #ifdef ALLOW_DISP_STRING_FILES
-      if (external_sd_card.exists(ext_string_file))
+      if (external_sd_card.exists(EXT_STRING_FILE))
         card1.disp_string_file_exists = true;
       else
         card1.disp_string_file_exists = false;
 #endif
 
 #ifdef ALLOW_DATA_LOG_FILES
-      if (external_sd_card.exists(ext_log_file))
+      if (external_sd_card.exists(EXT_LOG_FILE))
         card1.log_file_exists = true;
       else
         card1.log_file_exists = false;
 #endif
 
 #ifdef ALLOW_CALIBRATION_FILES
-      if (external_sd_card.exists(ext_calibration_file))
+      if (external_sd_card.exists(EXT_CALIBRATION_FILE))
         card1.calibration_file_exists = true;
       else
         card1.calibration_file_exists = false;
 #endif
 
 #ifdef ALLOW_INSTRUCTION_FILES
-      if (external_sd_card.exists(ext_instruction_file))
+      if (external_sd_card.exists(EXT_INSTRUCTION_FILE))
         card1.instruction_file_exists = true;
       else
         card1.instruction_file_exists = false;
 #endif
 
 #ifdef ALLOW_BITMAP_FILES
-      if (external_sd_card.exists(ext_bitmap_file))
+      if (external_sd_card.exists(EXT_BITMAP_FILE))
         card1.bitmap_file_exists = true;
       else
         card1.bitmap_file_exists = false;
@@ -510,15 +515,130 @@ void Card::check_for_files(byte check_card) {
     }
     else
       card1.directory_exists = false;
+
+    Serial.println("Cards 1:");
+    if (card1.directory_exists) Serial.println("directory_exists");
+    if (card1.network_file_exists) Serial.println("network_file_exists");
+    if (card1.disp_string_file_exists)Serial.println("disp_string_file_exists");
+    if (card1.log_file_exists)Serial.println("log_file_exists");
+    if (card1.instruction_file_exists)Serial.println("instruction_file_exists");
+    if (card1.calibration_file_exists)Serial.println("calibration_file_exists");
+    if (card1.bitmap_file_exists)Serial.println("bitmap_file_exists");
+
   }
 
-  else { //checking internal card
+  else if (card_to_check == 2) { //checking internal card
 
+    //check if dir exists
+    //Serial.println (card2.working_dir);
 
-    if (!internal_sd_card.exists(sd_int_dir)) {
-      if (!internal_sd_card.mkdir(sd_int_dir)) internal_sd_card.errorExit("internal_sd_card.mkdir");
+    internal_sd_card.ls();
+    if (!internal_sd_card.exists(card2.working_dir)) {
+      card2.directory_exists = internal_sd_card.mkdir(card2.working_dir); //make dir if does not exist
+      //Serial.println("need to mkdir");
     }
-    
+    else
+      card2.directory_exists = true;
+
+
+    if (card2.directory_exists) {                // if dir exists
+      internal_sd_card.chdir(card2.working_dir); // open dir
+
+#ifdef ALLOW_NETWORK_FILES
+      if (!internal_sd_card.exists("Networks.BIN")) {
+        card2.network_file_exists = file2.open("Networks.BIN", O_WRITE | O_CREAT );
+        file2.write("Networks.BIN");
+        Serial.println();
+      }
+      else
+        card2.network_file_exists = true;
+      file2.close();
+
+#endif
+      //delay(100);
+#ifdef ALLOW_DISP_STRING_FILES
+      if (!internal_sd_card.exists(INT_STRING_FILE)) {
+        card2.disp_string_file_exists = file2.open(INT_STRING_FILE, O_WRITE | O_CREAT);
+        file2.write("DisplayString.BIN");
+        Serial.println();
+      }
+      else
+        card2.disp_string_file_exists = true;
+      file2.close();
+
+#endif
+      //delay(100);
+#ifdef ALLOW_DATA_LOG_FILES
+      if (!internal_sd_card.exists(INT_LOG_FILE)) {
+        card2.log_file_exists = file2.open(INT_LOG_FILE, O_WRITE | O_CREAT);
+        file2.write("DataLog.BIN");
+        Serial.println();
+      }
+      else
+        card2.log_file_exists = true;
+      file2.close();
+#endif
+      //delay(100);
+#ifdef ALLOW_CALIBRATION_FILES
+      if (!internal_sd_card.exists(INT_CALIBRATION_FILE)) {
+        card2.calibration_file_exists = file2.open(INT_CALIBRATION_FILE, O_WRITE | O_CREAT);
+        file2.write("Calibration.BIN");
+        Serial.println();
+      }
+      else
+        card2.calibration_file_exists = true;
+      file2.close();
+#endif
+      //delay(100);
+#ifdef ALLOW_INSTRUCTION_FILES
+      if (!internal_sd_card.exists(INT_INSTRUCTION_FILE)) {
+        card2.instruction_file_exists = file2.open(INT_INSTRUCTION_FILE, O_WRITE | O_CREAT);
+        file2.write("Instructions.BIN");
+        Serial.println();
+      }
+      else
+        card2.instruction_file_exists = true;
+      file2.close();
+
+#endif
+      //delay(100);
+#ifdef ALLOW_BITMAP_FILES
+      if (!internal_sd_card.exists(INT_BITMAP_FILE))
+        card2.bitmap_file_exists = file2.open(INT_BITMAP_FILE, O_WRITE | O_CREAT);
+      else
+        card2.bitmap_file_exists = true;
+      file2.close();
+
+#endif
+    }
+
+    else { //dir does not exist, ensure all files disabled
+      card2.network_file_exists = false;
+      card2.disp_string_file_exists = false;
+      card2.log_file_exists = false;
+      card2.instruction_file_exists = false;
+      card2.calibration_file_exists = false;
+      card2.bitmap_file_exists = false;
+      //Serial.println("dir does not exist");
+    }
+
+    Serial.println("Cards 2:");
+    if (card2.directory_exists) Serial.println("directory_exists");
+    //delay(1);
+    if (card2.network_file_exists) Serial.println("network_file_exists");
+    //delay(1);
+    if (card2.disp_string_file_exists)Serial.println("disp_string_file_exists");
+    //delay(1);
+    if (card2.log_file_exists)Serial.println("log_file_exists");
+    //delay(1);
+    if (card2.instruction_file_exists)Serial.println("instruction_file_exists");
+    //delay(1);
+    if (card2.calibration_file_exists)Serial.println("calibration_file_exists");
+    //delay(1);
+    if (card2.bitmap_file_exists)Serial.println("bitmap_file_exists");
+
+
   }
 }
+
 #endif // SD_Cards_CPP
