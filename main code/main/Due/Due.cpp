@@ -40,14 +40,14 @@ void due_setup() {
   host.init_serial();
 //  host.check_serial();
 //  host.print_messages();
-  //fans.init_fans();
- // fans.init_temp_sensors();
- // led_strip.init_led_strip();
- // encoder.init_encoder();
- // encoder.init_button();
- // menu.init_menu_tree();
- // nativeUsb.init_native_usb();
- // light_sensor.init_LDR();
+  fans.init_fans();
+  fans.init_temp_sensors();
+  led_strip.init_led_strip();
+  encoder.init_encoder();
+  encoder.init_button();
+  menu.init_menu_tree();
+  nativeUsb.init_native_usb();
+  light_sensor.init_LDR();
   card.init_sd_cards();
 }
 
@@ -62,12 +62,12 @@ void due_loop() {
     // internet.check_connection();
     // graphics.update_brightness();
     
-   // fans.update_temperatures();
-   // fans.set_fan_speed();
-   // led_strip.led_strip_set_freq();
-    
-   // encoder.handle_interupts();  
-   // menu.display_menu();
+    fans.update_temperatures();
+    fans.set_fan_speed();
+    led_strip.led_strip_set_freq();
+    light_sensor.get_readings();
+    encoder.handle_interupts();  
+    menu.display_menu();
 
    
     // update_display();  //push additional data to screens as required
@@ -76,7 +76,7 @@ void due_loop() {
     // update_text_location(); //write location variable to be sent by interrupt
     host.check_serial();
     host.print_messages();
-   // light_sensor.get_readings();
+    
       card.check_for_sd_card();
   }
 

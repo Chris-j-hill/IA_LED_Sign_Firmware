@@ -44,7 +44,9 @@
 #define ALLOW_NETWORK_FILES
 
 
-
+#define CHECK_EXTERNAL_SD_CARD_PERIOD 1000
+#define CHECK_INTERNAL_SD_CARD_PERIOD 5000 //much less likely to be inserted/removed, check less frequencly
+     
 
 struct SD_Strings {
 
