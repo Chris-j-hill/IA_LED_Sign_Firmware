@@ -104,7 +104,7 @@ class Card {
 
     
 void retrieve_data(String filename);
-void log_data(String filename);
+void log_data(String filename, bool truncate = false, bool print_header = false);
 
   public:
 

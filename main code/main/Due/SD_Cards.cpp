@@ -4,7 +4,8 @@
 #include "SD_Cards.h"
 //#include "Due.h"
 #include "Coms.h"
-
+#include "Fans.h"
+#include "Current_Control.h"
 SD_Strings SD_string;
 
 SdFile file1;                 // file handling objects, use two objects to address both open files at once
@@ -61,7 +62,6 @@ const char *sd_int_file = NETWORK_LOGIN_FILENAME;
 #define EXT_BITMAP_FILE "bitmap.BIN"
 #define INT_BITMAP_FILE "bitmap.BIN"
 
-
 bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
 bool sd_card2_detected = true;
 
@@ -71,10 +71,12 @@ SD_Card card2;
 
 extern char text_str[MAX_TWEET_SIZE];
 
+extern Fan_Struct fan_parameters;
+extern Temp_sensor temp_parameters;
+extern LDR_Struct light_sensor_parameters;
+extern Current_Meter_Struct current_meter_parameters;
 
-
-
-
+extern byte screen_brightness;
 Card::Card() {
   card1.pin = SD1_ENABLE;
   card2.pin = SD2_ENABLE;
@@ -461,11 +463,18 @@ void Card::check_for_sd_card() {
       Serial.println(F("Card 2 found, checking card 2"));
       check_for_files(INTERNAL_CARD);  //check if files exist on external card
       retrieve_data(INT_NETWORK_FILE);
+
     }
     else if (!internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && card2.detected) {
       card2.detected = false;
       Serial.println(F("Card 2 got disconnected"));
     }
+  }
+  static int log_period = millis();
+  if (card2.detected && millis() > log_period + 500) {
+    log_data(INT_LOG_FILE, true);
+    Serial.println("log");
+    log_period = millis();
   }
 }
 
@@ -718,7 +727,7 @@ void Card::retrieve_data(String filename) {
       file2.close();
     }
     else {
-      if (!internal_sd_card.exists(card1.working_dir)) return;
+      if (!external_sd_card.exists(card1.working_dir)) return;
       external_sd_card.chdir(card1.working_dir);
 
       file1.open(EXT_NETWORK_FILE, O_READ);
@@ -726,7 +735,7 @@ void Card::retrieve_data(String filename) {
       file1.close();
     }
     String file_content = copy_buffer;
-//    Serial.println(file_content);
+    //    Serial.println(file_content);
 
     //parse content
     byte network_keyword = file_content.indexOf(':');
@@ -754,7 +763,63 @@ void Card::retrieve_data(String filename) {
   }
 }
 
-void Card::log_data(String filename) {}
+
+void Card::log_data(String filename, bool truncate, bool print_header) {
+  
+
+  char header_buff[] = "Time,Fans,AvgTemp,Current,LDR,ScreenBrightness";
+  char buf[10];
+  String time_ = String(millis());
+  String fans_ = String(fan_parameters.target_speed);
+  String temp_ = String(temp_parameters.avg);
+  String current_ = String(current_meter_parameters.total);
+  String light_ = String(light_sensor_parameters.avg_reading);
+  String screen_ = String(screen_brightness);
+  String data_to_write = time_ + ',' + fans_ + ',' + temp_+ ',' + current_ + ',' + light_ + ',' + screen_;
+  char data_buff[data_to_write.length()];
+
+  strcpy(data_buff, data_to_write.c_str());
+
+  if (filename == INT_LOG_FILE) {
+    if (!internal_sd_card.exists(card2.working_dir)) return;
+    internal_sd_card.chdir(card2.working_dir);
+    
+    if (truncate && print_header)
+      file2.open(INT_LOG_FILE, O_WRITE | O_TRUNC);
+    else
+      file2.open(INT_LOG_FILE, O_WRITE | O_AT_END);
+      
+    if (print_header) {
+      file2.write(header_buff, sizeof(header_buff)) ;
+      file2.write("\n", 1);
+    }
+
+
+    file2.write(data_buff, sizeof(data_buff));
+    file2.write("\n", 1);
+    file2.close();
+  }
+  
+  else if (filename == EXT_LOG_FILE) {
+    if (!external_sd_card.exists(card1.working_dir)) return;
+    external_sd_card.chdir(card1.working_dir);
+    
+    if (truncate && print_header)
+      file1.open(EXT_LOG_FILE, O_WRITE | O_TRUNC);
+    else
+      file1.open(EXT_LOG_FILE, O_WRITE | O_AT_END);
+      
+    if (print_header) {
+      file1.write(header_buff, sizeof(header_buff)) ;
+      file1.write("\n", 1);
+    }
+
+
+    file1.write(data_buff, sizeof(data_buff));
+    file1.write("\n", 1);
+    file1.close();
+  }
+}
 
 
 #endif // SD_Cards_CPP
