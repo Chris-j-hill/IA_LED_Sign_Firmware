@@ -46,7 +46,13 @@
 
 #define CHECK_EXTERNAL_SD_CARD_PERIOD 1000
 #define CHECK_INTERNAL_SD_CARD_PERIOD 5000 //much less likely to be inserted/removed, check less frequencly
-     
+
+#define INTERNAL_CARD 1     
+#define EXTERNAL_CARD 2
+#define RASP_PI 3
+
+
+#define COPY_BUF_SIZE 100
 
 struct SD_Strings {
 
@@ -93,8 +99,12 @@ class Card {
 
 
     void check_for_files(byte check_card);
-    
+    void copy_file(const char *from_filename, const char *to_filename, byte from_device, byte to_device); //copy file to multiple places so as to retain backups of data
+    void copy(byte from_device, byte to_device);
 
+    
+void retrieve_data(String filename);
+void log_data(String filename);
 
   public:
 
@@ -103,9 +113,6 @@ class Card {
     void check_for_sd_card(); //check if can .begin
 
     void init_sd_cards();
-
-
-
 
     
     int og_init_sd_cards();
