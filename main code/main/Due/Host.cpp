@@ -285,7 +285,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 7: (r_w == 'r')  ?  Serial.println(led_strip_parameters.enabled)                   : led_strip_parameters.enabled = value;                       break;
         case 8: (r_w == 'r')  ?  Serial.println(led_strip_parameters.fast_interval)             : led_strip_parameters.fast_interval = value;                 break;
         case 9: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal)                : led_strip_parameters.sinusoidal = value;                    break;
-        case 10: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+        case 10:(r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
       }
       break;
 
@@ -331,10 +331,11 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
 
     case REPORT_CURRENT_METER:
       switch (index) {
-        case 0: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max1)            : light_sensor_parameters.config_max1 = value;               break;
-        case 1: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min1)            : light_sensor_parameters.config_min1 = value;               break;
-        case 2: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max2)            : light_sensor_parameters.config_max2 = value;               break;
-        case 3: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min2)            : light_sensor_parameters.config_min2 = value;               break;
+        case 0: (r_w == 'r')  ?  Serial.println(current_meter_parameters.pin1)                   : Serial.println(pin_error_msg);                             break;
+        case 1: (r_w == 'r')  ?  Serial.println(current_meter_parameters.pin2)                   : Serial.println(pin_error_msg);                             break;
+        case 2: (r_w == 'r')  ?  Serial.println(current_meter_parameters.enabled1)               : current_meter_parameters.enabled1 = value;                 break;
+        case 3: (r_w == 'r')  ?  Serial.println(current_meter_parameters.enabled2)               : current_meter_parameters.enabled2 = value;                 break;
+        case 4: (r_w == 'r')  ?  Serial.println(current_meter_parameters.max_current_limit)      : current_meter_parameters.max_current_limit = value;        break;
       }
       break;
   }
@@ -1062,8 +1063,6 @@ void Host::print_ldr_config() {
   else
     Serial.print(F("Set range of max and min greater than range of raw readings"));
   Serial.println();
-
-
 }
 
 

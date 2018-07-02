@@ -121,7 +121,7 @@ void log_data(String filename, bool truncate = false, bool print_header = false)
     int og_init_sd_cards();
     int check_for_SD_card_inserted();
 
-    void update_data_log();
+    void update_data_log(byte give_priority_to = 0);
     
     void safely_eject_card(byte card);
     void mount_card(byte card);

@@ -21,6 +21,10 @@ extern struct Button_Struct button_parameters;
 extern struct Encoder_Struct encoder_parameters;
 extern struct Fan_Struct fan_parameters;
 extern struct Led_Strip_Struct led_strip_parameters;
+extern struct SD_Card card1;
+extern struct SD_Card card2;
+
+//classes
 extern Encoder encoder;
 extern Graphics graphics;
 extern Coms_Serial coms_serial;
@@ -28,8 +32,7 @@ extern Fans fans;
 extern Internet internet;
 extern Card card;
 extern Led_Strip led_strip;
-extern SD_Card card1;
-extern SD_Card card2;
+
 
 
 extern byte screen_mode;

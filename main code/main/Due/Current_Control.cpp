@@ -19,6 +19,10 @@ byte screen_brightness = 100;
 LDR_Struct light_sensor_parameters;
 Current_Meter_Struct current_meter_parameters;
 
+
+//uint16_t current_ring_buffer[RING_BUFFER_LENGTH]; //ring buffer used to calculate average
+//byte current_ring_buffer_index = 0;
+
 int Light_Sensor::init_LDR() {
 
   if (enable_LDR) {
@@ -184,10 +188,11 @@ void Light_Sensor::avg_sensor_result() {
 
   ring_buffer_total -= ring_buffer[ring_buffer_index];    //subtract off oldest value
   ring_buffer_total += this_avg_reading;                  //add new value to sum
-  ring_buffer[ring_buffer_index] += this_avg_reading;     //log new value in array
+  ring_buffer[ring_buffer_index] = this_avg_reading;     //log new value in array
   light_sensor_parameters.avg_reading = ring_buffer_total >> RING_BUFFER_SHIFT; //divide by number of indexes for rolling avg
 
-  ring_buffer_index = (ring_buffer_index + 1) % RING_BUFFER_LENGTH; //move index
+  ring_buffer_index++;
+  if (ring_buffer_index == RING_BUFFER_LENGTH) ring_buffer_index = 0; //move index
 }
 
 void Light_Sensor::get_readings() {
@@ -226,11 +231,11 @@ void Current_Meter::enable() {
 }
 
 inline void Current_Meter::enable1() {
-  pinMode(current_meter_parameters.pin1, INPUT);
+  pinMode(current_meter_parameters.pin1, INPUT_PULLUP);
   current_meter_parameters.enabled1 = true;
 }
 inline void Current_Meter::enable2() {
-  pinMode(current_meter_parameters.pin1, INPUT);
+  pinMode(current_meter_parameters.pin1, INPUT_PULLUP);
   current_meter_parameters.enabled1 = true;
 }
 
@@ -258,9 +263,9 @@ void Current_Meter::set_current_limit(byte value) {
 
 
 void Current_Meter::get_readings() {
-  
+
   static int previous_current_read_time = millis();
-  
+
   if (millis() > previous_current_read_time + CURRENT_METER_UPDATE_PERIOD) {
     previous_current_read_time = millis();
     delayMicroseconds(50);    //delay to allow accurate ADC reading
@@ -271,6 +276,44 @@ void Current_Meter::get_readings() {
     avg_sensor_result();
   }
 
+}
+
+inline double Current_Meter::reading_to_amps(uint16_t value, byte sensor_type) {
+
+  //formula from here: https://www.14core.com/introduction-of-acs712-current-sensor-module-30a-with-arduino/
+
+  if (sensor_type == THIRTY_AMP) return 0.044 * value - 3.78;// for 30A mode    <-default
+  if (sensor_type == TWENTY_AMP) return 0.19 * value - 25; //for 20A mode and
+  if (sensor_type == FIVE_AMP) return  0.0264 * value - 13.51;//for 5A mode,
+
+}
+
+void Current_Meter::avg_sensor_result() {
+
+  static uint16_t current_ring_buffer[RING_BUFFER_LENGTH]; //ring buffer used to calculate average
+  static byte current_ring_buffer_index = 0; //index in ring buffer
+  static uint16_t current_ring_buffer_total = 0;
+  uint16_t this_reading = current_meter_parameters.reading1 + current_meter_parameters.reading2;
+
+  current_ring_buffer_total -= current_ring_buffer[current_ring_buffer_index];    //subtract off oldest value
+  current_ring_buffer_total += this_reading;                  //add new value to sum
+  current_ring_buffer[current_ring_buffer_index] = this_reading;     //log new value in array
+
+  current_meter_parameters.total = current_ring_buffer_total >> RING_BUFFER_SHIFT; //divide by number of indexes for rolling avg
+
+  current_ring_buffer_index++;
+  if (current_ring_buffer_index == RING_BUFFER_LENGTH) current_ring_buffer_index = 0; //move index
+}
+
+void Current_Meter::read_current_meter(byte sensor) {
+
+  if (sensor == 1) {
+    current_meter_parameters.reading1 = reading_to_amps(analogRead(current_meter_parameters.pin1));
+  }
+
+  else {
+    current_meter_parameters.reading2 = reading_to_amps(analogRead(current_meter_parameters.pin2));
+  }
 }
 
 #endif  // Current_Control_CPP

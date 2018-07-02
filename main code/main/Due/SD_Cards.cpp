@@ -50,8 +50,8 @@ const char *sd_int_file = NETWORK_LOGIN_FILENAME;
 #define EXT_STRING_FILE "String.BIN"
 #define INT_STRING_FILE "String.BIN"
 
-#define EXT_LOG_FILE "DataLog.BIN"
-#define INT_LOG_FILE "DataLog.BIN"
+#define EXT_LOG_FILE "DataLog.CSV"
+#define INT_LOG_FILE "DataLog.CSV"
 
 #define EXT_CALIBRATION_FILE "Cal.BIN"
 #define INT_CALIBRATION_FILE "Cal.BIN"
@@ -829,83 +829,124 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
 }
 
 
-void Card::update_data_log() {
+void Card::update_data_log(byte give_priority_to) {
 
   static int last_log_time = millis();
-  static byte logging_on_device = 0;
-  static bool first_log_event = true ;
-
+  static byte logging_on_device = 0;      // what device were we last using
+  static bool first_internal_card_log_event = true; //print header if first time logging to this device
+  static bool first_external_card_log_event = true;
+  static bool first_r_pi_log_event = true;
+  static byte error_code = 0;
 
   if (millis() > last_log_time + LOGGING_PERIOD) {
 
     last_log_time = millis();
-    if (card2.enabled && card2.detected && card2.log_file_exists) { //internal card gets priority, then pi, then external
 
-      if (first_log_event) {
-        log_data(INT_LOG_FILE, true, true); //on startup, clear file and print header
-        first_log_event = false;
-      }
+    switch (give_priority_to) {
 
-      else if (logging_on_device != INTERNAL_CARD) {
-        log_data(INT_LOG_FILE, false, true);    //do not truncate but print header, bad connection?
-        logging_on_device = INTERNAL_CARD;
-      }
-      else  //otherwise just print the data
-        log_data(INT_LOG_FILE, false, false);
+      case INTERNAL_CARD:
 
+        if (card2.enabled && card2.detected && card2.log_file_exists) { //internal card gets priority, then pi, then external
+
+          if (first_internal_card_log_event) {
+            log_data(INT_LOG_FILE, true, true); //on startup, or first time switching to this device, clear file and print header
+            first_internal_card_log_event = false;
+          }
+
+          else  //otherwise just print the data
+            log_data(INT_LOG_FILE, false, false);
+        }
+
+        else if (error_code == 0) {
+          Serial.println(F("Failed to log to internal card"));
+          error_code = 1; //print once
+        }
+        break;
+
+      case EXTERNAL_CARD:
+
+        if (card1.enabled && card1.detected && card1.log_file_exists) {
+          error_code = 0;
+          if (first_external_card_log_event) {
+            log_data(EXT_LOG_FILE, true, true);
+            first_external_card_log_event = false;
+          }
+
+          else
+            log_data(EXT_LOG_FILE, false, false);
+        }
+        else if (error_code == 0) {
+
+          Serial.println(F("Failed to log to external card"));
+          error_code = 1;
+        }
+        break;
+
+      case RASP_PI:
+        break;
+
+      default:  //log to whichever is available, internal card gets priority, then pi, then external
+        if (card2.enabled && card2.detected && card2.log_file_exists) {
+          error_code = 0;
+          if (first_internal_card_log_event) {
+            log_data(INT_LOG_FILE, true, true); //on startup, clear file and print header
+            first_internal_card_log_event = false;
+          }
+
+
+          else  //otherwise just print the data
+            log_data(INT_LOG_FILE, false, false);
+
+        }
+
+
+
+        //else if(pi is detected){
+        //
+        //}
+
+
+        else if (card1.enabled && card1.detected && card1.log_file_exists) {
+          error_code = 0;
+          if (first_external_card_log_event) {
+            log_data(EXT_LOG_FILE, true, true);
+            first_external_card_log_event = false;
+          }
+          else
+            log_data(EXT_LOG_FILE, false, false);
+        }
+
+        else if (error_code == 0) {
+          Serial.println(F("ERROR: Data log failed, no devices found, or file doesnt exist"));
+          error_code = 1;
+        }
     }
-
-
-
-    //else if(pi is detected){
-    //
-    //}
-
-
-
-    else if (card1.enabled && card1.detected && card1.log_file_exists) {
-      if (first_log_event) {
-        log_data(EXT_LOG_FILE, true, true);
-        first_log_event = false;
-      }
-
-      else if (logging_on_device != EXTERNAL_CARD) {
-        log_data(EXT_LOG_FILE, false, true);
-        logging_on_device = EXTERNAL_CARD;
-      }
-      else
-        log_data(EXT_LOG_FILE, false, false);
-    }
-
-    else
-      Serial.println(F("ERROR: Data log failed, no devices found, or file doesnt exist"));
   }
 }
 
+void Card::safely_eject_card(byte card) {
 
-void Card::safely_eject_card(byte card){
-
-  if (card == INTERNAL_CARD){ //stop checking for card
+  if (card == INTERNAL_CARD) { //stop checking for card
     card2.enabled = false;
     card2.detected = false;
   }
 
-  else if (card == EXTERNAL_CARD){
-    card1.enabled = false;   
+  else if (card == EXTERNAL_CARD) {
+    card1.enabled = false;
     card1.detected = false;
   }
 }
 
 
-void Card::mount_card(byte card){
+void Card::mount_card(byte card) {
 
-  if (card == INTERNAL_CARD){ //check for card
+  if (card == INTERNAL_CARD) { //check for card
     card2.enabled = true;
     card2.detected = false;   //on first detection, read card
   }
 
-  else if (card == EXTERNAL_CARD){
-    card1.enabled = true;   
+  else if (card == EXTERNAL_CARD) {
+    card1.enabled = true;
     card1.detected = false;
   }
 

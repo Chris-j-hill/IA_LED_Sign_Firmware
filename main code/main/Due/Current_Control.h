@@ -11,11 +11,15 @@
 #define SCREEN_BRIGHTNESS_UPDATE_THRESHOLD 5  // require 5% difference in target screen brightness and actual brightness before update pushed to megas
 
 #define RING_BUFFER_SHIFT 4
-#define RING_BUFFER_LENGTH 2^RING_BUFFER_SHIFT
+#define RING_BUFFER_LENGTH 16//2^RING_BUFFER_SHIFT
 
 #define LDR_UPDATE_PERIOD (int16_t)5000/RING_BUFFER_LENGTH  // ring buffer filter cutoff frequency approximately 5s
 #define CURRENT_METER_UPDATE_PERIOD (int16_t)15000/RING_BUFFER_LENGTH // approximately 1s sampling rate
 
+
+#define THIRTY_AMP 3
+#define TWENTY_AMP 2
+#define FIVE_AMP 1
 
 struct LDR_Struct {
   byte pin1 = LDR1;
@@ -92,7 +96,7 @@ class Current_Meter {
     inline void disable2();
 
     void read_current_meter(byte sensor);  // read the current sensor
-    double reading_to_amps(uint16_t value);   // convert 10 bit analog reading to amps
+    double reading_to_amps(uint16_t value, byte sensor_type = THIRTY_AMP);   // convert 10 bit analog reading to amps
     void avg_sensor_result();
   public:
     Current_Meter() {}

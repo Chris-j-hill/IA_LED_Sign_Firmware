@@ -75,7 +75,7 @@ struct Serial_Sub_Menu {
 /*12*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
 /*13*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"}};
 
-  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS,9,6,11, 0,5,5,5, 0,0,0,0, 0, 4}; //number of columns in each row of the above two arrays
+  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS,9,6,11, 0,5,5,5, 5,0,0,0, 0, 4}; //number of columns in each row of the above two arrays
 
 };
 
