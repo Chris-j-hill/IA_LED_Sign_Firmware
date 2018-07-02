@@ -446,12 +446,12 @@ void Card::check_for_sd_card() {
     external_sd_card_prev_read_time = millis();
     if (external_sd_card.begin(card1.pin) && !card1.detected) {
       card1.detected = true;
-      Serial.println("Card 1 found, checking card 1");
+      //      Serial.println("Card 1 found, checking card 1");
       check_for_files(EXTERNAL_CARD);  //check if files exist on external card
     }
     else if (!external_sd_card.begin(card1.pin) && card1.detected) { //card was previously detected but not initialising now
       card1.detected = false;
-      Serial.println(F("Card 1 got disconnected"));
+      //      Serial.println(F("Card 1 got disconnected"));
     }
   }
 
@@ -460,14 +460,18 @@ void Card::check_for_sd_card() {
     internal_sd_card_prev_read_time = millis();
     if (internal_sd_card.begin(card2.pin) && !card2.detected) {
       card2.detected = true;
-      Serial.println(F("Card 2 found, checking card 2"));
+      //      Serial.println(F("Card 2 found, checking card 2"));
       check_for_files(INTERNAL_CARD);  //check if files exist on external card
-      retrieve_data(INT_NETWORK_FILE);
+
+      if (card2.network_file_exists)
+        retrieve_data(INT_NETWORK_FILE);
+      if (card2.disp_string_file_exists)
+        retrieve_data(INT_STRING_FILE);
 
     }
     else if (!internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && card2.detected) {
       card2.detected = false;
-      Serial.println(F("Card 2 got disconnected"));
+      //      Serial.println(F("Card 2 got disconnected"));
     }
   }
   static int log_period = millis();
@@ -501,11 +505,14 @@ void Card::check_for_files(byte card_to_check) {
         card1.disp_string_file_exists = false;
 #endif
 
-#ifdef ALLOW_DATA_LOG_FILES
-      if (external_sd_card.exists(EXT_LOG_FILE))
-        card1.log_file_exists = true;
+#ifdef ALLOW_DATA_LOG_FILES   //make the log file if it doesnt exist
+      if (external_sd_card.exists(EXT_LOG_FILE)) {
+        card1.log_file_exists = file1.open(EXT_LOG_FILE, O_WRITE | O_CREAT);
+        file1.write("DataLog.BIN");
+      }
       else
-        card1.log_file_exists = false;
+        card1.log_file_exists = true;
+      file1.close();
 #endif
 
 #ifdef ALLOW_CALIBRATION_FILES
@@ -765,7 +772,7 @@ void Card::retrieve_data(String filename) {
 
 
 void Card::log_data(String filename, bool truncate, bool print_header) {
-  
+
 
   char header_buff[] = "Time,Fans,AvgTemp,Current,LDR,ScreenBrightness";
   char buf[10];
@@ -775,7 +782,7 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
   String current_ = String(current_meter_parameters.total);
   String light_ = String(light_sensor_parameters.avg_reading);
   String screen_ = String(screen_brightness);
-  String data_to_write = time_ + ',' + fans_ + ',' + temp_+ ',' + current_ + ',' + light_ + ',' + screen_;
+  String data_to_write = time_ + ',' + fans_ + ',' + temp_ + ',' + current_ + ',' + light_ + ',' + screen_;
   char data_buff[data_to_write.length()];
 
   strcpy(data_buff, data_to_write.c_str());
@@ -783,12 +790,12 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
   if (filename == INT_LOG_FILE) {
     if (!internal_sd_card.exists(card2.working_dir)) return;
     internal_sd_card.chdir(card2.working_dir);
-    
+
     if (truncate && print_header)
       file2.open(INT_LOG_FILE, O_WRITE | O_TRUNC);
     else
       file2.open(INT_LOG_FILE, O_WRITE | O_AT_END);
-      
+
     if (print_header) {
       file2.write(header_buff, sizeof(header_buff)) ;
       file2.write("\n", 1);
@@ -799,16 +806,16 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
     file2.write("\n", 1);
     file2.close();
   }
-  
+
   else if (filename == EXT_LOG_FILE) {
     if (!external_sd_card.exists(card1.working_dir)) return;
     external_sd_card.chdir(card1.working_dir);
-    
+
     if (truncate && print_header)
       file1.open(EXT_LOG_FILE, O_WRITE | O_TRUNC);
     else
       file1.open(EXT_LOG_FILE, O_WRITE | O_AT_END);
-      
+
     if (print_header) {
       file1.write(header_buff, sizeof(header_buff)) ;
       file1.write("\n", 1);
@@ -821,5 +828,87 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
   }
 }
 
+
+void Card::update_data_log() {
+
+  static int last_log_time = millis();
+  static byte logging_on_device = 0;
+  static bool first_log_event = true ;
+
+
+  if (millis() > last_log_time + LOGGING_PERIOD) {
+
+    last_log_time = millis();
+    if (card2.enabled && card2.detected && card2.log_file_exists) { //internal card gets priority, then pi, then external
+
+      if (first_log_event) {
+        log_data(INT_LOG_FILE, true, true); //on startup, clear file and print header
+        first_log_event = false;
+      }
+
+      else if (logging_on_device != INTERNAL_CARD) {
+        log_data(INT_LOG_FILE, false, true);    //do not truncate but print header, bad connection?
+        logging_on_device = INTERNAL_CARD;
+      }
+      else  //otherwise just print the data
+        log_data(INT_LOG_FILE, false, false);
+
+    }
+
+
+
+    //else if(pi is detected){
+    //
+    //}
+
+
+
+    else if (card1.enabled && card1.detected && card1.log_file_exists) {
+      if (first_log_event) {
+        log_data(EXT_LOG_FILE, true, true);
+        first_log_event = false;
+      }
+
+      else if (logging_on_device != EXTERNAL_CARD) {
+        log_data(EXT_LOG_FILE, false, true);
+        logging_on_device = EXTERNAL_CARD;
+      }
+      else
+        log_data(EXT_LOG_FILE, false, false);
+    }
+
+    else
+      Serial.println(F("ERROR: Data log failed, no devices found, or file doesnt exist"));
+  }
+}
+
+
+void Card::safely_eject_card(byte card){
+
+  if (card == INTERNAL_CARD){ //stop checking for card
+    card2.enabled = false;
+    card2.detected = false;
+  }
+
+  else if (card == EXTERNAL_CARD){
+    card1.enabled = false;   
+    card1.detected = false;
+  }
+}
+
+
+void Card::mount_card(byte card){
+
+  if (card == INTERNAL_CARD){ //check for card
+    card2.enabled = true;
+    card2.detected = false;   //on first detection, read card
+  }
+
+  else if (card == EXTERNAL_CARD){
+    card1.enabled = true;   
+    card1.detected = false;
+  }
+
+}
 
 #endif // SD_Cards_CPP

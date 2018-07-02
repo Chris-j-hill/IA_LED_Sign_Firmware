@@ -28,6 +28,9 @@ extern Fans fans;
 extern Internet internet;
 extern Card card;
 extern Led_Strip led_strip;
+extern SD_Card card1;
+extern SD_Card card2;
+
 
 extern byte screen_mode;
 extern byte screen_brightness;
@@ -353,12 +356,23 @@ void Menu::display_SD_cards_menu() {
     coms_serial.send_menu_frame(SD_CARD_MENU, encoder_parameters.position);
     encoder_parameters.encoder_moved = false;
   }
-
+  
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
       case 0: current_menu = MAIN_MENU;          break;
-      case 1: card.enable_external_port();       break;
-      case 2: card.disable_external_port();      break;
+      case 1:
+        if (card1.enabled)
+          card.mount_card(1);
+        else
+          card.safely_eject_card(1);
+        break;
+        
+      case 2:
+        if (card1.enabled)
+          card.mount_card(1);
+        else
+          card.safely_eject_card(1);
+        break;
       case 3: current_menu = SD_FOLDERS_MENU;    break;
 
       default: current_menu = STARTUP;
@@ -602,7 +616,7 @@ void Menu::display_led_strip_brightness_menu() {
     current_menu = LED_STRIP_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
-    encoder.set_encoder_position(3);    
+    encoder.set_encoder_position(3);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -702,8 +716,8 @@ void Menu::display_text_colour_blue_menu() {
   }
 }
 
-void Menu::display_text_colour_hue_menu(){
-  
+void Menu::display_text_colour_hue_menu() {
+
   current_menu = TEXT_COLOUR_HUE;
 
   if (menu_just_changed) {
@@ -720,11 +734,11 @@ void Menu::display_text_colour_hue_menu(){
   }
 
   if (encoder_parameters.encoder_moved) {
-    text_colour_hue = encoder_parameters.position*HUE_ADJUSTMENT_STEP_SIZE;
+    text_colour_hue = encoder_parameters.position * HUE_ADJUSTMENT_STEP_SIZE;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
-    for (int i = 0; i < NUM_SCREENS; i++){
+    for (int i = 0; i < NUM_SCREENS; i++) {
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_MSB, i, true, 0);  //send screen_mode update to screens
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_LSB, i, false, 1);  //send screen_mode update to screens
     }

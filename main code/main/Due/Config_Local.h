@@ -122,8 +122,8 @@
 #define PREFIX_TEXT_USE_HUE             160
 #define PREFIX_DEBUG_STATE              170
 #define PREFIX_SCREEN_MODE              180
-
-
+#define PREFIX_SD_MOUNTED_1             190
+#define PREFIX_SD_MOUNTED_2             191
 // todo
 #define PREFIX_TEXT_SCROLL_SPEED        -1
 #define PREFIX_FAN_MINIMUM_SPEED        -1

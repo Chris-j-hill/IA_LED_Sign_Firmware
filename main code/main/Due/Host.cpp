@@ -94,13 +94,13 @@ void Host::check_serial() {   //to read incomming data
     String rx = Serial.readString();
     rx.trim();  //trim off return carraige
 
-    byte temp = data_to_report; // log what we were doing in case we only want 
+    byte temp = data_to_report; // log what we were doing in case we only want
 
-        //set message printing mode
+    //set message printing mode
     data_to_report = data_set_LUT(rx);
 
     //input might be to directly change value
-    if (data_to_report == 255){
+    if (data_to_report == 255) {
       data_to_report = temp;
       serial_sub_menu(rx);
     }
@@ -125,14 +125,14 @@ void Host::serial_sub_menu(String rx) {
   int value = command_arg.toInt();  //value as an int
 
 
-//      Serial.print("data set: ");
-//      Serial.println(data_set);
-//  
-//      Serial.print("Value: ");
-//      Serial.println(value);
-//      Serial.println(command_mode);
-//      Serial.println(command_data);
-//      Serial.println(command_arg);
+  //      Serial.print("data set: ");
+  //      Serial.println(data_set);
+  //
+  //      Serial.print("Value: ");
+  //      Serial.println(value);
+  //      Serial.println(command_mode);
+  //      Serial.println(command_data);
+  //      Serial.println(command_arg);
 
   if (command_mode == "-h") {
     data_to_report = data_set_LUT(data_set);  //convert string to data to display
@@ -149,11 +149,11 @@ void Host::serial_sub_menu(String rx) {
 
   else if (command_mode == "-w") {
     byte temp_data_to_report = data_to_report;
-    
+
     data_to_report = data_set_LUT(data_set);
     write_data(command_data, value);
     data_to_report = temp_data_to_report;    //return to whatever we were doing before
-    }
+  }
 }
 
 
@@ -247,7 +247,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
 
   String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
 
-  switch (data_to_report) {
+  switch (data_to_report) { //row 
     case REPORT_FANS:
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(fan_parameters.pin)                          : Serial.println(pin_error_msg);                   break;
@@ -285,7 +285,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 7: (r_w == 'r')  ?  Serial.println(led_strip_parameters.enabled)                   : led_strip_parameters.enabled = value;                       break;
         case 8: (r_w == 'r')  ?  Serial.println(led_strip_parameters.fast_interval)             : led_strip_parameters.fast_interval = value;                 break;
         case 9: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal)                : led_strip_parameters.sinusoidal = value;                    break;
-        case 10:(r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+        case 10: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
       }
       break;
 
@@ -293,8 +293,8 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinA)                        : Serial.println(pin_error_msg);                              break;
         case 1: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinA)                        : Serial.println(pin_error_msg);                              break;
-        case 2: (r_w == 'r')  ?  Serial.println(encoder_parameters.PosCount / 2)                  : encoder_parameters.PosCount = value * 2;
-          (r_w == 'r')  ?                                                                 : encoder_parameters.position = value;                        break;
+        case 2: (r_w == 'r')  ?  Serial.println(encoder_parameters.PosCount / 2)                : encoder_parameters.PosCount = value * 2;
+          (r_w == 'r')  ?                                                                 : encoder_parameters.position = value;                        break;  //change both
         case 3: (r_w == 'r')  ?  Serial.println(encoder_parameters.enabled)                     : encoder_parameters.enabled = value;                         break;
         case 4: (r_w == 'r')  ?  Serial.println(encoder_parameters.is_attached)                 : encoder_parameters.is_attached = value;                     break;
       }
@@ -310,7 +310,6 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
       }
       break;
 
-
     case REPORT_LDR_CONFIG:
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max1)            : light_sensor_parameters.config_max1 = value;               break;
@@ -319,10 +318,26 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 3: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min2)            : light_sensor_parameters.config_min2 = value;               break;
       }
       break;
+  
+    case REPORT_LDRS:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.pin1)                   : Serial.println(pin_error_msg);                              break;
+        case 1: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.pin2)                   : Serial.println(pin_error_msg);                              break;
+        case 2: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.enabled1)               : light_sensor_parameters.enabled1 = value;                   break;
+        case 3: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.enabled2)               : light_sensor_parameters.enabled2 = value;                   break;
+        case 4: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.large_disparity)        : light_sensor_parameters.large_disparity = value;            break;
+      }
+      break;
 
-
+    case REPORT_CURRENT_METER:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max1)            : light_sensor_parameters.config_max1 = value;               break;
+        case 1: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min1)            : light_sensor_parameters.config_min1 = value;               break;
+        case 2: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_max2)            : light_sensor_parameters.config_max2 = value;               break;
+        case 3: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min2)            : light_sensor_parameters.config_min2 = value;               break;
+      }
+      break;
   }
-
 }
 
 void Host::print_messages() {
@@ -1062,7 +1077,7 @@ void HostNativeUSB::init_native_usb() {
 
   SerialUSB.begin(115200);
   int USB_timeout = millis() + NATIVE_USB_TIMEOUT_PERIOD;
-  while (!SerialUSB && millis()<USB_timeout) {} // wait for serial port to connect. Needed for native USB port only
+  while (!SerialUSB && millis() < USB_timeout) {} // wait for serial port to connect. Needed for native USB port only
 
   while (SerialUSB.available() > 0) SerialUSB.read();
   Serial.println(F("Native usb init done"));
@@ -1216,17 +1231,17 @@ int HostNativeUSB::type_ok(String rx_type)
 }
 
 
-void HostNativeUSB::check_connection(){
+void HostNativeUSB::check_connection() {
 
   int USB_timeout = millis() + NATIVE_USB_TIMEOUT_PERIOD;
 
-  while (!SerialUSB && millis()<USB_timeout) {} // wait for serial port to connect
+  while (!SerialUSB && millis() < USB_timeout) {} // wait for serial port to connect
 
-    if(millis()>=USB_timeout)
-      return;
-    else
-        request_data(7);  //send ping command
-        return;
+  if (millis() >= USB_timeout)
+    return;
+  else
+    request_data(7);  //send ping command
+  return;
 }
 
 #endif // Host_CPP

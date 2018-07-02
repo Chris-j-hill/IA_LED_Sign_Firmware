@@ -34,11 +34,12 @@ extern struct Encoder_Struct encoder_parameters;     //create encoder struct
 extern struct Button_Struct button_parameters;       //create button struct
 extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
-
+extern struct SD_Card card1;
+extern struct SD_Card card2;
 
 // list of valid sensor prefix's for sending non string data to the megas.
 // append this as required and add to switch statements in due and mega code
-const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};  
+const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
 
 byte time_since_last_sent_text_frame = 0;
 bool send_text_now = false;
@@ -46,7 +47,7 @@ volatile bool send_pos_now = false;   //variable set in interrupt to trigger sen
 
 
 //pos frame variables
-byte x_pos_LSB = 0;   
+byte x_pos_LSB = 0;
 byte x_pos_MSB = 0;
 byte y_pos_LSB = 0;
 byte y_pos_MSB = 0;
@@ -58,7 +59,7 @@ byte pos_frame_length = 13;   //length of frame to transmit to update pos
 
 byte current_scroll_direction = 1;    // direction of scroll, x=1/y=2
 
-//char menu_frame[FRAME_OVERHEAD+3] ={0};   // initialise menu_frame, overhead +menu numeber + 2 bytes for encoder position 
+//char menu_frame[FRAME_OVERHEAD+3] ={0};   // initialise menu_frame, overhead +menu numeber + 2 bytes for encoder position
 //                                          // should only send references to strings already in megas LUT. Names from files need to be handled seperately
 
 extern char text_str[MAX_TWEET_SIZE];
@@ -72,10 +73,10 @@ extern bool use_hue;
 extern byte screen_brightness;
 extern int  text_colour_hue;
 extern byte screen_mode;   //mode of operation on startup should be both displaying
-                      //mode0: both on
-                      //mode1: one side on
-                      //mode2: both off
-                      //mode3: other side on
+//mode0: both on
+//mode1: one side on
+//mode2: both off
+//mode3: other side on
 
 
 extern bool sd_card1_detected;
@@ -87,78 +88,78 @@ extern bool sd_card2_detected;
 // ______  non class functions _______
 
 
-int attach_timer_pos_update(){
+int attach_timer_pos_update() {
   //attach pos update interrupt
-    if (!timers.pos_timer_attached){
-      timers.pos_timer_attached = true;       //indicate the timer is attached
-      
-      Timer3.attachInterrupt(send_pos_interrupt);   //attach ISR
-      int fail = set_pos_update_frequency(pos_update_freq);         // set the freq
-      
-      if (fail !=0){
-        Sprintln(F("Failed to attach pos timer"));
-        timers.pos_timer_attached = false;       
-        return(-1);     //stop code   
-      }
-     
-      Timer3.start();
-      Sprintln(F("Attached pos timer"));
+  if (!timers.pos_timer_attached) {
+    timers.pos_timer_attached = true;       //indicate the timer is attached
+
+    Timer3.attachInterrupt(send_pos_interrupt);   //attach ISR
+    int fail = set_pos_update_frequency(pos_update_freq);         // set the freq
+
+    if (fail != 0) {
+      Sprintln(F("Failed to attach pos timer"));
+      timers.pos_timer_attached = false;
+      return (-1);    //stop code
     }
+
+    Timer3.start();
+    Sprintln(F("Attached pos timer"));
+  }
 }
 
-int set_pos_update_frequency(int freq){
-  
-  if (!timers.pos_timer_attached){
-      Sprintln(F("From 'set_pos_update_frequency': trying to set frequency but timer not attached"));
-      return (-1);
+int set_pos_update_frequency(int freq) {
+
+  if (!timers.pos_timer_attached) {
+    Sprintln(F("From 'set_pos_update_frequency': trying to set frequency but timer not attached"));
+    return (-1);
   }
-  else{   //all good, set freq
-    
+  else {  //all good, set freq
+
     pos_update_freq = freq;   //variable for frame
-    
+
     Timer3.setFrequency(freq);   //set interval
-    
-    return(0);
+
+    return (0);
   }
 
 }
 
-int set_pos_speed(int x_speed, int y_speed){            //function to set the speed (pixels per second) the cursor postion is moving at
-x_pos_dir = x_speed+128;                                //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
-y_pos_dir = y_speed+128;
+int set_pos_speed(int x_speed, int y_speed) {           //function to set the speed (pixels per second) the cursor postion is moving at
+  x_pos_dir = x_speed + 128;                              //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
+  y_pos_dir = y_speed + 128;
 }
 
-void send_pos_interrupt(){     // interrupt to send pos data to all megas
-    send_pos_now = true;
+void send_pos_interrupt() {    // interrupt to send pos data to all megas
+  send_pos_now = true;
 }
 
 
 // ______ class functions _______
 
-int Coms::init_software_serial_to_usb_port(){           // init the serial at 115200 baud rate
+int Coms::init_software_serial_to_usb_port() {          // init the serial at 115200 baud rate
 
   Serial.begin(COMS_SPEED);
-  int alpha=millis();
-  while (!Serial){
+  int alpha = millis();
+  while (!Serial) {
     if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-//      debug = false;
+      //      debug = false;
       return -1;
     }
   }
-  
-  return 0; 
+
+  return 0;
 }
 
-int Coms::init_software_serial_to_usb_port(int speed){  // init the serial at a custom speed
+int Coms::init_software_serial_to_usb_port(int speed) { // init the serial at a custom speed
 
   if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
     return (-2);
-  
+
   Serial.begin(speed);
-  int alpha=millis();
-  while (!Serial){
+  int alpha = millis();
+  while (!Serial) {
     if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-//      debug = false;
+      //      debug = false;
       return -1;
     }
   }
@@ -213,8 +214,8 @@ int Coms::startup_handshake() {  //code to delay the due in initialisation and e
 //  // function calculates the number of frames required to send the string, then loops,
 //  // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
 //  // it also calls the send frame function to send it on to the specified address when frame complete
-//  
-//  
+//
+//
 //
 //  text_cursor.x_min = -text.text_width*strlen(text_str)*2; // set this based on size of string being sent, will update if string changed
 //
@@ -239,12 +240,12 @@ int Coms::startup_handshake() {  //code to delay the due in initialisation and e
 //    text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - frame.checksum;
 //
 //    write_text_frame();
-//    
+//
 //    text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
 //    delayMicroseconds(10000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
 //
 //  } while (text_frame.this_frame <= text_frame.num_frames);
-//  
+//
 //  return (0);
 //}
 
@@ -268,7 +269,7 @@ int Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //functio
 
 int Coms::build_pos_frame(int address) {
 
-  
+
   Sprint(F("Sending cursor positions to address "));
   Sprintln(address);
 
@@ -287,7 +288,7 @@ int Coms::build_pos_frame(int address) {
   pos_frame.frame_queued = true; //flag to send frame on new loop
 
   return (0);
-  }
+}
 
 int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send the x and y positions of the text cursor
 
@@ -337,7 +338,7 @@ int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send t
 int Coms::send_all_calibration_data(int address) {     //function to send all data
 
   //function to send all the sensor data. loop through all sensor values
-  
+
   byte frameNum = 1;
   byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
   int offset = 0;
@@ -369,7 +370,7 @@ int Coms::send_all_calibration_data(int address) {     //function to send all da
     }
 
   }
-  
+
   return (0);
 
 }
@@ -380,7 +381,7 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
   // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
   // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
   byte type = 3;
-  int HEADER_PLUS_ONE = HEADER_LENGTH+1;
+  int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
 
   //switch statement to pack the frame;
   switch (sensor_prefix) {
@@ -389,110 +390,110 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
       break;
 
-    case PREFIX_CURRENT_2:  
+    case PREFIX_CURRENT_2:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
       break;
 
-    case PREFIX_TEMP_1:  
+    case PREFIX_TEMP_1:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp1;
       break;
 
-    case PREFIX_TEMP_2:  
+    case PREFIX_TEMP_2:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp2;
       break;
 
-    case PREFIX_TEMP_3:  
+    case PREFIX_TEMP_3:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp3;
       break;
 
-    case PREFIX_LDR_1:  
+    case PREFIX_LDR_1:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading1;
       break;
 
-    case PREFIX_LDR_2:  
+    case PREFIX_LDR_2:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading2;
       break;
 
-    case PREFIX_FAN_SPEED:  
+    case PREFIX_FAN_SPEED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.target_speed;
       break;
 
-    case PREFIX_LED_STRIP_BRIGHTNESS:  
+    case PREFIX_LED_STRIP_BRIGHTNESS:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.target_brightness;
       break;
 
-    case PREFIX_SD1_DETECTED:  
+    case PREFIX_SD1_DETECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card1_detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
       break;
 
-    case PREFIX_SD2_DETECTED:  
+    case PREFIX_SD2_DETECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card2_detected ? (byte) 1 : (byte) 0;
       break;
 
-    case PREFIX_EHTERNET_CONNECTED:  
+    case PREFIX_EHTERNET_CONNECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
       break;
 
-    case PREFIX_WIFI_CONNECTED:  
+    case PREFIX_WIFI_CONNECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
       break;
 
-    case PREFIX_SCREEN_BRIGHTNESS:  
+    case PREFIX_SCREEN_BRIGHTNESS:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness = 100;
       else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
       break;
 
-    case PREFIX_TEXT_SIZE: 
+    case PREFIX_TEXT_SIZE:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_size;
       break;
 
-    case PREFIX_TEXT_COLOUR_R: 
+    case PREFIX_TEXT_COLOUR_R:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_r;
       break;
 
 
-    case PREFIX_TEXT_COLOUR_G: 
+    case PREFIX_TEXT_COLOUR_G:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_g;
       break;
 
 
-    case PREFIX_TEXT_COLOUR_B:  
+    case PREFIX_TEXT_COLOUR_B:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_b;
       break;
 
-    case PREFIX_TEXT_HUE_MSB: 
+    case PREFIX_TEXT_HUE_MSB:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
-    case PREFIX_TEXT_HUE_LSB: 
+    case PREFIX_TEXT_HUE_LSB:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
       break;
 
-    case PREFIX_TEXT_USE_HUE: 
+    case PREFIX_TEXT_USE_HUE:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = use_hue ? (byte) 1 : (byte) 0;
       break;
 
-    case PREFIX_DEBUG_STATE: 
+    case PREFIX_DEBUG_STATE:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
 #ifdef DEBUG
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 1;
@@ -501,9 +502,19 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 #endif
       break;
 
-    case PREFIX_SCREEN_MODE: 
+    case PREFIX_SCREEN_MODE:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_mode;
+      break;
+
+    case PREFIX_SD_MOUNTED_1:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.enabled;
+      break;
+
+    case PREFIX_SD_MOUNTED_2:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.enabled;
       break;
 
     default:  Sprint("Error: Prefix not defined. Prefix :");
@@ -531,29 +542,29 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 
 int Coms::send_all_pos_on_interrupt() {    // function to send pos data to all megas if timer interrupt has indicated they should be sent
 
-    if (!timers.pos_timer_attached){
-      Sprintln(F("Error: Cant send pos, timer not enabled"));
-      return(-1);
-    }
-  
-    if (send_pos_now){    //send pos based on timer interrupt variable
-     send_pos_frame(1);   // send frames
-     send_pos_frame(2);
-     send_pos_frame(3);
-     send_pos_frame(4);    
-     send_pos_now=false;
+  if (!timers.pos_timer_attached) {
+    Sprintln(F("Error: Cant send pos, timer not enabled"));
+    return (-1);
   }
-  return(0);
+
+  if (send_pos_now) {   //send pos based on timer interrupt variable
+    send_pos_frame(1);   // send frames
+    send_pos_frame(2);
+    send_pos_frame(3);
+    send_pos_frame(4);
+    send_pos_now = false;
+  }
+  return (0);
 }
 
-int Coms::send_all_pos_now(){    //function to send all the positional info now, not wait for timer to trigger flag
-  
-     send_pos_frame(1);   // send frames
-     send_pos_frame(2);
-     send_pos_frame(3);
-     send_pos_frame(4);    
-  
-  return(0);
+int Coms::send_all_pos_now() {   //function to send all the positional info now, not wait for timer to trigger flag
+
+  send_pos_frame(1);   // send frames
+  send_pos_frame(2);
+  send_pos_frame(3);
+  send_pos_frame(4);
+
+  return (0);
 }
 
 int Coms::calc_delay() {    // function to calculate the dalay in sending frames to the megas
@@ -574,10 +585,10 @@ int Coms::calc_delay() {    // function to calculate the dalay in sending frames
 //  if (millis()>time_since_last_sent_text_frame+TEXT_TRANSMIT_PERIOD){
 //    time_since_last_sent_text_frame = millis();
 //    for (int alpha = 1; alpha <= NUM_SCREENS; alpha++) {
-//     
+//
 //        Sprint(F("Sending text frame to address "));
 //        Sprintln(alpha);
-//      
+//
 //      int fail = send_disp_string_frame(alpha);
 //      if (fail != 0) {
 //        Sprint(F("Failed to send string to mega"));
@@ -614,57 +625,57 @@ int get_text_colour_hue(int byte_number) {  //function to return the MSB or LSB 
   }
 }
 
-int Coms::init_frames(){
+int Coms::init_frames() {
   //menu_frame
-  menu_frame.frame_length = FRAME_OVERHEAD+3;
+  menu_frame.frame_length = FRAME_OVERHEAD + 3;
   menu_frame.frame_type = 4;
-  
-  menu_frame.frame_buffer[0] = menu_frame.frame_length;   
+
+  menu_frame.frame_buffer[0] = menu_frame.frame_length;
   menu_frame.frame_buffer[1] = menu_frame.frame_type;
   menu_frame.frame_buffer[2] = 1;
   menu_frame.frame_buffer[3] = 1;
   menu_frame.header_checksum = menu_frame.frame_buffer[0] + menu_frame.frame_buffer[1] + menu_frame.frame_buffer[2] + menu_frame.frame_buffer[3];
-  menu_frame.checksum_address = menu_frame.frame_length-1;
-  
+  menu_frame.checksum_address = menu_frame.frame_length - 1;
+
   // pos frame
-  pos_frame.frame_length = FRAME_OVERHEAD+8;
+  pos_frame.frame_length = FRAME_OVERHEAD + 8;
   pos_frame.frame_type = 3;
-  pos_frame.frame_buffer[0] = pos_frame.frame_length;   
+  pos_frame.frame_buffer[0] = pos_frame.frame_length;
   pos_frame.frame_buffer[1] = pos_frame.frame_type;
   pos_frame.frame_buffer[2] = 1;
   pos_frame.frame_buffer[3] = 1;
   pos_frame.header_checksum = pos_frame.frame_buffer[0] + pos_frame.frame_buffer[1] + pos_frame.frame_buffer[2] + pos_frame.frame_buffer[3];
-  pos_frame.checksum_address = pos_frame.frame_length-1;
+  pos_frame.checksum_address = pos_frame.frame_length - 1;
 
   // text frame
-  text_frame.frame_type =1;
+  text_frame.frame_type = 1;
 
   // sensor_data_frame
   sensor_data_frame.frame_type = 3;
 }
 
 
-int Coms::build_menu_data_frame(int menu_number, int encoder_position){    //function to build the frame to send menu info
+int Coms::build_menu_data_frame(int menu_number, int encoder_position) {   //function to build the frame to send menu info
   int type = 4;
-  
+
   Sprint(F("Building menu frame: Menu"));
   Sprint(menu_number);
   Sprint("\t Encoder Pos:");
   Sprintln(encoder_position);
-  
+
   menu_frame.frame_buffer[4] = (byte) menu_number;
   menu_frame.frame_buffer[5] = (byte) get_text_encoder_position(1);
   menu_frame.frame_buffer[6] = (byte) get_text_encoder_position(2);
-  
+
   menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.header_checksum; //initial checksum
-  
+
   for (int alpha = HEADER_LENGTH; alpha < menu_frame.checksum_address; alpha++) { //sum of elements
-  menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.frame_buffer[menu_frame.checksum_address] + menu_frame.frame_buffer[alpha];
+    menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.frame_buffer[menu_frame.checksum_address] + menu_frame.frame_buffer[alpha];
   }
   menu_frame.frame_buffer[menu_frame.checksum_address] = (byte) 256 - (menu_frame.frame_buffer[menu_frame.checksum_address] % 256); //calc checksum
 
-  menu_frame.frame_queued = true;   //flag to send frame on new loop 
-  
+  menu_frame.frame_queued = true;   //flag to send frame on new loop
+
   return (0);
 }
 
