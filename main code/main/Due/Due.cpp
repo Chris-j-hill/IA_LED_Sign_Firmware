@@ -56,8 +56,6 @@ void due_setup() {
 void due_loop() {
   while (1) {
 
-
-
     // //do these periodically based on config
     // cards.check_for_sd_card_inserted();
     // internet.check_connection();
@@ -79,7 +77,7 @@ void due_loop() {
     host.print_messages();
 
     card.check_for_sd_card();
-    card.update_data_log();
+    //card.update_data_log();
   }
 
 }

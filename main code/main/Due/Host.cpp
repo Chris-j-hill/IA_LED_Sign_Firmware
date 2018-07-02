@@ -13,6 +13,9 @@
 #include "Graphics.h"
 #include "Coms.h"
 #include "Current_Control.h"
+#include "SD_Cards.h"
+
+
 Serial_Sub_Menu serial_sub_menu_items;
 
 
@@ -30,8 +33,9 @@ extern Frame text_frame;
 extern LDR_Struct light_sensor_parameters;
 extern Current_Meter_Struct current_meter_parameters;
 
-
-
+extern SD_Card card1;
+extern SD_Card card2;
+extern SD_Strings SD_string;
 
 extern byte screen_mode;
 extern byte screen_brightness;
@@ -48,6 +52,10 @@ extern int  text_colour_hue;
 
 extern char text_str[MAX_TWEET_SIZE];
 
+
+String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
+String string_write_error_msg PROGMEM = "Error: Cannot write string from serial monitor interface";
+
 //some frequenly used strings
 String space_colon_string PROGMEM = " : ";
 String dash_space_string PROGMEM = "- ";
@@ -55,6 +63,11 @@ String tab_string PROGMEM = "\t";
 String space_string PROGMEM = " ";
 String percent_string PROGMEM = "%";
 String divide_string PROGMEM = "/";
+String comma_space_string PROGMEM = ", ";
+String yes_string PROGMEM = "Yes";
+String no_string PROGMEM = "No ";
+String y_string PROGMEM = "Y";
+String n_string PROGMEM = "N";
 
 inline void space() {
   Serial.print(space_string);
@@ -71,6 +84,25 @@ inline void space_colon() {
 inline void dash_space() {
   Serial.print(dash_space_string);
 };
+
+inline void comma_space() {
+  Serial.print(comma_space_string);
+}
+
+inline void yes(){
+  Serial.print(yes_string);
+}
+
+inline void no(){
+  Serial.print(no_string);
+}
+
+inline void y(){
+  Serial.print(y_string);  
+}
+inline void n(){
+    Serial.print(n_string);
+}
 
 inline void print_command_name(String command_data) {
   Serial.print(command_data);
@@ -177,6 +209,8 @@ byte Host::data_set_LUT(String data_set) {
     return REPORT_BUTTON;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER])
     return REPORT_CURRENT_METER;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_SD_CARD])
+    return REPORT_SD_CARD;
 
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_LDR_CONFIG])
     return REPORT_LDR_CONFIG;
@@ -245,9 +279,7 @@ void Host::return_data(String command_data) {
 
 void Host::read_write_LUT(byte index, char r_w, int value) {
 
-  String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
-
-  switch (data_to_report) { //row 
+  switch (data_to_report) { //row
     case REPORT_FANS:
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(fan_parameters.pin)                          : Serial.println(pin_error_msg);                   break;
@@ -285,7 +317,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 7: (r_w == 'r')  ?  Serial.println(led_strip_parameters.enabled)                   : led_strip_parameters.enabled = value;                       break;
         case 8: (r_w == 'r')  ?  Serial.println(led_strip_parameters.fast_interval)             : led_strip_parameters.fast_interval = value;                 break;
         case 9: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal)                : led_strip_parameters.sinusoidal = value;                    break;
-        case 10:(r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
+        case 10: (r_w == 'r')  ?  Serial.println(led_strip_parameters.sinusoidal_half_frequency) : led_strip_parameters.sinusoidal_half_frequency = value;     break;
       }
       break;
 
@@ -318,7 +350,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 3: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.config_min2)            : light_sensor_parameters.config_min2 = value;               break;
       }
       break;
-  
+
     case REPORT_LDRS:
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(light_sensor_parameters.pin1)                   : Serial.println(pin_error_msg);                              break;
@@ -338,6 +370,19 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 4: (r_w == 'r')  ?  Serial.println(current_meter_parameters.max_current_limit)      : current_meter_parameters.max_current_limit = value;        break;
       }
       break;
+
+    case REPORT_SD_CARD:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  Serial.println(card1.pin)                                       : Serial.println(pin_error_msg);                             break;
+        case 1: (r_w == 'r')  ?  Serial.println(card2.pin)                                       : Serial.println(pin_error_msg);                             break;
+        case 2: (r_w == 'r')  ?  Serial.println(card1.enabled)                                   : card1.enabled = value;                                     break;
+        case 3: (r_w == 'r')  ?  Serial.println(card2.enabled)                                   : card2.enabled = value;                                     break;
+        case 5: (r_w == 'r')  ?  Serial.println(SD_string.Network)                               : Serial.println(string_write_error_msg);                    break;
+        case 6: (r_w == 'r')  ?  Serial.println(SD_string.Password)                              : Serial.println(string_write_error_msg);                    break;
+
+      }
+      break;
+
   }
 }
 
@@ -386,6 +431,18 @@ void Host::print_messages() {
         print_current_meters();
         break;
 
+      case REPORT_SD_CARD:
+        print_sd_cards();
+        break;
+
+      case REPORT_POS:
+        print_pos();
+        break;
+
+      case REPORT_TEXT:
+        print_text();
+        break;
+
       case REPORT_LDR_CONFIG:
         print_ldr_config();
         break;
@@ -412,9 +469,9 @@ void Host::print_fans() {
   Serial.print(F("\t "));
 
   if (timers.fan_timer_attached)
-    Serial.print(F("Yes"));
+    yes();
   else
-    Serial.print(F("No"));
+    no();
 
   Serial.print(F("\t\t "));
 
@@ -452,19 +509,19 @@ void Host::print_temps() {
   space(); space(); space(); space(); space();
 
   if (temp_parameters.enabled1)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
   space();
   if (temp_parameters.enabled2)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
   space();
   if (temp_parameters.enabled3)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
 
   tab(); tab(); space();
 
@@ -472,9 +529,9 @@ void Host::print_temps() {
     dash_space();
   else {
     if (temp_parameters.bad_connection1)
-      Serial.print(F("N"));
+      n();
     else
-      Serial.print(F("Y"));
+      y();
     space();
   }
 
@@ -482,9 +539,9 @@ void Host::print_temps() {
     dash_space();
   else {
     if (temp_parameters.bad_connection2)
-      Serial.print(F("N"));
+      n();
     else
-      Serial.print(F("Y"));
+      y();
     space();
   }
 
@@ -493,9 +550,9 @@ void Host::print_temps() {
   }
   else {
     if (temp_parameters.bad_connection3)
-      Serial.print(F("N"));
+      n();
     else
-      Serial.print(F("Y"));
+      y();
     tab();
   }
   tab(); tab(); space();
@@ -526,9 +583,9 @@ void Host::print_led_strip() {
   tab();
 
   if (led_strip_parameters.enabled)
-    Serial.print(F("Yes"));
+    yes();
   else
-    Serial.print(F("No"));
+    no();
   tab(); tab(); tab();
   Serial.print(led_strip_parameters.current_brightness);
   tab(); tab(); tab();
@@ -556,16 +613,16 @@ void Host::print_encoder() {
   tab();
 
   if (encoder_parameters.enabled)
-    Serial.print(F("Yes"));
+    yes();
   else
-    Serial.print(F("No"));
+    no();
 
   tab(); tab; tab(); tab();
 
   if (encoder_parameters.is_attached)
-    Serial.print(F("Yes"));
+    yes();
   else
-    Serial.print(F("No"));
+    no();
 
   tab(); tab; tab();
 
@@ -586,23 +643,23 @@ void Host::print_button() {
   tab();
 
   if (button_parameters.enabled)
-    Serial.print(F("Yes"));
+    yes();
   else
     Serial.print(F("No "));
 
   tab; tab(); tab();
 
   if (button_parameters.is_attached)
-    Serial.print(F("Yes"));
+    yes();
   else
     Serial.print(F("No "));
 
   tab(); tab; tab();
 
   if (button_parameters.last_button_pressed > function_called_last)
-    Serial.print(F("Yes"));
+    yes();
   else
-    Serial.print(F("No"));
+    no();
   Serial.println();
 
   function_called_last = millis();
@@ -621,16 +678,16 @@ void Host::print_ldrs() {
   tab();
 
   if (light_sensor_parameters.enabled1)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
 
   space();
 
   if (light_sensor_parameters.enabled2)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
 
   tab; tab(); tab();
 
@@ -638,9 +695,9 @@ void Host::print_ldrs() {
     dash_space();
   else {
     if (light_sensor_parameters.bad_connection1)
-      Serial.print(F("N"));
+      n();
     else
-      Serial.print(F("Y"));
+      y();
     space();
   }
 
@@ -648,9 +705,9 @@ void Host::print_ldrs() {
     dash_space();
   else {
     if (light_sensor_parameters.bad_connection2)
-      Serial.print(F("N"));
+      n();
     else
-      Serial.print(F("Y"));
+      y();
     space();
   }
 
@@ -678,16 +735,16 @@ void Host::print_current_meters() {
   tab();
 
   if (current_meter_parameters.enabled1)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
 
   space();
 
   if (current_meter_parameters.enabled2)
-    Serial.print(F("Y"));
+    y();
   else
-    Serial.print(F("N"));
+    n();
 
   tab; tab(); tab();
 
@@ -703,6 +760,112 @@ void Host::print_current_meters() {
   Serial.println();
 
 }
+
+
+void Host::print_sd_cards() {
+
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Pins \tEnabled \tDetected \tFiles Found"));
+  }
+  Serial.print(card1.pin);
+  space();
+  Serial.print(card2.pin);
+  tab();
+
+  if (card1.enabled)
+    y();
+  else
+    n();
+
+  space();
+
+  if (card2.enabled)
+    y();
+  else
+    n();
+
+  tab; tab(); tab; tab();
+
+  if (!card1.enabled)
+    dash_space();
+  else {
+    if (card1.detected)
+      y();
+    else
+      n();
+    space();
+  }
+
+  if (!card2.enabled)
+    dash_space();
+  else {
+    if (card2.detected)
+      y();
+    else
+      n();
+  }
+
+  tab; tab(); tab; tab();
+
+  Serial.print(card1.working_dir);
+  space_colon();
+  if (card1.network_file_exists) {
+    Serial.print(EXT_NETWORK_FILE);
+    comma_space();
+  }
+  if (card1.disp_string_file_exists) {
+    Serial.print(EXT_STRING_FILE);
+    comma_space();
+  }
+  if (card1.log_file_exists) {
+    Serial.print(EXT_LOG_FILE);
+    comma_space();
+  }
+  if (card1.instruction_file_exists) {
+    Serial.print(EXT_CALIBRATION_FILE);
+    comma_space();
+  }
+  if (card1.calibration_file_exists) {
+    Serial.print(EXT_INSTRUCTION_FILE);
+    comma_space();
+  }
+  if (card1.bitmap_file_exists) {
+    Serial.print(EXT_BITMAP_FILE);
+    comma_space();
+  }
+  tab();
+  Serial.print(card2.working_dir);
+  space_colon();
+  if (card2.network_file_exists) {
+    Serial.print(INT_NETWORK_FILE);
+    comma_space();
+  }
+  if (card2.disp_string_file_exists) {
+    Serial.print(INT_STRING_FILE);
+    comma_space();
+  }
+  if (card2.log_file_exists) {
+    Serial.print(INT_LOG_FILE);
+    comma_space();
+  }
+  if (card2.instruction_file_exists) {
+    Serial.print(INT_CALIBRATION_FILE);
+    comma_space();
+  }
+  if (card2.calibration_file_exists) {
+    Serial.print(INT_INSTRUCTION_FILE);
+    comma_space();
+  }
+  if (card2.bitmap_file_exists) {
+    Serial.print(INT_BITMAP_FILE);
+    comma_space();
+  }
+  Serial.println();
+}
+
+void Host::print_pos() {}
+void Host::print_text() {}
 
 
 void Host::print_menu_tree() {

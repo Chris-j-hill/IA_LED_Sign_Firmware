@@ -46,7 +46,7 @@ struct Serial_Sub_Menu {
 /*1 */   {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
 /*2 */   {"pin1", "pin2", "pin3", "enable1", "enable2", "enable3"},
 /*3 */   {"pin", "target_brightness", "current_brightness", "increment", "change_interval", "stable_interval", "minimum", "enabled","fast_interval_on", "sinusoidal", "freq"},
-/*4 */      {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
+/*4 */   {""},  // <- menu handled differently
 /*5 */   {"pin1", "pin2", "enabled1", "enabled2", "large_diff"},
 /*6 */   {"pin1", "pin2", "pos","enabled","attached"},
 /*7 */   {"pin", "pressed", "interval", "enabled", "attached"},
@@ -54,7 +54,7 @@ struct Serial_Sub_Menu {
 /*9 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
 /*10*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
 /*11*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
-/*12*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+/*12*/   {"pin1", "pin2", "enabled1", "enabled2", "network", "password"},
 /*13*/   {"max1", "min1", "max2", "min2"}};
 
 
@@ -72,10 +72,10 @@ struct Serial_Sub_Menu {
 /*9 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
 /*10*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
 /*11*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
-/*12*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+/*12*/    {"SD card attached to this digital pin number", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "Extracted network name", "Extracted network password"},
 /*13*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"}};
 
-  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS,9,6,11, 0,5,5,5, 5,0,0,0, 0, 4}; //number of columns in each row of the above two arrays
+  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS,9,6,11, 0,5,5,5, 5,0,0,0, 6, 4}; //number of columns in each row of the above two arrays
 
 };
 
@@ -96,6 +96,12 @@ class Host {
     void print_menu_tree();
     void print_current_meters();
     void print_ldr_config();
+    void print_sd_cards();
+    void print_pos();
+    void print_text();
+
+
+
     
     void serial_sub_menu(String rx);
     void print_help_options();

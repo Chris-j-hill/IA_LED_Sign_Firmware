@@ -43,25 +43,6 @@ const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
 const char *sd_int_file = NETWORK_LOGIN_FILENAME;
 
-
-#define  EXT_NETWORK_FILE NETWORK_LOGIN_FILENAME
-#define  INT_NETWORK_FILE NETWORK_LOGIN_FILENAME
-
-#define EXT_STRING_FILE "String.BIN"
-#define INT_STRING_FILE "String.BIN"
-
-#define EXT_LOG_FILE "DataLog.CSV"
-#define INT_LOG_FILE "DataLog.CSV"
-
-#define EXT_CALIBRATION_FILE "Cal.BIN"
-#define INT_CALIBRATION_FILE "Cal.BIN"
-
-#define EXT_INSTRUCTION_FILE "Instruct.BIN"
-#define INT_INSTRUCTION_FILE "Instruct.BIN"
-
-#define EXT_BITMAP_FILE "bitmap.BIN"
-#define INT_BITMAP_FILE "bitmap.BIN"
-
 bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
 bool sd_card2_detected = true;
 
@@ -451,6 +432,7 @@ void Card::check_for_sd_card() {
     }
     else if (!external_sd_card.begin(card1.pin) && card1.detected) { //card was previously detected but not initialising now
       card1.detected = false;
+      files_dont_exist(EXTERNAL_CARD);
       //      Serial.println(F("Card 1 got disconnected"));
     }
   }
@@ -471,14 +453,9 @@ void Card::check_for_sd_card() {
     }
     else if (!internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && card2.detected) {
       card2.detected = false;
+      files_dont_exist(INTERNAL_CARD);
       //      Serial.println(F("Card 2 got disconnected"));
     }
-  }
-  static int log_period = millis();
-  if (card2.detected && millis() > log_period + 500) {
-    log_data(INT_LOG_FILE, true);
-    Serial.println("log");
-    log_period = millis();
   }
 }
 
@@ -536,8 +513,15 @@ void Card::check_for_files(byte card_to_check) {
         card1.bitmap_file_exists = false;
 #endif
     }
-    else
+    else {
       card1.directory_exists = false;
+      card1.network_file_exists = false;
+      card1.disp_string_file_exists = false;
+      card1.log_file_exists = false;
+      card1.instruction_file_exists = false;
+      card1.calibration_file_exists = false;
+      card1.bitmap_file_exists = false;
+    }
   }
 
   else if (card_to_check == INTERNAL_CARD) { //checking internal card
@@ -952,4 +936,26 @@ void Card::mount_card(byte card) {
 
 }
 
+
+void Card::files_dont_exist(byte device) {
+
+  if (device == INTERNAL_CARD) {
+    card2.network_file_exists = false;
+    card2.disp_string_file_exists = false;
+    card2.log_file_exists = false;
+    card2.instruction_file_exists = false;
+    card2.calibration_file_exists = false;
+    card2.bitmap_file_exists = false;
+  }
+
+  else if (device == EXTERNAL_CARD) {
+    card1.network_file_exists = false;
+    card1.disp_string_file_exists = false;
+    card1.log_file_exists = false;
+    card1.instruction_file_exists = false;
+    card1.calibration_file_exists = false;
+    card1.bitmap_file_exists = false;
+  }
+
+}
 #endif // SD_Cards_CPP

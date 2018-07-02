@@ -43,11 +43,30 @@
 #define ALLOW_DISP_STRING_FILES
 #define ALLOW_NETWORK_FILES
 
+#define  EXT_NETWORK_FILE NETWORK_LOGIN_FILENAME
+#define  INT_NETWORK_FILE NETWORK_LOGIN_FILENAME
 
-#define CHECK_EXTERNAL_SD_CARD_PERIOD 1000
-#define CHECK_INTERNAL_SD_CARD_PERIOD 5000 //much less likely to be inserted/removed, check less frequencly
+#define EXT_STRING_FILE "String.BIN"
+#define INT_STRING_FILE "String.BIN"
 
-#define INTERNAL_CARD 1     
+#define EXT_LOG_FILE "DataLog.CSV"
+#define INT_LOG_FILE "DataLog.CSV"
+
+#define EXT_CALIBRATION_FILE "Cal.BIN"
+#define INT_CALIBRATION_FILE "Cal.BIN"
+
+#define EXT_INSTRUCTION_FILE "Instruct.BIN"
+#define INT_INSTRUCTION_FILE "Instruct.BIN"
+
+#define EXT_BITMAP_FILE "bitmap.BIN"
+#define INT_BITMAP_FILE "bitmap.BIN"
+
+
+
+#define CHECK_EXTERNAL_SD_CARD_PERIOD 500
+#define CHECK_INTERNAL_SD_CARD_PERIOD 1000 //much less likely to be inserted/removed, check less frequencly
+
+#define INTERNAL_CARD 1
 #define EXTERNAL_CARD 2
 #define RASP_PI 3
 
@@ -72,10 +91,10 @@ struct SD_Card {
   const char *working_dir = "123456789 123456789 "; // <- 20 characters for working dir name
 
   bool directory_exists = false;
-  
-  byte network_file_exists = false;       //types of files that we might work with
-  byte disp_string_file_exists = false;
-  byte log_file_exists = false;
+
+  bool network_file_exists = false;       //types of files that we might work with
+  bool disp_string_file_exists = false;
+  bool log_file_exists = false;
   bool instruction_file_exists = false;
   bool calibration_file_exists = false;
   bool bitmap_file_exists = false;
@@ -104,10 +123,10 @@ class Card {
     void check_for_files(byte check_card);
     void copy_file(const char *from_filename, const char *to_filename, byte from_device, byte to_device); //copy file to multiple places so as to retain backups of data
     void copy(byte from_device, byte to_device);
+    void files_dont_exist(byte device);
 
-    
-void retrieve_data(String filename);
-void log_data(String filename, bool truncate = false, bool print_header = false);
+    void retrieve_data(String filename);
+    void log_data(String filename, bool truncate = false, bool print_header = false);
 
   public:
 
@@ -117,15 +136,15 @@ void log_data(String filename, bool truncate = false, bool print_header = false)
 
     void init_sd_cards();
 
-    
+
     int og_init_sd_cards();
     int check_for_SD_card_inserted();
 
     void update_data_log(byte give_priority_to = 0);
-    
+
     void safely_eject_card(byte card);
     void mount_card(byte card);
-    
+
 };
 
 
