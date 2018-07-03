@@ -56,8 +56,8 @@ struct Current_Meter_Struct {
 
   byte total = 0;
 
-  byte config_max1 = 200;
-  byte config_max2 = 200;
+  byte config_max1 = 255;
+  byte config_max2 = 255;
 
   byte config_min1 = 0;
   byte config_min2 = 0;
@@ -98,6 +98,8 @@ class Current_Meter {
     void read_current_meter(byte sensor);  // read the current sensor
     double reading_to_amps(uint16_t value, byte sensor_type = THIRTY_AMP);   // convert 10 bit analog reading to amps
     void avg_sensor_result();
+    bool current_meter_santiy_check();
+    
   public:
     Current_Meter() {}
 

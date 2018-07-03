@@ -36,6 +36,8 @@ extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
 extern struct SD_Card card1;
 extern struct SD_Card card2;
+extern struct Text text_parameters;
+extern struct Text_cursor text_cursor;
 
 // list of valid sensor prefix's for sending non string data to the megas.
 // append this as required and add to switch statements in due and mega code
@@ -46,43 +48,23 @@ bool send_text_now = false;
 volatile bool send_pos_now = false;   //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
 
 
-//pos frame variables
-byte x_pos_LSB = 0;
-byte x_pos_MSB = 0;
-byte y_pos_LSB = 0;
-byte y_pos_MSB = 0;
-byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
-byte y_pos_dir = 127;
 byte comms_delay = 0;
 byte pos_update_freq = 5;
 byte pos_frame_length = 13;   //length of frame to transmit to update pos
-
-byte current_scroll_direction = 1;    // direction of scroll, x=1/y=2
 
 //char menu_frame[FRAME_OVERHEAD+3] ={0};   // initialise menu_frame, overhead +menu numeber + 2 bytes for encoder position
 //                                          // should only send references to strings already in megas LUT. Names from files need to be handled seperately
 
 extern char text_str[MAX_TWEET_SIZE];
 
-extern byte text_size;
-extern byte text_colour_r;
-extern byte text_colour_g;
-extern byte text_colour_b;
-extern bool use_hue;
+
 
 extern byte screen_brightness;
-extern int  text_colour_hue;
 extern byte screen_mode;   //mode of operation on startup should be both displaying
 //mode0: both on
 //mode1: one side on
 //mode2: both off
 //mode3: other side on
-
-
-extern bool sd_card1_detected;
-extern bool sd_card2_detected;
-
-
 
 
 // ______  non class functions _______
@@ -125,8 +107,8 @@ int set_pos_update_frequency(int freq) {
 }
 
 int set_pos_speed(int x_speed, int y_speed) {           //function to set the speed (pixels per second) the cursor postion is moving at
-  x_pos_dir = x_speed + 128;                              //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
-  y_pos_dir = y_speed + 128;
+  text_cursor.x_pos_dir = x_speed + 128;                              //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
+  text_cursor.y_pos_dir = y_speed + 128;
 }
 
 void send_pos_interrupt() {    // interrupt to send pos data to all megas
@@ -274,8 +256,8 @@ int Coms::build_pos_frame(int address) {
   Sprintln(address);
 
   pack_xy_coordinates();        //seperate function to bit shift values to correct order.
-  pos_frame.frame_buffer[8] = (byte) x_pos_dir;
-  pos_frame.frame_buffer[9] = (byte) y_pos_dir;
+  pos_frame.frame_buffer[8] =  text_cursor.x_pos_dir;
+  pos_frame.frame_buffer[9] =  text_cursor.y_pos_dir;
   pos_frame.frame_buffer[10] = (byte) comms_delay;
   pos_frame.frame_buffer[11] = (byte) pos_update_freq;
 
@@ -299,6 +281,12 @@ int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send t
 
   // NOTE: current implementation will overflow if an out of bounds coordinate is presented (+/-32738 is usable)
   //       I cant see a reason this would be an issue so not fixing it for now
+
+  byte x_pos_LSB = 0;
+  byte x_pos_MSB = 0;
+  byte y_pos_LSB = 0;
+  byte y_pos_MSB = 0;
+
 
   if (abs(text_cursor.x) > 32738 || abs(text_cursor.y) > 32738) //print warning that coordinate will be wrong
     Sprintln("WARNING: failed to send correct coordinate, out of bounds, overflow likely to occur");
@@ -432,12 +420,12 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 
     case PREFIX_SD1_DETECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card1_detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
       break;
 
     case PREFIX_SD2_DETECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = sd_card2_detected ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.detected ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_EHTERNET_CONNECTED:
@@ -458,24 +446,24 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 
     case PREFIX_TEXT_SIZE:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_size;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.text_size;
       break;
 
     case PREFIX_TEXT_COLOUR_R:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_r;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.red;
       break;
 
 
     case PREFIX_TEXT_COLOUR_G:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_g;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.green;
       break;
 
 
     case PREFIX_TEXT_COLOUR_B:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_colour_b;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.blue;
       break;
 
     case PREFIX_TEXT_HUE_MSB:
@@ -490,7 +478,7 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
 
     case PREFIX_TEXT_USE_HUE:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_DEBUG_STATE:
@@ -515,6 +503,21 @@ bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool 
     case PREFIX_SD_MOUNTED_2:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.enabled;
+      break;
+
+    case PREFIX_TEXT_SCROLL_SPEED_X:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.x_pos_dir;
+      break;
+
+    case PREFIX_TEXT_SCROLL_SPEED_Y:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.y_pos_dir;
+      break;
+
+    case PREFIX_FAN_MINIMUM_SPEED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_minimum;
       break;
 
     default:  Sprint("Error: Prefix not defined. Prefix :");
@@ -610,14 +613,14 @@ void Coms::print_frame() {
 int get_text_colour_hue(int byte_number) {  //function to return the MSB or LSB of the current hue value to send
 
   if (byte_number == 1) { //looking for MSB
-    if (text_colour_hue < 0)
-      return (abs(text_colour_hue) / 256);    //get quotient of absolute value and 256 rounded down
+    if (text_parameters.hue < 0)
+      return (abs(text_parameters.hue) / 256);    //get quotient of absolute value and 256 rounded down
 
     else
-      return (abs(text_colour_hue) / 256 + 128); //add 128 to indicate positve number
+      return (abs(text_parameters.hue) / 256 + 128); //add 128 to indicate positve number
   }
   else if (byte_number == 2) { //LSB
-    return (abs(text_colour_hue) % 256);    //get modulo of value and 256;
+    return (abs(text_parameters.hue) % 256);    //get modulo of value and 256;
   }
   else {
     Sprintln("Error, cant get hue MSB/LSB, invalid byte number presented");

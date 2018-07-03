@@ -20,34 +20,27 @@ Serial_Sub_Menu serial_sub_menu_items;
 
 
 //access to structs
-extern Temp_sensor temp_parameters;
-extern Fan_Struct fan_parameters;
-extern Timers timers;
-extern Led_Strip_Struct led_strip_parameters;
-extern Encoder_Struct encoder_parameters;
-extern Button_Struct button_parameters;
-extern Menu_tree_items menu_items;
-extern Menu_tree_menu_limits menu_limits;
-extern Menu menu;
-extern Frame text_frame;
-extern LDR_Struct light_sensor_parameters;
-extern Current_Meter_Struct current_meter_parameters;
+extern struct Temp_sensor temp_parameters;
+extern struct Fan_Struct fan_parameters;
+extern struct Timers timers;
+extern struct Led_Strip_Struct led_strip_parameters;
+extern struct Encoder_Struct encoder_parameters;
+extern struct Button_Struct button_parameters;
+extern struct Menu_tree_items menu_items;
+extern struct Menu_tree_menu_limits menu_limits;
+extern struct Menu menu;
+extern struct Frame text_frame;
+extern struct LDR_Struct light_sensor_parameters;
+extern struct Current_Meter_Struct current_meter_parameters;
+extern struct Text text_parameters;
+extern struct Text_cursor text_cursor;
 
-extern SD_Card card1;
-extern SD_Card card2;
-extern SD_Strings SD_string;
+extern struct SD_Card card1;
+extern struct SD_Card card2;
+extern struct SD_Strings SD_string;
 
 extern byte screen_mode;
 extern byte screen_brightness;
-extern byte text_size;
-extern byte current_scroll_direction;
-extern byte x_pos_dir;
-extern byte y_pos_dir;
-extern byte text_colour_r;
-extern byte text_colour_g;
-extern byte text_colour_b;
-
-extern int  text_colour_hue;
 
 
 extern char text_str[MAX_TWEET_SIZE];
@@ -1108,18 +1101,17 @@ void Host::position_to_menu_value() {
       break;
 
     case TEXT_SIZE_MENU:
-      Serial.print(text_size);
+      Serial.print(text_parameters.text_size);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_size_menu);
       break;
 
     case SCROLL_SPEED_MENU:
-      if (current_scroll_direction == 1)       Serial.print(x_pos_dir - 128);
-      else                                     Serial.print(y_pos_dir - 128);
-      Serial.print(" -> range: -");
-      Serial.print(menu_limits.scroll_speed_menu - 129);
-      Serial.print(divide_string);
-      Serial.print(menu_limits.scroll_speed_menu - 128);
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.scroll_speed_x);            break;
+        case 2: Serial.print(menu_items.scroll_speed_y);            break;       
+      }
       break;
 
     case FAN_SPEED_MENU:
@@ -1144,29 +1136,45 @@ void Host::position_to_menu_value() {
       break;
 
     case TEXT_COLOUR_RED:
-      Serial.print(text_colour_r);
+      Serial.print(text_parameters.red);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_red_menu);
       break;
 
     case TEXT_COLOUR_GREEN:
-      Serial.print(text_colour_g);
+      Serial.print(text_parameters.green);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_green_menu);
       break;
 
     case TEXT_COLOUR_BLUE:
-      Serial.print(text_colour_b);
+      Serial.print(text_parameters.blue);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_blue_menu);
       break;
 
     case TEXT_COLOUR_HUE:
-      Serial.print(text_colour_hue);
+      Serial.print(text_parameters.hue);
       Serial.print(" -> range: ");
       Serial.print(menu_limits.text_colour_hue_min);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_hue_max);
+      break;
+
+          case SCROLL_SPEED_MENU_X:
+      Serial.print(text_cursor.x_pos_dir - 128);
+      Serial.print(" -> range: -");
+      Serial.print(menu_limits.scroll_speed_menu - 129);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.scroll_speed_menu - 128);
+      break;
+
+          case SCROLL_SPEED_MENU_Y:
+      Serial.print(text_cursor.y_pos_dir - 128);
+      Serial.print(" -> range: -");
+      Serial.print(menu_limits.scroll_speed_menu - 129);
+      Serial.print(divide_string);
+      Serial.print(menu_limits.scroll_speed_menu - 128);
       break;
   }
 
@@ -1247,7 +1255,7 @@ void HostNativeUSB::init_native_usb() {
 
 void HostNativeUSB::push_serial(int loc, String data) {
 
-  String tx = push_keyword + space_colon_string + types[loc] + space_colon_string + data;
+  String tx = data_out_keyword + space_colon_string + types[loc] + space_colon_string + data;
   SerialUSB.print(tx);
 
 }

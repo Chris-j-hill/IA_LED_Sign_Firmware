@@ -287,6 +287,16 @@ void Encoder::encoder_position_limits() {
       if (encoder_parameters.position < menu_limits.text_colour_hue_min) set_encoder_position(menu_limits.text_colour_hue_min);
       else if (encoder_parameters.position > menu_limits.text_colour_hue_max) set_encoder_position(menu_limits.text_colour_hue_max);
       break;
+
+    case SCROLL_SPEED_MENU_X:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) set_encoder_position(menu_limits.scroll_speed_menu_x);
+      break;
+
+    case SCROLL_SPEED_MENU_Y:
+      if (encoder_parameters.position < 0) set_encoder_position(0);
+      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) set_encoder_position(menu_limits.scroll_speed_menu_y);
+      break;
   }
 }
 

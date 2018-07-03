@@ -12,7 +12,7 @@ extern struct Frame sensor_data_frame;
 extern struct Frame menu_frame;
 extern struct Frame pos_frame;
 extern struct Text_cursor text_cursor;
-extern struct Text text;
+extern struct Text text_parameters;
 
 extern char text_str[MAX_TWEET_SIZE];
 extern const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
@@ -157,7 +157,7 @@ int Coms_Serial::send_text_frame(int address) {   //function to send strings to 
 
 
 
-  text_cursor.x_min = -text.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
+  text_cursor.x_min = -text_parameters.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
 
   text_frame.num_frames = 1 + (strlen(text_str) / (FRAME_DATA_LENGTH)); //send this many frames
   text_frame.this_frame = 1;

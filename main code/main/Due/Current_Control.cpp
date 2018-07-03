@@ -309,11 +309,31 @@ void Current_Meter::read_current_meter(byte sensor) {
 
   if (sensor == 1) {
     current_meter_parameters.reading1 = reading_to_amps(analogRead(current_meter_parameters.pin1));
+
+    //check if current meter reading is reasonable, progressively more drastic action
+    if (!current_meter_santiy_check()) {
+      //restart megas...
+      if (!current_meter_santiy_check()) {
+        //disable screen outputs...
+        if (!current_meter_santiy_check()) {
+          //disconnect screen power (install relay)...
+        }
+      }
+    }
   }
 
   else {
     current_meter_parameters.reading2 = reading_to_amps(analogRead(current_meter_parameters.pin2));
   }
 }
+
+
+bool Current_Meter::current_meter_santiy_check() {
+  // estimate approximate current draw based on brightness of screens and content on screen
+  // return true if reasonable reading, false if possible short or open circuit
+
+  return true;
+}
+
 
 #endif  // Current_Control_CPP

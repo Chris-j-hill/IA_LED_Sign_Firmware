@@ -43,8 +43,7 @@ const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
 const char *sd_int_file = NETWORK_LOGIN_FILENAME;
 
-bool sd_card1_detected = true;    //display these parameters, update with check_for_SD_card_inserted()
-bool sd_card2_detected = true;
+
 
 
 SD_Card card1;

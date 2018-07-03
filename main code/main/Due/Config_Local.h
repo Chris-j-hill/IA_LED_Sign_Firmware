@@ -48,19 +48,14 @@
 #endif
 
 //select one of these colour scales
-#define USING_COLOUR_SET_333
-//#define USING_COLOUR_SET_444    // NOT FINISHED IMPLEMENTATION
-
+//#define USING_COLOUR_SET_333
+//#define USING_COLOUR_SET_444    // highest resolution without loosing data
+#define USING_COLOUR_SET_888      // highest resolution, requires down sampling inputs (actual output might not be as expected)
 
 
 // ______ Text Variables _________
 
-//how often will the text buffer in the megas be refreshed. NB not cursor position 
-#define TEXT_TRANSMIT_PERIOD 2000
-#define DEFAULT_TEXT_SIZE 2
-#define DEFAULT_TEXT_RED_BRIGHTNESS 7
-#define DEFAULT_TEXT_GREEN_BRIGHTNESS 7
-#define DEFAULT_TEXT_BLUE_BRIGHTNESS 7
+
 
 //byte frame_type;             // frame type defines what is to be done with info, ie where string should go or other operation
 //byte frame_length = 150;     // length of current frame
@@ -107,6 +102,7 @@
 #define PREFIX_LDR_1                    30
 #define PREFIX_LDR_2                    31
 #define PREFIX_FAN_SPEED                40
+#define PREFIX_FAN_MINIMUM_SPEED        41
 #define PREFIX_LED_STRIP_BRIGHTNESS     50
 #define PREFIX_SD1_DETECTED             60
 #define PREFIX_SD2_DETECTED             61
@@ -124,9 +120,10 @@
 #define PREFIX_SCREEN_MODE              180
 #define PREFIX_SD_MOUNTED_1             190
 #define PREFIX_SD_MOUNTED_2             191
-// todo
-#define PREFIX_TEXT_SCROLL_SPEED        -1
-#define PREFIX_FAN_MINIMUM_SPEED        -1
+#define PREFIX_TEXT_SCROLL_SPEED_X      200
+#define PREFIX_TEXT_SCROLL_SPEED_Y      201
+
+
 
 //#define SKIP_INTITAL_STARTUP_SEQUENCE
 

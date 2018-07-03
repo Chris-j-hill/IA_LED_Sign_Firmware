@@ -23,6 +23,7 @@
 #define LED_STRIP_MENU                9
 
 //#define SYSTEM_OVERRIDES
+
 //LEVEL 3
 #define TEXT_SIZE_MENU                10
 #define TEXT_COLOUR_MENU              11
@@ -40,13 +41,9 @@
 #define TEXT_COLOUR_BLUE              20
 #define TEXT_COLOUR_HUE               21
 
+#define SCROLL_SPEED_MENU_X           22
+#define SCROLL_SPEED_MENU_Y           23
 
-//TO DO
-
-#define FAN_MIN_TEMP
-#define FAN_MAX_TEMP
-#define CURRENT_DRAW_MAX
-#define SCREEN_BRIGHTNESS
 
 
 struct Menu_tree_items {
@@ -125,7 +122,9 @@ struct Menu_tree_items {
 
 
   // scroll speed
-  String scroll_speed_menu        PROGMEM           = "Scroll Speed";
+  String scroll_speed_menu        PROGMEM           = "Scroll Speed Menu";
+  String scroll_speed_x           PROGMEM           = "X Direction";
+  String scroll_speed_y           PROGMEM           = "Y Direction";
 
   //set fan speed
   String fan_speed_menu           PROGMEM           = "Set Fan Speed";
@@ -168,18 +167,18 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
   byte led_strip_menu                   = 3;
   byte text_size_menu                   = 4;    //size of text characters
   byte text_colour_menu                 = 6;
-  byte scroll_speed_menu                = 255;
+  byte scroll_speed_menu                = 2;
   byte fan_speed_menu                   = 100;
   byte minimum_fan_speed_menu           = 255;
-  unsigned int SD_card_folders_menu     = 2 ^ 32;  // assume there arent this many files on the card!!!
+  uint16_t SD_card_folders_menu         = 2 ^ 16;  // assume there arent this many files on the card!!!
   byte led_strip_brightness_menu        = 255;
   byte text_colour_red_menu             = RED_MAX_VALUE;
   byte text_colour_green_menu           = GREEN_MAX_VALUE;
   byte text_colour_blue_menu            = BLUE_MAX_VALUE;
   uint16_t text_colour_hue_min          = HUE_MIN_VALUE;
-  uint16_t text_colour_hue_max              = HUE_MAX_VALUE;
-
-
+  uint16_t text_colour_hue_max          = HUE_MAX_VALUE;
+  byte scroll_speed_menu_x              = 255;
+  byte scroll_speed_menu_y              = 255;
 
 
 };
@@ -225,7 +224,8 @@ class Menu {
     void display_text_colour_green_menu();
     void display_text_colour_blue_menu();
     void display_text_colour_hue_menu();
-
+    void display_text_scroll_speed_x();    
+    void display_text_scroll_speed_y();
   public:
 
     Menu() {};
@@ -233,7 +233,7 @@ class Menu {
     void display_menu();
     int set_menu_width();   //change the width of the menu on the screen
     void LDR_configuration() {};
-    
+
     int get_current_menu() {
       return current_menu;
     }
