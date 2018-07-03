@@ -62,12 +62,18 @@ struct Text {
 struct Text_cursor {        //xy coordinates of cursor position
   int x = 0;
   int y = 0;
-
-  byte x_min = 0; //on screen min positions  
-  byte y_min = 0;
-
   byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
   byte y_pos_dir = 127;   
+
+  int x_start =0;   // limits for pos, also specify direction, overflow values
+  int y_start =0;   // if conflict between direction and speed and start end points, points win
+  int x_end = 255;
+  int y_end = 255;
+
+  bool x_start_set = false;
+  bool y_start_set = false;
+  bool x_end_set = false;
+  bool y_end_set = false;
   
   bool mega1_updated = false;   //is the mega up to date with current positions, useful if not sending text displaying menu option
   bool mega2_updated = false;
@@ -86,8 +92,6 @@ class Graphics {
   public:
     Graphics() {}
     void flip_direction();
-    void use_hue();
-    void use_rgb();
     void update_brightness();
 
     void update_colour();

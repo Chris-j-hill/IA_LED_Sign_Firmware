@@ -76,6 +76,23 @@
 
 #define LOGGING_PERIOD 500
 
+#define DISP_STRING_COMMAND_LENGTH 12 //max length of the commands used in the string file
+
+#define STRING_FILE_COMMAND_STRING "String"
+#define STRING_FILE_COMMAND_RED "Red"
+#define STRING_FILE_COMMAND_GREEN "Green"
+#define STRING_FILE_COMMAND_BLUE "Blue"
+#define STRING_FILE_COMMAND_HUE "Hue"
+#define STRING_FILE_COMMAND_SIZE "Size"
+#define STRING_FILE_COMMAND_X_SPEED "X Speed"
+#define STRING_FILE_COMMAND_Y_SPEED "Y Speed"
+#define STRING_FILE_COMMAND_X_START_POS "X Start Pos"
+#define STRING_FILE_COMMAND_Y_START_POS "Y Start Pos"
+#define STRING_FILE_COMMAND_X_END_POS "X End Pos"
+#define STRING_FILE_COMMAND_Y_END_POS "X End Pos"
+
+
+
 struct SD_Strings {
 
   String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
@@ -123,9 +140,10 @@ class Card {
     void check_for_files(byte check_card);
     void copy_file(const char *from_filename, const char *to_filename, byte from_device, byte to_device); //copy file to multiple places so as to retain backups of data
     void copy(byte from_device, byte to_device);
-    void files_dont_exist(byte device);
+    void files_dont_exist(byte device);   //set all file_exists variables to false when device connection lost
 
     void retrieve_data(String filename);
+        
     void log_data(String filename, bool truncate = false, bool print_header = false);
 
   public:

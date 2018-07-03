@@ -157,7 +157,7 @@ int Coms_Serial::send_text_frame(int address) {   //function to send strings to 
 
 
 
-  text_cursor.x_min = -text_parameters.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
+  //text_cursor.x_min = -text_parameters.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
 
   text_frame.num_frames = 1 + (strlen(text_str) / (FRAME_DATA_LENGTH)); //send this many frames
   text_frame.this_frame = 1;

@@ -464,8 +464,8 @@ void Menu::display_text_colour_menu() {
       case 2: current_menu = TEXT_COLOUR_GREEN;  break;
       case 3: current_menu = TEXT_COLOUR_BLUE;   break;
       case 4: current_menu = TEXT_COLOUR_HUE;    break;
-      case 5: graphics.use_rgb();                break;
-      case 6: graphics.use_hue();                break;
+      case 5: text_parameters.use_hue = false;   break;
+      case 6: text_parameters.use_hue = true;    break;
 
       default: current_menu = STARTUP;
     }

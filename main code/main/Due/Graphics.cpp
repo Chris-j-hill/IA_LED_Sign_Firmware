@@ -37,13 +37,5 @@ void Graphics::update_brightness() {
   }
 }
 
-void Graphics::use_hue() {
-  text_parameters.use_hue = true;
-}
-void Graphics::use_rgb() {
-  text_parameters.use_hue = false;
-}
-
-
 
 #endif  // Graphics_CPP

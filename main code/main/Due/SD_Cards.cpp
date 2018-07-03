@@ -6,6 +6,9 @@
 #include "Coms.h"
 #include "Fans.h"
 #include "Current_Control.h"
+#include "Graphics.h"
+
+
 SD_Strings SD_string;
 
 SdFile file1;                 // file handling objects, use two objects to address both open files at once
@@ -19,9 +22,6 @@ bool enable_sd_cards = true;
 #else
 bool enable_sd_cards = false;
 #endif
-
-
-
 
 bool sd_cards_enabled = false;
 
@@ -51,10 +51,13 @@ SD_Card card2;
 
 extern char text_str[MAX_TWEET_SIZE];
 
-extern Fan_Struct fan_parameters;
-extern Temp_sensor temp_parameters;
-extern LDR_Struct light_sensor_parameters;
-extern Current_Meter_Struct current_meter_parameters;
+extern struct Fan_Struct fan_parameters;
+extern struct Temp_sensor temp_parameters;
+extern struct LDR_Struct light_sensor_parameters;
+extern struct Current_Meter_Struct current_meter_parameters;
+extern struct Text text_parameters;
+extern struct Text_cursor text_cursor;
+
 
 extern byte screen_brightness;
 Card::Card() {
@@ -678,32 +681,97 @@ void Card::copy(byte from_device, byte to_device) {
 
 void Card::retrieve_data(String filename) {
 
-  if (filename == INT_STRING_FILE) {
-    if (!internal_sd_card.exists(card2.working_dir)) return;
-    internal_sd_card.chdir(card2.working_dir);
+  if (filename == INT_STRING_FILE || filename == EXT_STRING_FILE) {
+    if (filename == INT_STRING_FILE) {
+      if (!internal_sd_card.exists(card2.working_dir)) return;
+      internal_sd_card.chdir(card2.working_dir);
+      file1.open(INT_STRING_FILE, O_READ);
+    }
 
-    char copy_buffer[MAX_TWEET_SIZE] = {'\0'};
+    else if (filename == EXT_STRING_FILE) {
+      if (!external_sd_card.exists(card1.working_dir)) return;
+      external_sd_card.chdir(card1.working_dir);
+      file1.open(EXT_STRING_FILE, O_READ);
+    }
 
-    Serial.println(file2.open(INT_STRING_FILE, O_READ));
+    //    char copy_buffer[MAX_TWEET_SIZE] = {'\0'};
+    //    file1.read(copy_buffer, sizeof(copy_buffer));
+    //    strncpy(text_str, copy_buffer, MAX_TWEET_SIZE);
+    //    file1.close();
 
-    file2.read(copy_buffer, sizeof(copy_buffer));
-    strncpy(text_str, copy_buffer, MAX_TWEET_SIZE);
-    file1.close();
+    char command [DISP_STRING_COMMAND_LENGTH] = {'0'};
+    int16_t char_read;
+
+    while (char_read != -1) {
+
+      int reads = 0;
+
+      while (reads < DISP_STRING_COMMAND_LENGTH) {
+        char_read = file1.read();
+        if ((char)char_read == ':' || (char)char_read == '\n' ||  char_read == -1 ) break;
+        else {
+          command[reads] = (char)char_read;
+          reads++;
+        }
+      }
+
+      if (char_read == ':') {
+        char data_found[MAX_TWEET_SIZE] = {'0'};
+        reads = 0;
+        while (reads < MAX_TWEET_SIZE) {
+          char_read = file1.read();
+          if ((char)char_read == '\n' ||  char_read == -1 ) break;
+          else {
+            data_found[reads] = (char)char_read;
+            reads++;
+          }
+        }
+        int value_found = atoi(data_found); //convert to int for some data types
+
+        if      (strcmp(command, STRING_FILE_COMMAND_STRING) == 0)
+          strncpy(text_str, data_found, sizeof(text_str));
+        else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
+          text_parameters.red = value_found;
+          text_parameters.use_hue = false;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_GREEN) == 0) {
+          text_parameters.green = value_found;
+          text_parameters.use_hue = false;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_BLUE) == 0) {
+          text_parameters.blue = value_found;
+          text_parameters.use_hue = false;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_HUE) == 0) {
+          text_parameters.hue = value_found;
+          text_parameters.use_hue = true;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_SIZE) == 0)
+          text_parameters.text_size = value_found;
+        else if (strcmp(command, STRING_FILE_COMMAND_X_SPEED) == 0)
+          text_cursor.x_pos_dir = value_found;
+        else if (strcmp(command, STRING_FILE_COMMAND_Y_SPEED) == 0)
+          text_cursor.y_pos_dir = value_found;
+        else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
+          text_cursor.x_start = value_found;
+          text_cursor.x_start_set = true;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_Y_START_POS) == 0) {
+          text_cursor.y_start = value_found;
+          text_cursor.y_start_set = true;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_X_END_POS) == 0)  {
+          text_cursor.x_end = value_found;
+          text_cursor.x_end_set = true;
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_Y_END_POS) == 0)   {
+          text_cursor.y_end = value_found;
+          text_cursor.y_end_set = true;
+        }
+
+      }
+    }
   }
-
-  else if (filename == EXT_STRING_FILE) {
-    if (!external_sd_card.exists(card1.working_dir)) return;
-    external_sd_card.chdir(card1.working_dir);
-
-    char copy_buffer[MAX_TWEET_SIZE] = {'\0'};
-
-    file1.open(EXT_STRING_FILE, O_READ);
-
-    file1.read(copy_buffer, sizeof(copy_buffer));
-    strncpy(text_str, copy_buffer, MAX_TWEET_SIZE);
-    file1.close();
-  }
-
   else if (filename == INT_NETWORK_FILE || filename == EXT_NETWORK_FILE) {
 
     char copy_buffer[150] = {'0'};
@@ -744,13 +812,7 @@ void Card::retrieve_data(String filename) {
 
 
   }
-  else if (filename == EXT_NETWORK_FILE) {
 
-    if (!external_sd_card.exists(card1.working_dir)) return;
-    external_sd_card.chdir(card1.working_dir);
-
-    //extract_network_data();
-  }
 }
 
 
