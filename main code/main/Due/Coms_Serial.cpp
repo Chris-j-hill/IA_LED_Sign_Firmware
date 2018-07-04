@@ -56,7 +56,7 @@ void Coms_Serial::init_serial() {
   init_software_serial_to_megas(mega_parameters.baud_rate);
   Serial.println("Setup done");
   ping();
-
+  init_frames(); //build constant parts of frames
 }
 
 
@@ -99,20 +99,10 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
 
-  mega_parameters.enabled1 = true;
-  mega_parameters.enabled2 = true;
-  mega_parameters.enabled3 = true;
-  mega_parameters.enabled4 = true;
-
-  return;
-
 }
 
 void Coms_Serial::ping() {
 
-  Serial1.begin(9600);
-  Serial2.begin(9600);
-  Serial3.begin(9600);
   delay(100);
   //  Serial_1.println(ping_string);
   //  Serial_2.println(ping_string);
@@ -121,47 +111,50 @@ void Coms_Serial::ping() {
 
   int ping_time = millis();
 
-
-  Serial_1.write(ping_string, sizeof(ping_string));
-  Serial_2.write(ping_string, sizeof(ping_string));
-  Serial_3.write(ping_string, sizeof(ping_string));
-  Serial_4.write(ping_string, sizeof(ping_string));
+  if (mega_enabled[0])
+    Serial_1.write(ping_string, sizeof(ping_string));
+  if (mega_enabled[1])
+    Serial_2.write(ping_string, sizeof(ping_string));
+  if (mega_enabled[2])
+    Serial_3.write(ping_string, sizeof(ping_string));
+  if (mega_enabled[3])
+    Serial_4.write(ping_string, sizeof(ping_string));
 
   while (millis() < ping_time + PING_WAIT_PERIOD) {
     char ping_rx = '\0';
-    if (Serial_1.available() != 0) {
+    if (mega_enabled[0] && Serial_1.available() != 0) {
       ping_rx = Serial_1.read();
       Serial.println(ping_rx);
       if (ping_rx == expected_ping_rx)
         mega_parameters.detected1 = true;
       else
-        mega_parameters.enabled1 = false;
+        mega_parameters.detected1 = false;
     }
 
-    if (Serial_2.available() != 0) {
+    if (mega_enabled[1] && Serial_2.available() != 0) {
       ping_rx = Serial_2.read();
       if (ping_rx == expected_ping_rx)
         mega_parameters.detected2 = true;
       else
-        mega_parameters.enabled2 = false;
+        mega_parameters.detected2 = false;
     }
 
-    if (Serial_3.available() != 0) {
+    if (mega_enabled[2] && Serial_3.available() != 0) {
       ping_rx = Serial_3.read();
       if (ping_rx == expected_ping_rx)
         mega_parameters.detected3 = true;
       else
-        mega_parameters.enabled3 = false;
+        mega_parameters.detected3 = false;
     }
 
-    if (Serial_4.available() != 0) {
+    if (mega_enabled[3] && Serial_4.available() != 0) {
       ping_rx = Serial_4.read();
       if (ping_rx == expected_ping_rx)
         mega_parameters.detected4 = true;
       else
-        mega_parameters.enabled4 = false;
+        mega_parameters.detected4 = false;
     }
-    if (mega_parameters.detected1 && mega_parameters.detected2 && mega_parameters.detected3 && mega_parameters.detected4) {
+    if ((mega_enabled[0] ? mega_parameters.detected1 : true) && (mega_enabled[1] ? mega_parameters.detected2 : true) && (mega_enabled[2] ? mega_parameters.detected3 : true) && (mega_enabled[3] ? mega_parameters.detected4 : true)) {
       Serial.println(F("all megas detected"));
       break;
     }
@@ -368,30 +361,18 @@ void Coms_Serial::write_pos_frame(byte address) {
     Sprintln(address);
   }
 
-  if (address == 0) {
-    for (int i = 0; i < pos_frame.frame_length; i++) {
-      Serial_1.write(pos_frame.frame_buffer[i]);
+  if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
+    Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);
 
-    }
-  }
-  else if (address == 1) {
-    for (int i = 0; i < pos_frame.frame_length; i++) {
-      Serial_2.write(pos_frame.frame_buffer[i]);
+  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
+    Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);
+    
+  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
+    Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);
 
-    }
-  }
-  else if (address == 2) {
-    for (int i = 0; i < pos_frame.frame_length; i++) {
-      Serial_3.write(pos_frame.frame_buffer[i]);
+  else  if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
+    Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);
 
-    }
-  }
-  else  if (address == 3) {
-    for (int i = 0; i < pos_frame.frame_length; i++) {
-      Serial_4.write(pos_frame.frame_buffer[i]);
-
-    }
-  }
   else {
     Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
     Sprintln(address);
@@ -493,9 +474,9 @@ void Coms_Serial::write_text_frame() {}  // send to all at once
 void Coms_Serial::check_queues() {
 
   check_pos_frame_queue();
-  check_sensor_date_frame_queue();
-  check_text_frame_queue();
-  check_menu_frame_queue();
+  //check_sensor_date_frame_queue();
+  //check_text_frame_queue();
+  //check_menu_frame_queue();
 
 }
 

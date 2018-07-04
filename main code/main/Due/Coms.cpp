@@ -70,38 +70,6 @@ extern byte screen_mode;   //mode of operation on startup should be both display
 
 
 
-// ______ class functions _______
-
-int Coms::init_software_serial_to_usb_port() {          // init the serial at 115200 baud rate
-
-  Serial.begin(COMS_SPEED);
-  int alpha = millis();
-  while (!Serial) {
-    if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-      //      debug = false;
-      return -1;
-    }
-  }
-
-  return 0;
-}
-
-int Coms::init_software_serial_to_usb_port(int speed) { // init the serial at a custom speed
-
-  if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
-    return (-2);
-
-  Serial.begin(speed);
-  int alpha = millis();
-  while (!Serial) {
-    if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-      //      debug = false;
-      return -1;
-    }
-  }
-
-  return 0;
-}
 
 int Coms::startup_handshake() {  //code to delay the due in initialisation and enable mega startup, simply wait until the megas all set ready pin high
 
@@ -203,7 +171,7 @@ int Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //functio
   return (0);
 }
 
-int Coms::build_pos_frame(int address) {
+void Coms::build_pos_frame() {
 
 
   Sprint(F("Sending cursor positions to address "));
@@ -223,10 +191,10 @@ int Coms::build_pos_frame(int address) {
 
   pos_frame.frame_queued = true; //flag to send frame on new loop
 
-  return (0);
+  //return (0);
 }
 
-int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send the x and y positions of the text cursor
+void Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send the x and y positions of the text cursor
 
   // Wire.write can only handle bytes (0-256) whereas we will need to use positive and negaitve values potientially significantly larger than 256
   // to accomplish this two sucessive bytes are sent to repersent one number. to deal with positive and negative numbers, the coordinate is split into
@@ -246,32 +214,30 @@ int Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send t
     Sprintln("WARNING: failed to send correct coordinate, out of bounds, overflow likely to occur");
 
   if (text_cursor.x > 0) {
-    x_pos_MSB = text_cursor.x / 256; //take the multiples 256 and set as MS byte
+    x_pos_MSB = text_cursor.x >>8; //take the multiples 256 and set as MS byte
     x_pos_MSB = x_pos_MSB + 128; //greater than zero, set MSB to 1
     x_pos_LSB = text_cursor.x % 256; //take the modulo to get the LS byte
   }
   else {
-    x_pos_MSB = text_cursor.x / 256; //take the multiples 256 and set as MS byte
+    x_pos_MSB = text_cursor.x >>8; //take the multiples 256 and set as MS byte
     x_pos_LSB = text_cursor.x % 256; //take the modulo to get the LS byte
   }
 
   if (text_cursor.y > 0) {
-    y_pos_MSB = text_cursor.y / 256; //take the multiples 256 and set as MS byte
+    y_pos_MSB = text_cursor.y >>8; //take the multiples 256 and set as MS byte
     y_pos_MSB = y_pos_MSB + 128; //greater than zero, set MSB to 1
     y_pos_LSB = text_cursor.y % 256; //take the modulo to get the LS byte
   }
   else {
-    y_pos_MSB = text_cursor.y / 256; //take the multiples 256 and set as MS byte
+    y_pos_MSB = text_cursor.y >> 8; //take the multiples 256 and set as MS byte
     y_pos_LSB = text_cursor.y % 256; //take the modulo to get the LS byte
   }
-
 
   pos_frame.frame_buffer[4] = x_pos_MSB;   //write new values to frame
   pos_frame.frame_buffer[5] = x_pos_LSB;
   pos_frame.frame_buffer[6] = y_pos_MSB;
   pos_frame.frame_buffer[7] = y_pos_LSB;
 
-  return (0);
 }
 
 

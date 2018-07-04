@@ -22,7 +22,7 @@ struct   Mega_Serial_Parameters{
   bool detected3 = false;
   bool detected4 = false;
 
-  uint16_t baud_rate = 57600; //<- max stable baud rate = 57600
+  uint16_t baud_rate = COMS_SPEED; //<- max stable baud rate = 57600
   
 };
 

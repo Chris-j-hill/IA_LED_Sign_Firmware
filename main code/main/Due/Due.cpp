@@ -81,6 +81,7 @@ void due_loop() {
 
     card.check_for_sd_card();
     //card.update_data_log();
+    coms_serial.check_queues();
     
   }
 

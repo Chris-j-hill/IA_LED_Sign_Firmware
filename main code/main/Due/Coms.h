@@ -83,7 +83,7 @@ struct Frame {            //frame details for the due, seperate one for the mega
   byte num_frames = 0;
   byte this_frame = 0;
   byte header_checksum = 0;   //can calculate in advance for some pos and menu frames to save time
-  int checksum_address = 0;   // can also allocate in advance for pos and menu frames
+  uint16_t checksum_address = 0;   // can also allocate in advance for pos and menu frames
   bool frame_queued = false;    //queue frame this loop to send at the beginning of next
   
 };
@@ -117,15 +117,11 @@ class Coms {
 
     Coms() {}
 
-    int init_software_serial_to_megas();            // init the software serial at 115200 baud rate
-    int init_software_serial_to_megas(int speed);   // init the serial at a custom speed
-    int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
-    int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
     int pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
-    int build_pos_frame(int address);                                     //function to send the xy coordinates along with a number of other related variables
-    int pack_xy_coordinates() ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
+    void build_pos_frame();                                               //function to send the xy coordinates along with a number of other related variables
+    void pack_xy_coordinates() ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
     int send_all_calibration_data(int address);                          //function to send all data calibration
     bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
     int send_all_pos_on_interrupt();     // function to send pos data to all megas periodically based on timer interrupt

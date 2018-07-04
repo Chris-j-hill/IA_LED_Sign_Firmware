@@ -153,7 +153,7 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
     }
   }
 
-  send_pos_now = true;
+  coms_serial.build_pos_frame();
 }
 
 void Graphics::configure_limits() {
