@@ -17,13 +17,12 @@
 #define REPORT_CURRENT_METER  8
 
 #define REPORT_TEXT           9
-#define REPORT_POS            10
-#define REPORT_SERIAL         11
-#define REPORT_SD_CARD        12
 
-#define REPORT_LDR_CONFIG     13
+#define REPORT_SERIAL         10
+#define REPORT_SD_CARD        11
 
-#define DUMP_FILE             14
+#define REPORT_LDR_CONFIG     12
+#define DUMP_FILE             13
 
 
 
@@ -45,7 +44,7 @@ struct Serial_Sub_Menu {
 
   //these are the terminal input commands to type
   String data_elements [NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-    /*0 */   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current", "text", "position", "serial", "card", "ldr_config"},
+    /*0 */   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current", "text", "serial", "card", "ldr_config", "dump"},
     /*1 */   {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
     /*2 */   {"pin1", "pin2", "pin3", "enable1", "enable2", "enable3"},
     /*3 */   {"pin", "target_brightness", "current_brightness", "increment", "change_interval", "stable_interval", "minimum", "enabled", "fast_interval_on", "sinusoidal", "freq"},
@@ -56,15 +55,15 @@ struct Serial_Sub_Menu {
     /*8 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
     /*9 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
     /*10*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
-    /*11*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
-    /*12*/   {"pin1", "pin2", "enabled1", "enabled2", "network", "password"},
+    /*11*/   {"pin1", "pin2", "enabled1", "enabled2", "network", "password"},
+    /*12*/   {"max1", "min1", "max2", "min2"},
     /*13*/   {"max1", "min1", "max2", "min2"}
   };
 
 
   //these are the help notes for above commands
   String data_descriptions[NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-    /*0 */    {"stop printing data", "data related to fans", "data related to temperature sensors", "data related to led strip", "data related to the menu tree", "data related to the LDR's", "data related to the encoder wheel", "data related to encoder's button", "data related to current meters", "current text setting", "current text position settings", "serial link settings to megas", "sd card settings", "to configure range of ldr readings"},
+    /*0 */    {"stop printing data", "data related to fans", "data related to temperature sensors", "data related to led strip", "data related to the menu tree", "data related to the LDR's", "data related to the encoder wheel", "data related to encoder's button", "data related to current meters", "current text setting", "serial link settings to megas", "sd card settings", "to configure range of ldr readings", "dump specified file to specified serial"},
     /*1 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
     /*2 */    {"sensor 1 attached to this digital pin number", "as above...", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "as above..."},
     /*3 */    {"led strip attached to this digital pin number", "the target brightness", "the current brightness", "ISR increment magnitude", "interval period between ISR when changing brightness", "interval period between ISR when stable", "minimum brightness of led strip", "is the led strip enabled", "can the interval period be set to fast", "set the led behaviour to sinusoidal pulsing", "pulse at this freq if in sinusoidal mode"},
@@ -75,12 +74,12 @@ struct Serial_Sub_Menu {
     /*8 */    {"Current meter 1 attached to this digital pin number", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "max allowable current, due will intervene if current draw higher"},
     /*9 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
     /*10*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
-    /*11*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
-    /*12*/    {"SD card attached to this digital pin number", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "Extracted network name", "Extracted network password"},
+    /*11*/    {"SD card attached to this digital pin number", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "Extracted network name", "Extracted network password"},
+    /*12*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"},
     /*13*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"}
   };
 
-  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS, 9, 6, 11, 0, 5, 5, 5, 5, 0, 0, 0, 6, 4}; //number of columns in each row of the above two arrays
+  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS, 9, 6, 11, 0, 5, 5, 5, 5, 0, 0, 6, 4, 0}; //number of columns in each row of the above two arrays
 
 };
 
@@ -102,7 +101,6 @@ class Host {
     void print_current_meters();
     void print_ldr_config();
     void print_sd_cards();
-    void print_pos();
     void print_text();
 
 

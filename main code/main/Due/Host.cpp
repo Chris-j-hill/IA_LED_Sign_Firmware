@@ -82,19 +82,19 @@ inline void comma_space() {
   Serial.print(comma_space_string);
 }
 
-inline void yes(){
+inline void yes() {
   Serial.print(yes_string);
 }
 
-inline void no(){
+inline void no() {
   Serial.print(no_string);
 }
 
-inline void y(){
-  Serial.print(y_string);  
+inline void y() {
+  Serial.print(y_string);
 }
-inline void n(){
-    Serial.print(n_string);
+inline void n() {
+  Serial.print(n_string);
 }
 
 inline void print_command_name(String command_data) {
@@ -202,11 +202,17 @@ byte Host::data_set_LUT(String data_set) {
     return REPORT_BUTTON;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER])
     return REPORT_CURRENT_METER;
+  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT])
+    return REPORT_TEXT;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_SD_CARD])
     return REPORT_SD_CARD;
 
+
+
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_LDR_CONFIG])
     return REPORT_LDR_CONFIG;
+
+
 
   else
     return 255;
@@ -426,10 +432,6 @@ void Host::print_messages() {
 
       case REPORT_SD_CARD:
         print_sd_cards();
-        break;
-
-      case REPORT_POS:
-        print_pos();
         break;
 
       case REPORT_TEXT:
@@ -857,8 +859,80 @@ void Host::print_sd_cards() {
   Serial.println();
 }
 
-void Host::print_pos() {}
-void Host::print_text() {}
+
+void Host::print_text() {
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Size \tR   G   B   H \t\tUse Hue \tXpos Ypos \tScroll Speeds \tStart points \tEnd Points"));
+  }
+  Serial.print(text_parameters.text_size);
+  tab();
+
+  Serial.print(text_parameters.red);
+  if (text_parameters.red < 10) space();
+  if (text_parameters.red < 100) space();
+  space();
+
+  Serial.print(text_parameters.green);
+  if (text_parameters.green < 10) space();
+  if (text_parameters.green < 100) space();
+  space();
+
+  Serial.print(text_parameters.blue);
+  if (text_parameters.blue < 10) space();
+  if (text_parameters.blue < 100) space();
+  space();
+
+  Serial.print(text_parameters.hue);
+  if (abs(text_parameters.hue < 10)) space();
+  if (abs(text_parameters.hue < 100)) space();
+  if (abs(text_parameters.hue < 1000)) space();
+  if (text_parameters.hue >= 0) space();
+  tab();
+
+  if (text_parameters.use_hue)
+    yes();
+  else
+    no();
+  tab(); tab();
+
+  Serial.print(text_cursor.x);
+  if (abs(text_cursor.x < 10)) space();
+  if (abs(text_cursor.x < 100)) space();
+  if (text_cursor.x >= 0) space();
+  space();
+
+  Serial.print(text_cursor.y);
+  tab(); tab();
+
+  Serial.print(text_cursor.x_pos_dir - 128);
+  if (abs(text_cursor.x_pos_dir - 128 < 10)) space();
+  if (abs(text_cursor.x_pos_dir - 128 < 100)) space();
+  if (text_cursor.x_pos_dir - 128 >= 0) space();
+  space();
+
+  Serial.print(text_cursor.y_pos_dir - 128);
+  tab(); tab();
+
+  Serial.print(text_cursor.x_start);
+  if (abs(text_cursor.x_start < 10)) space();
+  if (abs(text_cursor.x_start < 100)) space();
+  if (text_cursor.x_start >= 0) space();
+  space();
+
+  Serial.print(text_cursor.y_start);
+  tab(); tab();
+
+  Serial.print(text_cursor.x_end);
+  if (abs(text_cursor.x_end < 10)) space();
+  if (abs(text_cursor.x_end < 100)) space();
+  if (text_cursor.x_end >= 0) space();
+  space();
+
+  Serial.print(text_cursor.y_end);
+  Serial.println();
+
+}
 
 
 void Host::print_menu_tree() {
@@ -1110,7 +1184,7 @@ void Host::position_to_menu_value() {
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                    break;
         case 1: Serial.print(menu_items.scroll_speed_x);            break;
-        case 2: Serial.print(menu_items.scroll_speed_y);            break;       
+        case 2: Serial.print(menu_items.scroll_speed_y);            break;
       }
       break;
 
@@ -1161,7 +1235,7 @@ void Host::position_to_menu_value() {
       Serial.print(menu_limits.text_colour_hue_max);
       break;
 
-          case SCROLL_SPEED_MENU_X:
+    case SCROLL_SPEED_MENU_X:
       Serial.print(text_cursor.x_pos_dir - 128);
       Serial.print(" -> range: -");
       Serial.print(menu_limits.scroll_speed_menu - 129);
@@ -1169,7 +1243,7 @@ void Host::position_to_menu_value() {
       Serial.print(menu_limits.scroll_speed_menu - 128);
       break;
 
-          case SCROLL_SPEED_MENU_Y:
+    case SCROLL_SPEED_MENU_Y:
       Serial.print(text_cursor.y_pos_dir - 128);
       Serial.print(" -> range: -");
       Serial.print(menu_limits.scroll_speed_menu - 129);

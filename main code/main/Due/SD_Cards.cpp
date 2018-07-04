@@ -429,13 +429,22 @@ void Card::check_for_sd_card() {
     external_sd_card_prev_read_time = millis();
     if (external_sd_card.begin(card1.pin) && !card1.detected) {
       card1.detected = true;
-      //      Serial.println("Card 1 found, checking card 1");
       check_for_files(EXTERNAL_CARD);  //check if files exist on external card
+      if (card1.network_file_exists) {  //if file exists
+        if (card2.detected) {}            //attempt to update to newer version
+        copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+        retrieve_data(EXT_NETWORK_FILE);//get contents
+      }
+      if (card1.disp_string_file_exists) {
+        if (card2.detected){}
+        copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+        retrieve_data(EXT_STRING_FILE);
+      }
+
     }
     else if (!external_sd_card.begin(card1.pin) && card1.detected) { //card was previously detected but not initialising now
       card1.detected = false;
       files_dont_exist(EXTERNAL_CARD);
-      //      Serial.println(F("Card 1 got disconnected"));
     }
   }
 
@@ -444,19 +453,22 @@ void Card::check_for_sd_card() {
     internal_sd_card_prev_read_time = millis();
     if (internal_sd_card.begin(card2.pin) && !card2.detected) {
       card2.detected = true;
-      //      Serial.println(F("Card 2 found, checking card 2"));
       check_for_files(INTERNAL_CARD);  //check if files exist on external card
-
-      if (card2.network_file_exists)
+      if (card2.network_file_exists) {
+        //if (card1.detected){}
+        //copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
         retrieve_data(INT_NETWORK_FILE);
-      if (card2.disp_string_file_exists)
+      }
+      if (card2.disp_string_file_exists) {
+        //if (card1.detected){}
+        //copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
         retrieve_data(INT_STRING_FILE);
+      }
 
     }
     else if (!internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && card2.detected) {
       card2.detected = false;
       files_dont_exist(INTERNAL_CARD);
-      //      Serial.println(F("Card 2 got disconnected"));
     }
   }
 }
@@ -694,17 +706,12 @@ void Card::retrieve_data(String filename) {
       file1.open(EXT_STRING_FILE, O_READ);
     }
 
-    //    char copy_buffer[MAX_TWEET_SIZE] = {'\0'};
-    //    file1.read(copy_buffer, sizeof(copy_buffer));
-    //    strncpy(text_str, copy_buffer, MAX_TWEET_SIZE);
-    //    file1.close();
-
-    char command [DISP_STRING_COMMAND_LENGTH] = {'0'};
     int16_t char_read;
 
-    while (char_read != -1) {
+    while (char_read != -1 ){//|| num_lines<max_lines) {
 
       int reads = 0;
+      char command [DISP_STRING_COMMAND_LENGTH] = {'\0'};
 
       while (reads < DISP_STRING_COMMAND_LENGTH) {
         char_read = file1.read();
@@ -716,7 +723,7 @@ void Card::retrieve_data(String filename) {
       }
 
       if (char_read == ':') {
-        char data_found[MAX_TWEET_SIZE] = {'0'};
+        char data_found[MAX_TWEET_SIZE/2] = {'\0'};
         reads = 0;
         while (reads < MAX_TWEET_SIZE) {
           char_read = file1.read();
@@ -727,8 +734,8 @@ void Card::retrieve_data(String filename) {
           }
         }
         int value_found = atoi(data_found); //convert to int for some data types
-
-        if      (strcmp(command, STRING_FILE_COMMAND_STRING) == 0)
+        
+        if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0)
           strncpy(text_str, data_found, sizeof(text_str));
         else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
           text_parameters.red = value_found;
@@ -774,7 +781,7 @@ void Card::retrieve_data(String filename) {
   }
   else if (filename == INT_NETWORK_FILE || filename == EXT_NETWORK_FILE) {
 
-    char copy_buffer[150] = {'0'};
+    char copy_buffer[60] = {'\0'};
 
     if (filename == INT_NETWORK_FILE) {
       if (!internal_sd_card.exists(card2.working_dir)) return;
