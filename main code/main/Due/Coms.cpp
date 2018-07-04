@@ -45,11 +45,10 @@ const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61,
 
 byte time_since_last_sent_text_frame = 0;
 bool send_text_now = false;
-volatile bool send_pos_now = false;   //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
+extern volatile bool send_pos_now;  //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
 
 
 byte comms_delay = 0;
-byte pos_update_freq = 5;
 byte pos_frame_length = 13;   //length of frame to transmit to update pos
 
 //char menu_frame[FRAME_OVERHEAD+3] ={0};   // initialise menu_frame, overhead +menu numeber + 2 bytes for encoder position
@@ -67,53 +66,8 @@ extern byte screen_mode;   //mode of operation on startup should be both display
 //mode3: other side on
 
 
-// ______  non class functions _______
 
 
-int attach_timer_pos_update() {
-  //attach pos update interrupt
-  if (!timers.pos_timer_attached) {
-    timers.pos_timer_attached = true;       //indicate the timer is attached
-
-    Timer3.attachInterrupt(send_pos_interrupt);   //attach ISR
-    int fail = set_pos_update_frequency(pos_update_freq);         // set the freq
-
-    if (fail != 0) {
-      Sprintln(F("Failed to attach pos timer"));
-      timers.pos_timer_attached = false;
-      return (-1);    //stop code
-    }
-
-    Timer3.start();
-    Sprintln(F("Attached pos timer"));
-  }
-}
-
-int set_pos_update_frequency(int freq) {
-
-  if (!timers.pos_timer_attached) {
-    Sprintln(F("From 'set_pos_update_frequency': trying to set frequency but timer not attached"));
-    return (-1);
-  }
-  else {  //all good, set freq
-
-    pos_update_freq = freq;   //variable for frame
-
-    Timer3.setFrequency(freq);   //set interval
-
-    return (0);
-  }
-
-}
-
-int set_pos_speed(int x_speed, int y_speed) {           //function to set the speed (pixels per second) the cursor postion is moving at
-  text_cursor.x_pos_dir = x_speed + 128;                              //shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
-  text_cursor.y_pos_dir = y_speed + 128;
-}
-
-void send_pos_interrupt() {    // interrupt to send pos data to all megas
-  send_pos_now = true;
-}
 
 
 // ______ class functions _______
@@ -259,7 +213,7 @@ int Coms::build_pos_frame(int address) {
   pos_frame.frame_buffer[8] =  text_cursor.x_pos_dir;
   pos_frame.frame_buffer[9] =  text_cursor.y_pos_dir;
   pos_frame.frame_buffer[10] = (byte) comms_delay;
-  pos_frame.frame_buffer[11] = (byte) pos_update_freq;
+  pos_frame.frame_buffer[11] = (byte) text_cursor.ISR_freq;
 
   pos_frame.frame_buffer[pos_frame.checksum_address] = pos_frame.header_checksum; //zero checksum
   for (int alpha = HEADER_LENGTH; alpha < pos_frame.checksum_address; alpha++) { //sum of elements

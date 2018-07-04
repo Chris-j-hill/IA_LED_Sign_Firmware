@@ -59,7 +59,12 @@ extern struct Text text_parameters;
 extern struct Text_cursor text_cursor;
 
 
+extern Graphics graphics;
+
 extern byte screen_brightness;
+
+
+
 Card::Card() {
   card1.pin = SD1_ENABLE;
   card2.pin = SD2_ENABLE;
@@ -436,7 +441,7 @@ void Card::check_for_sd_card() {
         retrieve_data(EXT_NETWORK_FILE);//get contents
       }
       if (card1.disp_string_file_exists) {
-        if (card2.detected){}
+        if (card2.detected) {}
         copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
         retrieve_data(EXT_STRING_FILE);
       }
@@ -707,8 +712,12 @@ void Card::retrieve_data(String filename) {
     }
 
     int16_t char_read;
+    bool x_start = false;   //place holders until file read
+    bool y_start = false;
+    bool x_end = false;
+    bool y_end = false;
 
-    while (char_read != -1 ){//|| num_lines<max_lines) {
+    while (char_read != -1 ) { //|| num_lines<max_lines) {
 
       int reads = 0;
       char command [DISP_STRING_COMMAND_LENGTH] = {'\0'};
@@ -723,7 +732,7 @@ void Card::retrieve_data(String filename) {
       }
 
       if (char_read == ':') {
-        char data_found[MAX_TWEET_SIZE/2] = {'\0'};
+        char data_found[MAX_TWEET_SIZE / 2] = {'\0'};
         reads = 0;
         while (reads < MAX_TWEET_SIZE) {
           char_read = file1.read();
@@ -734,9 +743,11 @@ void Card::retrieve_data(String filename) {
           }
         }
         int value_found = atoi(data_found); //convert to int for some data types
-        
-        if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0)
+
+        if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
           strncpy(text_str, data_found, sizeof(text_str));
+          text_parameters.text_str_length = reads;
+        }
         else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
           text_parameters.red = value_found;
           text_parameters.use_hue = false;
@@ -761,24 +772,75 @@ void Card::retrieve_data(String filename) {
           text_cursor.y_pos_dir = value_found;
         else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
           text_cursor.x_start = value_found;
-          text_cursor.x_start_set = true;
+          x_start = true;
         }
         else if (strcmp(command, STRING_FILE_COMMAND_Y_START_POS) == 0) {
           text_cursor.y_start = value_found;
-          text_cursor.y_start_set = true;
+          y_start = true;
         }
         else if (strcmp(command, STRING_FILE_COMMAND_X_END_POS) == 0)  {
           text_cursor.x_end = value_found;
-          text_cursor.x_end_set = true;
+          x_end = true;
         }
         else if (strcmp(command, STRING_FILE_COMMAND_Y_END_POS) == 0)   {
           text_cursor.y_end = value_found;
-          text_cursor.y_end_set = true;
+          y_end = true;
         }
 
       }
     }
+
+    text_cursor.x_start_set = x_start;  //drive to false if not found
+    text_cursor.y_start_set = y_start;
+    text_cursor.x_end_set = x_end;
+    text_cursor.y_end_set = y_end;
+
+    graphics.configure_limits();
+    graphics.reset_position();
+    
+    
+    //
+    //    if (text_cursor.x_start_set && text_cursor.x_end_set) {
+    //      if (text_cursor.x_end > text_cursor.x_start) {
+    //        text_cursor.x_limit_max = text_cursor.x_end;
+    //        text_cursor.x_limit_min = text_cursor.x_start;
+    //      }
+    //      else if (text_cursor.x_end < text_cursor.x_start) {
+    //        text_cursor.x_limit_max = text_cursor.x_start;
+    //        text_cursor.x_limit_min = text_cursor.x_end;
+    //      }
+    //      else
+    //        text_cursor.x_limit_max = text_cursor.x_limit_min = text_cursor.x_start;
+    //
+    //    }
+    //    else {
+    //      text_cursor.x_limit_min = -1*(text_parameters.text_size*text_parameters.text_width*text_parameters.text_str_length);
+    //      text_cursor.x_limit_max = TOTAL_WIDTH;
+    //    }
+    //
+    //    if (text_cursor.y_start_set && text_cursor.y_end_set) {
+    //      if (text_cursor.y_end > text_cursor.y_start) {
+    //        text_cursor.y_limit_max = text_cursor.y_end;
+    //        text_cursor.y_limit_min = text_cursor.y_start;
+    //      }
+    //      else if (text_cursor.y_end < text_cursor.y_start) {
+    //        text_cursor.y_limit_max = text_cursor.y_start;
+    //        text_cursor.y_limit_min = text_cursor.y_end;
+    //      }
+    //      else
+    //        text_cursor.y_limit_max = text_cursor.y_limit_min = text_cursor.y_start;
+    //
+    //    }
+    //    else {
+    //      text_cursor.y_limit_min = -1*(text_parameters.text_size*text_parameters.text_height);
+    //      text_cursor.y_limit_max = SINGLE_MATRIX_HEIGHT;
+    //    }
+    //
+
   }
+
+
+
   else if (filename == INT_NETWORK_FILE || filename == EXT_NETWORK_FILE) {
 
     char copy_buffer[60] = {'\0'};

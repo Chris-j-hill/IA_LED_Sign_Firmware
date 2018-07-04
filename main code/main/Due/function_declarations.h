@@ -2,20 +2,6 @@
 #ifndef Functions_H
 #define Functions_H
 
-//forward declare all classes
-//class Coms;
-//class Coms_Serial;
-//class Coms_i2c;
-//class Card;
-//class Menu;
-//class Internet;
-//class Fans;
-//class Encoder;
-//class Led_strip;
-//class SdFat;
-//class Current_Meter;
-//class Light_Sensor;
-
 
 struct Timers{            //structure for all timers used and related variables
   
@@ -29,11 +15,6 @@ bool pos_timer_attached = false;
 
 };
 
-
-void send_pos_interrupt();
-int set_pos_speed(int x_speed, int y_speed);
-int set_pos_update_frequency(int freq);
-int attach_timer_interrupts();
 
 int send_pos_frame(int address);
 int pack_xy_coordinates();

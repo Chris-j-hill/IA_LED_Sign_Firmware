@@ -863,7 +863,7 @@ void Host::print_sd_cards() {
 void Host::print_text() {
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Size \tR   G   B   H \t\tUse Hue \tXpos Ypos \tScroll Speeds \tStart points \tEnd Points"));
+    Serial.println(F("Size \tR   G   B   H \t\tUse Hue \tXpos Ypos \t\tScroll Speeds \tStart points \tEnd Points \tLimits X- X+ Y- Y+"));
   }
   Serial.print(text_parameters.text_size);
   tab();
@@ -903,6 +903,9 @@ void Host::print_text() {
   space();
 
   Serial.print(text_cursor.y);
+  if (abs(text_cursor.y < 10)) space();
+  if (abs(text_cursor.y < 100)) space();
+  if (text_cursor.y >= 0) space();
   tab(); tab();
 
   Serial.print(text_cursor.x_pos_dir - 128);
@@ -912,7 +915,11 @@ void Host::print_text() {
   space();
 
   Serial.print(text_cursor.y_pos_dir - 128);
-  tab(); tab();
+  if (abs(text_cursor.y_pos_dir - 128 < 10)) space();
+  if (abs(text_cursor.y_pos_dir - 128 < 100)) space();
+  if (text_cursor.y_pos_dir - 128 >= 0) space();
+  space();
+  tab();
 
   Serial.print(text_cursor.x_start);
   if (abs(text_cursor.x_start < 10)) space();
@@ -921,7 +928,10 @@ void Host::print_text() {
   space();
 
   Serial.print(text_cursor.y_start);
-  tab(); tab();
+  if (abs(text_cursor.y_start < 10)) space();
+  if (abs(text_cursor.y_start < 100)) space();
+  if (text_cursor.y_start >= 0) space();
+  space();
 
   Serial.print(text_cursor.x_end);
   if (abs(text_cursor.x_end < 10)) space();
@@ -930,6 +940,18 @@ void Host::print_text() {
   space();
 
   Serial.print(text_cursor.y_end);
+
+  tab();  tab();
+
+  Serial.print(text_cursor.x_limit_min);
+  space();
+  Serial.print(text_cursor.x_limit_max);
+  space();
+  Serial.print(text_cursor.y_limit_min);
+  space();
+  Serial.print(text_cursor.y_limit_max);
+
+
   Serial.println();
 
 }

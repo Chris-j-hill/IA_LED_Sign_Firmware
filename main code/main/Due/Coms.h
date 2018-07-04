@@ -106,14 +106,6 @@ Nack_details nack;
 #endif // ENABLE_ERROR_CHECKING
 
 
-int attach_timer_pos_update();
-
-int set_pos_update_frequency(int freq);
-
-int set_pos_speed(int x_speed, int y_speed);            //function to set the speed (pixels per second) the cursor postion is moving at
-//shift up to allow negatives to be sent as bytes, make sure to shift down on recieve end
-
-void send_pos_interrupt();     // interrupt to send pos data to all megas
 
 
 class Coms {

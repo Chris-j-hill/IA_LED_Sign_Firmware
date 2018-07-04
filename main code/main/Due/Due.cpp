@@ -50,6 +50,7 @@ void due_setup() {
   light_sensor.init_LDR();
   card.init_sd_cards();
   current_meter.init_current_meter();
+  graphics.init_cursor();
 }
 
 

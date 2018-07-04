@@ -31,10 +31,10 @@
 #define STARTUP_DUE_DELAY_PERIOD 500             //if no one wire protocol, just delay, system should be stable so should autosync after a while
 #endif
 
-#define single_matrix_width 64
-#define single_matrix_height 32
+#define SINGLE_MATRIX_WIDTH 64
+#define SINGLE_MATRIX_HEIGHT 32
 #define NUM_SCREENS 4    //per side
-#define TOTAL_WIDTH single_matrix_width * NUM_SCREENS
+#define TOTAL_WIDTH SINGLE_MATRIX_WIDTH * NUM_SCREENS
 
 // Select if the due is enabled or if all megas enabled, if not all megas enabled, choose which
 #define DUE_ENABLED                        
@@ -51,14 +51,6 @@
 //#define USING_COLOUR_SET_333
 //#define USING_COLOUR_SET_444    // highest resolution without loosing data
 #define USING_COLOUR_SET_888      // highest resolution, requires down sampling inputs (actual output colour might not be as expected)
-
-
-// ______ Text Variables _________
-
-
-
-//byte frame_type;             // frame type defines what is to be done with info, ie where string should go or other operation
-//byte frame_length = 150;     // length of current frame
 
 
 // ______ SD Variables _________
