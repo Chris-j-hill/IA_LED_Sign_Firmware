@@ -1063,9 +1063,7 @@ void Card::mount_card(byte card) {
     card1.enabled = true;
     card1.detected = false;
   }
-
 }
-
 
 void Card::files_dont_exist(byte device) {
 

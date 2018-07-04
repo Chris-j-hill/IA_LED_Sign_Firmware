@@ -6,6 +6,28 @@
 #include "Config_Local.h"
 #include "Coms.h"
 
+#define PING_WAIT_PERIOD 200
+
+
+
+struct   Mega_Serial_Parameters{
+
+  bool enabled1 = MEGA_1_ENABLED;
+  bool enabled2 = MEGA_2_ENABLED;
+  bool enabled3 = MEGA_3_ENABLED;
+  bool enabled4 = MEGA_4_ENABLED;
+
+  bool detected1 = false;
+  bool detected2 = false;
+  bool detected3 = false;
+  bool detected4 = false;
+
+  uint16_t baud_rate = 57600; //<- max stable baud rate = 57600
+  
+};
+
+
+
 class Coms_Serial: public Coms {    
 
   private:
@@ -22,8 +44,10 @@ class Coms_Serial: public Coms {
 
     void send_long_text_frame(byte address);
     void send_short_text_frame(byte address);
-    
 
+    void ping();
+    void init_software_serial_to_megas(int speed = 115200);
+    
   public:
 
     Coms_Serial(){}
@@ -31,8 +55,8 @@ class Coms_Serial: public Coms {
 //    int init_serial();            // init the serial at 115200 baud rate
 //    int init_serial(int speed);   // init the serial at a custom speed
 
-    int init_software_serial_to_megas();
-    int init_software_serial_to_megas(int speed);
+    
+    void init_serial();
     
     int Serial_write_frame(int address) ;                                  //function to actually send the frame to given address
     void write_frame(int address);

@@ -45,7 +45,13 @@
 #define MEGA_2_ENABLED true
 #define MEGA_3_ENABLED true
 #define MEGA_4_ENABLED true
+#else
+#define MEGA_1_ENABLED false
+#define MEGA_2_ENABLED false
+#define MEGA_3_ENABLED false
+#define MEGA_4_ENABLED false
 #endif
+
 
 //select one of these colour scales
 //#define USING_COLOUR_SET_333

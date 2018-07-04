@@ -85,7 +85,7 @@ struct Frame {            //frame details for the due, seperate one for the mega
   byte header_checksum = 0;   //can calculate in advance for some pos and menu frames to save time
   int checksum_address = 0;   // can also allocate in advance for pos and menu frames
   bool frame_queued = false;    //queue frame this loop to send at the beginning of next
-
+  
 };
 
 

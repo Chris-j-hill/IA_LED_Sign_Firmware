@@ -39,57 +39,31 @@ auto& Serial_3 = serial_tc7;
 serial_tc8_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_4 = serial_tc8;
 
+Mega_Serial_Parameters mega_parameters;
+
+char ping_string[] PROGMEM = "ping";
+char expected_ping_rx PROGMEM = 'p';
+
+
 
 
 //methods for Coms_Serial class
 
 #ifdef USE_SERIAL_TO_MEGAS
 
-int Coms_Serial::init_software_serial_to_megas() {      // initialise serial at set baud rate speed of 115200
+void Coms_Serial::init_serial() {
 
-  //init four soft serial objects on due
-  Serial_1.begin(
-    RX_PIN_1,
-    TX_PIN_1,
-    SOFT_UART_BIT_RATE,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );
-  Serial_2.begin(
-    RX_PIN_2,
-    TX_PIN_2,
-    SOFT_UART_BIT_RATE,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );
-  Serial_3.begin(
-    RX_PIN_3,
-    TX_PIN_3,
-    SOFT_UART_BIT_RATE,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );
-  Serial_4.begin(
-    RX_PIN_4,
-    TX_PIN_4,
-    SOFT_UART_BIT_RATE,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );
-  return 0;
+  init_software_serial_to_megas(mega_parameters.baud_rate);
+  Serial.println("Setup done");
+  ping();
 
 }
 
-int Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
+
+void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
   //ensure the speed is a standard baud rate
   if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
-    return (-2);
-  //if (debug){      //if debug mode, init serial, if debug false dont bether with this
-  int alpha = millis();
+    return;
 
   Serial_1.begin(
     RX_PIN_1,
@@ -99,6 +73,7 @@ int Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise seri
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
+
   Serial_2.begin(
     RX_PIN_2,
     TX_PIN_2,
@@ -123,10 +98,77 @@ int Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise seri
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
-  return 0;
+
+  mega_parameters.enabled1 = true;
+  mega_parameters.enabled2 = true;
+  mega_parameters.enabled3 = true;
+  mega_parameters.enabled4 = true;
+
+  return;
 
 }
 
+void Coms_Serial::ping() {
+
+  Serial1.begin(9600);
+  Serial2.begin(9600);
+  Serial3.begin(9600);
+  delay(100);
+  //  Serial_1.println(ping_string);
+  //  Serial_2.println(ping_string);
+  //  Serial_3.println(ping_string);
+  //Serial_4.println(ping_string);
+
+  int ping_time = millis();
+
+
+  Serial_1.write(ping_string, sizeof(ping_string));
+  Serial_2.write(ping_string, sizeof(ping_string));
+  Serial_3.write(ping_string, sizeof(ping_string));
+  Serial_4.write(ping_string, sizeof(ping_string));
+
+  while (millis() < ping_time + PING_WAIT_PERIOD) {
+    char ping_rx = '\0';
+    if (Serial_1.available() != 0) {
+      ping_rx = Serial_1.read();
+      Serial.println(ping_rx);
+      if (ping_rx == expected_ping_rx)
+        mega_parameters.detected1 = true;
+      else
+        mega_parameters.enabled1 = false;
+    }
+
+    if (Serial_2.available() != 0) {
+      ping_rx = Serial_2.read();
+      if (ping_rx == expected_ping_rx)
+        mega_parameters.detected2 = true;
+      else
+        mega_parameters.enabled2 = false;
+    }
+
+    if (Serial_3.available() != 0) {
+      ping_rx = Serial_3.read();
+      if (ping_rx == expected_ping_rx)
+        mega_parameters.detected3 = true;
+      else
+        mega_parameters.enabled3 = false;
+    }
+
+    if (Serial_4.available() != 0) {
+      ping_rx = Serial_4.read();
+      if (ping_rx == expected_ping_rx)
+        mega_parameters.detected4 = true;
+      else
+        mega_parameters.enabled4 = false;
+    }
+    if (mega_parameters.detected1 && mega_parameters.detected2 && mega_parameters.detected3 && mega_parameters.detected4) {
+      Serial.println(F("all megas detected"));
+      break;
+    }
+  }
+  if (millis() >= ping_time + PING_WAIT_PERIOD)
+    Serial.println("timeout");
+}
 
 
 int Coms_Serial::send_all_text_frames() {   // send the text frame to all megas

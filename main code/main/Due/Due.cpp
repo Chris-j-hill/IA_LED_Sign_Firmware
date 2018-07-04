@@ -29,8 +29,9 @@ Light_Sensor   light_sensor;
 Graphics       graphics;
 Host           host;
 HostNativeUSB  nativeUsb;
-Timers timers;
 
+
+Timers timers; //timers struct
 
 void due_setup() {
 #ifndef DUE_ENABLED    //stop code imidiately if due disabled
@@ -51,6 +52,7 @@ void due_setup() {
   card.init_sd_cards();
   current_meter.init_current_meter();
   graphics.init_cursor();
+  coms_serial.init_serial();
 }
 
 
