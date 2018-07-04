@@ -480,37 +480,37 @@ void Coms_Serial::check_queues() {
 
 }
 
-void Coms_Serial::check_sensor_date_frame_queue() {
+inline void Coms_Serial::check_sensor_date_frame_queue() {
   if (sensor_data_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
     sensor_data_frame.frame_queued = false;
-    for (int i = 0; i < 4; i++) {
+    for (byte i = 0; i < 4; i++) {
       write_sensor_data_frame(i);
     }
   }
 }
 
-void Coms_Serial::check_text_frame_queue() {
+inline void Coms_Serial::check_text_frame_queue() {
   if (text_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
     text_frame.frame_queued = false;
-    for (int i = 0; i < 4; i++) {
+    for (byte i = 0; i < 4; i++) {
       write_text_frame(i);
     }
   }
 }
 
-void Coms_Serial::check_pos_frame_queue() {
+inline void Coms_Serial::check_pos_frame_queue() {
   if (pos_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
     pos_frame.frame_queued = false;
-    for (int i = 0; i < 4; i++) {
+    for (byte i = 0; i < 4; i++) {
       write_pos_frame(i);
     }
   }
 }
 
-void Coms_Serial::check_menu_frame_queue() {
+inline void Coms_Serial::check_menu_frame_queue() {
   if (menu_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
     menu_frame.frame_queued = false;
-    for (int i = 0; i < 4; i++) {
+    for (byte i = 0; i < 4; i++) {
       write_menu_frame(i);
     }
   }
