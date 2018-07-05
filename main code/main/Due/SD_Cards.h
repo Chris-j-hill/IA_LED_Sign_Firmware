@@ -90,7 +90,10 @@
 #define STRING_FILE_COMMAND_Y_START_POS "Y Start Pos"
 #define STRING_FILE_COMMAND_X_END_POS "X End Pos"
 #define STRING_FILE_COMMAND_Y_END_POS "X End Pos"
-
+#define STRING_FILE_COMMAND_NUM_LOOPS "Loops"
+#define STRING_FILE_COMMAND_DISP_TIME "Disp time"
+ 
+#define STRING_FILE_COMMAND_NEXT_FILE "Next File"   //<- define file to read after defined loops is completed
 
 
 struct SD_Strings {
@@ -98,7 +101,7 @@ struct SD_Strings {
   String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
   String Network = "init network";    //store current network
   String Password = "init password";   //store current password
-
+  char next_file[30] = {'\0'};
 };
 
 struct SD_Card {

@@ -698,7 +698,7 @@ void Card::copy(byte from_device, byte to_device) {
 
 void Card::retrieve_data(String filename) {
 
-  if (filename == INT_STRING_FILE || filename == EXT_STRING_FILE) {
+  if (filename == INT_STRING_FILE || filename == EXT_STRING_FILE || (text_cursor.check_for_new_file && filename == SD_string.next_file)) {
     if (filename == INT_STRING_FILE) {
       if (!internal_sd_card.exists(card2.working_dir)) return;
       internal_sd_card.chdir(card2.working_dir);
@@ -711,11 +711,21 @@ void Card::retrieve_data(String filename) {
       file1.open(EXT_STRING_FILE, O_READ);
     }
 
+    else if (filename == SD_string.next_file) {
+      if (!external_sd_card.exists(card2.working_dir)) return;
+      external_sd_card.chdir(card2.working_dir);
+      file1.open(SD_string.next_file, O_READ);
+      text_cursor.check_for_new_file = false;
+    }
+
     int16_t char_read;
     bool x_start = false;   //place holders until file read
     bool y_start = false;
     bool x_end = false;
     bool y_end = false;
+    bool disp_loops_found = false;
+    bool disp_time_found = false;
+    bool next_file_found = false;
 
     while (char_read != -1 ) { //|| num_lines<max_lines) {
 
@@ -786,10 +796,35 @@ void Card::retrieve_data(String filename) {
           text_cursor.y_end = value_found;
           y_end = true;
         }
-
+        else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS) == 0)   {
+          if (value_found > 0) {
+            text_cursor.loops = value_found;
+            disp_loops_found = true;
+          }
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
+          if (value_found > 0) {
+            text_cursor.str_disp_time = value_found;
+            disp_time_found = true;
+          }
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
+          strncpy(SD_string.next_file, data_found, sizeof(reads));
+          //sd_string.next_file = data_found;
+          next_file_found = true;
+        }
       }
     }
 
+    file1.close();
+
+    //will assume any chain of disp files are located on internal sd card for now
+    if (next_file_found && (disp_time_found || disp_loops_found)) {
+      if (!internal_sd_card.exists(SD_string.next_file))  //if file doesnt exist dont jump to that file
+        text_cursor.check_for_new_file = false;
+      else
+        text_cursor.check_for_new_file = true;
+    }
     text_cursor.x_start_set = x_start;  //drive to false if not found
     text_cursor.y_start_set = y_start;
     text_cursor.x_end_set = x_end;
@@ -797,45 +832,6 @@ void Card::retrieve_data(String filename) {
 
     graphics.configure_limits();
     graphics.reset_position();
-    
-    
-    //
-    //    if (text_cursor.x_start_set && text_cursor.x_end_set) {
-    //      if (text_cursor.x_end > text_cursor.x_start) {
-    //        text_cursor.x_limit_max = text_cursor.x_end;
-    //        text_cursor.x_limit_min = text_cursor.x_start;
-    //      }
-    //      else if (text_cursor.x_end < text_cursor.x_start) {
-    //        text_cursor.x_limit_max = text_cursor.x_start;
-    //        text_cursor.x_limit_min = text_cursor.x_end;
-    //      }
-    //      else
-    //        text_cursor.x_limit_max = text_cursor.x_limit_min = text_cursor.x_start;
-    //
-    //    }
-    //    else {
-    //      text_cursor.x_limit_min = -1*(text_parameters.text_size*text_parameters.text_width*text_parameters.text_str_length);
-    //      text_cursor.x_limit_max = TOTAL_WIDTH;
-    //    }
-    //
-    //    if (text_cursor.y_start_set && text_cursor.y_end_set) {
-    //      if (text_cursor.y_end > text_cursor.y_start) {
-    //        text_cursor.y_limit_max = text_cursor.y_end;
-    //        text_cursor.y_limit_min = text_cursor.y_start;
-    //      }
-    //      else if (text_cursor.y_end < text_cursor.y_start) {
-    //        text_cursor.y_limit_max = text_cursor.y_start;
-    //        text_cursor.y_limit_min = text_cursor.y_end;
-    //      }
-    //      else
-    //        text_cursor.y_limit_max = text_cursor.y_limit_min = text_cursor.y_start;
-    //
-    //    }
-    //    else {
-    //      text_cursor.y_limit_min = -1*(text_parameters.text_size*text_parameters.text_height);
-    //      text_cursor.y_limit_max = SINGLE_MATRIX_HEIGHT;
-    //    }
-    //
 
   }
 

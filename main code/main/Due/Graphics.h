@@ -90,6 +90,11 @@ struct Text_cursor {        //xy coordinates of cursor position
   int y_limit_max = SINGLE_MATRIX_HEIGHT;
   int x_limit_min = 0;
   int y_limit_min = 0;
+
+  byte loops =0;
+  int str_disp_time = 0;
+  bool check_for_new_file=false;
+  
 };
 
 
