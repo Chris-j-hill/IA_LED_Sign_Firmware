@@ -76,25 +76,64 @@
 
 #define LOGGING_PERIOD 500
 
-#define DISP_STRING_COMMAND_LENGTH 12 //max length of the commands used in the string file
+#define COMMAND_LENGTH 30 //max length of the commands used in the string file
 
-#define STRING_FILE_COMMAND_STRING "String"
-#define STRING_FILE_COMMAND_RED "Red"
-#define STRING_FILE_COMMAND_GREEN "Green"
-#define STRING_FILE_COMMAND_BLUE "Blue"
-#define STRING_FILE_COMMAND_HUE "Hue"
-#define STRING_FILE_COMMAND_SIZE "Size"
-#define STRING_FILE_COMMAND_X_SPEED "X Speed"
-#define STRING_FILE_COMMAND_Y_SPEED "Y Speed"
-#define STRING_FILE_COMMAND_X_START_POS "X Start Pos"
-#define STRING_FILE_COMMAND_Y_START_POS "Y Start Pos"
-#define STRING_FILE_COMMAND_X_END_POS "X End Pos"
-#define STRING_FILE_COMMAND_Y_END_POS "Y End Pos"
-#define STRING_FILE_COMMAND_NUM_LOOPS_X "X Loops"
-#define STRING_FILE_COMMAND_NUM_LOOPS_Y "Y Loops"
-#define STRING_FILE_COMMAND_DISP_TIME "Disp time"
- 
-#define STRING_FILE_COMMAND_NEXT_FILE "Next File"   //<- define file to read after defined loops is completed
+#define STRING_FILE_COMMAND_STRING          "String"
+#define STRING_FILE_COMMAND_RED             "Red"
+#define STRING_FILE_COMMAND_GREEN           "Green"
+#define STRING_FILE_COMMAND_BLUE            "Blue"
+#define STRING_FILE_COMMAND_HUE             "Hue"
+#define STRING_FILE_COMMAND_SIZE            "Size"
+#define STRING_FILE_COMMAND_X_SPEED         "X Speed"
+#define STRING_FILE_COMMAND_Y_SPEED         "Y Speed"
+#define STRING_FILE_COMMAND_X_START_POS     "X Start Pos"
+#define STRING_FILE_COMMAND_Y_START_POS     "Y Start Pos"
+#define STRING_FILE_COMMAND_X_END_POS       "X End Pos"
+#define STRING_FILE_COMMAND_Y_END_POS       "Y End Pos"
+#define STRING_FILE_COMMAND_NUM_LOOPS_X     "X Loops"
+#define STRING_FILE_COMMAND_NUM_LOOPS_Y     "Y Loops"
+#define STRING_FILE_COMMAND_DISP_TIME       "Disp time" 
+#define STRING_FILE_COMMAND_NEXT_FILE       "Next File"   //<- define file to read after defined loops is completed
+
+#define STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH 30
+
+
+#define CALIBRATION_FILE_COMMAND_FAN_ENABLED          "fan enabled"
+#define CALIBRATION_FILE_COMMAND_TEMP1_ENABLED        "temp1 enabled"
+#define CALIBRATION_FILE_COMMAND_TEMP2_ENABLED        "temp2 enabled"
+#define CALIBRATION_FILE_COMMAND_TEMP3_ENABLED        "temp3 enabled"
+#define CALIBRATION_FILE_COMMAND_STRIP_ENABLED        "strip enabled"
+#define CALIBRATION_FILE_COMMAND_CURRENT1_ENABLED     "current1 enabled"
+#define CALIBRATION_FILE_COMMAND_CURRENT2_ENABLED     "current2 enabled"
+#define CALIBRATION_FILE_COMMAND_LDR1_ENABLED         "ldr1 enabled"
+#define CALIBRATION_FILE_COMMAND_LDR2_ENABLED         "ldr2 enabled"
+#define CALIBRATION_FILE_COMMAND_ENCODER_ENABLED      "encoder enabled"
+#define CALIBRATION_FILE_COMMAND_BUTTON_ENABLED       "button enabled"
+#define CALIBRATION_FILE_COMMAND_SD_CARD1_ENABLED     "card1 enabled"   //<- careful now
+#define CALIBRATION_FILE_COMMAND_SD_CARD2_ENABLED     "card2 enabled"
+
+#define CALIBRATION_FILE_COMMAND_FAN_MIN              "fan min"
+#define CALIBRATION_FILE_COMMAND_FAN_SPEED            "fan speed"
+#define CALIBRATION_FILE_COMMAND_FAN_INCREMENT        "fan increment"
+#define CALIBRATION_FILE_COMMAND_FAN_INTERVAL         "fan interval"
+
+#define CALIBRATION_FILE_COMMAND_STRIP_BRIGHTNESS     "strip birghtness"
+#define CALIBRATION_FILE_COMMAND_STRIP_MINUMUM        "strip min"
+#define CALIBRATION_FILE_COMMAND_STRIP_INCREMENT      "strip increment"
+#define CALIBRATION_FILE_COMMAND_STRIP_INTERVAL       "fan interval"
+
+#define CALIBRATION_FILE_COMMAND_ENCODER_SENSITIVITY  "encoder sensitivity"
+
+#define CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX1      "ldr max 1"
+#define CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX2      "ldr max 2"
+#define CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN1      "ldr min 1"
+#define CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN2      "ldr min 2"
+
+
+
+
+#define CALIBRATION_FILE_DATA_CHAR_LENGTH 10
+
 
 
 struct SD_Strings {
@@ -102,8 +141,8 @@ struct SD_Strings {
   String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
   String Network = "init network";    //store current network
   String Password = "init password";   //store current password
-  char next_file[30] = {'\0'};
-  char null_string[30] = {'\0'};
+  char next_file[STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {'\0'};
+  char null_string[STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {'\0'}; //array of nulls to clear with
 };
 
 struct SD_Card {

@@ -21,6 +21,8 @@ struct Encoder_Struct {   //structure for the encoder
                                           // set clean loop true, do functions on next loop then set both false when finished
   bool enabled = false;
   bool is_attached = false;
+
+  byte sensitivity = 1;   // scaler for how many turns require one position movement to be read
 };
 
 

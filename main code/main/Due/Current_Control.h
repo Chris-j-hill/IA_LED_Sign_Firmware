@@ -56,11 +56,11 @@ struct Current_Meter_Struct {
 
   byte total = 0;
 
-  byte config_max1 = 255;
-  byte config_max2 = 255;
-
-  byte config_min1 = 0;
-  byte config_min2 = 0;
+//  byte config_max1 = 255;
+//  byte config_max2 = 255;
+//
+//  byte config_min1 = 0;
+//  byte config_min2 = 0;
 };
 
 

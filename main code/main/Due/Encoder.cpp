@@ -58,7 +58,7 @@ void update_encoder_ISR () {
         encoder_parameters.PosCount--;
 
       }
-      encoder_parameters.position = encoder_parameters.PosCount / 2;
+      encoder_parameters.position = encoder_parameters.PosCount / (2/encoder_parameters.sensitivity);
 
     }
 

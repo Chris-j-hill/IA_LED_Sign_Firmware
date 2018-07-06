@@ -170,12 +170,6 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
     }
   }
 
-//Serial.print("loops_since_overflow_x : ");
-//Serial.print(loops_since_overflow_x);
-//Serial.print("\tloops_since_overflow_y : ");
-//Serial.println(loops_since_overflow_y);
-
-
   //if the next file exists and we've reached an overflow limit or time limit of this file get new file data
   if (text_cursor.check_for_new_file) {
     if ((text_cursor.found_loops_x && loops_since_overflow_x >= text_cursor.loops_x) || (text_cursor.found_loops_y && loops_since_overflow_y >= text_cursor.loops_y) || (text_cursor.found_time && millis() > text_cursor.change_file_timeout + text_cursor.str_disp_time)) {
@@ -184,8 +178,7 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
       card.retrieve_data(SD_string.next_file);
       loops_since_overflow_x = 0;
       loops_since_overflow_y = 0;
-      
-      //change_file_timeout = millis();
+
     }
   }
 

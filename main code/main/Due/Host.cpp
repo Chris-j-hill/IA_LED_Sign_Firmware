@@ -457,28 +457,29 @@ void Host::print_fans() {
 
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Pin \t ISR attached \t State \t Current Speed \t Target Speed \t Average Temp"));
+    Serial.println(F("Pin \tEnabled \tISR attached  \tCurrent Speed \tTarget Speed \tAverage Temp"));
   }
 
   Serial.print(fan_parameters.pin);
-  Serial.print(F("\t "));
+  tab();
+
+  if (fan_parameters.enabled)
+    yes();
+
+  else
+    no();
+
+  tab(); tab();
 
   if (timers.fan_timer_attached)
     yes();
   else
     no();
 
-  Serial.print(F("\t\t "));
+  tab(); tab();
 
-  if (fan_parameters.enabled)
-    Serial.print(F("On"));
-
-  else
-    Serial.print(F("Off"));
-
-  Serial.print(F("\t "));
   Serial.print(fan_parameters.current_speed);
-  Serial.print(F("\t\t "));
+  tab(); tab();
   Serial.print(fan_parameters.target_speed);
   tab(); tab();
   Serial.print(temp_parameters.avg);
@@ -941,7 +942,7 @@ void Host::print_text() {
   space();
 
   Serial.print(text_cursor.y_end);
-    if (abs(text_cursor.y_end < 10)) space();
+  if (abs(text_cursor.y_end < 10)) space();
   if (abs(text_cursor.y_end < 100)) space();
   if (text_cursor.y_end >= 0) space();
   space();

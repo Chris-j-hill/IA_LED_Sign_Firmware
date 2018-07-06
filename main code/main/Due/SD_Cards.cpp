@@ -2,11 +2,14 @@
 #define SD_Cards_CPP
 
 #include "SD_Cards.h"
-//#include "Due.h"
+
 #include "Coms.h"
 #include "Fans.h"
 #include "Current_Control.h"
 #include "Graphics.h"
+#include "Led_Strip.h"
+#include "Encoder.h"
+
 
 
 SD_Strings SD_string;
@@ -57,6 +60,9 @@ extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
 extern struct Text text_parameters;
 extern struct Text_cursor text_cursor;
+extern struct Led_Strip_Struct led_strip_parameters;
+extern struct Encoder_Struct encoder_parameters;
+extern struct Button_Struct button_parameters;
 
 
 extern Graphics graphics;
@@ -442,9 +448,13 @@ void Card::check_for_sd_card() {
       }
       if (card1.disp_string_file_exists) {
         if (card2.detected)
-          copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
-        Serial.println("Get data");
+          copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD);
         retrieve_data(EXT_STRING_FILE);
+      }
+      if (card2.calibration_file_exists) {
+        if (card2.detected)
+          copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+        retrieve_data(EXT_CALIBRATION_FILE);
       }
 
     }
@@ -461,14 +471,19 @@ void Card::check_for_sd_card() {
       card2.detected = true;
       check_for_files(INTERNAL_CARD);  //check if files exist on external card
       if (card2.network_file_exists) {
-        //if (card1.detected){}
-        //copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+        if (card1.detected)
+          copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
         retrieve_data(INT_NETWORK_FILE);
       }
       if (card2.disp_string_file_exists) {
-        //if (card1.detected){}
-        //copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+        if (card1.detected)
+          copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
         retrieve_data(INT_STRING_FILE);
+      }
+      if (card2.calibration_file_exists) {
+        if (card1.detected)
+          copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+        retrieve_data(INT_CALIBRATION_FILE);
       }
 
     }
@@ -723,7 +738,7 @@ void Card::retrieve_data(String filename) {
       internal_sd_card.chdir(card2.working_dir);
       file1.open(SD_string.next_file, O_READ);
       text_cursor.check_for_new_file = false;
-      
+
     }
 
     else {
@@ -742,12 +757,12 @@ void Card::retrieve_data(String filename) {
     bool disp_time_found = false;
     bool next_file_found = false;
 
-    while (char_read != -1 ) { //|| num_lines<max_lines) {
+    while (char_read != -1 ) {
 
       int reads = 0;
-      char command [DISP_STRING_COMMAND_LENGTH] = {'\0'};
+      char command [COMMAND_LENGTH] = {'\0'};
 
-      while (reads < DISP_STRING_COMMAND_LENGTH) {
+      while (reads < COMMAND_LENGTH) {
         char_read = file1.read();
         if ((char)char_read == ':' || (char)char_read == '\n' ||  char_read == -1 ) break;
         else {
@@ -757,7 +772,7 @@ void Card::retrieve_data(String filename) {
       }
 
       if (char_read == ':') {
-        char data_found[MAX_TWEET_SIZE / 2] = {'\0'};
+        char data_found[MAX_TWEET_SIZE] = {'\0'};
         reads = 0;
         while (reads < MAX_TWEET_SIZE) {
           char_read = file1.read();
@@ -815,30 +830,30 @@ void Card::retrieve_data(String filename) {
           if (value_found > 0) {
             text_cursor.loops_x = value_found;
             disp_loops_found_x = true;
-            
+
           }
         }
         else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_Y) == 0)   {
           if (value_found > 0) {
             text_cursor.loops_y = value_found;
             disp_loops_found_y = true;
-            
+
           }
         }
         else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
           if (value_found > 0) {
             text_cursor.str_disp_time = value_found;
             disp_time_found = true;
-            
+
           }
         }
         else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
           //Serial.println(reads);
-          strncpy(SD_string.next_file, SD_string.null_string, 30);
+          strncpy(SD_string.next_file, SD_string.null_string, STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH);
           strncpy(SD_string.next_file, data_found, reads);
           next_file_found = true;
           Serial.println(SD_string.next_file);
-          
+
         }
       }
     }
@@ -857,11 +872,11 @@ void Card::retrieve_data(String filename) {
       else {
 
         text_cursor.check_for_new_file = true;
-        if (disp_time_found){
+        if (disp_time_found) {
           text_cursor.found_time = true;
           text_cursor.change_file_timeout = millis();
         }
-        
+
         if (disp_loops_found_x) text_cursor.found_loops_x = true;
         if (disp_loops_found_y) text_cursor.found_loops_y = true;
       }
@@ -921,8 +936,102 @@ void Card::retrieve_data(String filename) {
 
   }
 
-}
+  else if (filename == INT_CALIBRATION_FILE || filename == EXT_CALIBRATION_FILE) {
+    
+    if (filename == INT_CALIBRATION_FILE) {
+      if (!internal_sd_card.exists(card2.working_dir)) return;
+      internal_sd_card.chdir(card2.working_dir);
+      file1.open(INT_CALIBRATION_FILE, O_READ);
+    }
 
+    else if (filename == EXT_CALIBRATION_FILE) {
+      if (!external_sd_card.exists(card1.working_dir)) {
+        Serial.println("file_doesnt_exist");
+        return;
+      }
+      external_sd_card.chdir(card1.working_dir);
+      file1.open(EXT_CALIBRATION_FILE, O_READ);
+    }
+
+
+    int16_t char_read;
+
+    while (char_read != -1 ) { //|| num_lines<max_lines) {
+
+      int reads = 0;
+      char command [COMMAND_LENGTH] = {'\0'};
+
+      while (reads < COMMAND_LENGTH) {
+        char_read = file1.read();
+        if ((char)char_read == ':' || (char)char_read == '\n' ||  char_read == -1 ) break;
+        else {
+          command[reads] = (char)char_read;
+          reads++;
+        }
+      }
+
+      if (char_read == ':') {
+        char data_found[CALIBRATION_FILE_DATA_CHAR_LENGTH] = {'\0'};
+        reads = 0;
+        while (reads < CALIBRATION_FILE_DATA_CHAR_LENGTH) {
+          char_read = file1.read();
+          if ((char)char_read == '\n' ||  char_read == -1 ) break;
+          else {
+            data_found[reads] = (char)char_read;
+            reads++;
+          }
+        }
+        int value_found = atoi(data_found); //convert to int for some data types
+        bool bool_found;
+        if ((strcmp(data_found, "True") == 0) || (strcmp(data_found, "true") == 0) || (strcmp(data_found, "TRUE") == 0))
+          bool_found = true;
+        else
+          bool_found = false;
+
+        if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_ENABLED) == 0)                   fan_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP1_ENABLED) == 0)            temp_parameters.enabled1 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP2_ENABLED) == 0)            temp_parameters.enabled2 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP3_ENABLED) == 0)            temp_parameters.enabled3 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_ENABLED) == 0)            led_strip_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_CURRENT1_ENABLED) == 0)         current_meter_parameters.enabled1 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_CURRENT2_ENABLED) == 0)         current_meter_parameters.enabled2 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR1_ENABLED) == 0)             light_sensor_parameters.enabled1 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR2_ENABLED) == 0)             light_sensor_parameters.enabled2 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_ENCODER_ENABLED) == 0)          encoder_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_BUTTON_ENABLED) == 0)           button_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_SD_CARD1_ENABLED) == 0)         card1.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_SD_CARD2_ENABLED) == 0)         card2.enabled = bool_found;
+
+
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_MIN) == 0)                  fan_parameters.fan_minimum = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_SPEED) == 0) {
+          fan_parameters.manual_set_value = value_found;
+          fan_parameters.manual = true;
+        }
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_INCREMENT) == 0)            fan_parameters.change_increment = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_INTERVAL) == 0)             fan_parameters.fan_change_interval = value_found;
+
+
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_BRIGHTNESS) == 0)         led_strip_parameters.current_brightness = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_MINUMUM) == 0)            led_strip_parameters.minimum_on = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_INCREMENT) == 0)          led_strip_parameters.change_increment = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_INTERVAL) == 0)           led_strip_parameters.change_interval = value_found;
+
+
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_ENCODER_SENSITIVITY) == 0)      encoder_parameters.sensitivity = value_found;
+
+
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX1) == 0)           light_sensor_parameters.config_max1 = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX2) == 0)           light_sensor_parameters.config_max2 = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN1) == 0)           light_sensor_parameters.config_min1 = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN2) == 0)           light_sensor_parameters.config_min2 = value_found;
+      }
+    }
+    file1.close();
+
+
+  }
+}
 
 void Card::log_data(String filename, bool truncate, bool print_header) {
 
