@@ -6,6 +6,7 @@
 #include "Config_Local.h"
 #include "Current_control.h"
 #include "Coms_Serial.h"
+#include "SD_Cards.h"
 
 #include "function_declarations.h"
 
@@ -29,8 +30,8 @@ extern byte screen_brightness;
 
 volatile bool send_pos_now;
 
-
-
+extern struct SD_Strings SD_string;
+extern Card card;
 
 
 void Graphics::flip_direction() {
@@ -94,8 +95,12 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
   int8_t x_incr = text_cursor.x_pos_dir - 128;
   int8_t y_incr = text_cursor.y_pos_dir - 128;
 
-  x_incr = round(x_incr * text_cursor.ISR_freq * XY_SPEED_UNITS);
-  y_incr = round(y_incr * text_cursor.ISR_freq * XY_SPEED_UNITS);
+  static uint16_t loops_since_overflow_x = 0;
+  static uint16_t loops_since_overflow_y = 0;
+  
+  double temp = text_cursor.ISR_freq * XY_SPEED_UNITS;
+  x_incr = round(x_incr * temp);
+  y_incr = round(y_incr * temp);
 
   //increment cursor in correct direction
   if (text_cursor.x_start_set && text_cursor.x_end_set) {
@@ -109,10 +114,14 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
 
     //overflow value
     if (text_cursor.x_start != text_cursor.x_end) {
-      if (text_cursor.x_start < text_cursor.x_end && text_cursor.x > text_cursor.x_end)
+      if (text_cursor.x_start < text_cursor.x_end && text_cursor.x > text_cursor.x_end) {
         text_cursor.x = text_cursor.x_start;
-      if (text_cursor.x_start > text_cursor.x_end && text_cursor.x < text_cursor.x_end)
+        loops_since_overflow_x ++;
+      }
+      if (text_cursor.x_start > text_cursor.x_end && text_cursor.x < text_cursor.x_end) {
         text_cursor.x = text_cursor.x_start;
+        loops_since_overflow_x ++;
+      }
     }
   }
   else {
@@ -122,8 +131,10 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
     }
     else if (text_cursor.x < text_cursor.x_limit_min && x_incr < 0) {
       text_cursor.x = text_cursor.x_limit_max;
+      loops_since_overflow_x ++;
     }
   }
+
 
 
   if (text_cursor.y_start_set && text_cursor.y_end_set) {
@@ -137,22 +148,48 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
 
     //overflow value
     if (text_cursor.y_start != text_cursor.y_end) {
-      if (text_cursor.y_start < text_cursor.y_end && text_cursor.y > text_cursor.y_end)
+      if (text_cursor.y_start < text_cursor.y_end && text_cursor.y > text_cursor.y_end) {
         text_cursor.y = text_cursor.y_start;
-      if (text_cursor.y_start > text_cursor.y_end && text_cursor.y < text_cursor.y_end)
+        loops_since_overflow_y ++;
+      }
+      if (text_cursor.y_start > text_cursor.y_end && text_cursor.y < text_cursor.y_end) {
         text_cursor.y = text_cursor.y_start;
+        loops_since_overflow_y ++;
+      }
     }
   }
   else {
     text_cursor.y += y_incr;
     if (text_cursor.y > text_cursor.y_limit_max && y_incr > 0) {
       text_cursor.y = text_cursor.y_limit_min;
+      loops_since_overflow_y ++;
     }
     else if (text_cursor.y < text_cursor.y_limit_min && y_incr < 0) {
       text_cursor.y = text_cursor.y_limit_max;
+      loops_since_overflow_y ++;
     }
   }
 
+//Serial.print("loops_since_overflow_x : ");
+//Serial.print(loops_since_overflow_x);
+//Serial.print("\tloops_since_overflow_y : ");
+//Serial.println(loops_since_overflow_y);
+
+
+  //if the next file exists and we've reached an overflow limit or time limit of this file get new file data
+  if (text_cursor.check_for_new_file) {
+    if ((text_cursor.found_loops_x && loops_since_overflow_x >= text_cursor.loops_x) || (text_cursor.found_loops_y && loops_since_overflow_y >= text_cursor.loops_y) || (text_cursor.found_time && millis() > text_cursor.change_file_timeout + text_cursor.str_disp_time)) {
+      
+      Serial.println("read new file condition met");
+      card.retrieve_data(SD_string.next_file);
+      loops_since_overflow_x = 0;
+      loops_since_overflow_y = 0;
+      
+      //change_file_timeout = millis();
+    }
+  }
+
+  //send out data
   coms_serial.build_pos_frame();
 }
 

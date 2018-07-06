@@ -91,10 +91,14 @@ struct Text_cursor {        //xy coordinates of cursor position
   int x_limit_min = 0;
   int y_limit_min = 0;
 
-  byte loops =0;
+  uint16_t loops_x =0;
+  uint16_t loops_y =0;
   int str_disp_time = 0;
   bool check_for_new_file=false;
-  
+  bool found_loops_x = false;
+  bool found_loops_y = false;
+  bool found_time = false;
+  int change_file_timeout; //<- on file change, reset this
 };
 
 

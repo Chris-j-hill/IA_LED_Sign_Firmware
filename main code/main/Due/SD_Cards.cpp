@@ -46,8 +46,8 @@ const char *sd_int_file = NETWORK_LOGIN_FILENAME;
 
 
 
-SD_Card card1;
-SD_Card card2;
+SD_Card card1;    //external card struct
+SD_Card card2;    //internal card struct
 
 extern char text_str[MAX_TWEET_SIZE];
 
@@ -66,8 +66,8 @@ extern byte screen_brightness;
 
 
 Card::Card() {
-  card1.pin = SD1_ENABLE;
-  card2.pin = SD2_ENABLE;
+  card1.pin = SD2_ENABLE;
+  card2.pin = SD1_ENABLE;
 
   card1.enabled = enable_sd_cards;
   card2.enabled = enable_sd_cards;
@@ -441,8 +441,9 @@ void Card::check_for_sd_card() {
         retrieve_data(EXT_NETWORK_FILE);//get contents
       }
       if (card1.disp_string_file_exists) {
-        if (card2.detected) {}
-        copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+        if (card2.detected)
+          copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+        Serial.println("Get data");
         retrieve_data(EXT_STRING_FILE);
       }
 
@@ -706,24 +707,38 @@ void Card::retrieve_data(String filename) {
     }
 
     else if (filename == EXT_STRING_FILE) {
-      if (!external_sd_card.exists(card1.working_dir)) return;
+      if (!external_sd_card.exists(card1.working_dir)) {
+        Serial.println("file_doesnt_exist");
+        return;
+      }
       external_sd_card.chdir(card1.working_dir);
       file1.open(EXT_STRING_FILE, O_READ);
     }
 
     else if (filename == SD_string.next_file) {
-      if (!external_sd_card.exists(card2.working_dir)) return;
-      external_sd_card.chdir(card2.working_dir);
+      if (!internal_sd_card.exists(card2.working_dir)) {
+        Serial.println("failed to open new file");
+        return;
+      }
+      internal_sd_card.chdir(card2.working_dir);
       file1.open(SD_string.next_file, O_READ);
       text_cursor.check_for_new_file = false;
+      
     }
+
+    else {
+      Serial.println("cant retrieve from that file");
+      return;
+    }
+
 
     int16_t char_read;
     bool x_start = false;   //place holders until file read
     bool y_start = false;
     bool x_end = false;
     bool y_end = false;
-    bool disp_loops_found = false;
+    bool disp_loops_found_x = false;
+    bool disp_loops_found_y = false;
     bool disp_time_found = false;
     bool next_file_found = false;
 
@@ -777,9 +792,9 @@ void Card::retrieve_data(String filename) {
         else if (strcmp(command, STRING_FILE_COMMAND_SIZE) == 0)
           text_parameters.text_size = value_found;
         else if (strcmp(command, STRING_FILE_COMMAND_X_SPEED) == 0)
-          text_cursor.x_pos_dir = value_found;
+          text_cursor.x_pos_dir = value_found + 128;
         else if (strcmp(command, STRING_FILE_COMMAND_Y_SPEED) == 0)
-          text_cursor.y_pos_dir = value_found;
+          text_cursor.y_pos_dir = value_found + 128;
         else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
           text_cursor.x_start = value_found;
           x_start = true;
@@ -796,22 +811,34 @@ void Card::retrieve_data(String filename) {
           text_cursor.y_end = value_found;
           y_end = true;
         }
-        else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS) == 0)   {
+        else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_X) == 0)   {
           if (value_found > 0) {
-            text_cursor.loops = value_found;
-            disp_loops_found = true;
+            text_cursor.loops_x = value_found;
+            disp_loops_found_x = true;
+            
+          }
+        }
+        else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_Y) == 0)   {
+          if (value_found > 0) {
+            text_cursor.loops_y = value_found;
+            disp_loops_found_y = true;
+            
           }
         }
         else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
           if (value_found > 0) {
             text_cursor.str_disp_time = value_found;
             disp_time_found = true;
+            
           }
         }
         else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
-          strncpy(SD_string.next_file, data_found, sizeof(reads));
-          //sd_string.next_file = data_found;
+          //Serial.println(reads);
+          strncpy(SD_string.next_file, SD_string.null_string, 30);
+          strncpy(SD_string.next_file, data_found, reads);
           next_file_found = true;
+          Serial.println(SD_string.next_file);
+          
         }
       }
     }
@@ -819,12 +846,28 @@ void Card::retrieve_data(String filename) {
     file1.close();
 
     //will assume any chain of disp files are located on internal sd card for now
-    if (next_file_found && (disp_time_found || disp_loops_found)) {
-      if (!internal_sd_card.exists(SD_string.next_file))  //if file doesnt exist dont jump to that file
+    if (next_file_found && (disp_time_found || disp_loops_found_x || disp_loops_found_y)) {
+      if (!internal_sd_card.exists(SD_string.next_file)) { //if file doesnt exist dont jump to that file
         text_cursor.check_for_new_file = false;
-      else
+        text_cursor.found_loops_x = false;
+        text_cursor.found_loops_y = false;
+        text_cursor.found_time = false;
+      }
+
+      else {
+
         text_cursor.check_for_new_file = true;
+        if (disp_time_found){
+          text_cursor.found_time = true;
+          text_cursor.change_file_timeout = millis();
+        }
+        
+        if (disp_loops_found_x) text_cursor.found_loops_x = true;
+        if (disp_loops_found_y) text_cursor.found_loops_y = true;
+      }
     }
+
+
     text_cursor.x_start_set = x_start;  //drive to false if not found
     text_cursor.y_start_set = y_start;
     text_cursor.x_end_set = x_end;

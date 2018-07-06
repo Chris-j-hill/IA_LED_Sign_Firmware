@@ -933,6 +933,7 @@ void Host::print_text() {
   if (text_cursor.y_start >= 0) space();
   space();
 
+  tab();
   Serial.print(text_cursor.x_end);
   if (abs(text_cursor.x_end < 10)) space();
   if (abs(text_cursor.x_end < 100)) space();
@@ -940,8 +941,12 @@ void Host::print_text() {
   space();
 
   Serial.print(text_cursor.y_end);
+    if (abs(text_cursor.y_end < 10)) space();
+  if (abs(text_cursor.y_end < 100)) space();
+  if (text_cursor.y_end >= 0) space();
+  space();
 
-  tab();  tab();
+  tab();
 
   Serial.print(text_cursor.x_limit_min);
   space();

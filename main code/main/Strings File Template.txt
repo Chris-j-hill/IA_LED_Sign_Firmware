@@ -1,0 +1,16 @@
+String:string to display
+Red:2
+Green:4
+Blue:6
+Hue:1000
+Size:2
+X Speed:4
+Y Speed:-1
+X Start Pos:0
+Y Start Pos:32
+X End Pos:0
+Y End Pos:255
+X Loops:2
+Y Loops:10
+Disp time:100000
+Next File:Next file in the chain.txt

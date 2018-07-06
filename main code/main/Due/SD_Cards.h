@@ -89,8 +89,9 @@
 #define STRING_FILE_COMMAND_X_START_POS "X Start Pos"
 #define STRING_FILE_COMMAND_Y_START_POS "Y Start Pos"
 #define STRING_FILE_COMMAND_X_END_POS "X End Pos"
-#define STRING_FILE_COMMAND_Y_END_POS "X End Pos"
-#define STRING_FILE_COMMAND_NUM_LOOPS "Loops"
+#define STRING_FILE_COMMAND_Y_END_POS "Y End Pos"
+#define STRING_FILE_COMMAND_NUM_LOOPS_X "X Loops"
+#define STRING_FILE_COMMAND_NUM_LOOPS_Y "Y Loops"
 #define STRING_FILE_COMMAND_DISP_TIME "Disp time"
  
 #define STRING_FILE_COMMAND_NEXT_FILE "Next File"   //<- define file to read after defined loops is completed
@@ -102,6 +103,7 @@ struct SD_Strings {
   String Network = "init network";    //store current network
   String Password = "init password";   //store current password
   char next_file[30] = {'\0'};
+  char null_string[30] = {'\0'};
 };
 
 struct SD_Card {
@@ -145,7 +147,7 @@ class Card {
     void copy(byte from_device, byte to_device);
     void files_dont_exist(byte device);   //set all file_exists variables to false when device connection lost
 
-    void retrieve_data(String filename);
+    
         
     void log_data(String filename, bool truncate = false, bool print_header = false);
 
@@ -165,6 +167,7 @@ class Card {
 
     void safely_eject_card(byte card);
     void mount_card(byte card);
+    void retrieve_data(String filename);
 
 };
 
