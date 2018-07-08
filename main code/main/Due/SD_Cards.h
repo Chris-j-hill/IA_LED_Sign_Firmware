@@ -19,6 +19,10 @@
 #define errorExit(msg) errorHalt_P(PSTR(msg))
 #define initError(msg) initErrorHalt_P(PSTR(msg))
 
+#define set_as_active() chvol()
+
+
+
 #define NETWORK_INFO_NAME_LENGTH 25 //number of bytes to use when parsing files for network info
 #define MAX_NETWORK_NAME_LENGTH               NETWORK_INFO_NAME_LENGTH
 #define MAX_NETWORK_PASSWORD_LENGTH           NETWORK_INFO_NAME_LENGTH
@@ -53,7 +57,7 @@
 #define INT_LOG_FILE "DataLog.CSV"
 
 #define EXT_CALIBRATION_FILE "Cal.BIN"
-#define INT_CALIBRATION_FILE "Cal.BIN"
+#define INT_CALIBRATION_FILE "Cal_int.BIN"
 
 #define EXT_INSTRUCTION_FILE "Instruct.BIN"
 #define INT_INSTRUCTION_FILE "Instruct.BIN"
@@ -94,6 +98,8 @@
 #define STRING_FILE_COMMAND_NUM_LOOPS_Y     "Y Loops"
 #define STRING_FILE_COMMAND_DISP_TIME       "Disp time" 
 #define STRING_FILE_COMMAND_NEXT_FILE       "Next File"   //<- define file to read after defined loops is completed
+#define STRING_FILE_COMMAND_SCREEN_MODE     "Screen Mode"
+
 
 #define STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH 30
 
@@ -182,7 +188,7 @@ class Card {
 
 
     void check_for_files(byte check_card);
-    void copy_file(const char *from_filename, const char *to_filename, byte from_device, byte to_device); //copy file to multiple places so as to retain backups of data
+    void copy_file(String from_string, String to_string, byte from_device, byte to_device); //copy file to multiple places so as to retain backups of data
     void copy(byte from_device, byte to_device);
     void files_dont_exist(byte device);   //set all file_exists variables to false when device connection lost
 

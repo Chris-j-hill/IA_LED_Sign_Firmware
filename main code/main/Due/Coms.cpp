@@ -67,7 +67,11 @@ extern byte screen_mode;   //mode of operation on startup should be both display
 
 
 
-
+#ifndef ALL_MEGAS_ENABLED
+    bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};
+#else
+    bool mega_enabled[4] = {true, true, true, true};  // ignore communication if board is false
+#endif
 
 
 
@@ -153,7 +157,7 @@ int Coms::startup_handshake() {  //code to delay the due in initialisation and e
 //  return (0);
 //}
 
-int Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //function to pack a frame of text to display
+void Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //function to pack a frame of text to display
 
   // function to pack a frame based on a given offset (ie this frames number)
   // maybe generalise later to accept calls from multiple frame building methods
@@ -167,8 +171,6 @@ int Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //functio
       if (i == FRAME_DATA_LENGTH) break;     //copy string until end or 28 bytes copied
     }
   }
-
-  return (0);
 }
 
 void Coms::build_pos_frame() {
@@ -242,226 +244,226 @@ void Coms::pack_xy_coordinates() {       //function to pack the 4 bytes to send 
 
 
 
-
-int Coms::send_all_calibration_data(int address) {     //function to send all data
-
-  //function to send all the sensor data. loop through all sensor values
-
-  byte frameNum = 1;
-  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
-  int offset = 0;
-  bool frame_to_be_sent = false;
-
-  sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
-  sensor_data_frame.frame_buffer[2] = numFrames;
-  sensor_data_frame.frame_buffer[3] = frameNum;
-
-  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
-
-    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
-      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
-
-    }
-    else
-      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
-
-    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
-      offset++;
-
-    else if (frame_to_be_sent) {
-      frameNum++;     //increment the frame number
-      offset = 0;     //reset offset for new frame
-      //write_sensor_data_frame();
-      sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
-      sensor_data_frame.frame_buffer[2] = numFrames;
-      sensor_data_frame.frame_buffer[3] = frameNum;
-    }
-
-  }
-
-  return (0);
-
-}
-
-bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
-
-  // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
-  // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
-  // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
-  byte type = 3;
-  int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
-
-  //switch statement to pack the frame;
-  switch (sensor_prefix) {
-    case PREFIX_CURRENT_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
-      break;
-
-    case PREFIX_CURRENT_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
-      break;
-
-    case PREFIX_TEMP_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp1;
-      break;
-
-    case PREFIX_TEMP_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp2;
-      break;
-
-    case PREFIX_TEMP_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp3;
-      break;
-
-    case PREFIX_LDR_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading1;
-      break;
-
-    case PREFIX_LDR_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading2;
-      break;
-
-    case PREFIX_FAN_SPEED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.target_speed;
-      break;
-
-    case PREFIX_LED_STRIP_BRIGHTNESS:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.target_brightness;
-      break;
-
-    case PREFIX_SD1_DETECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
-      break;
-
-    case PREFIX_SD2_DETECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.detected ? (byte) 1 : (byte) 0;
-      break;
-
-    case PREFIX_EHTERNET_CONNECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
-      break;
-
-    case PREFIX_WIFI_CONNECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
-      break;
-
-    case PREFIX_SCREEN_BRIGHTNESS:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness = 100;
-      else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
-      break;
-
-    case PREFIX_TEXT_SIZE:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.text_size;
-      break;
-
-    case PREFIX_TEXT_COLOUR_R:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.red;
-      break;
-
-
-    case PREFIX_TEXT_COLOUR_G:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.green;
-      break;
-
-
-    case PREFIX_TEXT_COLOUR_B:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.blue;
-      break;
-
-    case PREFIX_TEXT_HUE_MSB:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
-      break;
-
-    case PREFIX_TEXT_HUE_LSB:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
-      break;
-
-    case PREFIX_TEXT_USE_HUE:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.use_hue ? (byte) 1 : (byte) 0;
-      break;
-
-    case PREFIX_DEBUG_STATE:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-#ifdef DEBUG
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 1;
-#else
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 0;
-#endif
-      break;
-
-    case PREFIX_SCREEN_MODE:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_mode;
-      break;
-
-    case PREFIX_SD_MOUNTED_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.enabled;
-      break;
-
-    case PREFIX_SD_MOUNTED_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.enabled;
-      break;
-
-    case PREFIX_TEXT_SCROLL_SPEED_X:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.x_pos_dir;
-      break;
-
-    case PREFIX_TEXT_SCROLL_SPEED_Y:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.y_pos_dir;
-      break;
-
-    case PREFIX_FAN_MINIMUM_SPEED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_minimum;
-      break;
-
-    default:  Sprint("Error: Prefix not defined. Prefix :");
-      Sprintln(sensor_prefix);
-
-  }
-
-
-  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= 29) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
-    return (false);
-  }
-  else {
-    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2);
-    sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
-    sensor_data_frame.checksum = 0; //calculate checksum
-    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
-      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
-    }
-    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = sensor_data_frame.checksum;
-    sensor_data_frame.frame_queued = true;
-    return (true);                    //frame_sent, send notification back
-  }
-
-}
+//
+//int Coms::send_all_calibration_data(int address) {     //function to send all data
+//
+//  //function to send all the sensor data. loop through all sensor values
+//
+//  byte frameNum = 1;
+//  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
+//  int offset = 0;
+//  bool frame_to_be_sent = false;
+//
+//  sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
+//  sensor_data_frame.frame_buffer[2] = numFrames;
+//  sensor_data_frame.frame_buffer[3] = frameNum;
+//
+//  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
+//
+//    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
+//      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
+//
+//    }
+//    else
+//      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
+//
+//    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
+//      offset++;
+//
+//    else if (frame_to_be_sent) {
+//      frameNum++;     //increment the frame number
+//      offset = 0;     //reset offset for new frame
+//      //write_sensor_data_frame();
+//      sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
+//      sensor_data_frame.frame_buffer[2] = numFrames;
+//      sensor_data_frame.frame_buffer[3] = frameNum;
+//    }
+//
+//  }
+//
+//  return (0);
+//
+//}
+//
+//bool Coms::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
+//
+//  // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
+//  // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
+//  // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
+//  byte type = 3;
+//  int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
+//
+//  //switch statement to pack the frame;
+//  switch (sensor_prefix) {
+//    case PREFIX_CURRENT_1:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
+//      break;
+//
+//    case PREFIX_CURRENT_2:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
+//      break;
+//
+//    case PREFIX_TEMP_1:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp1;
+//      break;
+//
+//    case PREFIX_TEMP_2:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp2;
+//      break;
+//
+//    case PREFIX_TEMP_3:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp3;
+//      break;
+//
+//    case PREFIX_LDR_1:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading1;
+//      break;
+//
+//    case PREFIX_LDR_2:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading2;
+//      break;
+//
+//    case PREFIX_FAN_SPEED:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.target_speed;
+//      break;
+//
+//    case PREFIX_LED_STRIP_BRIGHTNESS:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.target_brightness;
+//      break;
+//
+//    case PREFIX_SD1_DETECTED:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
+//      break;
+//
+//    case PREFIX_SD2_DETECTED:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.detected ? (byte) 1 : (byte) 0;
+//      break;
+//
+//    case PREFIX_EHTERNET_CONNECTED:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
+//      break;
+//
+//    case PREFIX_WIFI_CONNECTED:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
+//      break;
+//
+//    case PREFIX_SCREEN_BRIGHTNESS:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness = 100;
+//      else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
+//      break;
+//
+//    case PREFIX_TEXT_SIZE:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.text_size;
+//      break;
+//
+//    case PREFIX_TEXT_COLOUR_R:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.red;
+//      break;
+//
+//
+//    case PREFIX_TEXT_COLOUR_G:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.green;
+//      break;
+//
+//
+//    case PREFIX_TEXT_COLOUR_B:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.blue;
+//      break;
+//
+//    case PREFIX_TEXT_HUE_MSB:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+//      break;
+//
+//    case PREFIX_TEXT_HUE_LSB:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
+//      break;
+//
+//    case PREFIX_TEXT_USE_HUE:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.use_hue ? (byte) 1 : (byte) 0;
+//      break;
+//
+//    case PREFIX_DEBUG_STATE:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//#ifdef DEBUG
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 1;
+//#else
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 0;
+//#endif
+//      break;
+//
+//    case PREFIX_SCREEN_MODE:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_mode;
+//      break;
+//
+//    case PREFIX_SD_MOUNTED_1:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.enabled;
+//      break;
+//
+//    case PREFIX_SD_MOUNTED_2:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.enabled;
+//      break;
+//
+//    case PREFIX_TEXT_SCROLL_SPEED_X:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.x_pos_dir;
+//      break;
+//
+//    case PREFIX_TEXT_SCROLL_SPEED_Y:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.y_pos_dir;
+//      break;
+//
+//    case PREFIX_FAN_MINIMUM_SPEED:
+//      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+//      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_minimum;
+//      break;
+//
+//    default:  Sprint("Error: Prefix not defined. Prefix :");
+//      Sprintln(sensor_prefix);
+//
+//  }
+//
+//
+//  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= 29) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
+//    return (false);
+//  }
+//  else {
+//    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2);
+//    sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
+//    sensor_data_frame.checksum = 0; //calculate checksum
+//    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
+//      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
+//    }
+//    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = sensor_data_frame.checksum;
+//    sensor_data_frame.frame_queued = true;
+//    return (true);                    //frame_sent, send notification back
+//  }
+//
+//}
 
 int Coms::send_all_pos_on_interrupt() {    // function to send pos data to all megas if timer interrupt has indicated they should be sent
 

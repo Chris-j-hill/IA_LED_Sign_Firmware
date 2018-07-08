@@ -17,7 +17,7 @@
 // class constructors
 
 Coms_Serial    coms_serial;
-Coms_i2c       coms_i2c;
+//Coms_i2c       coms_i2c;
 Card           card;
 Menu           menu;
 Internet       internet;

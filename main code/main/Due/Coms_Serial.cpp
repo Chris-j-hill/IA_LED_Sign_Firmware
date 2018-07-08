@@ -3,22 +3,45 @@
 
 #include "Coms_Serial.h"
 #include "Coms.h"
-//#include "Due.h"
 #include "Due_Pins.h"
 #include "Graphics.h"
+#include "Current_Control.h"
+#include "Fans.h"
+#include "Internet.h"
+#include "SD_Cards.h"
+#include "Led_Strip.h"
+#include "Encoder.h"
 
 extern struct Frame text_frame;
 extern struct Frame sensor_data_frame;
 extern struct Frame menu_frame;
 extern struct Frame pos_frame;
+
+
+
+//give access to these structs
+extern struct Led_Strip_Struct led_strip_parameters;
+extern struct Temp_sensor temp_parameters;
+extern struct Fan_Struct fan_parameters;        //create fan struct
+extern struct Text text;
 extern struct Text_cursor text_cursor;
+extern struct Timers timers;
+extern struct Encoder_Struct encoder_parameters;     //create encoder struct
+extern struct Button_Struct button_parameters;       //create button struct
+extern struct LDR_Struct light_sensor_parameters;
+extern struct Current_Meter_Struct current_meter_parameters;
+extern struct SD_Card card1;
+extern struct SD_Card card2;
 extern struct Text text_parameters;
+extern struct Text_cursor text_cursor;
 
 extern char text_str[MAX_TWEET_SIZE];
 extern const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
 
 extern byte time_since_last_sent_text_frame;
 extern byte menu_width;
+
+extern bool mega_enabled[4];
 
 
 #ifdef USE_SERIAL_TO_MEGAS
@@ -44,8 +67,8 @@ Mega_Serial_Parameters mega_parameters;
 char ping_string[] PROGMEM = "ping";
 char expected_ping_rx PROGMEM = 'p';
 
-
-
+extern byte screen_brightness;
+extern byte screen_mode;
 
 //methods for Coms_Serial class
 
@@ -164,27 +187,15 @@ void Coms_Serial::ping() {
 }
 
 
-int Coms_Serial::send_all_text_frames() {   // send the text frame to all megas
+void Coms_Serial::send_all_text_frames(bool send_now) {   // send the text frame to all megas
 
-  if (millis() > time_since_last_sent_text_frame + TEXT_TRANSMIT_PERIOD) {
+  if ((send_now = true) || (millis() > time_since_last_sent_text_frame + TEXT_TRANSMIT_PERIOD)) {
     time_since_last_sent_text_frame = millis();
-    for (int alpha = 1; alpha <= NUM_SCREENS; alpha++) {
-
-      Sprint(F("Sending text frame to address "));
-      Sprintln(alpha);
-
-      int fail = send_text_frame(alpha);
-      if (fail != 0) {
-        Sprint(F("Failed to send string to mega"));
-        Sprintln(alpha);
-        return (-1);
-      }
-    }
+    send_text_frame();
   }
-  return (0);
 }
 
-int Coms_Serial::send_text_frame(int address) {   //function to send strings to display on screen
+void Coms_Serial::send_text_frame(byte address) {   //function to send strings to display on screen
 
   // function calculates the number of frames required to send the string, then loops,
   // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
@@ -214,62 +225,49 @@ int Coms_Serial::send_text_frame(int address) {   //function to send strings to 
     pack_disp_string_frame(text_frame.frame_type, text_frame.this_frame);//function to pack the frame with which ever data is relevant
     text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
 
-    //    write_text_frame();
+    write_text_frame(address);
 
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
-    delayMicroseconds(10000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
+    delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
 
   } while (text_frame.this_frame <= text_frame.num_frames);
-
-  return (0);
 }
 
 
-int Coms_Serial::Serial_write_frame(int address) {   //function to actually send the frame to given address
+void Coms_Serial::Serial_write_frame(byte address) {   //function to actually send the frame to given address
 
-
-  if (!mega_enabled[address - 1]) {
-
-    Sprintln(F("Mega disabled, did not attempt transmission"));
-    return (-1);
-  }
-
-  if (address == 1) {
-    for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-      Serial_1.write(text_frame.frame_buffer[i]);
-
+  if (address == 1 || address == 0) {
+    if (mega_enabled[0] && mega_parameters.detected1) {
+      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
+        Serial_1.write(text_frame.frame_buffer[i]);
+      }
     }
   }
-  else if (address == 2) {
-    for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-      Serial_2.write(text_frame.frame_buffer[i]);
-
+  else if (address == 2 || address == 0) {
+    if (mega_enabled[1] && mega_parameters.detected2) {
+      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
+        Serial_2.write(text_frame.frame_buffer[i]);
+      }
     }
   }
-  else if (address == 3) {
-    for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-      Serial_3.write(text_frame.frame_buffer[i]);
-
+  else if (address == 3 || address == 0) {
+    if (mega_enabled[2] && mega_parameters.detected3) {
+      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
+        Serial_3.write(text_frame.frame_buffer[i]);
+      }
     }
   }
-  else  if (address == 4) {
-    for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-      Serial_4.write(text_frame.frame_buffer[i]);
-
+  else  if (address == 4 || address == 0) {
+    if (mega_enabled[3] && mega_parameters.detected4) {
+      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
+        Serial_4.write(text_frame.frame_buffer[i]);
+      }
     }
   }
-  else {
-    Sprintln(F("Address invalid"));
-    return -1;
-  }
-
-
   //clear frame from last iteration
   for (int beta = 0; beta < MEGA_SERIAL_BUFFER_LENGTH; beta++) {
     text_frame.frame_buffer[beta] = 0;
   }
-
-  return (0);
 }
 
 
@@ -312,46 +310,34 @@ void Coms_Serial::send_pos_frame() {  //build frame and send position to all meg
 
 }
 
+void write_sensor_data_frame(byte address) {
+  
+  if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
+    Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
 
+  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
+    Serial_2.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
+
+  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
+    Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
+
+  else if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
+    Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
+}
 
 void Coms_Serial::write_menu_frame(byte address) {   //function to actually send the frame to given address
 
+  if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
+    Serial_1.write(menu_frame.frame_buffer, menu_frame.frame_length);
 
-  if (!mega_enabled[address]) {
+  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
+    Serial_2.write(menu_frame.frame_buffer, menu_frame.frame_length);
 
-    Sprint(F("Mega disabled, no menu sent \t address: "));
-    Sprintln(address);
-  }
+  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
+    Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);
 
-  if (address == 0) {
-    for (int i = 0; i < menu_frame.frame_length; i++) {
-      Serial_1.write(menu_frame.frame_buffer[i]);
-
-    }
-  }
-  else if (address == 1) {
-    for (int i = 0; i < menu_frame.frame_length; i++) {
-      Serial_2.write(menu_frame.frame_buffer[i]);
-
-    }
-  }
-  else if (address == 2) {
-    for (int i = 0; i < menu_frame.frame_length; i++) {
-      Serial_3.write(menu_frame.frame_buffer[i]);
-
-    }
-  }
-  else  if (address == 3) {
-    for (int i = 0; i < menu_frame.frame_length; i++) {
-      Serial_4.write(menu_frame.frame_buffer[i]);
-
-    }
-  }
-  else {
-    Sprint(F("Address invalid, no menu sent to mega \t attempted address:"));
-    Sprintln(address);
-  }
-
+  else if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
+    Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);
 }
 
 void Coms_Serial::write_pos_frame(byte address) {
@@ -366,7 +352,7 @@ void Coms_Serial::write_pos_frame(byte address) {
 
   else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
     Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);
-    
+
   else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
     Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);
 
@@ -383,7 +369,7 @@ void Coms_Serial::write_pos_frame(byte address) {
 void Coms_Serial::write_text_frame(byte address) {
   if (!mega_enabled[address]) {
 
-    Sprint(F("Mega disabled, no pos sent \t address: "));
+    Sprint(F("Mega disabled, no text sent \t address: "));
     Sprintln(address);
   }
 
@@ -515,6 +501,230 @@ inline void Coms_Serial::check_menu_frame_queue() {
     }
   }
 }
+
+
+
+void Coms_Serial::send_all_calibration_data(int address) {     //function to send all data
+
+  //function to send all the sensor data. loop through all sensor values
+
+  byte frameNum = 1;
+  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
+  int offset = 0;
+  bool frame_to_be_sent = false;
+
+  sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
+  sensor_data_frame.frame_buffer[2] = numFrames;
+  sensor_data_frame.frame_buffer[3] = frameNum;
+
+  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
+
+    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
+      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
+
+    }
+    else
+      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
+
+    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
+      offset++;
+
+    else if (frame_to_be_sent) {
+      frameNum++;     //increment the frame number
+      offset = 0;     //reset offset for new frame
+      
+      write_sensor_data_frame(1);
+      write_sensor_data_frame(2);
+      write_sensor_data_frame(3);
+      write_sensor_data_frame(4);
+      
+      sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
+      sensor_data_frame.frame_buffer[2] = numFrames;
+      sensor_data_frame.frame_buffer[3] = frameNum;
+    }
+  }
+}
+
+bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
+
+  // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
+  // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
+  // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
+  byte type = 3;
+  int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
+
+  //switch statement to pack the frame;
+  switch (sensor_prefix) {
+    case PREFIX_CURRENT_1:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
+      break;
+
+    case PREFIX_CURRENT_2:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = current_meter_parameters.reading2;
+      break;
+
+    case PREFIX_TEMP_1:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp1;
+      break;
+
+    case PREFIX_TEMP_2:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp2;
+      break;
+
+    case PREFIX_TEMP_3:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = temp_parameters.temp3;
+      break;
+
+    case PREFIX_LDR_1:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading1;
+      break;
+
+    case PREFIX_LDR_2:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = light_sensor_parameters.reading2;
+      break;
+
+    case PREFIX_FAN_SPEED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.target_speed;
+      break;
+
+    case PREFIX_LED_STRIP_BRIGHTNESS:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.target_brightness;
+      break;
+
+    case PREFIX_SD1_DETECTED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
+      break;
+
+    case PREFIX_SD2_DETECTED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.detected ? (byte) 1 : (byte) 0;
+      break;
+
+    case PREFIX_EHTERNET_CONNECTED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = ethernet_connected ? (byte) 1 : (byte) 0;
+      break;
+
+    case PREFIX_WIFI_CONNECTED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = wifi_connected ? (byte) 1 : (byte) 0;
+      break;
+
+    case PREFIX_SCREEN_BRIGHTNESS:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness = 100;
+      else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
+      break;
+
+    case PREFIX_TEXT_SIZE:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.text_size;
+      break;
+
+    case PREFIX_TEXT_COLOUR_R:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.red;
+      break;
+
+
+    case PREFIX_TEXT_COLOUR_G:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.green;
+      break;
+
+
+    case PREFIX_TEXT_COLOUR_B:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.blue;
+      break;
+
+    case PREFIX_TEXT_HUE_MSB:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      break;
+
+    case PREFIX_TEXT_HUE_LSB:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
+      break;
+
+    case PREFIX_TEXT_USE_HUE:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.use_hue ? (byte) 1 : (byte) 0;
+      break;
+
+    case PREFIX_DEBUG_STATE:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+#ifdef DEBUG
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 1;
+#else
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte) 0;
+#endif
+      break;
+
+    case PREFIX_SCREEN_MODE:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_mode;
+      break;
+
+    case PREFIX_SD_MOUNTED_1:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card1.enabled;
+      break;
+
+    case PREFIX_SD_MOUNTED_2:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.enabled;
+      break;
+
+    case PREFIX_TEXT_SCROLL_SPEED_X:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.x_pos_dir;
+      break;
+
+    case PREFIX_TEXT_SCROLL_SPEED_Y:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.y_pos_dir;
+      break;
+
+    case PREFIX_FAN_MINIMUM_SPEED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_minimum;
+      break;
+
+    default:  Sprint("Error: Prefix not defined. Prefix :");
+      Sprintln(sensor_prefix);
+
+  }
+
+
+  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= 29) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
+    return (false);
+  }
+  else {
+    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2);
+    sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
+    sensor_data_frame.checksum = 0; //calculate checksum
+    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
+      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
+    }
+    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = sensor_data_frame.checksum;
+    sensor_data_frame.frame_queued = true;
+    return (true);                    //frame_sent, send notification back
+  }
+
+}
+
 
 
 #endif //USE_SERIAL_TO_MEGAS

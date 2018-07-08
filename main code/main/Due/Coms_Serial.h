@@ -10,7 +10,7 @@
 
 
 
-struct   Mega_Serial_Parameters{
+struct   Mega_Serial_Parameters {
 
   bool enabled1 = MEGA_1_ENABLED;
   bool enabled2 = MEGA_2_ENABLED;
@@ -23,12 +23,12 @@ struct   Mega_Serial_Parameters{
   bool detected4 = false;
 
   uint16_t baud_rate = COMS_SPEED; //<- max stable baud rate = 57600
-  
+
 };
 
 
 
-class Coms_Serial: public Coms {    
+class Coms_Serial: public Coms {
 
   private:
     void write_sensor_data_frame(byte address);
@@ -36,7 +36,7 @@ class Coms_Serial: public Coms {
     void write_pos_frame(byte address);
     void write_text_frame(byte address);
     void write_text_frame();   // send to all at once
-    
+
     inline void check_pos_frame_queue();
     inline void check_sensor_date_frame_queue();
     inline void check_text_frame_queue();
@@ -45,28 +45,30 @@ class Coms_Serial: public Coms {
     void send_long_text_frame(byte address);
     void send_short_text_frame(byte address);
 
+
+
+
     void ping();
     void init_software_serial_to_megas(int speed = 115200);
-    
+    void Serial_write_frame(byte address) ;                                  //function to actually send the frame to given address
+
   public:
 
-    Coms_Serial(){}
+    Coms_Serial() {}
 
-//    int init_serial();            // init the serial at 115200 baud rate
-//    int init_serial(int speed);   // init the serial at a custom speed
-
-    
     void init_serial();
-    
-    int Serial_write_frame(int address) ;                                  //function to actually send the frame to given address
+
     void write_frame(int address);
     void send_menu_frame(int menu, int encoder_pos);
-    int send_all_text_frames();
-    int send_text_frame(int address);
+    void send_all_text_frames(bool send_now = false);
+    void send_all_sensor_data_frames(bool send_now = false);
+    void send_text_frame(byte address = 0);
     void send_pos_frame();
-    
+
     void check_queues();
-    
+
+    void send_all_calibration_data(int address);                          //function to send all data calibration
+    bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
 
 };
 
