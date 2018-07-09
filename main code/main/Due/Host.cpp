@@ -878,7 +878,7 @@ void Host::print_text(String command) {
     yes();
   else
     no();
-  tab(); tab(); tab();
+  tab(); tab();
 
   Serial.print(text_parameters[obj_num].text_size);
   tab();

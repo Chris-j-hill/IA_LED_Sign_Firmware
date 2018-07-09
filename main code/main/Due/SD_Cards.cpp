@@ -839,8 +839,8 @@ void Card::retrieve_data(String filename) {
       char_read = file1.read();
 
       if (char_read == -1 ) break;
-      else if ((char)char_read == '{') {   //found an obj marker, decode until '}' found
-
+      else if (char_read == '{') {   //found an obj marker, decode until '}' found
+        Serial.println("found obj marker");
         bool x_start = false;   //place holders until file read
         bool y_start = false;
         bool x_end = false;
@@ -850,142 +850,156 @@ void Card::retrieve_data(String filename) {
         bool disp_time_found = false;
         bool next_file_found = false;
 
-        int reads = 0;
-        char command [COMMAND_LENGTH] = {'\0'};
 
-        while (reads < COMMAND_LENGTH) {
-          char_read = file1.read();
-          if ((char)char_read == ':' || (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
-          else {
-            command[reads] = (char)char_read;
-            reads++;
-          }
-        }
+        
+          if (file1.peek() == 13)
+            file1.read();
+          if (file1.peek() == 10)
+            file1.read();
 
-        if (char_read == ':') {
-          char data_found[MAX_TWEET_SIZE] = {'\0'};
-          reads = 0;
-          while (reads < MAX_TWEET_SIZE) {
+        while (char_read != '}') {
+          
+          int reads = 0;
+          char command [COMMAND_LENGTH] = {'\0'};
+                
+          while (reads < COMMAND_LENGTH) {
             char_read = file1.read();
-            if ((char)char_read == '\n' ||  char_read == -1 ) break;
+            Serial.print((char)char_read);
+            if ((char)char_read == ':' || (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
             else {
-              data_found[reads] = (char)char_read;
+              command[reads] = (char)char_read;
               reads++;
             }
           }
-          int value_found = atoi(data_found); //convert to int for some data types
-
-          if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
-            strncpy(text_str, data_found, sizeof(text_str));
-            text_parameters[i].text_str_length = reads;
-            coms_serial.send_all_text_frames(true);
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
-            text_parameters[i].red = value_found;
-            text_parameters[i].use_hue = false;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_GREEN) == 0) {
-            text_parameters[i].green = value_found;
-            text_parameters[i].use_hue = false;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_BLUE) == 0) {
-            text_parameters[i].blue = value_found;
-            text_parameters[i].use_hue = false;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_HUE) == 0) {
-            text_parameters[i].hue = value_found;
-            text_parameters[i].use_hue = true;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_SIZE) == 0)
-            text_parameters[i].text_size = value_found;
-          else if (strcmp(command, STRING_FILE_COMMAND_X_SPEED) == 0)
-            text_cursor[i].x_pos_dir = value_found + 128;
-          else if (strcmp(command, STRING_FILE_COMMAND_Y_SPEED) == 0)
-            text_cursor[i].y_pos_dir = value_found + 128;
-          else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
-            text_cursor[i].x_start = value_found;
-            x_start = true;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_Y_START_POS) == 0) {
-            text_cursor[i].y_start = value_found;
-            y_start = true;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_X_END_POS) == 0)  {
-            text_cursor[i].x_end = value_found;
-            x_end = true;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_Y_END_POS) == 0)   {
-            text_cursor[i].y_end = value_found;
-            y_end = true;
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_X) == 0)   {
-            if (value_found > 0) {
-              text_cursor[i].loops_x = value_found;
-              disp_loops_found_x = true;
-
-            }
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_Y) == 0)   {
-            if (value_found > 0) {
-              text_cursor[i].loops_y = value_found;
-              disp_loops_found_y = true;
-
-            }
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
-            if (value_found > 0) {
-              text_cursor[i].str_disp_time = value_found;
-              disp_time_found = true;
-
-            }
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
-            //Serial.println(reads);
-            strncpy(SD_string.next_file[i], SD_string.null_string, STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH);
-            strncpy(SD_string.next_file[i], data_found, reads);
-            next_file_found = true;
-            //Serial.println(SD_string.next_file);
-          }
-          else if (strcmp(command, STRING_FILE_COMMAND_SCREEN_MODE) == 0)   {
-            screen_mode = value_found;
-          }
-        }
-
-        else if ((char)char_read == '}') { // reached the end of a text obj block
-
-
-          //will assume any chain of disp files are located on internal sd card for now
-          if (next_file_found && (disp_time_found || disp_loops_found_x || disp_loops_found_y)) {
-            if (!external_sd_card.exists(SD_string.next_file[i])) { //if file doesnt exist dont jump to that file
-              text_cursor[i].check_for_new_file = false;
-              text_cursor[i].found_loops_x = false;
-              text_cursor[i].found_loops_y = false;
-              text_cursor[i].found_time = false;
-            }
-
-            else {
-
-              text_cursor[i].check_for_new_file = true;
-              if (disp_time_found) {
-                text_cursor[i].found_time = true;
-                text_cursor[i].change_file_timeout = millis();
+          Serial.println();
+          if (char_read == ':') {
+            char data_found[MAX_TWEET_SIZE] = {'\0'};
+            reads = 0;
+            while (reads < MAX_TWEET_SIZE) {
+              char_read = file1.read();
+              Serial.print((char)char_read);
+              if ((char)char_read == '\n' ||  char_read == -1 ) break;
+              else {
+                data_found[reads] = (char)char_read;
+                reads++;
               }
+            }
+            Serial.println();
+            int value_found = atoi(data_found); //convert to int for some data types
+            Serial.println(command);
+            Serial.println((int)command);
+            if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
+              strncpy(text_str, data_found, sizeof(text_str));
+              text_parameters[i].text_str_length = reads;
+              coms_serial.send_all_text_frames(true);
+              text_cursor[i].object_used = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
+              text_parameters[i].red = value_found;
+              text_parameters[i].use_hue = false;
+              Serial.println(value_found);
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_GREEN) == 0) {
+              text_parameters[i].green = value_found;
+              text_parameters[i].use_hue = false;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_BLUE) == 0) {
+              text_parameters[i].blue = value_found;
+              text_parameters[i].use_hue = false;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_HUE) == 0) {
+              text_parameters[i].hue = value_found;
+              text_parameters[i].use_hue = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_SIZE) == 0)
+              text_parameters[i].text_size = value_found;
+            else if (strcmp(command, STRING_FILE_COMMAND_X_SPEED) == 0)
+              text_cursor[i].x_pos_dir = value_found + 128;
+            else if (strcmp(command, STRING_FILE_COMMAND_Y_SPEED) == 0)
+              text_cursor[i].y_pos_dir = value_found + 128;
+            else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
+              text_cursor[i].x_start = value_found;
+              x_start = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_Y_START_POS) == 0) {
+              text_cursor[i].y_start = value_found;
+              y_start = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_X_END_POS) == 0)  {
+              text_cursor[i].x_end = value_found;
+              x_end = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_Y_END_POS) == 0)   {
+              text_cursor[i].y_end = value_found;
+              y_end = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_X) == 0)   {
+              if (value_found > 0) {
+                text_cursor[i].loops_x = value_found;
+                disp_loops_found_x = true;
 
-              if (disp_loops_found_x) text_cursor[i].found_loops_x = true;
-              if (disp_loops_found_y) text_cursor[i].found_loops_y = true;
+              }
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_Y) == 0)   {
+              if (value_found > 0) {
+                text_cursor[i].loops_y = value_found;
+                disp_loops_found_y = true;
+
+              }
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
+              if (value_found > 0) {
+                text_cursor[i].str_disp_time = value_found;
+                disp_time_found = true;
+
+              }
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
+              //Serial.println(reads);
+              strncpy(SD_string.next_file[i], SD_string.null_string, STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH);
+              strncpy(SD_string.next_file[i], data_found, reads);
+              next_file_found = true;
+              //Serial.println(SD_string.next_file);
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_SCREEN_MODE) == 0)   {
+              screen_mode = value_found;
             }
           }
-
-
-          text_cursor[i].x_start_set = x_start;  //drive to false if not found
-          text_cursor[i].y_start_set = y_start;
-          text_cursor[i].x_end_set = x_end;
-          text_cursor[i].y_end_set = y_end;
-
-          graphics.configure_limits(i);
-          graphics.reset_position(i);
-          i++;
         }
+        //else if ((char)char_read == '}') { // reached the end of a text obj block
+
+        Serial.println("found obj end marker");
+        //will assume any chain of disp files are located on internal sd card for now
+        if (next_file_found && (disp_time_found || disp_loops_found_x || disp_loops_found_y)) {
+          if (!external_sd_card.exists(SD_string.next_file[i])) { //if file doesnt exist dont jump to that file
+            text_cursor[i].check_for_new_file = false;
+            text_cursor[i].found_loops_x = false;
+            text_cursor[i].found_loops_y = false;
+            text_cursor[i].found_time = false;
+          }
+
+          else {
+
+            text_cursor[i].check_for_new_file = true;
+            if (disp_time_found) {
+              text_cursor[i].found_time = true;
+              text_cursor[i].change_file_timeout = millis();
+            }
+
+            if (disp_loops_found_x) text_cursor[i].found_loops_x = true;
+            if (disp_loops_found_y) text_cursor[i].found_loops_y = true;
+          }
+        }
+
+
+        text_cursor[i].x_start_set = x_start;  //drive to false if not found
+        text_cursor[i].y_start_set = y_start;
+        text_cursor[i].x_end_set = x_end;
+        text_cursor[i].y_end_set = y_end;
+
+        graphics.configure_limits(i);
+        graphics.reset_position(i);
+        i++;
       }
     }
     file1.close();

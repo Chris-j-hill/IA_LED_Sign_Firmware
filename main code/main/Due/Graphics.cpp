@@ -98,99 +98,100 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
   static uint16_t loops_since_overflow_y[MAX_NUM_OF_TEXT_OBJECTS] = {0};
 
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+    if (text_cursor[i].object_used) {
+      int8_t x_incr = text_cursor[i].x_pos_dir - 128;
+      int8_t y_incr = text_cursor[i].y_pos_dir - 128;
 
-    int8_t x_incr = text_cursor[i].x_pos_dir - 128;
-    int8_t y_incr = text_cursor[i].y_pos_dir - 128;
 
+      double temp = text_cursor[i].ISR_freq * XY_SPEED_UNITS;
+      x_incr = round(x_incr * temp);
+      y_incr = round(y_incr * temp);
 
-    double temp = text_cursor[i].ISR_freq * XY_SPEED_UNITS;
-    x_incr = round(x_incr * temp);
-    y_incr = round(y_incr * temp);
+      //increment cursor in correct direction based on start and end points
+      if (text_cursor[i].x_start_set && text_cursor[i].x_end_set) {
+        x_incr = abs(x_incr);
+        if (text_cursor[i].x_start > text_cursor[i].x_end)
+          text_cursor[i].x -= x_incr;
+        else if (text_cursor[i].x_start < text_cursor[i].x_end)
+          text_cursor[i].x += x_incr;
+        else
+          text_cursor[i].x = text_cursor[i].x_start;
 
-    //increment cursor in correct direction based on start and end points
-    if (text_cursor[i].x_start_set && text_cursor[i].x_end_set) {
-      x_incr = abs(x_incr);
-      if (text_cursor[i].x_start > text_cursor[i].x_end)
-        text_cursor[i].x -= x_incr;
-      else if (text_cursor[i].x_start < text_cursor[i].x_end)
+        //overflow value
+        if (text_cursor[i].x_start != text_cursor[i].x_end) {
+          if (text_cursor[i].x_start < text_cursor[i].x_end && text_cursor[i].x > text_cursor[i].x_end) {
+            text_cursor[i].x = text_cursor[i].x_start;
+            loops_since_overflow_x[i] ++;
+          }
+          if (text_cursor[i].x_start > text_cursor[i].x_end && text_cursor[i].x < text_cursor[i].x_end) {
+            text_cursor[i].x = text_cursor[i].x_start;
+            loops_since_overflow_x[i] ++;
+          }
+        }
+      }
+      // increment based on direction alone
+      else {
         text_cursor[i].x += x_incr;
-      else
-        text_cursor[i].x = text_cursor[i].x_start;
-
-      //overflow value
-      if (text_cursor[i].x_start != text_cursor[i].x_end) {
-        if (text_cursor[i].x_start < text_cursor[i].x_end && text_cursor[i].x > text_cursor[i].x_end) {
-          text_cursor[i].x = text_cursor[i].x_start;
-          loops_since_overflow_x[i] ++;
+        if (text_cursor[i].x > text_cursor[i].x_limit_max && x_incr > 0) {
+          text_cursor[i].x = text_cursor[i].x_limit_min;
         }
-        if (text_cursor[i].x_start > text_cursor[i].x_end && text_cursor[i].x < text_cursor[i].x_end) {
-          text_cursor[i].x = text_cursor[i].x_start;
+        else if (text_cursor[i].x < text_cursor[i].x_limit_min && x_incr < 0) {
+          text_cursor[i].x = text_cursor[i].x_limit_max;
           loops_since_overflow_x[i] ++;
         }
       }
-    }
-    // increment based on direction alone
-    else {
-      text_cursor[i].x += x_incr;
-      if (text_cursor[i].x > text_cursor[i].x_limit_max && x_incr > 0) {
-        text_cursor[i].x = text_cursor[i].x_limit_min;
-      }
-      else if (text_cursor[i].x < text_cursor[i].x_limit_min && x_incr < 0) {
-        text_cursor[i].x = text_cursor[i].x_limit_max;
-        loops_since_overflow_x[i] ++;
-      }
-    }
 
 
 
-    if (text_cursor[i].y_start_set && text_cursor[i].y_end_set) {
-      y_incr = abs(y_incr);
-      if (text_cursor[i].y_start > text_cursor[i].y_end)
-        text_cursor[i].y -= y_incr;
-      else if (text_cursor[i].y_start < text_cursor[i].y_end)
-        text_cursor[i].y += x_incr;
-      else
-        text_cursor[i].y = text_cursor[i].y_start;
-
-      //overflow value
-      if (text_cursor[i].y_start != text_cursor[i].y_end) {
-        if (text_cursor[i].y_start < text_cursor[i].y_end && text_cursor[i].y > text_cursor[i].y_end) {
+      if (text_cursor[i].y_start_set && text_cursor[i].y_end_set) {
+        y_incr = abs(y_incr);
+        if (text_cursor[i].y_start > text_cursor[i].y_end)
+          text_cursor[i].y -= y_incr;
+        else if (text_cursor[i].y_start < text_cursor[i].y_end)
+          text_cursor[i].y += x_incr;
+        else
           text_cursor[i].y = text_cursor[i].y_start;
-          loops_since_overflow_y[i] ++;
-        }
-        if (text_cursor[i].y_start > text_cursor[i].y_end && text_cursor[i].y < text_cursor[i].y_end) {
-          text_cursor[i].y = text_cursor[i].y_start;
-          loops_since_overflow_y[i] ++;
+
+        //overflow value
+        if (text_cursor[i].y_start != text_cursor[i].y_end) {
+          if (text_cursor[i].y_start < text_cursor[i].y_end && text_cursor[i].y > text_cursor[i].y_end) {
+            text_cursor[i].y = text_cursor[i].y_start;
+            loops_since_overflow_y[i] ++;
+          }
+          if (text_cursor[i].y_start > text_cursor[i].y_end && text_cursor[i].y < text_cursor[i].y_end) {
+            text_cursor[i].y = text_cursor[i].y_start;
+            loops_since_overflow_y[i] ++;
+          }
         }
       }
-    }
-    else {
-      text_cursor[i].y += y_incr;
-      if (text_cursor[i].y > text_cursor[i].y_limit_max && y_incr > 0) {
-        text_cursor[i].y = text_cursor[i].y_limit_min;
-        loops_since_overflow_y[i] ++;
+      else {
+        text_cursor[i].y += y_incr;
+        if (text_cursor[i].y > text_cursor[i].y_limit_max && y_incr > 0) {
+          text_cursor[i].y = text_cursor[i].y_limit_min;
+          loops_since_overflow_y[i] ++;
+        }
+        else if (text_cursor[i].y < text_cursor[i].y_limit_min && y_incr < 0) {
+          text_cursor[i].y = text_cursor[i].y_limit_max;
+          loops_since_overflow_y[i] ++;
+        }
       }
-      else if (text_cursor[i].y < text_cursor[i].y_limit_min && y_incr < 0) {
-        text_cursor[i].y = text_cursor[i].y_limit_max;
-        loops_since_overflow_y[i] ++;
+
+      //if the next file exists and we've reached an overflow limit or time limit of this file get new file data
+      if (text_cursor[i].check_for_new_file) {
+        if ((text_cursor[i].found_loops_x && loops_since_overflow_x[i] >= text_cursor[i].loops_x) || (text_cursor[i].found_loops_y && loops_since_overflow_y[i] >= text_cursor[i].loops_y) || (text_cursor[i].found_time && millis() > text_cursor[i].change_file_timeout + text_cursor[i].str_disp_time)) {
+
+          //        Serial.println("read new file condition met");
+          card.retrieve_data(SD_string.next_file[i]);
+          loops_since_overflow_x[i] = 0;
+          loops_since_overflow_y[i] = 0;
+
+        }
       }
+
+      //send out data
+      coms_serial.build_pos_frame(i);
+
     }
-
-    //if the next file exists and we've reached an overflow limit or time limit of this file get new file data
-    if (text_cursor[i].check_for_new_file) {
-      if ((text_cursor[i].found_loops_x && loops_since_overflow_x[i] >= text_cursor[i].loops_x) || (text_cursor[i].found_loops_y && loops_since_overflow_y[i] >= text_cursor[i].loops_y) || (text_cursor[i].found_time && millis() > text_cursor[i].change_file_timeout + text_cursor[i].str_disp_time)) {
-
-        //        Serial.println("read new file condition met");
-        card.retrieve_data(SD_string.next_file[i]);
-        loops_since_overflow_x[i] = 0;
-        loops_since_overflow_y[i] = 0;
-
-      }
-    }
-
-    //send out data
-    coms_serial.build_pos_frame(i);
-
   }
 }
 
