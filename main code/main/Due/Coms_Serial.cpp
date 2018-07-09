@@ -23,8 +23,6 @@ extern struct Frame pos_frame;
 extern struct Led_Strip_Struct led_strip_parameters;
 extern struct Temp_sensor temp_parameters;
 extern struct Fan_Struct fan_parameters;        //create fan struct
-extern struct Text text;
-extern struct Text_cursor text_cursor;
 extern struct Timers timers;
 extern struct Encoder_Struct encoder_parameters;     //create encoder struct
 extern struct Button_Struct button_parameters;       //create button struct
@@ -32,11 +30,11 @@ extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
 extern struct SD_Card card1;
 extern struct SD_Card card2;
-extern struct Text text_parameters;
-extern struct Text_cursor text_cursor;
+extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
+extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern char text_str[MAX_TWEET_SIZE];
-extern const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
+const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180,190,191,200,201};
 
 extern byte time_since_last_sent_text_frame;
 extern byte menu_width;
@@ -626,41 +624,41 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = screen_brightness;
       break;
 
-    case PREFIX_TEXT_SIZE:
+    case PREFIX_TEXT_SIZE_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.text_size;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[0].text_size;
       break;
 
-    case PREFIX_TEXT_COLOUR_R:
+    case PREFIX_TEXT_COLOUR_R_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.red;
-      break;
-
-
-    case PREFIX_TEXT_COLOUR_G:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.green;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[0].red;
       break;
 
 
-    case PREFIX_TEXT_COLOUR_B:
+    case PREFIX_TEXT_COLOUR_G_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.blue;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[0].green;
       break;
 
-    case PREFIX_TEXT_HUE_MSB:
+
+    case PREFIX_TEXT_COLOUR_B_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[0].blue;
       break;
 
-    case PREFIX_TEXT_HUE_LSB:
+    case PREFIX_TEXT_HUE_MSB_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2);
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(1, 0);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
-    case PREFIX_TEXT_USE_HUE:
+    case PREFIX_TEXT_HUE_LSB_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters.use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = (byte)get_text_colour_hue(2, 0);
+      break;
+
+    case PREFIX_TEXT_USE_HUE_0:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[0].use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_DEBUG_STATE:
@@ -687,14 +685,14 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = card2.enabled;
       break;
 
-    case PREFIX_TEXT_SCROLL_SPEED_X:
+    case PREFIX_TEXT_SCROLL_SPEED_X_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.x_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor[0].x_pos_dir;
       break;
 
-    case PREFIX_TEXT_SCROLL_SPEED_Y:
+    case PREFIX_TEXT_SCROLL_SPEED_Y_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor.y_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor[0].y_pos_dir;
       break;
 
     case PREFIX_FAN_MINIMUM_SPEED:

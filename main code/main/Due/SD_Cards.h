@@ -147,7 +147,7 @@ struct SD_Strings {
   String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
   String Network = "init network";    //store current network
   String Password = "init password";   //store current password
-  char next_file[STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {'\0'};
+  char next_file[MAX_NUM_OF_TEXT_OBJECTS][STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {{'\0'}};
   char null_string[STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {'\0'}; //array of nulls to clear with
 };
 
@@ -195,7 +195,7 @@ class Card {
     
         
     void log_data(String filename, bool truncate = false, bool print_header = false);
-
+    bool file_is_a_next_file(String filename);
   public:
 
     Card();

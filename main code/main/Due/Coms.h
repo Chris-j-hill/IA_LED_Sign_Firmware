@@ -93,8 +93,8 @@ class Coms {
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
     void pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
-    void build_pos_frame();                                               //function to send the xy coordinates along with a number of other related variables
-    void pack_xy_coordinates() ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
+    void build_pos_frame(byte obj_num);                                               //function to send the xy coordinates along with a number of other related variables
+    void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
 //    int send_all_calibration_data(int address);                          //function to send all data calibration
 //    bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
     int send_all_pos_on_interrupt();     // function to send pos data to all megas periodically based on timer interrupt
@@ -102,7 +102,7 @@ class Coms {
     int send_all_text();    // send the text frame to all megas
     void print_frame();      //print the currently stored frame to the serial monitor
 
-    int get_text_colour_hue(int byte_number){};                            //function to return the MSB or LSB of the current hue value to send over i2c
+    byte get_text_colour_hue(byte byte_number, byte obj_num);                            //function to return the MSB or LSB of the current hue value to send over i2c
 
     int calc_delay();
 

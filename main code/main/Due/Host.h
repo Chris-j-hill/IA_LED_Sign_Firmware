@@ -101,8 +101,7 @@ class Host {
     void print_current_meters();
     void print_ldr_config();
     void print_sd_cards();
-    void print_text();
-
+    void print_text(String command);
 
 
 
@@ -114,6 +113,8 @@ class Host {
     void read_write_LUT(byte index, char r_w, int value = 0);
     void position_to_menu_value();
     void print_menu_tree_options(int cur_menu = -1); //if not argument provided display all sub menus of current menu
+
+    
   public:
     Host() {}
     void init_serial();

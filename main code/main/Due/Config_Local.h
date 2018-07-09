@@ -86,7 +86,7 @@
 
 #define DISABLE_WARNING_MESSAGES  //option to disable warning messages within the menu system
 
-
+#define MAX_NUM_OF_TEXT_OBJECTS 5
 
 // ______ Prefixes for sensor data _______
 
@@ -107,19 +107,19 @@
 #define PREFIX_EHTERNET_CONNECTED       70
 #define PREFIX_WIFI_CONNECTED           80
 #define PREFIX_SCREEN_BRIGHTNESS        90
-#define PREFIX_TEXT_SIZE                100
-#define PREFIX_TEXT_COLOUR_R            110
-#define PREFIX_TEXT_COLOUR_G            120
-#define PREFIX_TEXT_COLOUR_B            130
-#define PREFIX_TEXT_HUE_MSB             140
-#define PREFIX_TEXT_HUE_LSB             150
-#define PREFIX_TEXT_USE_HUE             160
+#define PREFIX_TEXT_SIZE_0                100
+#define PREFIX_TEXT_COLOUR_R_0            110
+#define PREFIX_TEXT_COLOUR_G_0            120
+#define PREFIX_TEXT_COLOUR_B_0            130
+#define PREFIX_TEXT_HUE_MSB_0             140
+#define PREFIX_TEXT_HUE_LSB_0             150
+#define PREFIX_TEXT_USE_HUE_0             160
 #define PREFIX_DEBUG_STATE              170
 #define PREFIX_SCREEN_MODE              180
 #define PREFIX_SD_MOUNTED_1             190
 #define PREFIX_SD_MOUNTED_2             191
-#define PREFIX_TEXT_SCROLL_SPEED_X      200
-#define PREFIX_TEXT_SCROLL_SPEED_Y      201
+#define PREFIX_TEXT_SCROLL_SPEED_X_0      200
+#define PREFIX_TEXT_SCROLL_SPEED_Y_0      201
 
 
 

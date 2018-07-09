@@ -32,8 +32,8 @@ extern struct Menu menu;
 extern struct Frame text_frame;
 extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
-extern struct Text text_parameters;
-extern struct Text_cursor text_cursor;
+extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
+extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern struct SD_Card card1;
 extern struct SD_Card card2;
@@ -45,6 +45,7 @@ extern byte screen_brightness;
 
 extern char text_str[MAX_TWEET_SIZE];
 
+String last_command = "text0";
 
 String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
 String string_write_error_msg PROGMEM = "Error: Cannot write string from serial monitor interface";
@@ -202,18 +203,19 @@ byte Host::data_set_LUT(String data_set) {
     return REPORT_BUTTON;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_CURRENT_METER])
     return REPORT_CURRENT_METER;
-  else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT])
-    return REPORT_TEXT;
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_SD_CARD])
     return REPORT_SD_CARD;
-
-
-
   else if (data_set == serial_sub_menu_items.data_elements[0][REPORT_LDR_CONFIG])
     return REPORT_LDR_CONFIG;
 
 
-
+  
+  //check substring for text
+  String sub_string_data_set = data_set.substring(0, data_set.length()-1);
+  if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT]){
+    last_command = data_set;
+    return REPORT_TEXT;
+  }
   else
     return 255;
 }
@@ -435,7 +437,7 @@ void Host::print_messages() {
         break;
 
       case REPORT_TEXT:
-        print_text();
+        print_text(last_command);
         break;
 
       case REPORT_LDR_CONFIG:
@@ -861,101 +863,113 @@ void Host::print_sd_cards() {
 }
 
 
-void Host::print_text() {
+void Host::print_text(String command) {
+
+  String obj_num_as_char = command.substring(command.length()-1);
+  byte obj_num = obj_num_as_char.toInt();
+  if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)
+    obj_num = 0;
+
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Size \tR   G   B   H \t\tUse Hue \tXpos Ypos \t\tScroll Speeds \tStart points \tEnd Points \tLimits X- X+ Y- Y+"));
+    Serial.println(F("Configured \tSize \tR   G   B   H \t\tUse Hue \tXpos Ypos \t\tScroll Speeds \tStart points \tEnd Points \tLimits X- X+ Y- Y+"));
   }
-  Serial.print(text_parameters.text_size);
+  if (text_cursor[obj_num].object_used)
+    yes();
+  else
+    no();
+  tab(); tab(); tab();
+
+  Serial.print(text_parameters[obj_num].text_size);
   tab();
 
-  Serial.print(text_parameters.red);
-  if (text_parameters.red < 10) space();
-  if (text_parameters.red < 100) space();
+  Serial.print(text_parameters[obj_num].red);
+  if (text_parameters[obj_num].red < 10) space();
+  if (text_parameters[obj_num].red < 100) space();
   space();
 
-  Serial.print(text_parameters.green);
-  if (text_parameters.green < 10) space();
-  if (text_parameters.green < 100) space();
+  Serial.print(text_parameters[obj_num].green);
+  if (text_parameters[obj_num].green < 10) space();
+  if (text_parameters[obj_num].green < 100) space();
   space();
 
-  Serial.print(text_parameters.blue);
-  if (text_parameters.blue < 10) space();
-  if (text_parameters.blue < 100) space();
+  Serial.print(text_parameters[obj_num].blue);
+  if (text_parameters[obj_num].blue < 10) space();
+  if (text_parameters[obj_num].blue < 100) space();
   space();
 
-  Serial.print(text_parameters.hue);
-  if (abs(text_parameters.hue < 10)) space();
-  if (abs(text_parameters.hue < 100)) space();
-  if (abs(text_parameters.hue < 1000)) space();
-  if (text_parameters.hue >= 0) space();
+  Serial.print(text_parameters[obj_num].hue);
+  if (abs(text_parameters[obj_num].hue < 10)) space();
+  if (abs(text_parameters[obj_num].hue < 100)) space();
+  if (abs(text_parameters[obj_num].hue < 1000)) space();
+  if (text_parameters[obj_num].hue >= 0) space();
   tab();
 
-  if (text_parameters.use_hue)
+  if (text_parameters[obj_num].use_hue)
     yes();
   else
     no();
   tab(); tab();
 
-  Serial.print(text_cursor.x);
-  if (abs(text_cursor.x < 10)) space();
-  if (abs(text_cursor.x < 100)) space();
-  if (text_cursor.x >= 0) space();
+  Serial.print(text_cursor[obj_num].x);
+  if (abs(text_cursor[obj_num].x < 10)) space();
+  if (abs(text_cursor[obj_num].x < 100)) space();
+  if (text_cursor[obj_num].x >= 0) space();
   space();
 
-  Serial.print(text_cursor.y);
-  if (abs(text_cursor.y < 10)) space();
-  if (abs(text_cursor.y < 100)) space();
-  if (text_cursor.y >= 0) space();
+  Serial.print(text_cursor[obj_num].y);
+  if (abs(text_cursor[obj_num].y < 10)) space();
+  if (abs(text_cursor[obj_num].y < 100)) space();
+  if (text_cursor[obj_num].y >= 0) space();
   tab(); tab();
 
-  Serial.print(text_cursor.x_pos_dir - 128);
-  if (abs(text_cursor.x_pos_dir - 128 < 10)) space();
-  if (abs(text_cursor.x_pos_dir - 128 < 100)) space();
-  if (text_cursor.x_pos_dir - 128 >= 0) space();
+  Serial.print(text_cursor[obj_num].x_pos_dir - 128);
+  if (abs(text_cursor[obj_num].x_pos_dir - 128 < 10)) space();
+  if (abs(text_cursor[obj_num].x_pos_dir - 128 < 100)) space();
+  if (text_cursor[obj_num].x_pos_dir - 128 >= 0) space();
   space();
 
-  Serial.print(text_cursor.y_pos_dir - 128);
-  if (abs(text_cursor.y_pos_dir - 128 < 10)) space();
-  if (abs(text_cursor.y_pos_dir - 128 < 100)) space();
-  if (text_cursor.y_pos_dir - 128 >= 0) space();
+  Serial.print(text_cursor[obj_num].y_pos_dir - 128);
+  if (abs(text_cursor[obj_num].y_pos_dir - 128 < 10)) space();
+  if (abs(text_cursor[obj_num].y_pos_dir - 128 < 100)) space();
+  if (text_cursor[obj_num].y_pos_dir - 128 >= 0) space();
   space();
   tab();
 
-  Serial.print(text_cursor.x_start);
-  if (abs(text_cursor.x_start < 10)) space();
-  if (abs(text_cursor.x_start < 100)) space();
-  if (text_cursor.x_start >= 0) space();
+  Serial.print(text_cursor[obj_num].x_start);
+  if (abs(text_cursor[obj_num].x_start < 10)) space();
+  if (abs(text_cursor[obj_num].x_start < 100)) space();
+  if (text_cursor[obj_num].x_start >= 0) space();
   space();
 
-  Serial.print(text_cursor.y_start);
-  if (abs(text_cursor.y_start < 10)) space();
-  if (abs(text_cursor.y_start < 100)) space();
-  if (text_cursor.y_start >= 0) space();
-  space();
-
-  tab();
-  Serial.print(text_cursor.x_end);
-  if (abs(text_cursor.x_end < 10)) space();
-  if (abs(text_cursor.x_end < 100)) space();
-  if (text_cursor.x_end >= 0) space();
-  space();
-
-  Serial.print(text_cursor.y_end);
-  if (abs(text_cursor.y_end < 10)) space();
-  if (abs(text_cursor.y_end < 100)) space();
-  if (text_cursor.y_end >= 0) space();
+  Serial.print(text_cursor[obj_num].y_start);
+  if (abs(text_cursor[obj_num].y_start < 10)) space();
+  if (abs(text_cursor[obj_num].y_start < 100)) space();
+  if (text_cursor[obj_num].y_start >= 0) space();
   space();
 
   tab();
+  Serial.print(text_cursor[obj_num].x_end);
+  if (abs(text_cursor[obj_num].x_end < 10)) space();
+  if (abs(text_cursor[obj_num].x_end < 100)) space();
+  if (text_cursor[obj_num].x_end >= 0) space();
+  space();
 
-  Serial.print(text_cursor.x_limit_min);
+  Serial.print(text_cursor[obj_num].y_end);
+  if (abs(text_cursor[obj_num].y_end < 10)) space();
+  if (abs(text_cursor[obj_num].y_end < 100)) space();
+  if (text_cursor[obj_num].y_end >= 0) space();
   space();
-  Serial.print(text_cursor.x_limit_max);
+
+  tab();
+
+  Serial.print(text_cursor[obj_num].x_limit_min);
   space();
-  Serial.print(text_cursor.y_limit_min);
+  Serial.print(text_cursor[obj_num].x_limit_max);
   space();
-  Serial.print(text_cursor.y_limit_max);
+  Serial.print(text_cursor[obj_num].y_limit_min);
+  space();
+  Serial.print(text_cursor[obj_num].y_limit_max);
 
 
   Serial.println();
@@ -1203,7 +1217,7 @@ void Host::position_to_menu_value() {
       break;
 
     case TEXT_SIZE_MENU:
-      Serial.print(text_parameters.text_size);
+      Serial.print(text_parameters[0].text_size);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_size_menu);
       break;
@@ -1238,25 +1252,25 @@ void Host::position_to_menu_value() {
       break;
 
     case TEXT_COLOUR_RED:
-      Serial.print(text_parameters.red);
+      Serial.print(text_parameters[0].red);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_red_menu);
       break;
 
     case TEXT_COLOUR_GREEN:
-      Serial.print(text_parameters.green);
+      Serial.print(text_parameters[0].green);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_green_menu);
       break;
 
     case TEXT_COLOUR_BLUE:
-      Serial.print(text_parameters.blue);
+      Serial.print(text_parameters[0].blue);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_blue_menu);
       break;
 
     case TEXT_COLOUR_HUE:
-      Serial.print(text_parameters.hue);
+      Serial.print(text_parameters[0].hue);
       Serial.print(" -> range: ");
       Serial.print(menu_limits.text_colour_hue_min);
       Serial.print(divide_string);
@@ -1264,7 +1278,7 @@ void Host::position_to_menu_value() {
       break;
 
     case SCROLL_SPEED_MENU_X:
-      Serial.print(text_cursor.x_pos_dir - 128);
+      Serial.print(text_cursor[0].x_pos_dir - 128);
       Serial.print(" -> range: -");
       Serial.print(menu_limits.scroll_speed_menu - 129);
       Serial.print(divide_string);
@@ -1272,7 +1286,7 @@ void Host::position_to_menu_value() {
       break;
 
     case SCROLL_SPEED_MENU_Y:
-      Serial.print(text_cursor.y_pos_dir - 128);
+      Serial.print(text_cursor[0].y_pos_dir - 128);
       Serial.print(" -> range: -");
       Serial.print(menu_limits.scroll_speed_menu - 129);
       Serial.print(divide_string);

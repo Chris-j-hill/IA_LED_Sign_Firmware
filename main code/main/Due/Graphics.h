@@ -99,13 +99,15 @@ struct Text_cursor {        //xy coordinates of cursor position
   bool found_loops_y = false;
   bool found_time = false;
   int change_file_timeout; //<- on file change, reset this
+
+  bool object_used = false; //<- is this object used, has it been populated
 };
 
 
 
 void attach_timer_pos_update();
 
-void set_pos_update_frequency(int freq);
+void set_pos_update_frequency(byte freq);
 
 void send_pos_interrupt();     // interrupt to send pos data to all megas
 
@@ -125,7 +127,9 @@ class Graphics {
     void update_size();
 
     void init_cursor();
+    void configure_limits(byte obj_num);
     void configure_limits();
+    void reset_position(byte obj_num);
     void reset_position();
 };
 
