@@ -24,7 +24,7 @@ byte screen_mode = 0; //mode of operation on startup should be both displaying
 //mode2: both off
 //mode3: other side on
 
-char text_str[MAX_TWEET_SIZE] = "this is a test4 this is a test5 this is a test6";
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {"this is a test4 this is a test5 this is a test6"};
 
 extern byte screen_brightness;
 

@@ -42,8 +42,7 @@ extern struct SD_Strings SD_string;
 extern byte screen_mode;
 extern byte screen_brightness;
 
-
-extern char text_str[MAX_TWEET_SIZE];
+extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
 
 String last_command = "text0";
 
@@ -1409,6 +1408,14 @@ void HostNativeUSB::get_serial() {
 
 void HostNativeUSB::request_data(byte location) {
 
+// a note on the location variable
+// this variable is encoded. 
+// values in range 0-9 correspond to string objects 0-9
+// value 10 is requesting the next instruction
+// value 20 is requesting ip address
+// etc...
+// see put_data_into_loc funcition below, though be aware loc is /10 to better extract stings
+
   if (location >= 0 && location < NUM_USB_COMMANDS) { //sanity check location
     String tx = request_keyword + space_colon_string + location;
     SerialUSB.print(tx);
@@ -1418,7 +1425,8 @@ void HostNativeUSB::request_data(byte location) {
       delay(2); //short delay to allow some data to arrive
 
       String rx_string = SerialUSB.readString();
-      put_data_into_loc(rx_string, location);
+      byte obj_num = location%10; //the obj_num is encoded into the units part of the location, a location of 02 indicated request string 2 (text_str[2]) 
+      put_data_into_loc(rx_string, location/10, obj_num);
     }
     else
       Serial.print(F("Native usb timeout waiting for pi"));
@@ -1426,7 +1434,7 @@ void HostNativeUSB::request_data(byte location) {
 }
 
 
-void HostNativeUSB::put_data_into_loc(String rx_string, int loc) {
+void HostNativeUSB::put_data_into_loc(String rx_string, byte loc, byte obj_num) {
 
   switch (loc) {
     case 0:
@@ -1434,12 +1442,12 @@ void HostNativeUSB::put_data_into_loc(String rx_string, int loc) {
       Serial.println(rx_string);
       for (int i = 0; i < rx_string.length(); i++) {
         if (i < MAX_TWEET_SIZE - 3)
-          text_str[i] = rx_string[i];
+          text_str[obj_num][i] = rx_string[i];
         else if (i >= MAX_TWEET_SIZE - 5 && i < MAX_TWEET_SIZE) {
           if (i >= MAX_TWEET_SIZE - 4 && i < MAX_TWEET_SIZE - 1)
-            text_str[i] = '.'; //add ellipsis at the end of a long string
+            text_str[obj_num][i] = '.'; //add ellipsis at the end of a long string
           else
-            text_str[i] = '\0';  // and endstirng character
+            text_str[obj_num][i] = '\0';  // and endstring character
         }
       }
       break;

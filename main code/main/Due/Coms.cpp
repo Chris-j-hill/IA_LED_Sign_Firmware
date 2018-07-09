@@ -52,7 +52,7 @@ byte pos_frame_length = 13;   //length of frame to transmit to update pos
 //char menu_frame[FRAME_OVERHEAD+3] ={0};   // initialise menu_frame, overhead +menu numeber + 2 bytes for encoder position
 //                                          // should only send references to strings already in megas LUT. Names from files need to be handled seperately
 
-extern char text_str[MAX_TWEET_SIZE];
+extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
 
 
 
@@ -66,9 +66,9 @@ extern byte screen_mode;   //mode of operation on startup should be both display
 
 
 #ifndef ALL_MEGAS_ENABLED
-    bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};
+bool mega_enabled[4] = {MEGA_1_ENABLED, MEGA_2_ENABLED, MEGA_3_ENABLED, MEGA_4_ENABLED};
 #else
-    bool mega_enabled[4] = {true, true, true, true};  // ignore communication if board is false
+bool mega_enabled[4] = {true, true, true, true};  // ignore communication if board is false
 #endif
 
 
@@ -155,19 +155,18 @@ int Coms::startup_handshake() {  //code to delay the due in initialisation and e
 //  return (0);
 //}
 
-void Coms::pack_disp_string_frame(int frame_type, int frame_offset) {   //function to pack a frame of text to display
+void Coms::pack_disp_string_frame(uint16_t frame_offset, byte obj_num) {   //function to pack a frame of text to display
 
   // function to pack a frame based on a given offset (ie this frames number)
   // maybe generalise later to accept calls from multiple frame building methods
 
   frame_offset = ((frame_offset - 1) * (FRAME_DATA_LENGTH)); //if this frame is 1 offset in data set is 0, if 2 offset 27, etc
 
-  if (frame_type == 1) { //send str variable
-    for (int i = 0; i < strlen(text_str) - frame_offset; i++) { //loop through string until end or break
-      text_frame.frame_buffer[i + HEADER_LENGTH] = (byte)text_str[frame_offset + i];
-      text_frame.checksum = text_frame.checksum + (byte)text_frame.frame_buffer[i + HEADER_LENGTH];
-      if (i == FRAME_DATA_LENGTH) break;     //copy string until end or 28 bytes copied
-    }
+  for (int i = 0; i < strlen(text_str[obj_num]) - frame_offset; i++) { //loop through string until end or break
+    text_frame.frame_buffer[i + HEADER_LENGTH+1] = (byte)text_str[obj_num][frame_offset + i]; //HEADER_LENGTH+1 for text obj_num
+    text_frame.checksum = text_frame.checksum + (byte)text_frame.frame_buffer[i + HEADER_LENGTH+1];
+    if (i == FRAME_DATA_LENGTH) break;     //copy string until end or 27 bytes copied
+
   }
 }
 
@@ -214,17 +213,17 @@ void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 by
     Sprintln("WARNING: failed to send correct coordinate, out of bounds, overflow likely to occur");
 
   if (text_cursor[obj_num].x > 0) {
-    x_pos_MSB = text_cursor[obj_num].x >>8; //take the multiples 256 and set as MS byte
+    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
     x_pos_MSB = x_pos_MSB + 128; //greater than zero, set MSB to 1
     x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
   }
   else {
-    x_pos_MSB = text_cursor[obj_num].x >>8; //take the multiples 256 and set as MS byte
+    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
     x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
   }
 
   if (text_cursor[obj_num].y > 0) {
-    y_pos_MSB = text_cursor[obj_num].y >>8; //take the multiples 256 and set as MS byte
+    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
     y_pos_MSB = y_pos_MSB + 128; //greater than zero, set MSB to 1
     y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
   }
@@ -289,7 +288,7 @@ void Coms::print_frame() {
   Sprintln("");
 }
 
-byte Coms::get_text_colour_hue(byte byte_number,byte obj_num) {  //function to return the MSB or LSB of the current hue value to send
+byte Coms::get_text_colour_hue(byte byte_number, byte obj_num) { //function to return the MSB or LSB of the current hue value to send
 
   if (byte_number == 1) { //looking for MSB
     if (text_parameters[obj_num].hue < 0)

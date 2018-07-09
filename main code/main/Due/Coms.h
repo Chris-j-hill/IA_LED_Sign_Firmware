@@ -28,6 +28,7 @@ using namespace arduino_due;
 #define TRAILER_LENGTH 1 //just checksum
 #define DATA_IDENTIFIER_BYTE  2   //frame type byte
 #define FRAME_LENGTH_BYTE  1
+
 #define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
 
@@ -92,7 +93,7 @@ class Coms {
 
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
-    void pack_disp_string_frame(int frame_type, int frame_offset);        //function to pack a frame of text to display
+    void pack_disp_string_frame(uint16_t frame_offset, byte obj_num);        //function to pack a frame of text to display
     void build_pos_frame(byte obj_num);                                               //function to send the xy coordinates along with a number of other related variables
     void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
 //    int send_all_calibration_data(int address);                          //function to send all data calibration

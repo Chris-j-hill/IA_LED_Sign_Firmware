@@ -33,8 +33,19 @@ extern struct SD_Card card2;
 extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
-extern char text_str[MAX_TWEET_SIZE];
-const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180,190,191,200,201};
+extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
+const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90,
+                                     100, 101, 102, 103, 104,
+                                     110, 111, 112, 113, 114,
+                                     120, 121, 122, 123, 124,
+                                     130, 131, 132, 133, 134,
+                                     140, 141, 142, 143, 144,
+                                     150, 151, 152, 153, 154,
+                                     160, 161, 162, 163, 164,
+                                     170, 180, 190, 191,
+                                     200, 201, 202, 203, 204,
+                                     210, 211, 212, 213, 214
+                                    };
 
 extern byte time_since_last_sent_text_frame;
 extern byte menu_width;
@@ -189,11 +200,14 @@ void Coms_Serial::send_all_text_frames(bool send_now) {   // send the text frame
 
   if ((send_now = true) || (millis() > time_since_last_sent_text_frame + TEXT_TRANSMIT_PERIOD)) {
     time_since_last_sent_text_frame = millis();
-    send_text_frame();
+    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+      if (text_cursor[i].object_used)
+        send_text_frame(i); //send this string to all megas
+    }
   }
 }
 
-void Coms_Serial::send_text_frame(byte address) {   //function to send strings to display on screen
+void Coms_Serial::send_text_frame(byte obj_num, byte address) {   //function to send strings to display on screen
 
   // function calculates the number of frames required to send the string, then loops,
   // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
@@ -203,7 +217,7 @@ void Coms_Serial::send_text_frame(byte address) {   //function to send strings t
 
   //text_cursor.x_min = -text_parameters.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
 
-  text_frame.num_frames = 1 + (strlen(text_str) / (FRAME_DATA_LENGTH)); //send this many frames
+  text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / (FRAME_DATA_LENGTH)); //send this many frames
   text_frame.this_frame = 1;
 
   do {    //loop to send multiple frames if string is long
@@ -212,15 +226,16 @@ void Coms_Serial::send_text_frame(byte address) {   //function to send strings t
       text_frame.frame_buffer[0]  = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
-      text_frame.frame_buffer[0]  = strlen(text_str) - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (HEADER_LENGTH + TRAILER_LENGTH); //remaining frame is string length-text offset+5 bytes overhead
+      text_frame.frame_buffer[0]  = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (HEADER_LENGTH + TRAILER_LENGTH) - 1; //remaining frame is (string length - text offset)+ (5 bytes overhead) -1 for obj_num
 
 
     text_frame.frame_buffer[1] = (byte) text_frame.frame_type;
     text_frame.frame_buffer[2] = (byte) text_frame.num_frames;
     text_frame.frame_buffer[3] = (byte) text_frame.this_frame;
-    text_frame.checksum = text_frame.frame_buffer[0] + text_frame.frame_buffer[1] + text_frame.frame_buffer[2] + text_frame.frame_buffer[3] ;
+    text_frame.frame_buffer[4] = obj_num;
+    text_frame.checksum = text_frame.frame_buffer[0] + text_frame.frame_buffer[1] + text_frame.frame_buffer[2] + text_frame.frame_buffer[3] + text_frame.frame_buffer[4];
 
-    pack_disp_string_frame(text_frame.frame_type, text_frame.this_frame);//function to pack the frame with which ever data is relevant
+    pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
     text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
 
     write_text_frame(address);
@@ -309,7 +324,7 @@ void Coms_Serial::send_pos_frame() {  //build frame and send position to all meg
 }
 
 void write_sensor_data_frame(byte address) {
-  
+
   if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
     Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
 
@@ -502,7 +517,7 @@ inline void Coms_Serial::check_menu_frame_queue() {
 
 
 
-void Coms_Serial::send_all_calibration_data(int address) {     //function to send all data
+void Coms_Serial::send_all_calibration_data(byte address) {     //function to send all data
 
   //function to send all the sensor data. loop through all sensor values
 
@@ -530,12 +545,12 @@ void Coms_Serial::send_all_calibration_data(int address) {     //function to sen
     else if (frame_to_be_sent) {
       frameNum++;     //increment the frame number
       offset = 0;     //reset offset for new frame
-      
+
       write_sensor_data_frame(1);
       write_sensor_data_frame(2);
       write_sensor_data_frame(3);
       write_sensor_data_frame(4);
-      
+
       sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
       sensor_data_frame.frame_buffer[2] = numFrames;
       sensor_data_frame.frame_buffer[3] = frameNum;

@@ -19,7 +19,7 @@ bool pos_timer_attached = false;
 int send_pos_frame(int address);
 int pack_xy_coordinates();
 int send_disp_string_frame(int address);
-int pack_disp_string_frame(int frame_type, int frame_offset);
+//int pack_disp_string_frame(byte frame_type, uint16_t frame_offset);
 
 
 #endif

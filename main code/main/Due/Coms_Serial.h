@@ -62,12 +62,12 @@ class Coms_Serial: public Coms {
     void send_menu_frame(int menu, int encoder_pos);
     void send_all_text_frames(bool send_now = false);
     void send_all_sensor_data_frames(bool send_now = false);
-    void send_text_frame(byte address = 0);
+    void send_text_frame(byte obj_num, byte address = 0);
     void send_pos_frame();
 
     void check_queues();
 
-    void send_all_calibration_data(int address);                          //function to send all data calibration
+    void send_all_calibration_data(byte address);                          //function to send all data calibration
     bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
 
 };

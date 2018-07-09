@@ -53,7 +53,7 @@ char copy_buffer[1024] = {'\0'};
 SD_Card card1;    //external card struct
 SD_Card card2;    //internal card struct
 
-extern char text_str[MAX_TWEET_SIZE];
+extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
 
 extern struct Fan_Struct fan_parameters;
 extern struct Temp_sensor temp_parameters;
@@ -871,28 +871,28 @@ void Card::retrieve_data(String filename) {
               reads++;
             }
           }
-          Serial.println();
+          //Serial.println();
           if (char_read == ':') {
             char data_found[MAX_TWEET_SIZE] = {'\0'};
             reads = 0;
             while (reads < MAX_TWEET_SIZE) {
               char_read = file1.read();
-              Serial.print((char)char_read);
+              //Serial.print((char)char_read);
               if ((char)char_read == '\n' ||  char_read == -1 ) break;
               else {
                 data_found[reads] = (char)char_read;
                 reads++;
               }
             }
-            Serial.println();
+            //Serial.println();
             int value_found = atoi(data_found); //convert to int for some data types
-            Serial.println(command);
-            Serial.println((int)command);
+            //Serial.println(command);
+            //Serial.println((int)command);
             if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
-              strncpy(text_str, data_found, sizeof(text_str));
+              strncpy(text_str[i], data_found, sizeof(text_str));
               text_parameters[i].text_str_length = reads;
               coms_serial.send_all_text_frames(true);
-              text_cursor[i].object_used = true;
+              text_cursor[i].object_used = true;  // set as true once string found, ignore if data provided but no string
             }
             else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
               text_parameters[i].red = value_found;

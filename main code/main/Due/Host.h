@@ -150,7 +150,7 @@ class HostNativeUSB {
     void push_serial(int loc, String data);   //push data to pi, possibly login info or for non volatile storage?
     void get_serial();      //two step, first type, due confirms if recognised type, data read into specific location (might be a lot)
     void request_data(byte location);    //due requests
-    void put_data_into_loc(String rx_string, int loc);
+    void put_data_into_loc(String rx_string, byte loc, byte obj_num=0);
     void check_connection();
 };
 #endif //Host_H
