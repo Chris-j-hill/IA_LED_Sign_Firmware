@@ -50,20 +50,20 @@
 #define  EXT_NETWORK_FILE NETWORK_LOGIN_FILENAME
 #define  INT_NETWORK_FILE NETWORK_LOGIN_FILENAME
 
-#define EXT_STRING_FILE "String.BIN"
-#define INT_STRING_FILE "String.BIN"
+#define EXT_STRING_FILE "StringE.BIN"
+#define INT_STRING_FILE "StringI.BIN"
 
-#define EXT_LOG_FILE "DataLog.CSV"
-#define INT_LOG_FILE "DataLog.CSV"
+#define EXT_LOG_FILE "DataLogE.CSV"
+#define INT_LOG_FILE "DataLogI.CSV"
 
-#define EXT_CALIBRATION_FILE "Cal.BIN"
-#define INT_CALIBRATION_FILE "Cal_int.BIN"
+#define EXT_CALIBRATION_FILE "CalE.BIN"
+#define INT_CALIBRATION_FILE "CalI.BIN"
 
-#define EXT_INSTRUCTION_FILE "Instruct.BIN"
-#define INT_INSTRUCTION_FILE "Instruct.BIN"
+#define EXT_INSTRUCTION_FILE "InstrE.BIN"
+#define INT_INSTRUCTION_FILE "InstrI.BIN"
 
-#define EXT_BITMAP_FILE "bitmap.BIN"
-#define INT_BITMAP_FILE "bitmap.BIN"
+#define EXT_BITMAP_FILE "bitmapE.BIN"
+#define INT_BITMAP_FILE "bitmapI.BIN"
 
 
 
@@ -156,7 +156,7 @@ struct SD_Card {
   bool enabled = false;
   bool detected = false;
   const char *working_dir = "123456789 123456789 "; // <- 20 characters for working dir name
-
+  const char *strings_sub_dir = "123456789 123456789 ";
   bool directory_exists = false;
 
   bool network_file_exists = false;       //types of files that we might work with

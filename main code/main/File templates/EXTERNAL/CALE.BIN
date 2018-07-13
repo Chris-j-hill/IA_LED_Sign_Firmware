@@ -1,0 +1,30 @@
+fan enabled:true
+temp1 enabled:true
+temp2 enabled:true
+temp3 enabled:true
+strip enabled:true
+current1 enabled:true
+current2 enabled:true
+ldr1 enabled:true
+ldr2 enabled:true
+encoder enabled:true
+button enabled:true
+card1 enabled:true
+card2 enabled:true
+
+fan min:100
+fan speed:255
+fan increment:5
+fan interval:50
+
+strip birghtness:255
+strip min:100
+strip increment:5
+fan interval:50
+
+encoder sensitivity:1
+
+ldr max 1:200
+ldr max 2:200
+ldr min 1:0
+ldr min 2:0

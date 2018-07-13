@@ -871,12 +871,13 @@ void Host::print_text(String command) {
 
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Configured \tSize \tR   G   B   H \t\tUse Hue \tXpos Ypos \t\tScroll Speeds \tStart points \tEnd Points \tLimits X- X+ Y- Y+"));
+    Serial.println(F("Configured \tSize \tR   G   B   H \tUse Hue \t\tXpos Ypos \t\tScroll Speeds \tStart points \tEnd Points \tLimits X- X+ Y- Y+"));
   }
   if (text_cursor[obj_num].object_used)
     yes();
-  else
-    no();
+  else{
+    no();space();
+  }
   tab(); tab();
 
   Serial.print(text_parameters[obj_num].text_size);
@@ -906,8 +907,9 @@ void Host::print_text(String command) {
 
   if (text_parameters[obj_num].use_hue)
     yes();
-  else
-    no();
+  else{
+    no();space();
+  }
   tab(); tab();
 
   Serial.print(text_cursor[obj_num].x);
@@ -933,7 +935,7 @@ void Host::print_text(String command) {
   if (abs(text_cursor[obj_num].y_pos_dir - 128 < 100)) space();
   if (text_cursor[obj_num].y_pos_dir - 128 >= 0) space();
   space();
-  tab();
+  tab();tab();
 
   Serial.print(text_cursor[obj_num].x_start);
   if (abs(text_cursor[obj_num].x_start < 10)) space();
@@ -947,7 +949,7 @@ void Host::print_text(String command) {
   if (text_cursor[obj_num].y_start >= 0) space();
   space();
 
-  tab();
+  tab();tab();
   Serial.print(text_cursor[obj_num].x_end);
   if (abs(text_cursor[obj_num].x_end < 10)) space();
   if (abs(text_cursor[obj_num].x_end < 100)) space();
@@ -960,7 +962,7 @@ void Host::print_text(String command) {
   if (text_cursor[obj_num].y_end >= 0) space();
   space();
 
-  tab();
+  tab();tab();
 
   Serial.print(text_cursor[obj_num].x_limit_min);
   space();

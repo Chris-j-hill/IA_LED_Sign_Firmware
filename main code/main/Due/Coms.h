@@ -20,8 +20,8 @@
 using namespace arduino_due;
 #define COMS_SPEED 38400         //speed of coms between due and megas when using serial
 #define SOFT_UART_BIT_RATE COMS_SPEED // 57600 38400 1200 19200 9600 115200 300
-#define RX_BUF_LENGTH 256 // software serial port's reception buffer length 
-#define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
+#define RX_BUF_LENGTH 64 // software serial port's reception buffer length 
+#define TX_BUF_LENGTH 64 // software serial port's transmision buffer length
 
 
 #define HEADER_LENGTH 4  //length,type,num frames, frame no
@@ -37,7 +37,7 @@ using namespace arduino_due;
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 #define MEGA_SERIAL_BUFFER_LENGTH 32
-#define MAX_TWEET_SIZE 280
+#define MAX_TWEET_SIZE 140
 #define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
                                                                                                       // need different approach for bitmaps...
 

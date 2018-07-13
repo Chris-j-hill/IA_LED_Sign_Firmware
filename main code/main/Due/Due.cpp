@@ -62,7 +62,7 @@ void due_loop() {
     // //do these periodically based on config
     // cards.check_for_sd_card_inserted();
     // internet.check_connection();
-    // graphics.update_brightness();
+    graphics.update_brightness();
 
     fans.update_temperatures();
     fans.set_fan_speed();
@@ -77,9 +77,10 @@ void due_loop() {
     // //do this based speed variable
     // update_text_location(); //write location variable to be sent by interrupt
     host.check_serial();
+    card.check_for_sd_card();
     host.print_messages();
 
-    card.check_for_sd_card();
+
     //card.update_data_log();
     coms_serial.check_queues();
     

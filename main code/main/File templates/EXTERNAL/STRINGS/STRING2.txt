@@ -1,0 +1,17 @@
+{
+String:from string 2 file
+Red:3
+Green:5
+Blue:7
+Size:4
+X Speed:-3
+Y Speed:10
+X Start Pos:10
+Y Start Pos:-10
+X End Pos:-100
+Y End Pos:100
+X Loops:5
+Y Loops:5
+Disp time:100000
+Next File:String4.txt
+}
