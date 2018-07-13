@@ -75,12 +75,11 @@
 #define RASP_PI 3
 
 
-#define COPY_BUF_SIZE 100
-
-
 #define LOGGING_PERIOD 500
 
-#define COMMAND_LENGTH 30 //max length of the commands used in the string file
+#define COMMAND_LENGTH 20 //max length of the commands used in the string file
+#define CONFIG_PROFILE_NAME_LENGTH 20// max size of config profile name
+
 
 #define STRING_FILE_COMMAND_STRING          "String"
 #define STRING_FILE_COMMAND_RED             "Red"
@@ -101,7 +100,7 @@
 #define STRING_FILE_COMMAND_SCREEN_MODE     "Screen Mode"
 
 
-#define STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH 30
+#define STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH 20
 
 
 #define CALIBRATION_FILE_COMMAND_FAN_ENABLED          "fan enabled"
@@ -147,7 +146,7 @@ struct SD_Strings {
   String str_sd = "123456789 123456789 123456789 123456789 123456789 ";  //<- 60 bytes, sample default string, needed to set the length correctly
   String Network = "init network";    //store current network
   String Password = "init password";   //store current password
-  char next_file[MAX_NUM_OF_TEXT_OBJECTS][STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {{'\0'}};
+  char next_config_profile[MAX_NUM_OF_TEXT_OBJECTS][STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {{'\0'}};
   char null_string[STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH] = {'\0'}; //array of nulls to clear with
 };
 
@@ -192,10 +191,10 @@ class Card {
     void copy(byte from_device, byte to_device);
     void files_dont_exist(byte device);   //set all file_exists variables to false when device connection lost
 
-    
+    void retrieve_string(String filename, byte obj_num, bool get_next_config);
         
     void log_data(String filename, bool truncate = false, bool print_header = false);
-    bool file_is_a_next_file(String filename);
+    //bool file_is_a_next_file(String filename);
   public:
 
     Card();
@@ -212,7 +211,7 @@ class Card {
 
     void safely_eject_card(byte card);
     void mount_card(byte card);
-    void retrieve_data(String filename);
+    void retrieve_data(String filename, byte obj_num =0, bool get_next_config = false);
 
 };
 

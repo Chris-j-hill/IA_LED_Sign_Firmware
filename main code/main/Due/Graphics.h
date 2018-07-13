@@ -131,6 +131,7 @@ class Graphics {
     void configure_limits();
     void reset_position(byte obj_num);
     void reset_position();
+    void get_next_string_config_profile();
 };
 
 

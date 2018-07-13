@@ -41,18 +41,19 @@ void due_setup() {
   host.init_serial();
   //  host.check_serial();
   //  host.print_messages();
-  fans.init_fans();
-  fans.init_temp_sensors();
-  led_strip.init_led_strip();
+    card.init_sd_cards();
+
   encoder.init_encoder();
   encoder.init_button();
   menu.init_menu_tree();
   nativeUsb.init_native_usb();
   light_sensor.init_LDR();
-  card.init_sd_cards();
   current_meter.init_current_meter();
   graphics.init_cursor();
   coms_serial.init_serial();
+    fans.init_fans();
+  fans.init_temp_sensors();
+  led_strip.init_led_strip();
 }
 
 
@@ -83,6 +84,7 @@ void due_loop() {
 
     //card.update_data_log();
     coms_serial.check_queues();
+    graphics.get_next_string_config_profile();
     
   }
 

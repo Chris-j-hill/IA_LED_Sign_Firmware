@@ -12,6 +12,19 @@
 #include "Coms_serial.h"
 
 
+#include <malloc.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+
+extern char _end;
+extern "C" char *sbrk(int i);
+char *ramstart = (char *)0x20070000;
+char *ramend = (char *)0x20088000;
+
+
+
+
 
 SD_Strings SD_string;
 
@@ -33,10 +46,10 @@ bool sd_cards_enabled = false;
 const uint8_t SD2_CS = SD1_ENABLE;   // chip select for internal_sd_card
 const uint8_t SD1_CS = SD2_ENABLE;  // chip select for external_sd_card
 
-const uint8_t SD_FILE_COPY_BUF_SIZE = 100;
-uint8_t sd_file_copy_buffer[SD_FILE_COPY_BUF_SIZE];
+//const uint8_t SD_FILE_COPY_BUF_SIZE = 100;
+//uint8_t sd_file_copy_buffer[SD_FILE_COPY_BUF_SIZE];
 
-char sd_file_read_buffer[67];       //buffer to read some data, dont need to read whole file at once, and doing so could be problematic if file large,
+//char sd_file_read_buffer[67];       //buffer to read some data, dont need to read whole file at once, and doing so could be problematic if file large,
 //read 15 bytes to recognise id word (eg Network) and have 50 bytes for string (default could be long) and two for \n type characters
 
 // put sd card file name strings here:
@@ -47,7 +60,7 @@ const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
 const char *sd_int_file = NETWORK_LOGIN_FILENAME;
 
-char copy_buffer[1024] = {'\0'};
+//char copy_buffer[1024] = {'\0'};
 
 
 SD_Card card1;    //external card struct
@@ -71,6 +84,24 @@ extern Coms_Serial coms_serial;
 
 extern byte screen_brightness;
 extern byte screen_mode;
+
+
+
+
+
+void ram_stats() {
+  char *heapend = sbrk(0);
+  register char * stack_ptr asm ("sp");
+  struct mallinfo mi = mallinfo();
+  delay(1);
+  printf("\nDynamic ram used: %d\n", mi.uordblks);
+  delay(1);
+  printf("Program static ram used %d\n", &_end - ramstart);
+  delay(1);
+  printf("Stack ram used %d\n\n", ramend - stack_ptr);
+  delay(1);
+  printf("My guess at free mem: %d\n", stack_ptr - heapend + mi.fordblks);
+}
 
 
 Card::Card() {
@@ -448,14 +479,14 @@ void Card::check_for_sd_card() {
 
         if (card2.enabled && card2.detected) {            //attempt to update to newer version if both internal and external cards exist
 
-                    if (card1.network_file_exists)// if file exists on external device, copy
-                      copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
-                    if (card1.disp_string_file_exists)
-                      copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD);
-                    if (card1.calibration_file_exists)
-                      copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
-                    if (card1.bitmap_file_exists)
-                      copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          if (card1.network_file_exists)// if file exists on external device, copy
+            copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
+          if (card1.disp_string_file_exists)
+            copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          if (card1.calibration_file_exists)
+            copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          if (card1.bitmap_file_exists)
+            copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
         }
 
         Serial.println("Retrieve files");
@@ -481,12 +512,12 @@ void Card::check_for_sd_card() {
         card2.detected = true;
         check_for_files(INTERNAL_CARD);  //check if files exist on external card
 
-                if (card1.enabled && card1.detected) {
-                  copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD);
-                  copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD);
-                  copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
-                  copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
-                }
+        if (card1.enabled && card1.detected) {
+          copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+        }
 
         if (card2.network_file_exists)
           retrieve_data(INT_NETWORK_FILE);
@@ -506,7 +537,7 @@ void Card::check_for_sd_card() {
 void Card::check_for_files(byte card_to_check) {
 
   if (card_to_check == EXTERNAL_CARD) { //checking external card
-    
+
     external_sd_card.set_as_active();
     //check if dir exists
     if (external_sd_card.exists(card1.working_dir)) {
@@ -573,7 +604,7 @@ void Card::check_for_files(byte card_to_check) {
   }
 
   else if (card_to_check == INTERNAL_CARD) { //checking internal card
-    
+
     internal_sd_card.set_as_active();
     if (!internal_sd_card.exists(card2.working_dir)) {
       card2.directory_exists = internal_sd_card.mkdir(card2.working_dir); //make dir if does not exist
@@ -804,418 +835,149 @@ void Card::copy(byte from_device, byte to_device) {
   }
 }
 
-void Card::retrieve_data(String filename) {
+void Card::retrieve_data(String filename, byte obj_num, bool get_next_config) {
 
-  if (filename == INT_STRING_FILE || filename == EXT_STRING_FILE || file_is_a_next_file(filename)) {
+  if (filename == INT_STRING_FILE || filename == EXT_STRING_FILE)
+    retrieve_string(filename, obj_num, get_next_config);
 
-    byte i = 0;
-    int16_t char_read;
-    byte max_i = MAX_NUM_OF_TEXT_OBJECTS;
 
-    // byte delimiter = filename.indexOf('\0');
+  else if (filename == INT_NETWORK_FILE || filename == EXT_NETWORK_FILE) {
 
-    //filename.remove(sizeof(filename)-2);
+    char copy_buffer[60] = {'\0'};
 
-    Serial.println(filename.length());
-    delay(100);
-    //    for (int k = 0; k < sizeof(filename); k++)
-    //      Serial.println((int)filename[k]);
-    //    Serial.println(EXT_STRING_FILE + '\0');
-
-    if (filename == INT_STRING_FILE) {
-      Serial.println("internal");
+    if (filename == INT_NETWORK_FILE) {
       if (!internal_sd_card.exists(card2.working_dir)) return;
       internal_sd_card.chdir(card2.working_dir);
-      file1.open(INT_STRING_FILE, O_READ);
 
+      file2.open(INT_NETWORK_FILE, O_READ);
+      file2.read(copy_buffer, sizeof(copy_buffer));
+      file2.close();
     }
-    //else if (filename.compare(EXT_STRING_FILE)){
-    else if (filename == EXT_STRING_FILE) {
-      Serial.println("file is ext file");
-      external_sd_card.set_as_active();
+    else {
+      if (!external_sd_card.exists(card1.working_dir)) return;
+      external_sd_card.chdir(card1.working_dir);
+
+      file1.open(EXT_NETWORK_FILE, O_READ);
+      file1.read(copy_buffer, sizeof(copy_buffer));
+      file1.close();
+    }
+    String file_content = copy_buffer;
+    //    Serial.println(file_content);
+
+    //parse content
+    byte network_keyword = file_content.indexOf(':');
+    byte line_end = file_content.indexOf('\n', network_keyword + 1);
+    byte ssid_keyword = file_content.indexOf(':', line_end + 1);
+
+    String network = file_content.substring(network_keyword + 1, line_end);
+    String password = file_content.substring(ssid_keyword + 1);
+
+    network.trim();
+    password.trim();
+
+    //save locally
+    SD_string.Network = network;
+    SD_string.Password = password;
+
+
+  }
+
+  else if (filename == INT_CALIBRATION_FILE || filename == EXT_CALIBRATION_FILE) {
+
+    if (filename == INT_CALIBRATION_FILE) {
+      if (!internal_sd_card.exists(card2.working_dir)) return;
+      internal_sd_card.chdir(card2.working_dir);
+      file1.open(INT_CALIBRATION_FILE, O_READ);
+    }
+
+    else if (filename == EXT_CALIBRATION_FILE) {
       if (!external_sd_card.exists(card1.working_dir)) {
-        Serial.println(F("dir doesnt exist, cant retrieve data"));
+        Serial.println("file_doesnt_exist");
         return;
       }
-      Serial.println(F("dir found"));
       external_sd_card.chdir(card1.working_dir);
-      external_sd_card.ls();
-      file1.open(EXT_STRING_FILE, O_READ);
+      file1.open(EXT_CALIBRATION_FILE, O_READ);
     }
 
-    //    else if (file_is_a_next_file(filename)) {
-    //      delay(100);
-    //      
-    //      Serial.println(F("file_is_a_next_file"));
-    //      //external_sd_card.set_as_active();
-    //
-    //      //external_sd_card.chdir("/");
-    //      Serial.println(external_sd_card.exists(card2.working_dir));
-    //      Serial.println(external_sd_card.exists(card1.working_dir));
-    //      Serial.println(external_sd_card.exists(card1.strings_sub_dir));
-    //
-    //      //external_sd_card.chdir(card1.working_dir);
-    //      //external_sd_card.chdir('/');
-    //      //Serial.println("in root");
-    //      //external_sd_card.ls();
-    //      //external_sd_card.chdir(card1.working_dir);
-    //
-    //      //if (!external_sd_card.exists(card1.strings_sub_dir))
-    //      //external_sd_card.mkdir(card1.strings_sub_dir);
-    //      //external_sd_card.chdir(card1.strings_sub_dir);
-    //      //external_sd_card.ls();
-    //
-    //      for (byte k = 0; k < MAX_NUM_OF_TEXT_OBJECTS; k++)  //loop through objects
-    //        if (filename   == SD_string.next_file[k]) {
-    //          Serial.print(F("found string:"));
-    //          Serial.println(SD_string.next_file[k]);
-    //
-    //          if (!file1.open(SD_string.next_file[k], O_READ)) {
-    //            Serial.println(F("failed to open new file"));
-    //            return;
-    //          }
-    //          else {
-    //            //external_sd_card.chdir(card2.working_dir);
-    //            //file1.open(SD_string.next_file[k], O_READ);
-    //            text_cursor[k].check_for_new_file = false;
-    //            i = k; //this file is for a specific text obj, configure limits to only put it in that text obj
-    //            max_i = k + 1;
-    //            Serial.println(F("file chain found"));
-    //            break;
-    //          }
-    //        }
-    //    }
-    else {
-      Serial.println(F("wft"));
-      return;
-    }
 
-    while (char_read != -1 && i < max_i) { //scan file for text obj maker ('{')
-      Serial.print(F("i="));
-      Serial.println(i);
-      char_read = file1.read();
+    int16_t char_read;
 
-      if (char_read == -1 ) break;
-      else if (char_read == '{') {   //found an obj marker, decode until '}' found
-        Serial.println(F("found obj marker"));
-        bool x_start = false;   //place holders until file read
-        bool y_start = false;
-        bool x_end = false;
-        bool y_end = false;
-        bool disp_loops_found_x = false;
-        bool disp_loops_found_y = false;
-        bool disp_time_found = false;
-        bool next_file_found = false;
+    while (char_read != -1 ) { //|| num_lines<max_lines) {
 
+      int reads = 0;
+      char command [COMMAND_LENGTH] = {'\0'};
 
+      while (reads < COMMAND_LENGTH) {
+        char_read = file1.read();
+        if ((char)char_read == ':' || (char)char_read == '\n' ||  char_read == -1 ) break;
+        else {
+          command[reads] = (char)char_read;
+          reads++;
+        }
+      }
 
-        if (file1.peek() == 13)
-          file1.read();
-        if (file1.peek() == 10)
-          file1.read();
-
-        while (char_read != '}') {
-
-          int reads = 0;
-          char command [COMMAND_LENGTH] = {'\0'};
-
-          while (reads < COMMAND_LENGTH) {
-            char_read = file1.read();
-            Serial.print((char)char_read);
-            if ((char)char_read == ':' || (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
-            else {
-              command[reads] = (char)char_read;
-              reads++;
-            }
-          }
-          //Serial.println();
-          if (char_read == ':') {
-            char data_found[MAX_TWEET_SIZE] = {'\0'};
-            reads = 0;
-            while (reads < MAX_TWEET_SIZE) {
-              char_read = file1.read();
-              Serial.print((char)char_read);
-              if ((char)char_read == '\n' ||  char_read == -1 ) break;
-              else {
-                data_found[reads] = (char)char_read;
-                reads++;
-              }
-            }
-            Serial.println();
-            int value_found = atoi(data_found); //convert to int for some data types
-            //Serial.println(command);
-            //Serial.println((int)command);
-            if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
-              strncpy(text_str[i], data_found, sizeof(text_str));
-              text_parameters[i].text_str_length = reads;
-              coms_serial.send_all_text_frames(true);
-              text_cursor[i].object_used = true;  // set as true once string found, ignore if data provided but no string
-              Serial.println(data_found);
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
-              text_parameters[i].red = value_found;
-              text_parameters[i].use_hue = false;
-
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_GREEN) == 0) {
-              text_parameters[i].green = value_found;
-              text_parameters[i].use_hue = false;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_BLUE) == 0) {
-              text_parameters[i].blue = value_found;
-              text_parameters[i].use_hue = false;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_HUE) == 0) {
-              text_parameters[i].hue = value_found;
-              text_parameters[i].use_hue = true;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_SIZE) == 0)
-              text_parameters[i].text_size = value_found;
-            else if (strcmp(command, STRING_FILE_COMMAND_X_SPEED) == 0)
-              text_cursor[i].x_pos_dir = value_found + 128;
-            else if (strcmp(command, STRING_FILE_COMMAND_Y_SPEED) == 0)
-              text_cursor[i].y_pos_dir = value_found + 128;
-            else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
-              text_cursor[i].x_start = value_found;
-              x_start = true;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_Y_START_POS) == 0) {
-              text_cursor[i].y_start = value_found;
-              y_start = true;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_X_END_POS) == 0)  {
-              text_cursor[i].x_end = value_found;
-              x_end = true;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_Y_END_POS) == 0)   {
-              text_cursor[i].y_end = value_found;
-              y_end = true;
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_X) == 0)   {
-              if (value_found > 0) {
-                text_cursor[i].loops_x = value_found;
-                disp_loops_found_x = true;
-
-              }
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_Y) == 0)   {
-              if (value_found > 0) {
-                text_cursor[i].loops_y = value_found;
-                disp_loops_found_y = true;
-
-              }
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
-              if (value_found > 0) {
-                text_cursor[i].str_disp_time = value_found;
-                disp_time_found = true;
-
-              }
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
-              //Serial.println(reads);
-              strncpy(SD_string.next_file[i], SD_string.null_string, STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH);
-              strncpy(SD_string.next_file[i], data_found, reads - 1);
-              next_file_found = true;
-              Serial.println(SD_string.next_file[i]);
-            }
-            else if (strcmp(command, STRING_FILE_COMMAND_SCREEN_MODE) == 0)   {
-              screen_mode = value_found;
-            }
+      if (char_read == ':') {
+        char data_found[CALIBRATION_FILE_DATA_CHAR_LENGTH] = {'\0'};
+        reads = 0;
+        while (reads < CALIBRATION_FILE_DATA_CHAR_LENGTH) {
+          char_read = file1.read();
+          if ((char)char_read == '\n' ||  char_read == -1 ) break;
+          else {
+            data_found[reads] = (char)char_read;
+            reads++;
           }
         }
-        //else if ((char)char_read == '}') { // reached the end of a text obj block
+        int value_found = atoi(data_found); //convert to int for some data types
+        bool bool_found;
 
-        Serial.println(F("found obj end marker"));
-        //will assume any chain of disp files are located on internal sd card for now
-        if (next_file_found && (disp_time_found || disp_loops_found_x || disp_loops_found_y)) {
-          external_sd_card.chdir('/');
-          external_sd_card.chdir(card1.working_dir);
-          if (external_sd_card.exists(card1.strings_sub_dir)) {
-            external_sd_card.chdir(card1.strings_sub_dir);
-            Serial.println(F("Found dir"));
-            if (!external_sd_card.exists(SD_string.next_file[i])) { //if file doesnt exist dont jump to that file
-              Serial.println(F("file doesnt exist"));
-              text_cursor[i].check_for_new_file = false;
-              text_cursor[i].found_loops_x = false;
-              text_cursor[i].found_loops_y = false;
-              text_cursor[i].found_time = false;
-            }
+        if ((data_found[0] == 'T' || data_found[0] == 't') && data_found[1] == 'r' && data_found[2] == 'u' && data_found[3] == 'e')
+          bool_found = true;
+        else
+          bool_found = false;
 
-            else {  //dir exists and file exists
-              Serial.println(F("Found file"));
-              text_cursor[i].check_for_new_file = true;
-              if (disp_loops_found_x) text_cursor[i].found_loops_x = true;
-              if (disp_loops_found_y) text_cursor[i].found_loops_y = true;
-              if (disp_time_found) {
-                text_cursor[i].found_time = true;
-                text_cursor[i].change_file_timeout = millis();
-              }
-            }
-            external_sd_card.chdir(card1.working_dir);
-          }
+        if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_ENABLED) == 0)                   fan_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP1_ENABLED) == 0)            temp_parameters.enabled1 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP2_ENABLED) == 0)            temp_parameters.enabled2 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP3_ENABLED) == 0)            temp_parameters.enabled3 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_ENABLED) == 0)            led_strip_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_CURRENT1_ENABLED) == 0)         current_meter_parameters.enabled1 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_CURRENT2_ENABLED) == 0)         current_meter_parameters.enabled2 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR1_ENABLED) == 0)             light_sensor_parameters.enabled1 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR2_ENABLED) == 0)             light_sensor_parameters.enabled2 = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_ENCODER_ENABLED) == 0)          encoder_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_BUTTON_ENABLED) == 0)           button_parameters.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_SD_CARD1_ENABLED) == 0)         card1.enabled = bool_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_SD_CARD2_ENABLED) == 0)         card2.enabled = bool_found;
 
-          else { //dir doesnt exist
-            Serial.println(F("Dir doesnt exist"));
-            text_cursor[i].check_for_new_file = false;
-            text_cursor[i].found_loops_x = false;
-            text_cursor[i].found_loops_y = false;
-            text_cursor[i].found_time = false;
-          }
 
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_MIN) == 0)                  fan_parameters.fan_minimum = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_SPEED) == 0) {
+          fan_parameters.manual_set_value = value_found;
+          fan_parameters.manual = true;
         }
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_INCREMENT) == 0)            fan_parameters.change_increment = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_INTERVAL) == 0)             fan_parameters.fan_change_interval = value_found;
 
 
-        text_cursor[i].x_start_set = x_start;  //drive to false if not found
-        text_cursor[i].y_start_set = y_start;
-        text_cursor[i].x_end_set = x_end;
-        text_cursor[i].y_end_set = y_end;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_BRIGHTNESS) == 0)         led_strip_parameters.current_brightness = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_MINUMUM) == 0)            led_strip_parameters.minimum_on = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_INCREMENT) == 0)          led_strip_parameters.change_increment = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_INTERVAL) == 0)           led_strip_parameters.change_interval = value_found;
 
-        graphics.configure_limits(i);
-        graphics.reset_position(i);
-        i++;
+
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_ENCODER_SENSITIVITY) == 0)      encoder_parameters.sensitivity = value_found;
+
+
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX1) == 0)           light_sensor_parameters.config_max1 = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX2) == 0)           light_sensor_parameters.config_max2 = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN1) == 0)           light_sensor_parameters.config_min1 = value_found;
+        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN2) == 0)           light_sensor_parameters.config_min2 = value_found;
       }
     }
     file1.close();
-  }
 
-  //  else if (filename == INT_NETWORK_FILE || filename == EXT_NETWORK_FILE) {
-  //
-  //    char copy_buffer[60] = {'\0'};
-  //
-  //    if (filename == INT_NETWORK_FILE) {
-  //      if (!internal_sd_card.exists(card2.working_dir)) return;
-  //      internal_sd_card.chdir(card2.working_dir);
-  //
-  //      file2.open(INT_NETWORK_FILE, O_READ);
-  //      file2.read(copy_buffer, sizeof(copy_buffer));
-  //      file2.close();
-  //    }
-  //    else {
-  //      if (!external_sd_card.exists(card1.working_dir)) return;
-  //      external_sd_card.chdir(card1.working_dir);
-  //
-  //      file1.open(EXT_NETWORK_FILE, O_READ);
-  //      file1.read(copy_buffer, sizeof(copy_buffer));
-  //      file1.close();
-  //    }
-  //    String file_content = copy_buffer;
-  //    //    Serial.println(file_content);
-  //
-  //    //parse content
-  //    byte network_keyword = file_content.indexOf(':');
-  //    byte line_end = file_content.indexOf('\n', network_keyword + 1);
-  //    byte ssid_keyword = file_content.indexOf(':', line_end + 1);
-  //
-  //    String network = file_content.substring(network_keyword + 1, line_end);
-  //    String password = file_content.substring(ssid_keyword + 1);
-  //
-  //    network.trim();
-  //    password.trim();
-  //
-  //    //save locally
-  //    SD_string.Network = network;
-  //    SD_string.Password = password;
-  //
-  //
-  //  }
-  //
-  //  else if (filename == INT_CALIBRATION_FILE || filename == EXT_CALIBRATION_FILE) {
-  //
-  //    if (filename == INT_CALIBRATION_FILE) {
-  //      if (!internal_sd_card.exists(card2.working_dir)) return;
-  //      internal_sd_card.chdir(card2.working_dir);
-  //      file1.open(INT_CALIBRATION_FILE, O_READ);
-  //    }
-  //
-  //    else if (filename == EXT_CALIBRATION_FILE) {
-  //      if (!external_sd_card.exists(card1.working_dir)) {
-  //        Serial.println("file_doesnt_exist");
-  //        return;
-  //      }
-  //      external_sd_card.chdir(card1.working_dir);
-  //      file1.open(EXT_CALIBRATION_FILE, O_READ);
-  //    }
-  //
-  //
-  //    int16_t char_read;
-  //
-  //    while (char_read != -1 ) { //|| num_lines<max_lines) {
-  //
-  //      int reads = 0;
-  //      char command [COMMAND_LENGTH] = {'\0'};
-  //
-  //      while (reads < COMMAND_LENGTH) {
-  //        char_read = file1.read();
-  //        if ((char)char_read == ':' || (char)char_read == '\n' ||  char_read == -1 ) break;
-  //        else {
-  //          command[reads] = (char)char_read;
-  //          reads++;
-  //        }
-  //      }
-  //
-  //      if (char_read == ':') {
-  //        char data_found[CALIBRATION_FILE_DATA_CHAR_LENGTH] = {'\0'};
-  //        reads = 0;
-  //        while (reads < CALIBRATION_FILE_DATA_CHAR_LENGTH) {
-  //          char_read = file1.read();
-  //          if ((char)char_read == '\n' ||  char_read == -1 ) break;
-  //          else {
-  //            data_found[reads] = (char)char_read;
-  //            reads++;
-  //          }
-  //        }
-  //        int value_found = atoi(data_found); //convert to int for some data types
-  //        bool bool_found;
-  //
-  //        if ((data_found[0] == 'T' || data_found[0] == 't') && data_found[1] == 'r' && data_found[2] == 'u' && data_found[3] == 'e')
-  //          bool_found = true;
-  //        else
-  //          bool_found = false;
-  //
-  //        if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_ENABLED) == 0)                   fan_parameters.enabled = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP1_ENABLED) == 0)            temp_parameters.enabled1 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP2_ENABLED) == 0)            temp_parameters.enabled2 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_TEMP3_ENABLED) == 0)            temp_parameters.enabled3 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_ENABLED) == 0)            led_strip_parameters.enabled = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_CURRENT1_ENABLED) == 0)         current_meter_parameters.enabled1 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_CURRENT2_ENABLED) == 0)         current_meter_parameters.enabled2 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR1_ENABLED) == 0)             light_sensor_parameters.enabled1 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR2_ENABLED) == 0)             light_sensor_parameters.enabled2 = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_ENCODER_ENABLED) == 0)          encoder_parameters.enabled = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_BUTTON_ENABLED) == 0)           button_parameters.enabled = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_SD_CARD1_ENABLED) == 0)         card1.enabled = bool_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_SD_CARD2_ENABLED) == 0)         card2.enabled = bool_found;
-  //
-  //
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_MIN) == 0)                  fan_parameters.fan_minimum = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_SPEED) == 0) {
-  //          fan_parameters.manual_set_value = value_found;
-  //          fan_parameters.manual = true;
-  //        }
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_INCREMENT) == 0)            fan_parameters.change_increment = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_FAN_INTERVAL) == 0)             fan_parameters.fan_change_interval = value_found;
-  //
-  //
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_BRIGHTNESS) == 0)         led_strip_parameters.current_brightness = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_MINUMUM) == 0)            led_strip_parameters.minimum_on = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_INCREMENT) == 0)          led_strip_parameters.change_increment = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_STRIP_INTERVAL) == 0)           led_strip_parameters.change_interval = value_found;
-  //
-  //
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_ENCODER_SENSITIVITY) == 0)      encoder_parameters.sensitivity = value_found;
-  //
-  //
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX1) == 0)           light_sensor_parameters.config_max1 = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MAX2) == 0)           light_sensor_parameters.config_max2 = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN1) == 0)           light_sensor_parameters.config_min1 = value_found;
-  //        else if (strcmp(command, CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN2) == 0)           light_sensor_parameters.config_min2 = value_found;
-  //      }
-  //    }
-  //    file1.close();
-  //
-  //
-  //  }
+
+  }
 }
 
 void Card::log_data(String filename, bool truncate, bool print_header) {
@@ -1422,14 +1184,258 @@ void Card::files_dont_exist(byte device) {
     card1.bitmap_file_exists = false;
   }
 }
+//
+//bool Card::file_is_a_next_file(String filename) {
+//  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+//    Serial.println(SD_string.next_config_profile[i]);
+//    if (text_cursor[i].check_for_new_file && filename == SD_string.next_config_profile[i]) return true;
+//
+//  }
+//  return false;
+//}
 
-bool Card::file_is_a_next_file(String filename) {
-  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-    Serial.println(SD_string.next_file[i]);
-    if (text_cursor[i].check_for_new_file && filename == SD_string.next_file[i]) return true;
 
+
+void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) {
+  byte i = 0;
+  int16_t char_read;
+  byte max_i = MAX_NUM_OF_TEXT_OBJECTS;
+  ram_stats();
+  /*if (get_next_config && filename == INT_STRING_FILE) {
+    internal_sd_card.set_as_active();
+    if (!internal_sd_card.exists(INT_STRING_FILE)) {
+      Serial.println(F("file doesnt exist, cant retrieve data"));
+      return;
+    }
+    Serial.println("file exists");
+    file1.open(INT_STRING_FILE, O_READ);
+    }
+
+    else if (get_next_config && filename == EXT_STRING_FILE) {
+    //external_sd_card.set_as_active();
+    if (!external_sd_card.exists(EXT_STRING_FILE)) {
+      Serial.println(F("file doesnt exist, cant retrieve data"));
+      return;
+    }
+    //Serial.println("file exists");
+    file1.open(EXT_STRING_FILE, O_READ);
+    }
+
+    else*/ if (filename == INT_STRING_FILE) {
+    internal_sd_card.set_as_active();
+    //internal_sd_card.ls();
+    if (!internal_sd_card.exists(card2.working_dir)) {
+
+      //Serial.println(F("int dir doesnt exist, cant retrieve data"));
+      return;
+    }
+    internal_sd_card.chdir(card2.working_dir);
+    file1.open(INT_STRING_FILE, O_READ);
   }
-  return false;
+  else if (filename == EXT_STRING_FILE) {
+    external_sd_card.set_as_active();
+    if (!external_sd_card.exists(card1.working_dir)) {
+      external_sd_card.chdir("/");
+      if (!external_sd_card.exists(card1.working_dir)) {
+        //Serial.println(F("ext dir doesnt exist, cant retrieve data"));
+        return;
+      }
+    }
+    external_sd_card.chdir(card1.working_dir);
+    //external_sd_card.ls();
+    file1.open(EXT_STRING_FILE, O_READ);
+  }
+
+  else {
+    return;
+  }
+
+
+  bool break_after_one_config_profile = false;  //if meant to look for one specific profile
+
+  while (char_read != -1 && i < max_i && !break_after_one_config_profile) { //scan file for text obj maker ('{')
+    //   Serial.print(F("i="));
+    //     Serial.println(i);
+    char_read = file1.read();
+
+    if (char_read == -1 ) break;
+    else if (char_read == '{') {   //found an obj marker, decode until '}' found
+      //       Serial.println(F("found obj marker"));
+
+      bool x_start = false;   //place holders until file read
+      bool y_start = false;
+      bool x_end = false;
+      bool y_end = false;
+      bool disp_loops_found_x = false;
+      bool disp_loops_found_y = false;
+      bool disp_time_found = false;
+      bool next_file_found = false;
+
+      if (file1.peek() == 13) //skip return carraige
+        file1.read();
+      if (file1.peek() == 10)
+        file1.read();
+      if (file1.peek() != 40) {
+        while (char_read != '}') {
+
+          int reads = 0;
+          if (get_next_config) {        //if were meant to be looking for a specific text config block
+            char config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
+            bool outside_config_profile_name = true;
+            while (char_read != ')') {  //search until we find the specific identifier
+              char_read = file1.read();
+              if (char_read == -1) break;
+              else if (char_read == '(') {
+                memset( config_name, '\0', CONFIG_PROFILE_NAME_LENGTH );  //found the start of a config profile
+                outside_config_profile_name = false;
+              }
+              else if (char_read == ')')
+                outside_config_profile_name = true;
+              else if (!outside_config_profile_name) {
+                //Serial.print((char)char_read);
+                config_name[reads] = (char)char_read;
+                reads++;
+                if (strcmp(config_name, SD_string.next_config_profile[obj_num]) == 0) {
+                  break_after_one_config_profile = true;
+                }
+              }
+            }
+          }
+          reads = 0;
+          char command [COMMAND_LENGTH] = {'\0'};
+
+          while (reads < COMMAND_LENGTH) {
+            char_read = file1.read();
+            //            Serial.print((char)char_read);
+            if ((char)char_read == ':' || (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
+            else {
+              command[reads] = (char)char_read;
+              reads++;
+            }
+          }
+          //Serial.println();
+          if (char_read == ':') {
+            char data_found[MAX_TWEET_SIZE] = {'\0'};
+            reads = 0;
+            while (reads < MAX_TWEET_SIZE) {
+              char_read = file1.read();
+              if ((char)char_read == '\n' ||  char_read == -1 ) break;
+              else {
+                data_found[reads] = (char)char_read;
+                reads++;
+              }
+            }
+            int value_found = atoi(data_found); //convert to int for some data types
+            if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
+              strncpy(text_str[i], data_found, sizeof(text_str));
+              text_parameters[i].text_str_length = reads;
+              coms_serial.send_all_text_frames(true);
+              text_cursor[i].object_used = true;  // set as true once string found, ignore if data provided but no string
+
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_RED) == 0)   {
+              text_parameters[i].red = value_found;
+              text_parameters[i].use_hue = false;
+
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_GREEN) == 0) {
+              text_parameters[i].green = value_found;
+              text_parameters[i].use_hue = false;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_BLUE) == 0) {
+              text_parameters[i].blue = value_found;
+              text_parameters[i].use_hue = false;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_HUE) == 0) {
+              text_parameters[i].hue = value_found;
+              text_parameters[i].use_hue = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_SIZE) == 0)
+              text_parameters[i].text_size = value_found;
+            else if (strcmp(command, STRING_FILE_COMMAND_X_SPEED) == 0)
+              text_cursor[i].x_pos_dir = value_found + 128;
+            else if (strcmp(command, STRING_FILE_COMMAND_Y_SPEED) == 0)
+              text_cursor[i].y_pos_dir = value_found + 128;
+            else if (strcmp(command, STRING_FILE_COMMAND_X_START_POS) == 0) {
+              text_cursor[i].x_start = value_found;
+              x_start = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_Y_START_POS) == 0) {
+              text_cursor[i].y_start = value_found;
+              y_start = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_X_END_POS) == 0)  {
+              text_cursor[i].x_end = value_found;
+              x_end = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_Y_END_POS) == 0)   {
+              text_cursor[i].y_end = value_found;
+              y_end = true;
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_X) == 0)   {
+              if (value_found > 0) {
+                text_cursor[i].loops_x = value_found;
+                text_cursor[i].found_loops_x = true;
+
+              }
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_NUM_LOOPS_Y) == 0)   {
+              if (value_found > 0) {
+                text_cursor[i].loops_y = value_found;
+                text_cursor[i].found_loops_y = true;
+              }
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_DISP_TIME) == 0)   {
+              if (value_found > 0) {
+                text_cursor[i].str_disp_time = value_found;
+                text_cursor[i].found_time = true;
+
+              }
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
+              //Serial.println(reads);
+              strncpy(SD_string.next_config_profile[i], SD_string.null_string, STRING_FILE_COMMAND_NEXT_FILE_NAME_LENGTH);
+              strncpy(SD_string.next_config_profile[i], data_found, reads - 1);
+              next_file_found = true;
+              //Serial.println(SD_string.next_config_profile[i]);
+            }
+            else if (strcmp(command, STRING_FILE_COMMAND_SCREEN_MODE) == 0)   {
+              screen_mode = value_found;
+            }
+          }
+        }
+
+
+        //        Serial.println(F("found obj end marker"));
+        if (text_cursor[i].found_time || text_cursor[i].found_loops_y || text_cursor[i].found_loops_x) {
+          text_cursor[i].check_for_new_file = true;
+        }
+        else
+          text_cursor[i].check_for_new_file = false;
+
+
+        text_cursor[i].x_start_set = x_start;  //drive to false if not found
+        text_cursor[i].y_start_set = y_start;
+        text_cursor[i].x_end_set = x_end;
+        text_cursor[i].y_end_set = y_end;
+
+        graphics.configure_limits(i);
+        graphics.reset_position(i);
+        i++;
+      }
+    }
+  }
+  file1.close();
+
 }
+
+
+
+
+
+
+
+
+
 
 #endif // SD_Cards_CPP

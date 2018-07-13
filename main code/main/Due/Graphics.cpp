@@ -32,7 +32,7 @@ volatile bool send_pos_now;
 
 extern struct SD_Strings SD_string;
 extern Card card;
-
+bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS]={false};
 
 void Graphics::flip_direction() {
 
@@ -178,13 +178,10 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
 
       //if the next file exists and we've reached an overflow limit or time limit of this file get new file data
       if (text_cursor[i].check_for_new_file) {
-        if ((text_cursor[i].found_loops_x && loops_since_overflow_x[i] >= text_cursor[i].loops_x) || (text_cursor[i].found_loops_y && loops_since_overflow_y[i] >= text_cursor[i].loops_y)){// || (text_cursor[i].found_time && millis() > text_cursor[i].change_file_timeout + text_cursor[i].str_disp_time)) {
+        if ((text_cursor[i].found_loops_x && loops_since_overflow_x[i] >= text_cursor[i].loops_x) || (text_cursor[i].found_loops_y && loops_since_overflow_y[i] >= text_cursor[i].loops_y) || (text_cursor[i].found_time && millis() > text_cursor[i].change_file_timeout + text_cursor[i].str_disp_time)) {
 
-          //        Serial.println("read new file condition met");
-          String nextfile = SD_string.next_file[i];
-          //Serial.println(nextfile);
-          //card.retrieve_data(SD_string.next_file[i]);
-          
+          get_new_config[i] = true;
+
           loops_since_overflow_x[i] = 0;
           loops_since_overflow_y[i] = 0;
 
@@ -197,6 +194,16 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
     }
   }
 }
+void Graphics::get_next_string_config_profile() {
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+    if (get_new_config[i]) {
+      //Serial.println("get new config");
+      //card.retrieve_data(EXT_STRING_FILE, i, true);
+      get_new_config[i]=false;
+    }
+  }
+}
+
 
 void Graphics::configure_limits(byte obj_num) {
 
