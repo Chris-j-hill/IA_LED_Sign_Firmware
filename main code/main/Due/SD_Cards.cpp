@@ -115,8 +115,7 @@ Card::Card() {
   //card1.working_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;    //change this line when using two cards
   card2.working_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
 
-  card1.strings_sub_dir = STRING_SUB_DIR;
-  card2.strings_sub_dir = STRING_SUB_DIR;
+
 }
 //
 //int Card::og_init_sd_cards() {      // code to init sd cards and copy data from external to internal card

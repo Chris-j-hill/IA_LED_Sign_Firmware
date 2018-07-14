@@ -32,7 +32,7 @@ volatile bool send_pos_now;
 
 extern struct SD_Strings SD_string;
 extern Card card;
-bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS]={false};
+bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS] = {false};
 
 void Graphics::flip_direction() {
 
@@ -197,9 +197,11 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
 void Graphics::get_next_string_config_profile() {
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
     if (get_new_config[i]) {
-      //Serial.println("get new config");
-      //card.retrieve_data(EXT_STRING_FILE, i, true);
-      get_new_config[i]=false;
+#ifdef ALLOW_CONFIG_CHAINING
+      Serial.println("get new config");
+      card.retrieve_data(EXT_STRING_FILE, i, true);
+#endif
+      get_new_config[i] = false;
     }
   }
 }

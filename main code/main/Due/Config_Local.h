@@ -63,14 +63,14 @@
 
 #define EXPECTS_SD_ON_STARTUP   //if not defined, will not search for sd card, will carry on with default string since no internet connectivity
 
-
 #define EXTERNAL_SD_CARD_DIRECTORY_NAME "/EXTERNAL"
 #define INTERNAL_SD_CARD_DIRECTORY_NAME "/INTERNAL"
 
-#define STRING_SUB_DIR "STRINGS"
+//#define STRING_SUB_DIR "STRINGS"
 
 #define NETWORK_LOGIN_FILENAME "Networks.BIN"
 
+//#define ALLOW_CONFIG_CHAINING   // allow strings profiles to be chained together, ie display one for specified time then move to next
 
 #define ENABLE_FANS
 #define ENABLE_LED_STRIP
@@ -152,7 +152,6 @@
 #define PREFIX_TEXT_USE_HUE_3             163
 #define PREFIX_TEXT_USE_HUE_4             164
 
-
 #define PREFIX_DEBUG_STATE              170
 #define PREFIX_SCREEN_MODE              180
 #define PREFIX_SD_MOUNTED_1             190
@@ -170,7 +169,11 @@
 #define PREFIX_TEXT_SCROLL_SPEED_Y_3      213
 #define PREFIX_TEXT_SCROLL_SPEED_Y_4      214
 
-
+#define PREFIX_TEXT_OBJ_ENABLED_0         220
+#define PREFIX_TEXT_OBJ_ENABLED_1         221
+#define PREFIX_TEXT_OBJ_ENABLED_2         222
+#define PREFIX_TEXT_OBJ_ENABLED_3         223
+#define PREFIX_TEXT_OBJ_ENABLED_4         224
 
 //#define SKIP_INTITAL_STARTUP_SEQUENCE
 

@@ -47,8 +47,8 @@
 #define ALLOW_DISP_STRING_FILES
 #define ALLOW_NETWORK_FILES
 
-#define  EXT_NETWORK_FILE NETWORK_LOGIN_FILENAME
-#define  INT_NETWORK_FILE NETWORK_LOGIN_FILENAME
+#define  EXT_NETWORK_FILE "NetworksE.BIN"
+#define  INT_NETWORK_FILE "NetworksI.BIN"
 
 #define EXT_STRING_FILE "StringE.BIN"
 #define INT_STRING_FILE "StringI.BIN"
@@ -154,8 +154,7 @@ struct SD_Card {
   byte pin = 0;
   bool enabled = false;
   bool detected = false;
-  const char *working_dir = "123456789 123456789 "; // <- 20 characters for working dir name
-  const char *strings_sub_dir = "123456789 123456789 ";
+  const char *working_dir = "123456789 123456789 "; // <- allow 20 characters for working dir name
   bool directory_exists = false;
 
   bool network_file_exists = false;       //types of files that we might work with
@@ -173,16 +172,15 @@ class Card {
 
   private:
 
-
-    int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
-    int extract_network_data();
-    int buffer_in_header();         // return 1 if the colon is in the header, otherwise 0
-    int buffer_is_network();         // check if network stored in buffer
-    int buffer_is_password();        // check if password stored in buffer
-    int buffer_is_default();        // check if default string stored in buffer
-    int string_length();      // calculate the length of the relevent string in file
-    int remove_card_1();
-    int log_temp_to_sd();               // log data to the sd card data related to temps over time
+//    int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
+//    int extract_network_data();
+//    int buffer_in_header();         // return 1 if the colon is in the header, otherwise 0
+//    int buffer_is_network();         // check if network stored in buffer
+//    int buffer_is_password();        // check if password stored in buffer
+//    int buffer_is_default();        // check if default string stored in buffer
+//    int string_length();      // calculate the length of the relevent string in file
+//    int remove_card_1();
+//    int log_temp_to_sd();               // log data to the sd card data related to temps over time
 
 
 
@@ -194,7 +192,7 @@ class Card {
     void retrieve_string(String filename, byte obj_num, bool get_next_config);
         
     void log_data(String filename, bool truncate = false, bool print_header = false);
-    //bool file_is_a_next_file(String filename);
+    
   public:
 
     Card();

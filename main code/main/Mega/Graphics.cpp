@@ -15,9 +15,9 @@
 #endif
 
 
-Text_Struct text_parameters;
+Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Screen_Struct screen_parameters;
-Cursor_Struct cursor_parameters;
+Cursor_Struct cursor_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Object_Struct_Circles startup_ring;   //general purpose object parameters, so as not to overwrite text parameters when displaying several things at once
 Object_Struct_Polygons menu_select_bar;
 extern struct Menu_tree_items menu_items;
@@ -137,27 +137,27 @@ void Graphics::delay_pos_ISR(int value, byte counter) {
   }
 }
 
-void Graphics::increment_cursor_position(byte axis) {
+void Graphics::increment_cursor_position(byte axis, byte obj_num) {
 
   if (axis == 1) {
-    if (cursor_parameters.x_dir < 0) {
-      cursor_parameters.global_x_pos --;
-      cursor_parameters.local_x_pos --;
+    if (cursor_parameters[obj_num].x_dir < 0) {
+      cursor_parameters[obj_num].global_x_pos --;
+      cursor_parameters[obj_num].local_x_pos --;
     }
-    else if (cursor_parameters.x_dir > 0) {
-      cursor_parameters.global_x_pos ++;
-      cursor_parameters.local_x_pos ++;
+    else if (cursor_parameters[obj_num].x_dir > 0) {
+      cursor_parameters[obj_num].global_x_pos ++;
+      cursor_parameters[obj_num].local_x_pos ++;
     }
   }
 
   else if (axis == 2) {
-    if (cursor_parameters.y_dir < 0) {
-      cursor_parameters.global_y_pos --;
-      cursor_parameters.local_y_pos --;
+    if (cursor_parameters[obj_num].y_dir < 0) {
+      cursor_parameters[obj_num].global_y_pos --;
+      cursor_parameters[obj_num].local_y_pos --;
     }
-    else if (cursor_parameters.y_dir > 0) {
-      cursor_parameters.global_y_pos ++;
-      cursor_parameters.local_y_pos ++;
+    else if (cursor_parameters[obj_num].y_dir > 0) {
+      cursor_parameters[obj_num].global_y_pos ++;
+      cursor_parameters[obj_num].local_y_pos ++;
     }
   }
 }
@@ -171,19 +171,19 @@ int Graphics::pos_isr_period() {
 
 void Graphics::pos_isr_counter_overflow() {
 
-  x_pos_isr_counter_overflow = abs(cursor_parameters.x_dir) * 2; // *2 doubles range to increase of overflow to improve achievable scroll speed
-  y_pos_isr_counter_overflow = abs(cursor_parameters.y_dir) * 2;
+  x_pos_isr_counter_overflow = abs(cursor_parameters[0].x_dir) * 2; // *2 doubles range to increase of overflow to improve achievable scroll speed
+  y_pos_isr_counter_overflow = abs(cursor_parameters[0].y_dir) * 2;
 
 }
 
-void Graphics::set_text_min() {
+void Graphics::set_text_min(byte obj_num) {
   //how far to the left will the text scroll
-  cursor_parameters.local_min_x_pos = -1 * (screen_parameters.node_address * SINGLE_MATRIX_WIDTH) * (text_parameters.text_size * ASCII_CHARACTER_BASIC_WIDTH);
+  cursor_parameters[obj_num].local_min_x_pos = -1 * (screen_parameters.node_address << SINGLE_MATRIX_WIDTH_AS_POW_2) * (text_parameters[obj_num].text_size * ASCII_CHARACTER_BASIC_WIDTH);
 }
 
-void Graphics::set_text_max() {
+void Graphics::set_text_max(byte obj_num) {
   //how far to the left will the text scroll
-  cursor_parameters.local_max_x_pos = screen_parameters.node_address * SINGLE_MATRIX_WIDTH;
+  cursor_parameters[obj_num].local_max_x_pos = screen_parameters.node_address << SINGLE_MATRIX_WIDTH_AS_POW_2;
 }
 
 
@@ -194,12 +194,18 @@ void Graphics::draw_ring(byte x_center, byte y_center, uint16_t radius) {
   switch (screen_parameters.node_address) {
     case 0:   local_x = x_center; break;                    // global top left is this screens top left
     case 1:   local_x = x_center - SINGLE_MATRIX_WIDTH;     // global top left is -64
-    case 2:   local_x = x_center - (2 * SINGLE_MATRIX_WIDTH); // global top left is -128
-    case 3:   local_x = x_center - (3 * SINGLE_MATRIX_WIDTH);
+    case 2:   local_x = x_center - (2 << SINGLE_MATRIX_WIDTH_AS_POW_2); // global top left is -128
+    case 3:   local_x = x_center - (3 << SINGLE_MATRIX_WIDTH_AS_POW_2);
   }
 
-  matrix.drawCircle(local_x, y_center, radius, matrix.Color333(startup_ring.red, startup_ring.green, startup_ring.blue));
 
+#ifdef USING_COLOUR_SET_888
+  matrix.drawCircle(local_x, y_center, radius, matrix.Color888(startup_ring.red, startup_ring.green, startup_ring.blue));
+#elif USING_COLOUR_SET_444
+  matrix.drawCircle(local_x, y_center, radius, matrix.Color444(startup_ring.red, startup_ring.green, startup_ring.blue));
+#else
+  matrix.drawCircle(local_x, y_center, radius, matrix.Color333(startup_ring.red, startup_ring.green, startup_ring.blue));
+#endif
 }
 
 void Graphics::set_object_colour(byte new_r, byte new_g, byte new_b) {
@@ -225,15 +231,30 @@ void Graphics::init_menu_option_colour() {
 
 
 void Graphics::set_title_colour() {
+
+#ifdef USING_COLOUR_SET_888
+  matrix.setTextColor(matrix.Color888(title_colour.red, title_colour.green, title_colour.blue));
+#elif USING_COLOUR_SET_444
+  matrix.setTextColor(matrix.Color444(title_colour.red, title_colour.green, title_colour.blue));
+#else
   matrix.setTextColor(matrix.Color333(title_colour.red, title_colour.green, title_colour.blue));
+#endif
 }
 
 
 void Graphics::set_menu_colour() {
+
+#ifdef USING_COLOUR_SET_888
+  matrix.setTextColor(matrix.Color888(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
+#elif USING_COLOUR_SET_444
+  matrix.setTextColor(matrix.Color444(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
+#else
   matrix.setTextColor(matrix.Color333(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
+#endif
 }
 
-byte Graphics::non_linear_startup_function(uint16_t x) {
+byte Graphics::non_linear_startup_function(uint16_t x) {//<- i have no idea how i came up with this
+
   //  float a = 0.000000000000010658 //<- tiny effect, not included to improve speed
   float b = -0.151;
   float c = 0.0127;
@@ -249,9 +270,9 @@ void Graphics::draw_background() {
 
   if (menu_width - menu_pixels_right_of_node() < SINGLE_MATRIX_WIDTH) { // draw partial background
     this -> clear_area(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), 0, SINGLE_MATRIX_WIDTH, SINGLE_MATRIX_HEIGHT); // clear area for menu
-    text_parameters.x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
-    text_parameters.hard_limit = false;
-    text_parameters.limit_enabled = true;
+    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
+    text_parameters[0].hard_limit = false;
+    text_parameters[0].limit_enabled = true;
   }
 }
 
@@ -260,7 +281,14 @@ void Graphics::clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x,
   if (top_left_x == 0 && top_left_y == 0 && bottom_right_x == SINGLE_MATRIX_WIDTH && bottom_right_y == SINGLE_MATRIX_HEIGHT)
     matrix.fillScreen(0); //optimised method for filling the screen
   else
+
+#ifdef USING_COLOUR_SET_888
+    matrix.fillRect(top_left_x, top_left_y, bottom_right_x, bottom_right_y, matrix.Color888(0, 0, 0));
+#elif USING_COLOUR_SET_444
+    matrix.fillRect(top_left_x, top_left_y, bottom_right_x, bottom_right_y, matrix.Color444(0, 0, 0));
+#else
     matrix.fillRect(top_left_x, top_left_y, bottom_right_x, bottom_right_y, matrix.Color333(0, 0, 0));
+#endif
 
 }
 
@@ -405,7 +433,7 @@ void Graphics::write_title(byte title) {
 
 void Graphics::write_menu_option(byte first, byte second, byte third, byte line_config) {  //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
   byte line_item = 255;
-  for (int i = 1; i < 4; i++) { //loop through htree lines
+  for (int i = 1; i < 4; i++) { //loop through three lines
     if (i == 1) {
       line_item = first;
       matrix.setCursor(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), ASCII_CHARACTER_BASIC_HEIGHT + 1);
@@ -464,7 +492,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
 void Graphics::write_adjustment_menu(byte item) {
 
   int center_of_menu = SINGLE_MATRIX_WIDTH - (menu_width / 2 - menu_pixels_right_of_node());
-  char buf[3] = {' ', ' ', ' '}; //to store converted byte
+  char buf[3] = {' '}; //to store converted byte
   byte val;
   switch (item) {
     case BRIGHTNESS_MENU:
@@ -477,7 +505,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_SIZE_MENU:
       {
-        itoa(text_parameters.text_size, buf, 10);
+        itoa(text_parameters[0].text_size, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -517,7 +545,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_RED:
       {
-        itoa(text_parameters.colour_r, buf, 10);
+        itoa(text_parameters[0].colour_r, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -525,7 +553,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_GREEN:
       {
-        itoa(text_parameters.colour_g, buf, 10);
+        itoa(text_parameters[0].colour_g, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -533,7 +561,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_BLUE:
       {
-        itoa(text_parameters.colour_b, buf, 10);
+        itoa(text_parameters[0].colour_b, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -541,7 +569,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_HUE:
       {
-        itoa(text_parameters.hue, buf, 10);
+        itoa(text_parameters[0].hue, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -549,7 +577,7 @@ void Graphics::write_adjustment_menu(byte item) {
   }
 }
 
-void Graphics::write_enable_menu_item(byte item){}
+void Graphics::write_enable_menu_item(byte item) {}
 
 
 

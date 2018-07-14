@@ -220,9 +220,9 @@ struct Menu_tree_items{
 };
 
 struct Menu_colour_struct{
-  byte red = 7;    //default is bright white
-  byte green = 7;
-  byte blue = 7;
+  byte red = DEFAULT_TEXT_RED_BRIGHTNESS;    //default is bright white, set to correct colour on initialisation
+  byte green = DEFAULT_TEXT_GREEN_BRIGHTNESS;
+  byte blue = DEFAULT_TEXT_BLUE_BRIGHTNESS;
 };
 
 

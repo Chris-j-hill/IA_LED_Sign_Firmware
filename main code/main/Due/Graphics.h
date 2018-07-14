@@ -100,7 +100,7 @@ struct Text_cursor {        //xy coordinates of cursor position
   bool found_time = false;
   int change_file_timeout; //<- on file change, reset this
 
-  bool object_used = false; //<- is this object used, has it been populated
+  bool object_used = false; //<- is this object used, has it been populated from string file
 };
 
 

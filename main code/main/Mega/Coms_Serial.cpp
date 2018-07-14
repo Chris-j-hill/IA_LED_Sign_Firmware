@@ -17,7 +17,7 @@ extern struct Frame menu_frame;
 extern struct Frame pos_frame;
 extern struct Frame sensor_data_frame;
 
-extern struct Text_Struct text_parameters;
+extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 
 
 void serial_recieved_ISR() {
@@ -99,7 +99,9 @@ void Coms_Serial::read_buffer() {
 
 //due to high chance of a frame arriving soon deal with the contents of these inside the isr
 void Coms_Serial::received_text_frame() {
-  memcpy(text_parameters.string+(FRAME_DATA_LENGTH*(temp_buffer[FRAME_NUMBER_LOC]-1)), temp_buffer+HEADER_LENGTH, temp_buffer[FRAME_LENGTH_LOC]-FRAME_OVERHEAD);
+  byte obj_num = temp_buffer[4];//text obj number located at address 4
+  //copy short temp buffer into correct location in text_parameters buffer
+  memcpy(text_parameters[obj_num].string+(FRAME_DATA_LENGTH*(temp_buffer[FRAME_NUMBER_LOC]-1)), temp_buffer+HEADER_LENGTH, temp_buffer[FRAME_LENGTH_LOC]-FRAME_OVERHEAD);
 }
 
 void Coms_Serial::received_sensor_frame() {

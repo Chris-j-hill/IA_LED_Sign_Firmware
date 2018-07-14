@@ -19,7 +19,7 @@
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 #define MEGA_SERIAL_BUFFER_LENGTH 32
-#define MAX_TWEET_SIZE 280
+//#define MAX_TWEET_SIZE 140
 #define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
                                                                                                       // need different approach for bitmaps...
 
@@ -53,16 +53,16 @@ class Coms{
 
 private:
 
-  int calc_pos(byte MSB, byte LSB);
-  void calc_local_pos();
+  inline int calc_pos(byte MSB, byte LSB);
+  inline int calc_local_pos(byte MSB, byte LSB);
 
 public:
 Coms(){}
 
-    int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
-    int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
+//    int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
+//    int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
      
-    void extract_pos_frame();      
+    void extract_pos_frame(byte obj_num);      
     void extract_menu_frame();
     int extract_sensor_data(byte *address); 
 
