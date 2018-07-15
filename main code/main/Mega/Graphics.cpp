@@ -459,10 +459,10 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case SD_CARD_MENU:                matrix.println(F2(menu_items.sd_card_settings));            break;
       case LED_STRIP_MENU:              matrix.println(F2(menu_items.led_strip_settings));          break;
 
-//      case SCREEN_MODE_0:               matrix.println(F2(menu_items.screen_mode0));                break;
-//      case SCREEN_MODE_1:               matrix.println(F2(menu_items.screen_mode1));                break;
-//      case SCREEN_MODE_2:               matrix.println(F2(menu_items.screen_mode2));                break;
-//      case SCREEN_MODE_3:               matrix.println(F2(menu_items.screen_mode3));                break;
+      case SCREEN_MODE_0:               matrix.println(F2(menu_items.screen_mode0));                break;
+      case SCREEN_MODE_1:               matrix.println(F2(menu_items.screen_mode1));                break;
+      case SCREEN_MODE_2:               matrix.println(F2(menu_items.screen_mode2));                break;
+      case SCREEN_MODE_3:               matrix.println(F2(menu_items.screen_mode3));                break;
 
       case TEXT_SIZE_MENU:              matrix.println(F2(menu_items.text_size_settings));          break;
       case TEXT_COLOUR_MENU:            matrix.println(F2(menu_items.text_colour_settings));        break;
@@ -482,7 +482,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case TEXT_COLOUR_BLUE:            matrix.println(F2(menu_items.text_colour_blue));            break;
       case TEXT_COLOUR_HUE:             matrix.println(F2(menu_items.text_colour_hue));             break;
 
-//      case NULL_STRING:                 matrix.println(F2(menu_items.text_colour_hue));             break;
+      case NULL_STRING:                 matrix.println(F2(menu_items.null_string));                 break;
       default:                          matrix.println(F2(menu_items.default_string));              break;
 
     }

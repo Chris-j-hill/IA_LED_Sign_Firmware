@@ -45,6 +45,7 @@ void Menu::display_menu() {
     default:                          graphics.draw_background(); menu_visable = true; // menu visable, display any partially visable objects on unused parts of the screen
   }
   if (menu_visable) {
+    clear_background_text(); // check if menu covers whole area, if not display partial background
     switch (current_menu) {
       case MAIN_MENU:                   display_main_menu(); break;
       case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
@@ -106,7 +107,7 @@ void Menu::default_display() {
 }
 
 void Menu::display_main_menu() {
-  this -> display_background_text();    // check if menu covers whole area, if not display partial background
+  
   graphics.write_title(MAIN_MENU);
 
   switch (menu_parameters.encoder_position) {
@@ -124,7 +125,6 @@ void Menu::display_main_menu() {
 
 void Menu::display_screen_mode_menu() {
 
-  this -> display_background_text();
   graphics.write_title(SCREEN_MODE_MENU);
 
   switch (menu_parameters.encoder_position) {
@@ -138,12 +138,32 @@ void Menu::display_screen_mode_menu() {
 }
 
 
-void display_brightness_menu() {}
-void display_text_settings_menu() {}
-void display_fan_settings_menu() {}
-void display_internet_config_menu() {}
-void display_SD_cards_menu() {}
-void display_led_strip_menu() {}
+void Menu::display_brightness_menu() {
+
+  graphics.write_title(BRIGHTNESS_MENU);
+  graphics.write_adjustment_menu(BRIGHTNESS_MENU);
+
+}
+
+void Menu::display_text_settings_menu() {
+  
+  graphics.write_title(SCREEN_MODE_MENU);
+
+//  switch (menu_parameters.encoder_position) {
+//    case 0: graphics.write_menu_option(NULL_STRING,     RETURN_MENU,    SCREEN_MODE_0,   1);  break;
+//    case 1: graphics.write_menu_option(RETURN_MENU,     SCREEN_MODE_0,  SCREEN_MODE_1,   2);  break;
+//    case 2: graphics.write_menu_option(SCREEN_MODE_0,   SCREEN_MODE_1,  SCREEN_MODE_2,   2);  break;
+//    case 3: graphics.write_menu_option(SCREEN_MODE_1,   SCREEN_MODE_2,  SCREEN_MODE_3,   2);  break;
+//    case 4: graphics.write_menu_option(SCREEN_MODE_2,   SCREEN_MODE_3,  NULL_STRING,     3);  break;
+//
+//  }
+}
+
+
+void Menu::display_fan_settings_menu() {}
+void Menu::display_internet_config_menu() {}
+void Menu::display_SD_cards_menu() {}
+void Menu::display_led_strip_menu() {}
 
 
 

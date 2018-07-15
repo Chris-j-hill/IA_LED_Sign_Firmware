@@ -67,7 +67,7 @@
 #define MENU_TITLE_G 5
 #define MENU_TITLE_B 5
 
-
+//triangle pointer co-ordinates
 #define MENU_POINTER_X0 1   //NOTE: x coordinates are relative to left side of menu area
 #define MENU_POINTER_Y0 17
 #define MENU_POINTER_X1 1
@@ -233,7 +233,8 @@ class Menu {
     byte current_menu = DEFAULT_MENU;
 
 
-    void display_background_text();
+    void clear_background_text(); //clear area for menu
+    
     //level 1
     void display_startup_sequence();
     void default_display();
@@ -273,6 +274,7 @@ class Menu {
 
     int init_menu_tree();
     void display_menu();
+    
     byte get_current_menu() {
       return current_menu;
     }
