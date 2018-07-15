@@ -459,10 +459,10 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case SD_CARD_MENU:                matrix.println(F2(menu_items.sd_card_settings));            break;
       case LED_STRIP_MENU:              matrix.println(F2(menu_items.led_strip_settings));          break;
 
-      case SCREEN_MODE_0:               matrix.println(F2(menu_items.screen_mode0));                break;
-      case SCREEN_MODE_1:               matrix.println(F2(menu_items.screen_mode1));                break;
-      case SCREEN_MODE_2:               matrix.println(F2(menu_items.screen_mode2));                break;
-      case SCREEN_MODE_3:               matrix.println(F2(menu_items.screen_mode3));                break;
+//      case SCREEN_MODE_0:               matrix.println(F2(menu_items.screen_mode0));                break;
+//      case SCREEN_MODE_1:               matrix.println(F2(menu_items.screen_mode1));                break;
+//      case SCREEN_MODE_2:               matrix.println(F2(menu_items.screen_mode2));                break;
+//      case SCREEN_MODE_3:               matrix.println(F2(menu_items.screen_mode3));                break;
 
       case TEXT_SIZE_MENU:              matrix.println(F2(menu_items.text_size_settings));          break;
       case TEXT_COLOUR_MENU:            matrix.println(F2(menu_items.text_colour_settings));        break;
@@ -482,14 +482,14 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case TEXT_COLOUR_BLUE:            matrix.println(F2(menu_items.text_colour_blue));            break;
       case TEXT_COLOUR_HUE:             matrix.println(F2(menu_items.text_colour_hue));             break;
 
-      case NULL_STRING:                 matrix.println(F2(menu_items.text_colour_hue));             break;
+//      case NULL_STRING:                 matrix.println(F2(menu_items.text_colour_hue));             break;
       default:                          matrix.println(F2(menu_items.default_string));              break;
 
     }
   }
 }
 
-void Graphics::write_adjustment_menu(byte item) {
+void Graphics::write_adjustment_menu(byte item, byte obj_num) {
 
   int center_of_menu = SINGLE_MATRIX_WIDTH - (menu_width / 2 - menu_pixels_right_of_node());
   char buf[3] = {' '}; //to store converted byte
@@ -505,7 +505,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_SIZE_MENU:
       {
-        itoa(text_parameters[0].text_size, buf, 10);
+        itoa(text_parameters[obj_num].text_size, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -513,7 +513,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case SCROLL_SPEED_MENU:
       {
-        itoa(menu_parameters.scroll_speed, buf, 10);
+        itoa(cursor_parameters[obj_num].x_dir, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -545,7 +545,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_RED:
       {
-        itoa(text_parameters[0].colour_r, buf, 10);
+        itoa(text_parameters[obj_num].colour_r, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -553,7 +553,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_GREEN:
       {
-        itoa(text_parameters[0].colour_g, buf, 10);
+        itoa(text_parameters[obj_num].colour_g, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -561,7 +561,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_BLUE:
       {
-        itoa(text_parameters[0].colour_b, buf, 10);
+        itoa(text_parameters[obj_num].colour_b, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;
@@ -569,7 +569,7 @@ void Graphics::write_adjustment_menu(byte item) {
 
     case TEXT_COLOUR_HUE:
       {
-        itoa(text_parameters[0].hue, buf, 10);
+        itoa(text_parameters[obj_num].hue, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
         matrix.print("-" + (String)buf + "+");
         break;

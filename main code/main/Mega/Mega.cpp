@@ -11,7 +11,8 @@ extern struct Screen_Struct screen_parameters;
 //mega_class mega;
 //RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE1, OE2, false, 64, screen_mode);
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE2, false, 64);
-
+Menu menu;
+Graphics graphics;
   
 void mega_setup(){
 // configure_address();

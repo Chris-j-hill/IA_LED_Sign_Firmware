@@ -259,10 +259,6 @@ int Coms::extract_sensor_data(byte *address) {
         text_parameters[4].use_hue = (sensor_data_frame.frame_buffer[alpha + 1] == 1) ? true : false;
         break;
 
-      case PREFIX_DEBUG_STATE:
-        menu_parameters.debug = (sensor_data_frame.frame_buffer[alpha + 1] == 1) ? true : false;
-        break;
-
       case PREFIX_SCREEN_MODE:
         screen_parameters.mode = sensor_data_frame.frame_buffer[alpha + 1];
         break;

@@ -24,7 +24,7 @@ uint16_t time_since_menu_last_changed = 0;
 uint16_t startup_menu_timer = 0;
 uint16_t startup_counter = 0;
 bool menu_visable = false;
-byte encoder_position = 0;
+//byte encoder_position = 0;
 
 int Menu::init_menu_tree() {
 
@@ -109,7 +109,7 @@ void Menu::display_main_menu() {
   this -> display_background_text();    // check if menu covers whole area, if not display partial background
   graphics.write_title(MAIN_MENU);
 
-  switch (encoder_position) {
+  switch (menu_parameters.encoder_position) {
     case 0: graphics.write_menu_option(NULL_STRING,           RETURN_MENU,          SCREEN_MODE_MENU,     1);  break;
     case 1: graphics.write_menu_option(RETURN_MENU,           SCREEN_MODE_MENU,     BRIGHTNESS_MENU,      2);  break;
     case 2: graphics.write_menu_option(SCREEN_MODE_MENU,      BRIGHTNESS_MENU,      TEXT_SETTINGS_MENU,   2);  break;
@@ -127,7 +127,7 @@ void Menu::display_screen_mode_menu() {
   this -> display_background_text();
   graphics.write_title(SCREEN_MODE_MENU);
 
-  switch (encoder_position) {
+  switch (menu_parameters.encoder_position) {
     case 0: graphics.write_menu_option(NULL_STRING,     RETURN_MENU,    SCREEN_MODE_0,   1);  break;
     case 1: graphics.write_menu_option(RETURN_MENU,     SCREEN_MODE_0,  SCREEN_MODE_1,   2);  break;
     case 2: graphics.write_menu_option(SCREEN_MODE_0,   SCREEN_MODE_1,  SCREEN_MODE_2,   2);  break;

@@ -19,5 +19,6 @@
 #include "Graphics.h"
 #include "Menus.h"
 #include "Text.h"
+#include "Host.h"
 
 #endif	// MEGA_LIBS_H

@@ -4,7 +4,7 @@
 #define MENUS_H
 #include "Local_Config.h"
 #include "Arduino.h"
-#include <avr/pgmspace.h>
+//#include <avr/pgmspace.h>
 
 
 
@@ -22,7 +22,7 @@
 #define BRIGHTNESS_MENU               4
 #define TEXT_SETTINGS_MENU            5
 #define FAN_SETTINGS_MENU             6
-#define INTERNET_CONFIG_MENU          7 
+#define INTERNET_CONFIG_MENU          7
 #define SD_CARD_MENU                  8
 #define LED_STRIP_MENU                9
 
@@ -43,17 +43,17 @@
 #define TEXT_COLOUR_BLUE              20
 #define TEXT_COLOUR_HUE               21
 
-#define NULL_STRING                   22
-#define RETURN_MENU                   23
-
-#define SCREEN_MODE_0                 24
-#define SCREEN_MODE_1                 25
-#define SCREEN_MODE_2                 26
-#define SCREEN_MODE_3                 27
+#define SCROLL_SPEED_MENU_X           22
+#define SCROLL_SPEED_MENU_Y           23
 
 
-
-
+//aditional menus to be printed on screen
+#define NULL_STRING                   24
+#define RETURN_MENU                   25
+#define SCREEN_MODE_0                 26
+#define SCREEN_MODE_1                 27
+#define SCREEN_MODE_2                 28
+#define SCREEN_MODE_3                 29
 
 
 
@@ -84,34 +84,32 @@
 
 
 //struct for menu items that need to be displayable but not directly used by the megas
-struct Menu_Struct{
-  byte current1 =0;
-  byte current2 =0;
+struct Menu_Struct {
+  byte current1 = 0;
+  byte current2 = 0;
   byte light1 = 0;
   byte light2 = 0;
   byte temp1 = 0;
   byte temp2 = 0;
   byte temp3 = 0;
   byte fan_speed = 0;
-  byte led_strip_brightness= 0;
+  byte min_fan_speed = 0;
+  byte led_strip_brightness = 0;
   bool sd_card1_detected = false;
   bool sd_card2_detected = false;
   bool ethernet_connected = false;
   bool wifi_connected = false;
-  bool debug = false;
+  bool sd_card1_mounted = false;
+  bool sd_card2_mounted = false;
 
-  uint32_t sensor_value_received =0;    //use as array of 32 bits to detect if value has been transmitted
-                                        // bits to save space, bool is 8 bits so wasteful 
+  int encoder_position = 0;
 
-
-//  to implement
-  byte scroll_speed = 0;
-  byte min_fan_speed=0;                                      
 };
 
-struct Menu_tree_items{
 
-//level 1 menu items  
+struct Menu_tree_items {
+
+  //level 1 menu items
   const char main_menu[]                PROGMEM           = "Main Menu";
   const char RETURN[]                   PROGMEM           = "RETURN";
   const char screen_mode[]              PROGMEM           = "Screen Mode";
@@ -119,62 +117,62 @@ struct Menu_tree_items{
   const char text_settings[]            PROGMEM           = "Text Settings";
   const char fan_settings[]             PROGMEM           = "Fan Settings";
   const char internet_settings[]        PROGMEM           = "Internet Config";
-  const char sd_card_settings[]         PROGMEM           = "Sd Cards"; 
+  const char sd_card_settings[]         PROGMEM           = "Sd Cards";
   const char led_strip_settings[]       PROGMEM           = "LED Strip";
 
 
-//level 2 menu items
-//change mode folder
+  //level 2 menu items
+  //change mode folder
   const char screen_mode_menu[]         PROGMEM           = "Mode Menu";
   const char screen_mode0[]             PROGMEM           = "Both on";
   const char screen_mode1[]             PROGMEM           = "Front Side";
   const char screen_mode3[]             PROGMEM           = "Back Side";
   const char screen_mode2[]             PROGMEM           = "Both Off";
 
-// brightness folder
+  // brightness folder
 
-  const char brightness_menu[]          PROGMEM           = "Brightness";  
+  const char brightness_menu[]          PROGMEM           = "Brightness";
 
-//text adjustment folder
+  //text adjustment folder
   const char text_settings_menu[]       PROGMEM           = "Text Settings";
   const char text_size_settings[]       PROGMEM           = "Text Size";
   const char text_colour_settings[]     PROGMEM           = "Text Colour";
   const char scroll_speed_settings[]    PROGMEM           = "Scroll Speed";
   const char flip_dir_settings[]        PROGMEM           = "Flip Direction";
 
-//fan settings folder
+  //fan settings folder
   const char fan_settings_menu[]        PROGMEM           = "Fan Settings";
   const char fan_speed_settings[]       PROGMEM           = "Fan Speed";
   const char fan_enable[]               PROGMEM           = "Enable";
   const char fan_disable[]              PROGMEM           = "Disable";
   const char minimum_rotating_speed[]   PROGMEM           = "Minimum speed";
 
-// internet configuration folder  
+  // internet configuration folder
   const char internet_config_menu[]     PROGMEM           = "Internet";
   const char select_network_manually[]  PROGMEM           = "Connect To...";
   const char ethernet_enable[]          PROGMEM           = "Enable Eth";
   const char ethernet_disable[]         PROGMEM           = "Disable Eth";
   const char wifi_enable[]              PROGMEM           = "Enable Wifi";
   const char wifi_disable[]             PROGMEM           = "Disable Wifi";
-  
-// SD cards folder
+
+  // SD cards folder
   const char sd_cards_menu[]            PROGMEM           = "SD Cards";
   const char enable_ext_card[]          PROGMEM           = "Enable Port";
   const char disable_ext_card[]         PROGMEM           = "Disable Port";
   const char sd_card_folders[]          PROGMEM           = "Read Folders";
 
-// Led Strip folder
+  // Led Strip folder
   const char led_strip_menu[]           PROGMEM           = "Led Strip";
   const char enable_led_strip[]         PROGMEM           = "Enable LED Strip";
   const char disable_led_strip[]        PROGMEM           = "Disable LED Strip";
   const char led_strip_brightness[]     PROGMEM           = "Brightness";
 
 
-//level 3 folders
-//text size
+  //level 3 folders
+  //text size
   const char text_size_menu[]           PROGMEM           = "Text Size";
 
-//text colour
+  //text colour
   const char text_colour_menu[]         PROGMEM           = "Text Colour";
   const char text_colour_red[]          PROGMEM           = "Red";
   const char text_colour_green[]        PROGMEM           = "Green";
@@ -184,94 +182,104 @@ struct Menu_tree_items{
   const char text_colour_use_rgb[]      PROGMEM           = "Use RGB";
 
 
-// scroll speed
+  // scroll speed
   const char scroll_speed_menu[]        PROGMEM           = "Scroll Speed";
+  const char scroll_speed_x[]           PROGMEM           = "X Direction";
+  const char scroll_speed_y[]           PROGMEM           = "Y Direction";
 
-//set fan speed
+  //set fan speed
   const char fan_speed_menu[]           PROGMEM           = "Set Fan Speed";
-  
-// fan minimum speed
-  const char minimum_fan_speed_menu[]   PROGMEM           = "Set Min Speed";  
 
-// read sd card folders 
+  // fan minimum speed
+  const char minimum_fan_speed_menu[]   PROGMEM           = "Set Min Speed";
+
+  // read sd card folders
   const char SD_card_folders_menu[]     PROGMEM           = "Card Files";
 
-// led brightness menu
+  // led brightness menu
   const char led_strip_brightness_menu[]   PROGMEM        = "Set Brightness";
 
-//level 4
-//text_colour_red
+  //level 4
+  //text_colour_red
   const char text_colour_red_menu[]     PROGMEM           = "Red";
-  
-//text_colour_green
+
+  //text_colour_green
   const char text_colour_green_menu[]     PROGMEM           = "Green";
-  
-//text_colour_blue
+
+  //text_colour_blue
   const char text_colour_blue_menu[]     PROGMEM           = "Blue";
-  
-//text_colour_hue
+
+  //text_colour_hue
   const char text_colour_hue_menu[]     PROGMEM           = "Hue";
 
-//dummy string
-  const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder 
-  const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function 
-  const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function 
+  //dummy string
+  const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder
+  const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function
+  const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function
 
 };
 
-struct Menu_colour_struct{
+struct Menu_colour_struct {
   byte red = DEFAULT_TEXT_RED_BRIGHTNESS;    //default is bright white, set to correct colour on initialisation
   byte green = DEFAULT_TEXT_GREEN_BRIGHTNESS;
   byte blue = DEFAULT_TEXT_BLUE_BRIGHTNESS;
 };
 
 
-class Menu{
-  
-private:
-  
-  byte current_menu = DEFAULT_MENU;
-  void display_background_text();  
-  //level 1
-  void display_startup_sequence(); 
-  void default_display();
-  void display_main_menu();
+class Menu {
 
-  //level 2
-  void display_screen_mode_menu();
-  void display_brightness_menu();
-  void display_text_settings_menu();
-  void display_fan_settings_menu();
-  void display_internet_config_menu();
-  void display_SD_cards_menu();
-  void display_led_strip_menu();
+  private:
 
-  //level 3
-  void display_text_size_menu();
-  void display_text_colour_menu();
-  void display_scroll_speed_menu();
-  void display_fan_speed_menu();
-  void display_min_fan_speed_menu();
-  void display_sd_folder_menu();
-  void display_led_strip_brightness_menu();
-
-  //level 4  
-  void display_text_colour_red_menu();
-  void display_text_colour_green_menu();
-  void display_text_colour_blue_menu();
-  void display_text_colour_hue_menu();
-
-  
-public:
-  
-  Menu(){}
-
-  int init_menu_tree();
-  void display_menu();;
+    byte current_menu = DEFAULT_MENU;
 
 
+    void display_background_text();
+    //level 1
+    void display_startup_sequence();
+    void default_display();
+    void display_main_menu();
 
-  
+    //level 2
+    void display_screen_mode_menu();
+    void display_brightness_menu();
+    void display_text_settings_menu();
+    void display_fan_settings_menu();
+    void display_internet_config_menu();
+    void display_SD_cards_menu();
+    void display_led_strip_menu();
+
+    //level 3
+    void display_text_size_menu();
+    void display_text_colour_menu();
+    void display_scroll_speed_menu();
+    void display_fan_speed_menu();
+    void display_min_fan_speed_menu();
+    void display_sd_folder_menu();
+    void display_led_strip_brightness_menu();
+
+    //level 4
+    void display_text_colour_red_menu();
+    void display_text_colour_green_menu();
+    void display_text_colour_blue_menu();
+    void display_text_colour_hue_menu();
+
+
+  public:
+
+    int current_menu_limit_min = 0;        // <- set from most recent menu frame, save ram by not hard coding these for all atributes
+    int current_menu_limit_max = 0;
+
+    Menu() {}
+
+    int init_menu_tree();
+    void display_menu();
+    byte get_current_menu() {
+      return current_menu;
+    }
+
+
+
+
 };
 
 #endif // MENUS_H
