@@ -85,6 +85,7 @@ void Menu::display_menu() {
     case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
     case BRIGHTNESS_MENU:             display_brightness_menu(); break;
     case TEXT_SETTINGS_MENU:          display_text_settings_menu(); break;
+    case TEXT_OBJ_SELECTION_MENU:     display_text_obj_selection_menu(); break;
     case FAN_SETTINGS_MENU:           display_fan_settings_menu(); break;
     case INTERNET_CONFIG_MENU:        display_internet_config_menu(); break;
     case SD_CARD_MENU:                display_SD_cards_menu(); break;
@@ -158,14 +159,15 @@ void Menu::display_main_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0: current_menu = DEFAULT_MENU;         break;
-      case 1: current_menu = SCREEN_MODE_MENU;     break;
-      case 2: current_menu = BRIGHTNESS_MENU;      break;
-      case 3: current_menu = TEXT_SETTINGS_MENU;   break;
-      case 4: current_menu = FAN_SETTINGS_MENU;    break;
-      case 5: current_menu = INTERNET_CONFIG_MENU; break;
-      case 6: current_menu = SD_CARD_MENU;         break;
-      case 7: current_menu = LED_STRIP_MENU;       break;
+      case 0: current_menu = DEFAULT_MENU;            break;
+      case 1: current_menu = SCREEN_MODE_MENU;        break;
+      case 2: current_menu = BRIGHTNESS_MENU;         break;
+      case 3: current_menu = TEXT_OBJ_SELECTION_MENU; break;
+      //      case 3: current_menu = TEXT_SETTINGS_MENU;      break;
+      case 4: current_menu = FAN_SETTINGS_MENU;       break;
+      case 5: current_menu = INTERNET_CONFIG_MENU;    break;
+      case 6: current_menu = SD_CARD_MENU;            break;
+      case 7: current_menu = LED_STRIP_MENU;          break;
 
       default: current_menu = STARTUP;
     }
@@ -242,6 +244,40 @@ void Menu::display_brightness_menu() {
   }
 }
 
+void Menu::display_text_obj_selection_menu() {
+  current_menu = TEXT_OBJ_SELECTION_MENU;
+
+  if (menu_just_changed) {
+    menu_just_changed = false;
+    encoder.recenter_encoder();
+    check_obj_enabled();    //function to count which objects are enabled and put them in array
+    coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU, encoder_parameters.position);
+  }
+
+  if (encoder_parameters.encoder_moved) {
+    time_since_menu_last_changed = millis();
+    coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU, encoder_parameters.position);
+    encoder_parameters.encoder_moved = false;
+  }
+
+
+  if (button_parameters.button_pressed) {
+    //instead of switch, auto accommodates N text objects, most options go to TEXT_SETTINGS_MENU
+    if (encoder_parameters.position == 0)
+      current_menu = MAIN_MENU;
+    else if (encoder_parameters.position > 0 && encoder_parameters.position <= num_obj_enabled && num_obj_enabled != 0) {
+      obj_selected = obj_enabled[encoder_parameters.position - 1];
+      current_menu = TEXT_SETTINGS_MENU;
+    }
+    else
+      current_menu = STARTUP;
+
+    menu_just_changed = true;
+    time_since_menu_last_changed = millis();
+    button_parameters.button_pressed = false;
+  }
+}
+
 void Menu::display_text_settings_menu() {
   current_menu = TEXT_SETTINGS_MENU;
 
@@ -259,17 +295,14 @@ void Menu::display_text_settings_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0: current_menu = MAIN_MENU;          break;
-      case 1: current_menu = TEXT_SIZE_MENU;     break;
-      case 2: current_menu = TEXT_COLOUR_MENU;   break;
-      case 3: current_menu = SCROLL_SPEED_MENU;  break;
-      case 4: graphics.flip_direction();         break;
-
+      case 0: current_menu = TEXT_OBJ_SELECTION_MENU;   break;
+      case 1: current_menu = TEXT_SIZE_MENU;            break;
+      case 2: current_menu = TEXT_COLOUR_MENU;          break;
+      case 3: current_menu = SCROLL_SPEED_MENU;         break;
       default: current_menu = STARTUP;
     }
 
-    if (encoder_parameters.position != 4)
-      menu_just_changed = true;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
   }
@@ -301,7 +334,7 @@ void Menu::display_fan_settings_menu() {
       default: current_menu = STARTUP;
     }
 
-    if (encoder_parameters.position == 0 || encoder_parameters.position == 3 || encoder_parameters.position == 4)
+    if (encoder_parameters.position == 0 || encoder_parameters.position == 1 || encoder_parameters.position == 4)
       menu_just_changed = true;
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
@@ -480,7 +513,7 @@ void Menu::display_text_colour_menu() {
 void Menu::display_scroll_speed_menu() {
   current_menu = SCROLL_SPEED_MENU;
 
-if (menu_just_changed) {
+  if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
     coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
@@ -495,8 +528,8 @@ if (menu_just_changed) {
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
       case 0: current_menu = TEXT_SETTINGS_MENU; break;
-      case 1: current_menu = SCROLL_SPEED_MENU_X;break;
-      case 2: current_menu = SCROLL_SPEED_MENU_Y;break;
+      case 1: current_menu = SCROLL_SPEED_MENU_X; break;
+      case 2: current_menu = SCROLL_SPEED_MENU_Y; break;
 
       default: current_menu = STARTUP;
     }
@@ -524,7 +557,7 @@ void Menu::display_fan_speed_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    fan_parameters.manual_set_value = map(encoder_parameters.position, 0, 100, fan_parameters.fan_minimum-1, 255);   //map percentage to byte, -1 to allow off state
+    fan_parameters.manual_set_value = map(encoder_parameters.position, 0, 100, fan_parameters.fan_minimum - 1, 255); //map percentage to byte, -1 to allow off state
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
     fan_parameters.manual = true;     //set manual mode
@@ -560,7 +593,7 @@ void Menu::display_min_fan_speed_menu() {
     // not important for running megas, just update on the megas displaying the menu
     int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_FAN_MINIMUM_SPEED, i, false, 0);  
+      coms_serial.send_specific_calibration_data(PREFIX_FAN_MINIMUM_SPEED, i, false, 0);
   }
 }
 
@@ -794,6 +827,17 @@ void Menu::display_text_scroll_speed_y() {
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_Y_0, i, false, 0);  //send screen_mode update to screens
   }
+}
+
+void Menu::check_obj_enabled() {
+  byte counter = 0;
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+    if (text_cursor[i].object_used) {
+      obj_enabled[counter] = i;
+      counter++;
+    }
+  }
+  num_obj_enabled=counter;
 }
 
 #endif  // Menu_CPP

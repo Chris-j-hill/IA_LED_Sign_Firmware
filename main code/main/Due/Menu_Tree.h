@@ -25,9 +25,7 @@
 //#define SYSTEM_OVERRIDES
 
 //LEVEL 3
-#define TEXT_SIZE_MENU                10
-#define TEXT_COLOUR_MENU              11
-#define SCROLL_SPEED_MENU             12
+#define TEXT_OBJ_SELECTION_MENU       24
 #define FAN_SPEED_MENU                13
 #define MIN_FAN_SPEED_MENU            14
 #define SD_FOLDERS_MENU               15
@@ -36,20 +34,25 @@
 //#define SELECT_NETWORK_MANUALLY       17
 
 // LEVEL 4
+#define TEXT_SIZE_MENU                10
+#define TEXT_COLOUR_MENU              11
+#define SCROLL_SPEED_MENU             12
+#define SCROLL_SPEED_MENU_X           22
+#define SCROLL_SPEED_MENU_Y           23
+
+//LEVEL 5
 #define TEXT_COLOUR_RED               18
 #define TEXT_COLOUR_GREEN             19
 #define TEXT_COLOUR_BLUE              20
 #define TEXT_COLOUR_HUE               21
 
-#define SCROLL_SPEED_MENU_X           22
-#define SCROLL_SPEED_MENU_Y           23
-
-
 
 struct Menu_tree_items {
 
-  //level 1 menu items
+
   String main_menu                PROGMEM           = "Main Menu";
+
+  //level 1 menu items
   String RETURN                   PROGMEM           = "RETURN";
   String screen_mode              PROGMEM           = "Screen Mode";
   String brightness               PROGMEM           = "Brightness";
@@ -73,11 +76,12 @@ struct Menu_tree_items {
   String brightness_menu          PROGMEM           = "Brightness";
 
   //text adjustment folder
-  String text_settings_menu       PROGMEM           = "Text Settings";
-  String text_size_settings       PROGMEM           = "Text Size";
-  String text_colour_settings     PROGMEM           = "Text Colour";
-  String scroll_speed_settings    PROGMEM           = "Scroll Speed";
-  String flip_dir_settings        PROGMEM           = "Flip Direction";
+  String text_obj_select_menu                       = "Select Obj";
+  String text_obj_0_menu                            = "Obj 0";
+  String text_obj_1_menu                            = "Obj 1";
+  String text_obj_2_menu                            = "Obj 2";
+  String text_obj_3_menu                            = "Obj 3";
+  String text_obj_4_menu                            = "Obj 4";
 
   //fan settings folder
   String fan_settings_menu        PROGMEM           = "Fan Settings";
@@ -108,23 +112,12 @@ struct Menu_tree_items {
 
 
   //level 3 folders
-  //text size
-  String text_size_menu           PROGMEM           = "Text Size";
-
-  //text colour
-  String text_colour_menu         PROGMEM           = "Text Colour";
-  String text_colour_red          PROGMEM           = "Red";
-  String text_colour_green        PROGMEM           = "Green";
-  String text_colour_blue         PROGMEM           = "Blue";
-  String text_colour_hue          PROGMEM           = "Hue";
-  String text_colour_use_hue      PROGMEM           = "Use Hue";
-  String text_colour_use_rgb      PROGMEM           = "Use RGB";
-
-
-  // scroll speed
-  String scroll_speed_menu        PROGMEM           = "Scroll Speed Menu";
-  String scroll_speed_x           PROGMEM           = "X Direction";
-  String scroll_speed_y           PROGMEM           = "Y Direction";
+  // text adjustment menu
+  String text_settings_menu       PROGMEM           = "Text Settings";
+  String text_size_settings       PROGMEM           = "Text Size";
+  String text_colour_settings     PROGMEM           = "Text Colour";
+  String scroll_speed_settings    PROGMEM           = "Scroll Speed";
+  String flip_dir_settings        PROGMEM           = "Flip Direction";
 
   //set fan speed
   String fan_speed_menu           PROGMEM           = "Set Fan Speed";
@@ -139,6 +132,24 @@ struct Menu_tree_items {
   String led_strip_brightness_menu   PROGMEM        = "Set Brightness";
 
   //level 4
+  //text size
+  String text_size_menu           PROGMEM           = "Text Size";
+
+  //text colour
+  String text_colour_menu         PROGMEM           = "Text Colour";
+  String text_colour_red          PROGMEM           = "Red";
+  String text_colour_green        PROGMEM           = "Green";
+  String text_colour_blue         PROGMEM           = "Blue";
+  String text_colour_hue          PROGMEM           = "Hue";
+  String text_colour_use_hue      PROGMEM           = "Use Hue";
+  String text_colour_use_rgb      PROGMEM           = "Use RGB";
+
+  // scroll speed
+  String scroll_speed_menu        PROGMEM           = "Scroll Speed Menu";
+  String scroll_speed_x           PROGMEM           = "X Direction";
+  String scroll_speed_y           PROGMEM           = "Y Direction";
+
+  //level 5
   //text_colour_red
   String text_colour_red_menu     PROGMEM           = "Red";
 
@@ -160,7 +171,7 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
   byte main_menu                        = 7;
   byte screen_mode_menu                 = 4;
   byte brightness_menu                  = 100;
-  byte text_settings_menu               = 4;
+  byte text_settings_menu               = 3;
   byte fan_settings_menu                = 4;
   byte internet_config_menu             = 5;
   byte sd_cards_menu                    = 3;
@@ -190,12 +201,15 @@ class Menu {
     int current_menu = 0;    //use to keep track of where we are. use switch statement to navigate based on this value
     int previous_menu = 0;    //can be used if one menu option may be available from two locations in the tree
     int background_porcess = 1;
-
-
+    byte obj_selected = 0; //text obj selected in text settings sub menu
+    byte obj_enabled[MAX_NUM_OF_TEXT_OBJECTS] = {0};    //list of enabled text objects eg 1,3,4 are enabled
+    byte num_obj_enabled = 0;
     // menu functions, these dont send menu option text, only pointers to the megas string of the same
     //NB: menu items stored in LUT on both mega and due for display and feedback over com port note
     //    menu options sent back irrespective of DEBUG, but rather dependant on NAVIGATE_MENU_OPTIONS_OVER_USB_SERIAL
 
+    void check_obj_enabled();
+    
     //level 1
     void display_startup_sequence();
     void default_display();
@@ -211,21 +225,24 @@ class Menu {
     void display_led_strip_menu();
 
     //level 3
-    void display_text_size_menu();
-    void display_text_colour_menu();
-    void display_scroll_speed_menu();
+    void display_text_obj_selection_menu();
     void display_fan_speed_menu();
     void display_min_fan_speed_menu();
     void display_sd_folder_menu();
     void display_led_strip_brightness_menu();
 
     //level 4
+    void display_text_size_menu();
+    void display_text_colour_menu();
+    void display_scroll_speed_menu();
+    void display_text_scroll_speed_x();
+    void display_text_scroll_speed_y();
+
+    //level 5
     void display_text_colour_red_menu();
     void display_text_colour_green_menu();
     void display_text_colour_blue_menu();
     void display_text_colour_hue_menu();
-    void display_text_scroll_speed_x();    
-    void display_text_scroll_speed_y();
   public:
 
     Menu() {};

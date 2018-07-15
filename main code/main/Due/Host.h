@@ -27,7 +27,7 @@
 
 
 #define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow...
-#define MESSAGE_DELAY_PERIOD    200   //delay this many ms between message prints
+#define MESSAGE_DELAY_PERIOD    400   //delay this many ms between message prints
 //class to manage all functions regarding communication with due host device (probably a pi)
 
 #define MAX_NUM_MENU_OPTIONS 14
@@ -118,15 +118,7 @@ class Host {
   public:
     Host() {}
     void init_serial();
-    int request_data();
-    int set_text_string();    //if got new string, save to text_str variable
-
     void check_serial();    //to read incomming data
-
-    void set_debug_mode();   //set the mode, what data to print
-    void transmit_modes();   //send back available modes and setting commands
-    void stop_debug_mode();  //stop debug prints
-
     void print_messages();
 
 };
