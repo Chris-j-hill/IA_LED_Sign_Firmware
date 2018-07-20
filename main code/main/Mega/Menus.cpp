@@ -14,7 +14,7 @@ Menu_colour_struct    title_colour;
 Menu_tree_items       menu_items;
 
 extern struct Object_Struct_Circles  startup_ring;
-
+extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern Graphics  graphics;
 
 byte current_menu = 0;
@@ -47,25 +47,29 @@ void Menu::display_menu() {
   if (menu_visable) {
     clear_background_text(); // check if menu covers whole area, if not display partial background
     switch (current_menu) {
-      case MAIN_MENU:                   display_main_menu(); break;
-      case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
-      case BRIGHTNESS_MENU:             display_screen_brightness_menu(); break;
-      case TEXT_SETTINGS_MENU:          display_text_settings_menu(); break;
-      case FAN_SETTINGS_MENU:           display_fan_settings_menu(); break;
-      case INTERNET_CONFIG_MENU:        display_internet_config_menu(); break;
-      case SD_CARD_MENU:                display_SD_cards_menu(); break;
-      case LED_STRIP_MENU:              display_led_strip_menu(); break;
-      case TEXT_SIZE_MENU:              display_text_size_menu(); break;
-      case TEXT_COLOUR_MENU:            display_text_colour_menu(); break;
-      case SCROLL_SPEED_MENU:           display_scroll_speed_menu(); break;
-      case FAN_SPEED_MENU:              display_fan_speed_menu(); break;
-      case MIN_FAN_SPEED_MENU:          display_min_fan_speed_menu(); break;
-      case SD_FOLDERS_MENU:             display_sd_folder_menu(); break;
-      case LED_STRIP_BRIGHTNESS_MENU:   display_led_strip_brightness_menu(); break;
-      case TEXT_COLOUR_RED:             display_text_colour_red_menu(); break;
-      case TEXT_COLOUR_GREEN:           display_text_colour_green_menu(); break;
-      case TEXT_COLOUR_BLUE:            display_text_colour_blue_menu(); break;
-      case TEXT_OBJ_SELECTION_MENU:     display_text_obj_selection_menu(); break;
+      case MAIN_MENU:                   display_main_menu();                                  break;
+      case SCREEN_MODE_MENU:            display_screen_mode_menu();                           break;
+      case BRIGHTNESS_MENU:             display_adjustment_menu(BRIGHTNESS_MENU);             break;
+      case TEXT_SETTINGS_MENU:          display_text_settings_menu();                         break;
+      case FAN_SETTINGS_MENU:           display_fan_settings_menu();                          break;
+      case INTERNET_CONFIG_MENU:        display_internet_config_menu();                       break;
+      case SD_CARD_MENU:                display_SD_cards_menu();                              break;
+      case LED_STRIP_MENU:              display_led_strip_menu();                             break;
+      case TEXT_SIZE_MENU:              display_adjustment_menu(TEXT_SIZE_MENU);              break;
+      case TEXT_COLOUR_MENU:            display_text_colour_menu();                           break;
+      case SCROLL_SPEED_MENU:           display_scroll_speed_menu();                          break;
+      case FAN_SPEED_MENU:              display_adjustment_menu(FAN_SPEED_MENU);              break;
+      case MIN_FAN_SPEED_MENU:          display_adjustment_menu(MIN_FAN_SPEED_MENU);          break;
+      case SD_FOLDERS_MENU:             display_sd_folder_menu();                             break;
+      case LED_STRIP_BRIGHTNESS_MENU:   display_adjustment_menu(LED_STRIP_BRIGHTNESS_MENU);   break;
+      case TEXT_COLOUR_RED:             display_adjustment_menu(TEXT_COLOUR_RED);             break;
+      case TEXT_COLOUR_GREEN:           display_adjustment_menu(TEXT_COLOUR_GREEN);           break;
+      case TEXT_COLOUR_BLUE:            display_adjustment_menu(TEXT_COLOUR_BLUE);            break;
+      case TEXT_COLOUR_HUE:             display_adjustment_menu(TEXT_COLOUR_HUE);             break;
+      case SCROLL_SPEED_MENU_X:         display_adjustment_menu(SCROLL_SPEED_MENU_X);         break;
+      case SCROLL_SPEED_MENU_Y:         display_adjustment_menu(SCROLL_SPEED_MENU_Y);         break;
+
+      case TEXT_OBJ_SELECTION_MENU:     display_text_obj_selection_menu();                    break;
 
       default: current_menu = STARTUP;    //restart, run startup
     }
@@ -138,14 +142,6 @@ void Menu::display_screen_mode_menu() {
   }
 }
 
-
-void Menu::display_screen_brightness_menu() {
-
-  graphics.write_title(BRIGHTNESS_MENU);
-  graphics.write_adjustment_menu(BRIGHTNESS_MENU);
-
-}
-
 void Menu::display_text_settings_menu() {
 
   graphics.write_title(TEXT_SETTINGS_MENU);
@@ -175,7 +171,6 @@ void Menu::display_fan_settings_menu() {
     case 2: graphics.write_menu_option(FAN_SPEED_MENU,      toggle_fan_enable,  MIN_FAN_SPEED_MENU,   2);  break;
     case 3: graphics.write_menu_option(toggle_fan_enable,   MIN_FAN_SPEED_MENU, NULL_STRING,          3);  break;
   }
-
 }
 
 
@@ -197,18 +192,9 @@ void Menu::display_led_strip_menu() {
 }
 
 
-
-
 void Menu::display_text_obj_selection_menu() {
 
   graphics.write_title(TEXT_OBJ_SELECTION_MENU);
-
-//  switch (menu_parameters.encoder_position) {
-//    case 0: graphics.write_menu_option(NULL_STRING,         RETURN_MENU,        FAN_SPEED_MENU,       1);  break;
-//    case 1: graphics.write_menu_option(RETURN_MENU,         FAN_SPEED_MENU,     toggle_fan_enable,    2);  break;
-//    case 2: graphics.write_menu_option(FAN_SPEED_MENU,      toggle_fan_enable,  MIN_FAN_SPEED_MENU,   2);  break;
-//    case 3: graphics.write_menu_option(toggle_fan_enable,   MIN_FAN_SPEED_MENU, NULL_STRING,          3);  break;
-//  }
 
   if (menu_parameters.encoder_position == 0)
     graphics.write_menu_option(NULL_STRING, RETURN_MENU, TEXT_OBJ_0, 1);
@@ -224,10 +210,82 @@ void Menu::display_text_obj_selection_menu() {
 }
 
 
+void Menu::display_text_colour_menu() {
+
+  graphics.write_title(TEXT_COLOUR_MENU);
+
+  byte toggle_use_hue;
+  if (text_parameters[menu_parameters.obj_selected].use_hue)
+    toggle_use_hue = USE_RGB;
+  else
+    toggle_use_hue = USE_HUE;
+
+  switch (menu_parameters.encoder_position) {
+    case 0: graphics.write_menu_option(NULL_STRING,               RETURN_MENU,                TEXT_COLOUR_RED,      1);  break;
+    case 1: graphics.write_menu_option(RETURN_MENU,               TEXT_COLOUR_RED,            TEXT_COLOUR_GREEN,    2);  break;
+    case 2: graphics.write_menu_option(TEXT_COLOUR_RED,           TEXT_COLOUR_GREEN,          TEXT_COLOUR_BLUE,     2);  break;
+    case 3: graphics.write_menu_option(TEXT_COLOUR_GREEN,         TEXT_COLOUR_BLUE,           TEXT_COLOUR_HUE,      2);  break;
+    case 4: graphics.write_menu_option(TEXT_COLOUR_BLUE,          TEXT_COLOUR_HUE,            toggle_use_hue,       2);  break;
+    case 5: graphics.write_menu_option(TEXT_COLOUR_HUE,           toggle_use_hue,             NULL_STRING,          3);  break;
+  }
+}
+
+void Menu::display_scroll_speed_menu() {
+
+  graphics.write_title(TEXT_COLOUR_MENU);
+
+  switch (menu_parameters.encoder_position) {
+    case 0: graphics.write_menu_option(NULL_STRING,               RETURN_MENU,                SCROLL_SPEED_MENU_X,      1);  break;
+    case 1: graphics.write_menu_option(RETURN_MENU,               SCROLL_SPEED_MENU_X,        SCROLL_SPEED_MENU_Y,      2);  break;
+    case 2: graphics.write_menu_option(SCROLL_SPEED_MENU_X,       SCROLL_SPEED_MENU_Y,        NULL_STRING,              3);  break;
+  }
+}
+
+void Menu::display_SD_cards_menu() {
+
+  graphics.write_title(SD_CARD_MENU);
+
+  byte toggle_sd1_mounted;
+  byte toggle_sd2_mounted;
+
+  if (menu_parameters.sd_card1_mounted)
+    toggle_sd1_mounted = UNMOUNT_CARD1;
+  else
+    toggle_sd1_mounted = MOUNT_CARD1;
+
+  if (menu_parameters.sd_card2_mounted)
+    toggle_sd2_mounted = UNMOUNT_CARD2;
+  else
+    toggle_sd2_mounted = MOUNT_CARD2;
+
+  switch (menu_parameters.encoder_position) {
+    case 0: graphics.write_menu_option(NULL_STRING,               RETURN_MENU,                toggle_sd1_mounted,      1);  break;
+    case 1: graphics.write_menu_option(RETURN_MENU,               toggle_sd1_mounted,         toggle_sd2_mounted,      2);  break;
+    case 2: graphics.write_menu_option(toggle_sd1_mounted,        toggle_sd2_mounted,         SD_FOLDERS_MENU,         2);  break;
+    case 3: graphics.write_menu_option(toggle_sd2_mounted,        SD_FOLDERS_MENU,            NULL_STRING,             3);  break;
+  }
+}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+inline void display_adjustment_menu(byte menu) {
+  graphics.write_title(menu);
+  graphics.write_adjustment_menu(menu);
+}
 
 void Menu::display_internet_config_menu() {}
-void Menu::display_SD_cards_menu() {}
+
 #endif // MENUS_CPP

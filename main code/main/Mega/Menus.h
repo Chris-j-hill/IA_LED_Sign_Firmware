@@ -61,13 +61,19 @@
 #define DISABLE_FAN                   61
 #define ENABLE_LED_STRIP              62
 #define DISABLE_LED_STRIP             63
+#define USE_RGB                       64
+#define USE_HUE                       65
+#define MOUNT_CARD1                   66
+#define UNMOUNT_CARD1                 67
+#define MOUNT_CARD2                   68
+#define UNMOUNT_CARD2                 69
+
 
 #define TEXT_OBJ_0                    100   //increase this to N objects
 #define TEXT_OBJ_1                    101
 #define TEXT_OBJ_2                    102
 #define TEXT_OBJ_3                    103
 #define TEXT_OBJ_4                    104
-
 
 
 #define STARTUP_R 1   //expanding rings startup, blue/purple colour
@@ -98,34 +104,35 @@
 
 //struct for menu items that need to be displayable but not directly used by the megas
 struct Menu_Struct {
-  
+
   byte current1 = 0;
   byte current2 = 0;
-  
+
   byte light1 = 0;
   byte light2 = 0;
-  
+
   byte temp1 = 0;
   byte temp2 = 0;
   byte temp3 = 0;
-  
+
   byte fan_speed = 0;
   byte min_fan_speed = 0;
   bool fan_enabled = false;
-  
+
   byte led_strip_brightness = 0;
   bool led_strip_enabled = false;
-  
+
   bool sd_card1_detected = false;
   bool sd_card2_detected = false;
-  
+
   bool ethernet_connected = false;
   bool wifi_connected = false;
-  
+
   bool sd_card1_mounted = false;
   bool sd_card2_mounted = false;
 
   int encoder_position = 0;
+  byte obj_selected =0;
 
 };
 
@@ -257,6 +264,8 @@ class Menu {
 
     void clear_background_text(); //clear area for menu
 
+    // all menus containing sub menu items (ie not adjustment menus)
+
     //level 1
     void display_startup_sequence();
     void default_display();
@@ -273,24 +282,16 @@ class Menu {
 
     //level 3
     void display_text_settings_menu();
-    void display_fan_speed_menu();
-    void display_min_fan_speed_menu();
     void display_sd_folder_menu();
-    void display_led_strip_brightness_menu();
 
     //level 4
-    void display_text_size_menu();
     void display_text_colour_menu();
     void display_scroll_speed_menu();
+    
 
-    //level 5
-    void display_text_colour_red_menu();
-    void display_text_colour_green_menu();
-    void display_text_colour_blue_menu();
-    void display_text_colour_hue_menu();
-    void display_scroll_speed_x_menu();
-    void display_scroll_speed_y_menu();
 
+    // takes care of all adjustment menus
+    inline void display_adjustment_menu(byte menu);
 
   public:
 

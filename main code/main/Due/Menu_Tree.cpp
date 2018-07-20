@@ -463,7 +463,7 @@ void Menu::display_text_size_menu() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_parameters[0].text_size);
+    encoder.set_encoder_position(text_parameters[obj_selected].text_size);
     coms_serial.send_menu_frame(TEXT_SIZE_MENU, encoder_parameters.position);
   }
 
@@ -475,11 +475,11 @@ void Menu::display_text_size_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    text_parameters[0].text_size = encoder_parameters.position;
+    text_parameters[obj_selected].text_size = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
     for (int i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SIZE_0, i, false, 0);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SIZE_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
 }
 
@@ -505,8 +505,12 @@ void Menu::display_text_colour_menu() {
       case 2: current_menu = TEXT_COLOUR_GREEN;  break;
       case 3: current_menu = TEXT_COLOUR_BLUE;   break;
       case 4: current_menu = TEXT_COLOUR_HUE;    break;
-      case 5: text_parameters[0].use_hue = false;   break;
-      case 6: text_parameters[0].use_hue = true;    break;
+      case 5:
+        if (text_parameters[obj_selected].use_hue)
+          text_parameters[obj_selected].use_hue = false;
+        else
+          text_parameters[obj_selected].use_hue = true;
+        break;
 
       default: current_menu = STARTUP;
     }
@@ -671,7 +675,7 @@ void Menu::display_text_colour_red_menu() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_parameters[0].red);
+    encoder.set_encoder_position(text_parameters[obj_selected].red);
     coms_serial.send_menu_frame(TEXT_COLOUR_RED, encoder_parameters.position);
   }
 
@@ -683,14 +687,14 @@ void Menu::display_text_colour_red_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    text_parameters[0].red = encoder_parameters.position;
+    text_parameters[obj_selected].red = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
 
     for (int i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_R_0, i, false, 0);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_R_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
 }
 
@@ -699,7 +703,7 @@ void Menu::display_text_colour_green_menu() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_parameters[0].green);
+    encoder.set_encoder_position(text_parameters[obj_selected].green);
     coms_serial.send_menu_frame(TEXT_COLOUR_GREEN, encoder_parameters.position);
   }
 
@@ -711,14 +715,14 @@ void Menu::display_text_colour_green_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    text_parameters[0].green = encoder_parameters.position;
+    text_parameters[obj_selected].green = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
 
     for (int i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0, i, false, 0);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
 }
 
@@ -728,7 +732,7 @@ void Menu::display_text_colour_blue_menu() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_parameters[0].blue);
+    encoder.set_encoder_position(text_parameters[obj_selected].blue);
     coms_serial.send_menu_frame(TEXT_COLOUR_BLUE, encoder_parameters.position);
   }
 
@@ -740,12 +744,12 @@ void Menu::display_text_colour_blue_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    text_parameters[0].blue = encoder_parameters.position;
+    text_parameters[obj_selected].blue = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
     for (int i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0, i, false, 0);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
 }
 
@@ -755,7 +759,7 @@ void Menu::display_text_colour_hue_menu() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_parameters[0].hue);
+    encoder.set_encoder_position(text_parameters[obj_selected].hue);
     coms_serial.send_menu_frame(TEXT_COLOUR_HUE, encoder_parameters.position);
   }
 
@@ -767,13 +771,13 @@ void Menu::display_text_colour_hue_menu() {
   }
 
   if (encoder_parameters.encoder_moved) {
-    text_parameters[0].hue = encoder_parameters.position * HUE_ADJUSTMENT_STEP_SIZE;
+    text_parameters[obj_selected].hue = encoder_parameters.position * HUE_ADJUSTMENT_STEP_SIZE;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
     for (int i = 0; i < NUM_SCREENS; i++) {
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0, i, true, 0);  //send screen_mode update to screens
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0, i, false, 1);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0 + obj_selected, i, true, 0); //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_selected, i, false, 1); //send screen_mode update to screens
     }
   }
 }
@@ -783,7 +787,7 @@ void Menu::display_text_scroll_speed_x() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_cursor[0].x_pos_dir);    //will require offset of 128 when displayed for clarity
+    encoder.set_encoder_position(text_cursor[obj_selected].x_pos_dir);    //will require offset of 128 when displayed for clarity
     coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
   }
 
@@ -796,7 +800,7 @@ void Menu::display_text_scroll_speed_x() {
 
   if (encoder_parameters.encoder_moved) {
 
-    text_cursor[0].x_pos_dir = encoder_parameters.position;
+    text_cursor[obj_selected].x_pos_dir = encoder_parameters.position;
 
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
@@ -804,7 +808,7 @@ void Menu::display_text_scroll_speed_x() {
     // not important for running megas, just update on the megas displaying the menu
     int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_X_0, i, false, 0);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_X_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
 }
 void Menu::display_text_scroll_speed_y() {
@@ -812,7 +816,7 @@ void Menu::display_text_scroll_speed_y() {
 
   if (menu_just_changed) {
     menu_just_changed = false;
-    encoder.set_encoder_position(text_cursor[0].y_pos_dir);    //will require offset of 128 when displayed for clarity
+    encoder.set_encoder_position(text_cursor[obj_selected].y_pos_dir);    //will require offset of 128 when displayed for clarity
     coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
   }
 
@@ -825,7 +829,7 @@ void Menu::display_text_scroll_speed_y() {
 
   if (encoder_parameters.encoder_moved) {
 
-    text_cursor[0].y_pos_dir = encoder_parameters.position;
+    text_cursor[obj_selected].y_pos_dir = encoder_parameters.position;
 
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
@@ -833,7 +837,7 @@ void Menu::display_text_scroll_speed_y() {
     // not important for running megas, just update on the megas displaying the menu
     int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_Y_0, i, false, 0);  //send screen_mode update to screens
+      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_Y_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
 }
 

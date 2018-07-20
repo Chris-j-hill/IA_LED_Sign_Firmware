@@ -342,7 +342,12 @@ int Coms::extract_sensor_data(byte *address) {
       case PREFIX_TEXT_OBJ_ENABLED_4:
         text_parameters[3].object_used = sensor_data_frame.frame_buffer[alpha + 1];
         break;
+        
+      case PREFIX_TEXT_OBJ_SELECTED:
+        menu_parameters.obj_selected = sensor_data_frame.frame_buffer[alpha + 1];
+        break;
 
+       
       default:  Sprint("Error: recieved prefix not defined. Prefix :");
         Sprintln((byte)sensor_data_frame.frame_buffer[alpha + 1]);
 
