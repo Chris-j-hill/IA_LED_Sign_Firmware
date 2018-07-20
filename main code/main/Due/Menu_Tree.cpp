@@ -83,7 +83,7 @@ void Menu::display_menu() {
     case DEFAULT_MENU:                default_display(); break;
     case MAIN_MENU:                   display_main_menu(); break;
     case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
-    case BRIGHTNESS_MENU:             display_brightness_menu(); break;
+    case BRIGHTNESS_MENU:             display_screen_brightness_menu(); break;
     case TEXT_SETTINGS_MENU:          display_text_settings_menu(); break;
     case TEXT_OBJ_SELECTION_MENU:     display_text_obj_selection_menu(); break;
     case FAN_SETTINGS_MENU:           display_fan_settings_menu(); break;
@@ -218,7 +218,7 @@ void Menu::display_screen_mode_menu() {
   }
 }
 
-void Menu::display_brightness_menu() {
+void Menu::display_screen_brightness_menu() {
   current_menu = BRIGHTNESS_MENU;
 
   if (menu_just_changed) {
@@ -327,9 +327,13 @@ void Menu::display_fan_settings_menu() {
     switch (encoder_parameters.position) {
       case 0: current_menu = MAIN_MENU;          break;
       case 1: current_menu = FAN_SPEED_MENU;     break;
-      case 2: fans.enable();                     break;
-      case 3: fans.disable();                    break;
-      case 4: current_menu = MIN_FAN_SPEED_MENU; break;
+      case 2:
+        if (fan_parameters.enabled)
+          fans.disable();
+        else
+          fans.enable();
+        break;
+      case 3: current_menu = MIN_FAN_SPEED_MENU; break;
 
       default: current_menu = STARTUP;
     }
@@ -434,9 +438,13 @@ void Menu::display_led_strip_menu() {
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
       case 0: current_menu = MAIN_MENU;                   break;
-      case 1: led_strip.enable();                         break;
-      case 2: led_strip.disable();                        break;
-      case 3: current_menu = LED_STRIP_BRIGHTNESS_MENU;   break;
+      case 1:
+        if (!led_strip_parameters.enabled)
+          led_strip.enable();
+        else
+          led_strip.disable();
+        break;
+      case 2: current_menu = LED_STRIP_BRIGHTNESS_MENU;   break;
 
       default: current_menu = STARTUP;
     }
@@ -837,7 +845,7 @@ void Menu::check_obj_enabled() {
       counter++;
     }
   }
-  num_obj_enabled=counter;
+  num_obj_enabled = counter;
 }
 
 #endif  // Menu_CPP

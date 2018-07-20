@@ -37,14 +37,15 @@
 #define TEXT_SIZE_MENU                10
 #define TEXT_COLOUR_MENU              11
 #define SCROLL_SPEED_MENU             12
-#define SCROLL_SPEED_MENU_X           22
-#define SCROLL_SPEED_MENU_Y           23
+
 
 //LEVEL 5
 #define TEXT_COLOUR_RED               18
 #define TEXT_COLOUR_GREEN             19
 #define TEXT_COLOUR_BLUE              20
 #define TEXT_COLOUR_HUE               21
+#define SCROLL_SPEED_MENU_X           22
+#define SCROLL_SPEED_MENU_Y           23
 
 
 struct Menu_tree_items {
@@ -172,10 +173,10 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
   byte screen_mode_menu                 = 4;
   byte brightness_menu                  = 100;
   byte text_settings_menu               = 3;
-  byte fan_settings_menu                = 4;
+  byte fan_settings_menu                = 3;
   byte internet_config_menu             = 5;
   byte sd_cards_menu                    = 3;
-  byte led_strip_menu                   = 3;
+  byte led_strip_menu                   = 2;
   byte text_size_menu                   = 4;    //size of text characters
   byte text_colour_menu                 = 6;
   byte scroll_speed_menu                = 2;
@@ -209,7 +210,7 @@ class Menu {
     //    menu options sent back irrespective of DEBUG, but rather dependant on NAVIGATE_MENU_OPTIONS_OVER_USB_SERIAL
 
     void check_obj_enabled();
-    
+
     //level 1
     void display_startup_sequence();
     void default_display();
@@ -217,7 +218,7 @@ class Menu {
 
     //level 2
     void display_screen_mode_menu();
-    void display_brightness_menu();
+    void display_screen_brightness_menu();
     void display_text_settings_menu();
     void display_fan_settings_menu();
     void display_internet_config_menu();
@@ -235,14 +236,15 @@ class Menu {
     void display_text_size_menu();
     void display_text_colour_menu();
     void display_scroll_speed_menu();
-    void display_text_scroll_speed_x();
-    void display_text_scroll_speed_y();
 
     //level 5
     void display_text_colour_red_menu();
     void display_text_colour_green_menu();
     void display_text_colour_blue_menu();
     void display_text_colour_hue_menu();
+    void display_text_scroll_speed_x();
+    void display_text_scroll_speed_y();
+    
   public:
 
     Menu() {};

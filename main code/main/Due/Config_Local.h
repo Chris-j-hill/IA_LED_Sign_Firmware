@@ -103,7 +103,9 @@
 #define PREFIX_LDR_2                    31
 #define PREFIX_FAN_SPEED                40
 #define PREFIX_FAN_MINIMUM_SPEED        41
+#define PREFIX_FAN_ENABLED              42
 #define PREFIX_LED_STRIP_BRIGHTNESS     50
+#define PREFIX_LED_STRIP_ENABLED        51
 #define PREFIX_SD1_DETECTED             60
 #define PREFIX_SD2_DETECTED             61
 #define PREFIX_EHTERNET_CONNECTED       70

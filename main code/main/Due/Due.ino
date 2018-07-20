@@ -2,7 +2,7 @@
 // sandboxed version of the due code, should not interfere with and mega code, 
 // should run independantly of main sign config
 // this file should only call main due functions in due.h file. 
-// all other functionality should be handled by those
+// all other functionality should be handled by those files 
  
 #ifdef _SAM3XA_
 
