@@ -11,7 +11,7 @@
 #include "SD_Cards.h"
 #include "Led_Strip.h"
 #include "Encoder.h"
-
+#include "Menu_Tree.h"
 extern struct Frame text_frame;
 extern struct Frame sensor_data_frame;
 extern struct Frame menu_frame;
@@ -34,6 +34,9 @@ extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
+
+extern Menu menu;
+
 const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90,
                                      100, 101, 102, 103, 104,
                                      110, 111, 112, 113, 114,
@@ -48,7 +51,7 @@ const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61,
                                     };
 
 extern byte time_since_last_sent_text_frame;
-extern byte menu_width;
+
 
 extern bool mega_enabled[4];
 
@@ -295,23 +298,23 @@ void Coms_Serial::Serial_write_frame(byte address) {   //function to actually se
 
 
 
-void Coms_Serial::send_menu_frame(int menu, int encoder_pos) { // build frame and call write_menu_frame for relevant addresses
+void Coms_Serial::send_menu_frame(byte cur_menu, int encoder_pos) { // build frame and call write_menu_frame for relevant addresses
 
-  this -> build_menu_data_frame(menu, encoder_pos);
+  this -> build_menu_data_frame(cur_menu, encoder_pos);
 
-  if (menu_width != 0) {   //not sure why it would be this but include for completeness
+  if (menu.get_menu_width() != 0) {   //not sure why it would be this but include for completeness
     this -> write_menu_frame(3);  //write frame to address 3
   }
 
-  if (menu_width > 64) {
+  if (menu.get_menu_width() > 64) {
     this -> write_menu_frame(2);
   }
 
-  if (menu_width > 128) {
+  if (menu.get_menu_width() > 128) {
     this -> write_menu_frame(1);
   }
 
-  if (menu_width > 192) {
+  if (menu.get_menu_width() > 192) {
     this -> write_menu_frame(0);
   }
 
@@ -612,12 +615,12 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.fan_minimum;
       break;
-      
+
     case PREFIX_FAN_ENABLED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = fan_parameters.enabled;
       break;
-      
+
 
     case PREFIX_LED_STRIP_BRIGHTNESS:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
@@ -629,7 +632,7 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = led_strip_parameters.enabled;
       break;
 
-      
+
 
     case PREFIX_SD1_DETECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
@@ -676,12 +679,12 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[3].text_size;
       break;
-      
+
     case PREFIX_TEXT_SIZE_4:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[4].text_size;
       break;
-      
+
     case PREFIX_TEXT_COLOUR_R_0:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_parameters[0].red;
@@ -904,6 +907,11 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
     case PREFIX_TEXT_SCROLL_SPEED_Y_4:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = text_cursor[4].y_pos_dir;
+      break;
+
+    case PREFIX_TEXT_OBJ_SELECTED:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = menu.get_selected_object();
       break;
       
     default:  Sprint("Error: Prefix not defined. Prefix :");

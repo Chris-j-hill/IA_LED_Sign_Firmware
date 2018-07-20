@@ -107,7 +107,7 @@ class Coms {
 
     int calc_delay();
 
-    int build_menu_data_frame(int menu_number, int encoder_position);    //function to build the frame to send menu info
+    int build_menu_data_frame(byte menu_number, int encoder_position);    //function to build the frame to send menu info
     int init_frames();  //set length elements of frames
 
     //  todo

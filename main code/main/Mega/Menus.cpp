@@ -267,20 +267,6 @@ void Menu::display_SD_cards_menu() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 inline void display_adjustment_menu(byte menu) {
   graphics.write_title(menu);
   graphics.write_adjustment_menu(menu);

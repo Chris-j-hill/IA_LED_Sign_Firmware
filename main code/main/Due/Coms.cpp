@@ -332,7 +332,7 @@ int Coms::init_frames() {
 }
 
 
-int Coms::build_menu_data_frame(int menu_number, int encoder_position) {   //function to build the frame to send menu info
+int Coms::build_menu_data_frame(byte menu_number, int encoder_position) {   //function to build the frame to send menu info
   int type = 4;
 
   Sprint(F("Building menu frame: Menu"));

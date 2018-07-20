@@ -199,15 +199,17 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
 class Menu {
 
   private:
-    int current_menu = 0;    //use to keep track of where we are. use switch statement to navigate based on this value
-    int previous_menu = 0;    //can be used if one menu option may be available from two locations in the tree
-    int background_porcess = 1;
+    byte current_menu = 0;    //use to keep track of where we are. use switch statement to navigate based on this value
+    byte previous_menu = 0;    //can be used if one menu option may be available from two locations in the tree
+    
     byte obj_selected = 0; //text obj selected in text settings sub menu
     byte obj_enabled[MAX_NUM_OF_TEXT_OBJECTS] = {0};    //list of enabled text objects eg 1,3,4 are enabled
     byte num_obj_enabled = 0;
-    // menu functions, these dont send menu option text, only pointers to the megas string of the same
-    //NB: menu items stored in LUT on both mega and due for display and feedback over com port note
-    //    menu options sent back irrespective of DEBUG, but rather dependant on NAVIGATE_MENU_OPTIONS_OVER_USB_SERIAL
+
+    byte menu_width = DEFAULT_MENU_WIDTH;
+    
+    // menu functions, these dont send menu option text, only menu reference variable to the megas
+    // NB: menu items stored in LUT on both mega and due for display and feedback over com port
 
     void check_obj_enabled();
 
@@ -244,19 +246,27 @@ class Menu {
     void display_text_colour_hue_menu();
     void display_text_scroll_speed_x();
     void display_text_scroll_speed_y();
-    
+
   public:
 
     Menu() {};
-    int init_menu_tree();
+    void init_menu_tree();
     void display_menu();
-    int set_menu_width();   //change the width of the menu on the screen
-    void LDR_configuration() {};
-
-    int get_current_menu() {
+    inline void set_menu_width(byte width){
+      menu_width = width;   //change the width of the menu on the screen
+    }
+    inline byte get_menu_width(){
+      return menu_width;
+    }
+    
+    inline byte get_selected_object() {
+      return obj_selected;
+    }
+    
+    inline byte get_current_menu() {
       return current_menu;
     }
-    int get_previous_menu() {
+    inline byte get_previous_menu() {
       return previous_menu;
     }
     //  void add_menu_to_send_queue(int menu);

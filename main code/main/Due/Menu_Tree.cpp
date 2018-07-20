@@ -35,6 +35,7 @@ extern Fans fans;
 extern Internet internet;
 extern Card card;
 extern Led_Strip led_strip;
+extern Menu menu;
 
 
 
@@ -50,13 +51,13 @@ int time_since_menu_startup_run = 0;
 
 bool supress_frame_to_this_screen = false;  // use this to supress text frame to screens covered fully by menu
 // other screens will require a black box cover if menu visable
-byte menu_width = DEFAULT_MENU_WIDTH;
+
 bool menu_just_changed = false;
 
 
 //menu class methods
 
-int Menu::init_menu_tree() {
+void Menu::init_menu_tree() {
 
 #ifdef SKIP_INTITAL_STARTUP_SEQUENCE
   current_menu = DEFUALT_MENU;
@@ -263,11 +264,14 @@ void Menu::display_text_obj_selection_menu() {
 
   if (button_parameters.button_pressed) {
     //instead of switch, auto accommodates N text objects, most options go to TEXT_SETTINGS_MENU
-    if (encoder_parameters.position == 0)
-      current_menu = MAIN_MENU;
-    else if (encoder_parameters.position > 0 && encoder_parameters.position <= num_obj_enabled && num_obj_enabled != 0) {
-      obj_selected = obj_enabled[encoder_parameters.position - 1];
-      current_menu = TEXT_SETTINGS_MENU;
+    if (encoder_parameters.position <= num_obj_enabled) {
+      if (encoder_parameters.position == 0)
+        current_menu = MAIN_MENU;
+      else if (encoder_parameters.position > 0 && encoder_parameters.position <= num_obj_enabled && num_obj_enabled != 0) {
+        obj_selected = obj_enabled[encoder_parameters.position - 1];
+        current_menu = TEXT_SETTINGS_MENU;
+      }
+      coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU, encoder_parameters.position-1);
     }
     else
       current_menu = STARTUP;
@@ -575,7 +579,7 @@ void Menu::display_fan_speed_menu() {
     fan_parameters.manual = true;     //set manual mode
 
     // not important for running megas, just update on the megas displaying the menu
-    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_FAN_SPEED, i, false, 0);  //send screen_mode update to screens
   }
@@ -603,7 +607,7 @@ void Menu::display_min_fan_speed_menu() {
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
-    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_FAN_MINIMUM_SPEED, i, false, 0);
   }
@@ -634,7 +638,7 @@ void Menu::display_sd_folder_menu() {
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
-    //    int left_most_address_displaying_menu = (TOTAL_WIDTH/menu_width)-1;     //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    //    int left_most_address_displaying_menu = (TOTAL_WIDTH/menu.get_menu_width())-1;     //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     //    for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
     //      coms_serial.send_specific_calibration_data(PREFIX_FAN_SPEED, i, false, 0);  //send screen_mode update to screens
   }
@@ -662,7 +666,7 @@ void Menu::display_led_strip_brightness_menu() {
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
-    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_LED_STRIP_BRIGHTNESS, i, false, 0);  //send screen_mode update to screens
   }
@@ -806,7 +810,7 @@ void Menu::display_text_scroll_speed_x() {
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
-    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_X_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
@@ -835,7 +839,7 @@ void Menu::display_text_scroll_speed_y() {
     time_since_menu_last_changed = millis();
 
     // not important for running megas, just update on the megas displaying the menu
-    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu_width) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    int left_most_address_displaying_menu = (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
     for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_Y_0 + obj_selected, i, false, 0); //send screen_mode update to screens
   }
