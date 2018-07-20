@@ -49,7 +49,7 @@ void Menu::display_menu() {
     switch (current_menu) {
       case MAIN_MENU:                   display_main_menu(); break;
       case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
-      case BRIGHTNESS_MENU:             display_brightness_menu(); break;
+      case BRIGHTNESS_MENU:             display_screen_brightness_menu(); break;
       case TEXT_SETTINGS_MENU:          display_text_settings_menu(); break;
       case FAN_SETTINGS_MENU:           display_fan_settings_menu(); break;
       case INTERNET_CONFIG_MENU:        display_internet_config_menu(); break;
@@ -65,6 +65,7 @@ void Menu::display_menu() {
       case TEXT_COLOUR_RED:             display_text_colour_red_menu(); break;
       case TEXT_COLOUR_GREEN:           display_text_colour_green_menu(); break;
       case TEXT_COLOUR_BLUE:            display_text_colour_blue_menu(); break;
+      case TEXT_OBJ_SELECTION_MENU:     display_text_obj_selection_menu(); break;
 
       default: current_menu = STARTUP;    //restart, run startup
     }
@@ -107,7 +108,7 @@ void Menu::default_display() {
 }
 
 void Menu::display_main_menu() {
-  
+
   graphics.write_title(MAIN_MENU);
 
   switch (menu_parameters.encoder_position) {
@@ -138,7 +139,7 @@ void Menu::display_screen_mode_menu() {
 }
 
 
-void Menu::display_brightness_menu() {
+void Menu::display_screen_brightness_menu() {
 
   graphics.write_title(BRIGHTNESS_MENU);
   graphics.write_adjustment_menu(BRIGHTNESS_MENU);
@@ -146,25 +147,87 @@ void Menu::display_brightness_menu() {
 }
 
 void Menu::display_text_settings_menu() {
-  
-  graphics.write_title(SCREEN_MODE_MENU);
 
-//  switch (menu_parameters.encoder_position) {
-//    case 0: graphics.write_menu_option(NULL_STRING,     RETURN_MENU,    SCREEN_MODE_0,   1);  break;
-//    case 1: graphics.write_menu_option(RETURN_MENU,     SCREEN_MODE_0,  SCREEN_MODE_1,   2);  break;
-//    case 2: graphics.write_menu_option(SCREEN_MODE_0,   SCREEN_MODE_1,  SCREEN_MODE_2,   2);  break;
-//    case 3: graphics.write_menu_option(SCREEN_MODE_1,   SCREEN_MODE_2,  SCREEN_MODE_3,   2);  break;
-//    case 4: graphics.write_menu_option(SCREEN_MODE_2,   SCREEN_MODE_3,  NULL_STRING,     3);  break;
-//
-//  }
+  graphics.write_title(TEXT_SETTINGS_MENU);
+
+  switch (menu_parameters.encoder_position) {
+    case 0: graphics.write_menu_option(NULL_STRING,         RETURN_MENU,        TEXT_SIZE_MENU,       1);  break;
+    case 1: graphics.write_menu_option(RETURN_MENU,         TEXT_SIZE_MENU,     TEXT_COLOUR_MENU,     2);  break;
+    case 2: graphics.write_menu_option(TEXT_SIZE_MENU,      TEXT_COLOUR_MENU,   SCROLL_SPEED_MENU,    2);  break;
+    case 3: graphics.write_menu_option(TEXT_COLOUR_MENU,    SCROLL_SPEED_MENU,  NULL_STRING,          3);  break;
+  }
 }
 
 
-void Menu::display_fan_settings_menu() {}
+void Menu::display_fan_settings_menu() {
+
+  graphics.write_title(FAN_SETTINGS_MENU);
+
+  byte toggle_fan_enable;
+  if (menu_parameters.fan_enabled)
+    toggle_fan_enable = ENABLE_FAN;
+  else
+    toggle_fan_enable = DISABLE_FAN;
+
+  switch (menu_parameters.encoder_position) {
+    case 0: graphics.write_menu_option(NULL_STRING,         RETURN_MENU,        FAN_SPEED_MENU,       1);  break;
+    case 1: graphics.write_menu_option(RETURN_MENU,         FAN_SPEED_MENU,     toggle_fan_enable,    2);  break;
+    case 2: graphics.write_menu_option(FAN_SPEED_MENU,      toggle_fan_enable,  MIN_FAN_SPEED_MENU,   2);  break;
+    case 3: graphics.write_menu_option(toggle_fan_enable,   MIN_FAN_SPEED_MENU, NULL_STRING,          3);  break;
+  }
+
+}
+
+
+void Menu::display_led_strip_menu() {
+
+  graphics.write_title(LED_STRIP_MENU);
+
+  byte toggle_led_strip_enable;
+  if (menu_parameters.led_strip_enabled)
+    toggle_led_strip_enable = ENABLE_LED_STRIP;
+  else
+    toggle_led_strip_enable = DISABLE_LED_STRIP;
+
+  switch (menu_parameters.encoder_position) {
+    case 0: graphics.write_menu_option(NULL_STRING,               RETURN_MENU,                toggle_led_strip_enable,      1);  break;
+    case 1: graphics.write_menu_option(RETURN_MENU,               toggle_led_strip_enable,    LED_STRIP_BRIGHTNESS_MENU,    2);  break;
+    case 2: graphics.write_menu_option(toggle_led_strip_enable,   LED_STRIP_BRIGHTNESS_MENU,  NULL_STRING,                  3);  break;
+  }
+}
+
+
+
+
+void Menu::display_text_obj_selection_menu() {
+
+  graphics.write_title(TEXT_OBJ_SELECTION_MENU);
+
+//  switch (menu_parameters.encoder_position) {
+//    case 0: graphics.write_menu_option(NULL_STRING,         RETURN_MENU,        FAN_SPEED_MENU,       1);  break;
+//    case 1: graphics.write_menu_option(RETURN_MENU,         FAN_SPEED_MENU,     toggle_fan_enable,    2);  break;
+//    case 2: graphics.write_menu_option(FAN_SPEED_MENU,      toggle_fan_enable,  MIN_FAN_SPEED_MENU,   2);  break;
+//    case 3: graphics.write_menu_option(toggle_fan_enable,   MIN_FAN_SPEED_MENU, NULL_STRING,          3);  break;
+//  }
+
+  if (menu_parameters.encoder_position == 0)
+    graphics.write_menu_option(NULL_STRING, RETURN_MENU, TEXT_OBJ_0, 1);
+
+  else if (menu_parameters.encoder_position == 1)
+    graphics.write_menu_option(RETURN_MENU, TEXT_OBJ_0, TEXT_OBJ_0 + 1, 2);
+
+  else if (menu_parameters.encoder_position == MAX_NUM_OF_TEXT_OBJECTS)
+    graphics.write_menu_option(TEXT_OBJ_0 + (menu_parameters.encoder_position - 2), TEXT_OBJ_0 + (menu_parameters.encoder_position - 1), NULL_STRING, 3);
+
+  else
+    graphics.write_menu_option(TEXT_OBJ_0 + (menu_parameters.encoder_position - 2), TEXT_OBJ_0 + (menu_parameters.encoder_position - 1), TEXT_OBJ_0 + (menu_parameters.encoder_position), 2);
+}
+
+
+
+
+
+
 void Menu::display_internet_config_menu() {}
 void Menu::display_SD_cards_menu() {}
-void Menu::display_led_strip_menu() {}
-
-
-
 #endif // MENUS_CPP

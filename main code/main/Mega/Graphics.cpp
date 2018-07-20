@@ -469,6 +469,8 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case SCROLL_SPEED_MENU:           matrix.println(F2(menu_items.scroll_speed_settings));       break;
 
       case FAN_SPEED_MENU:              matrix.println(F2(menu_items.fan_speed_settings));          break;
+      case ENABLE_FAN:                  matrix.println(F2(menu_items.fan_enable));                  break;
+      case DISABLE_FAN:                 matrix.println(F2(menu_items.fan_disable));                 break;
       case MIN_FAN_SPEED_MENU:          matrix.println(F2(menu_items.minimum_rotating_speed));      break;
 
       case SELECT_NETWORK_MANUALLY:     matrix.println(F2(menu_items.select_network_manually));     break;
@@ -481,6 +483,11 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case TEXT_COLOUR_GREEN:           matrix.println(F2(menu_items.text_colour_green));           break;
       case TEXT_COLOUR_BLUE:            matrix.println(F2(menu_items.text_colour_blue));            break;
       case TEXT_COLOUR_HUE:             matrix.println(F2(menu_items.text_colour_hue));             break;
+
+
+
+
+      
 
       case NULL_STRING:                 matrix.println(F2(menu_items.null_string));                 break;
       default:                          matrix.println(F2(menu_items.default_string));              break;

@@ -46,14 +46,27 @@
 #define SCROLL_SPEED_MENU_X           22
 #define SCROLL_SPEED_MENU_Y           23
 
+#define TEXT_OBJ_SELECTION_MENU       24
+
+
 
 //aditional menus to be printed on screen
-#define NULL_STRING                   24
-#define RETURN_MENU                   25
-#define SCREEN_MODE_0                 26
-#define SCREEN_MODE_1                 27
-#define SCREEN_MODE_2                 28
-#define SCREEN_MODE_3                 29
+#define NULL_STRING                   54
+#define RETURN_MENU                   55
+#define SCREEN_MODE_0                 56
+#define SCREEN_MODE_1                 57
+#define SCREEN_MODE_2                 58
+#define SCREEN_MODE_3                 59
+#define ENABLE_FAN                    60
+#define DISABLE_FAN                   61
+#define ENABLE_LED_STRIP              62
+#define DISABLE_LED_STRIP             63
+
+#define TEXT_OBJ_0                    100   //increase this to N objects
+#define TEXT_OBJ_1                    101
+#define TEXT_OBJ_2                    102
+#define TEXT_OBJ_3                    103
+#define TEXT_OBJ_4                    104
 
 
 
@@ -85,20 +98,30 @@
 
 //struct for menu items that need to be displayable but not directly used by the megas
 struct Menu_Struct {
+  
   byte current1 = 0;
   byte current2 = 0;
+  
   byte light1 = 0;
   byte light2 = 0;
+  
   byte temp1 = 0;
   byte temp2 = 0;
   byte temp3 = 0;
+  
   byte fan_speed = 0;
   byte min_fan_speed = 0;
+  bool fan_enabled = false;
+  
   byte led_strip_brightness = 0;
+  bool led_strip_enabled = false;
+  
   bool sd_card1_detected = false;
   bool sd_card2_detected = false;
+  
   bool ethernet_connected = false;
   bool wifi_connected = false;
+  
   bool sd_card1_mounted = false;
   bool sd_card2_mounted = false;
 
@@ -129,8 +152,7 @@ struct Menu_tree_items {
   const char screen_mode3[]             PROGMEM           = "Back Side";
   const char screen_mode2[]             PROGMEM           = "Both Off";
 
-  // brightness folder
-
+  //screen brightness folder
   const char brightness_menu[]          PROGMEM           = "Brightness";
 
   //text adjustment folder
@@ -234,7 +256,7 @@ class Menu {
 
 
     void clear_background_text(); //clear area for menu
-    
+
     //level 1
     void display_startup_sequence();
     void default_display();
@@ -242,27 +264,32 @@ class Menu {
 
     //level 2
     void display_screen_mode_menu();
-    void display_brightness_menu();
-    void display_text_settings_menu();
+    void display_screen_brightness_menu();
     void display_fan_settings_menu();
     void display_internet_config_menu();
     void display_SD_cards_menu();
     void display_led_strip_menu();
+    void display_text_obj_selection_menu();
 
     //level 3
-    void display_text_size_menu();
-    void display_text_colour_menu();
-    void display_scroll_speed_menu();
+    void display_text_settings_menu();
     void display_fan_speed_menu();
     void display_min_fan_speed_menu();
     void display_sd_folder_menu();
     void display_led_strip_brightness_menu();
 
     //level 4
+    void display_text_size_menu();
+    void display_text_colour_menu();
+    void display_scroll_speed_menu();
+
+    //level 5
     void display_text_colour_red_menu();
     void display_text_colour_green_menu();
     void display_text_colour_blue_menu();
     void display_text_colour_hue_menu();
+    void display_scroll_speed_x_menu();
+    void display_scroll_speed_y_menu();
 
 
   public:
@@ -274,7 +301,7 @@ class Menu {
 
     int init_menu_tree();
     void display_menu();
-    
+
     byte get_current_menu() {
       return current_menu;
     }

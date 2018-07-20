@@ -5,13 +5,6 @@
 #include "Mega.h"    
 #endif
 
-//    uint8_t         *matrixbuff[2];
-//  int buffsize  = 32 * 64 * 3; // x3 = 3 bytes holds 4 planes "packed"
-//int allocsize = buffsize * 2;
-//uint8_t buf[32 * 64 * 3*2];
-//  if(NULL == (matrixbuff[0] = (uint8_t *)malloc(allocsize))) return;
-//  memset(matrixbuff[0], 0, allocsize);
-
 //all code for both board types executed in setup
 void setup() {
 

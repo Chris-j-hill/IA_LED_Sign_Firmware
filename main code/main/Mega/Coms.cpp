@@ -94,9 +94,21 @@ int Coms::extract_sensor_data(byte *address) {
       case PREFIX_FAN_SPEED:
         menu_parameters.fan_speed = sensor_data_frame.frame_buffer[alpha + 1];
         break;
+        
+      case PREFIX_FAN_MINIMUM_SPEED:
+        menu_parameters.min_fan_speed = sensor_data_frame.frame_buffer[alpha + 1];
+        break;
+        
+      case PREFIX_FAN_ENABLED:
+          menu_parameters.fan_enabled = sensor_data_frame.frame_buffer[alpha + 1];
+        break;
 
       case PREFIX_LED_STRIP_BRIGHTNESS:
         menu_parameters.led_strip_brightness = sensor_data_frame.frame_buffer[alpha + 1];
+        break;
+
+      case PREFIX_LED_STRIP_ENABLED:
+        menu_parameters.led_strip_enabled = sensor_data_frame.frame_buffer[alpha + 1];
         break;
 
       case PREFIX_SD1_DETECTED:
@@ -318,15 +330,15 @@ int Coms::extract_sensor_data(byte *address) {
       case PREFIX_TEXT_OBJ_ENABLED_1:
         text_parameters[3].object_used = sensor_data_frame.frame_buffer[alpha + 1];
         break;
-        
+
       case PREFIX_TEXT_OBJ_ENABLED_2:
         text_parameters[3].object_used = sensor_data_frame.frame_buffer[alpha + 1];
         break;
-        
+
       case PREFIX_TEXT_OBJ_ENABLED_3:
         text_parameters[3].object_used = sensor_data_frame.frame_buffer[alpha + 1];
         break;
-        
+
       case PREFIX_TEXT_OBJ_ENABLED_4:
         text_parameters[3].object_used = sensor_data_frame.frame_buffer[alpha + 1];
         break;
@@ -349,7 +361,7 @@ void Coms::extract_pos_frame(byte obj_num) {
 
   cursor_parameters[obj_num].local_x_pos = calc_local_pos(pos_frame.frame_buffer[4], pos_frame.frame_buffer[5]);
   cursor_parameters[obj_num].local_y_pos = calc_local_pos(pos_frame.frame_buffer[6], pos_frame.frame_buffer[7]);
-//  calc_local_pos();
+  //  calc_local_pos();
 
   cursor_parameters[obj_num].x_dir = pos_frame.frame_buffer[8] - 128;
   cursor_parameters[obj_num].y_dir = pos_frame.frame_buffer[9] - 128;
@@ -364,12 +376,12 @@ void Coms::extract_menu_frame() {
 
 
 inline int Coms::calc_pos(byte MSB, byte LSB) {
-return (MSB<<8)+LSB;
+  return (MSB << 8) + LSB;
 }
 
 inline int Coms::calc_local_pos(byte MSB, byte LSB) {
-int temp = (MSB<<8)+LSB;
-return  temp -(screen_parameters.node_address << SINGLE_MATRIX_WIDTH_AS_POW_2);
+  int temp = (MSB << 8) + LSB;
+  return  temp - (screen_parameters.node_address << SINGLE_MATRIX_WIDTH_AS_POW_2);
 }
 
 #endif // COMS_CPP
