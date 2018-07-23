@@ -78,7 +78,7 @@ void Menu::display_menu() {
   if (MENU_VISABLITIY_TIMOUT < millis() - time_since_menu_last_changed) {
     current_menu = DEFAULT_MENU;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(DEFAULT_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(DEFAULT_MENU);
   }
 
   switch (current_menu) {
@@ -117,7 +117,7 @@ void Menu::display_startup_sequence() {
   if (button_parameters.button_pressed) {}
 
   time_since_menu_startup_run = millis();  //log time this function was run
-  coms_serial.send_menu_frame(STARTUP, encoder_parameters.position);
+  coms_serial.send_menu_frame(STARTUP);
   current_menu = DEFAULT_MENU;  // force this as next menu
 }
 
@@ -128,7 +128,7 @@ void Menu::default_display() {
   if (millis() - time_since_menu_startup_run > TIME_TO_DISPLAY_STARTUP) {
     if (menu_just_changed) {
       encoder.recenter_encoder();
-      coms_serial.send_menu_frame(DEFAULT_MENU, encoder_parameters.position);
+      coms_serial.send_menu_frame(DEFAULT_MENU);
       menu_just_changed = false;
     }
 
@@ -151,12 +151,12 @@ void Menu::display_main_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(MAIN_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(MAIN_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(MAIN_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(MAIN_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -190,12 +190,12 @@ void Menu::display_screen_mode_menu() {
 
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(SCREEN_MODE_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SCREEN_MODE_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(SCREEN_MODE_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SCREEN_MODE_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -228,7 +228,7 @@ void Menu::display_screen_brightness_menu() {
 
     menu_just_changed = false;
     encoder.set_encoder_position(screen_brightness);
-    coms_serial.send_menu_frame(BRIGHTNESS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(BRIGHTNESS_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -254,12 +254,12 @@ void Menu::display_text_obj_selection_menu() {
     menu_just_changed = false;
     encoder.recenter_encoder();
     check_obj_enabled();    //function to count which objects are enabled and put them in array
-    coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -273,7 +273,7 @@ void Menu::display_text_obj_selection_menu() {
         obj_selected = obj_enabled[encoder_parameters.position - 1];
         current_menu = TEXT_SETTINGS_MENU;
       }
-      coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU, encoder_parameters.position-1);
+      coms_serial.send_menu_frame(TEXT_OBJ_SELECTION_MENU);
     }
     else
       current_menu = STARTUP;
@@ -290,12 +290,12 @@ void Menu::display_text_settings_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(TEXT_SETTINGS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_SETTINGS_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(TEXT_SETTINGS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_SETTINGS_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -320,12 +320,12 @@ void Menu::display_fan_settings_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(FAN_SETTINGS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(FAN_SETTINGS_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(FAN_SETTINGS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(FAN_SETTINGS_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -357,12 +357,12 @@ void Menu::display_internet_config_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(INTERNET_CONFIG_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(INTERNET_CONFIG_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(INTERNET_CONFIG_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(INTERNET_CONFIG_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -390,12 +390,12 @@ void Menu::display_SD_cards_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(SD_CARD_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SD_CARD_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(SD_CARD_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SD_CARD_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -432,12 +432,12 @@ void Menu::display_led_strip_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(LED_STRIP_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(LED_STRIP_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(LED_STRIP_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(LED_STRIP_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -470,7 +470,7 @@ void Menu::display_text_size_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].text_size);
-    coms_serial.send_menu_frame(TEXT_SIZE_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_SIZE_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -495,12 +495,12 @@ void Menu::display_text_colour_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(TEXT_COLOUR_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_COLOUR_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(TEXT_COLOUR_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_COLOUR_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -534,12 +534,12 @@ void Menu::display_scroll_speed_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SCROLL_SPEED_MENU);
   }
 
   if (encoder_parameters.encoder_moved) {
     time_since_menu_last_changed = millis();
-    coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SCROLL_SPEED_MENU);
     encoder_parameters.encoder_moved = false;
   }
 
@@ -564,7 +564,7 @@ void Menu::display_fan_speed_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(map(fan_parameters.target_speed, fan_parameters.fan_minimum, 255, 0, 100));
-    coms_serial.send_menu_frame(FAN_SPEED_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(FAN_SPEED_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -593,7 +593,7 @@ void Menu::display_min_fan_speed_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(fan_parameters.fan_minimum);
-    coms_serial.send_menu_frame(MIN_FAN_SPEED_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(MIN_FAN_SPEED_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -624,7 +624,7 @@ void Menu::display_sd_folder_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.recenter_encoder();
-    coms_serial.send_menu_frame(SD_FOLDERS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SD_FOLDERS_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -652,7 +652,7 @@ void Menu::display_led_strip_brightness_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(led_strip_parameters.target_brightness);
-    coms_serial.send_menu_frame(LED_STRIP_BRIGHTNESS_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(LED_STRIP_BRIGHTNESS_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -682,7 +682,7 @@ void Menu::display_text_colour_red_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].red);
-    coms_serial.send_menu_frame(TEXT_COLOUR_RED, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_COLOUR_RED);
   }
 
   if (button_parameters.button_pressed) {
@@ -710,7 +710,7 @@ void Menu::display_text_colour_green_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].green);
-    coms_serial.send_menu_frame(TEXT_COLOUR_GREEN, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_COLOUR_GREEN);
   }
 
   if (button_parameters.button_pressed) {
@@ -739,7 +739,7 @@ void Menu::display_text_colour_blue_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].blue);
-    coms_serial.send_menu_frame(TEXT_COLOUR_BLUE, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_COLOUR_BLUE);
   }
 
   if (button_parameters.button_pressed) {
@@ -766,7 +766,7 @@ void Menu::display_text_colour_hue_menu() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].hue);
-    coms_serial.send_menu_frame(TEXT_COLOUR_HUE, encoder_parameters.position);
+    coms_serial.send_menu_frame(TEXT_COLOUR_HUE);
   }
 
   if (button_parameters.button_pressed) {
@@ -794,7 +794,7 @@ void Menu::display_text_scroll_speed_x() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_cursor[obj_selected].x_pos_dir);    //will require offset of 128 when displayed for clarity
-    coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SCROLL_SPEED_MENU);
   }
 
   if (button_parameters.button_pressed) {
@@ -823,7 +823,7 @@ void Menu::display_text_scroll_speed_y() {
   if (menu_just_changed) {
     menu_just_changed = false;
     encoder.set_encoder_position(text_cursor[obj_selected].y_pos_dir);    //will require offset of 128 when displayed for clarity
-    coms_serial.send_menu_frame(SCROLL_SPEED_MENU, encoder_parameters.position);
+    coms_serial.send_menu_frame(SCROLL_SPEED_MENU);
   }
 
   if (button_parameters.button_pressed) {

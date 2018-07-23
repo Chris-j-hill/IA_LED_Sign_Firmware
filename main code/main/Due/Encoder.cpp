@@ -58,7 +58,7 @@ void update_encoder_ISR () {
         encoder_parameters.PosCount--;
 
       }
-      encoder_parameters.position = encoder_parameters.PosCount / (2/encoder_parameters.sensitivity);
+      encoder_parameters.position = encoder_parameters.PosCount / (2 / encoder_parameters.sensitivity);
 
     }
 
@@ -81,18 +81,24 @@ void update_button_ISR() {
 byte Encoder::get_text_encoder_position(byte byte_number) {  //function to return the MSB or LSB of the current hue value to send
 
   if (byte_number == 1) { //looking for MSB
-    if (encoder_parameters.position < 0)
-      return (abs(encoder_parameters.position) / 256);    //get quotient of absolute value and 256 rounded down
 
-    else
-      return (abs(encoder_parameters.position) / 256 + 128); //add 128 to indicate positve number
+    return ((encoder_parameters.position >> 8) & 0xFF);
+
+    //    if (encoder_parameters.position < 0)
+    //      return (abs(encoder_parameters.position) / 256);    //get quotient of absolute value and 256 rounded down
+    //
+    //    else
+    //      return (abs(encoder_parameters.position) / 256 + 128); //add 128 to indicate positve number
   }
   else if (byte_number == 2) { //LSB
-    return (abs(encoder_parameters.position) % 256);    //get modulo of value and 256;
+
+    return (encoder_parameters.position & 0xFF);
+
+    //return (abs(encoder_parameters.position) % 256);    //get modulo of value and 256;
   }
   else {
-    Sprintln("Error, cant get hue MSB/LSB, invalid byte number presented");
-    return (-1);
+    Sprintln("Error, cant get MSB/LSB, invalid byte number presented");
+    return (0);
   }
 }
 

@@ -306,9 +306,9 @@ void Coms_Serial::Serial_write_frame(byte address) {   //function to actually se
 
 
 
-void Coms_Serial::send_menu_frame(byte cur_menu, int encoder_pos) { // build frame and call write_menu_frame for relevant addresses
+void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write_menu_frame for relevant addresses
 
-  this -> build_menu_data_frame(cur_menu, encoder_pos);
+  this -> build_menu_data_frame(cur_menu);
 
   if (menu.get_menu_width() != 0) {   //not sure why it would be this but include for completeness
     this -> write_menu_frame(3);  //write frame to address 3

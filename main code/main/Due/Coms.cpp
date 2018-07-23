@@ -317,7 +317,7 @@ int Coms::init_frames() {
 
   // pos frame
   pos_frame.frame_length = FRAME_OVERHEAD + 8;
-  pos_frame.frame_type = 3;
+  pos_frame.frame_type = 3; 
   pos_frame.frame_buffer[0] = pos_frame.frame_length;
   pos_frame.frame_buffer[1] = pos_frame.frame_type;
   pos_frame.frame_buffer[2] = 1;
@@ -333,13 +333,8 @@ int Coms::init_frames() {
 }
 
 
-int Coms::build_menu_data_frame(byte menu_number, int encoder_position) {   //function to build the frame to send menu info
+void Coms::build_menu_data_frame(byte menu_number) {   //function to build the frame to send menu info
   byte type = 4;
-
-  Sprint(F("Building menu frame: Menu"));
-  Sprint(menu_number);
-  Sprint("\t Encoder Pos:");
-  Sprintln(encoder_position);
 
   menu_frame.frame_buffer[4] = (byte) menu_number;
   menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(1);
@@ -354,7 +349,6 @@ int Coms::build_menu_data_frame(byte menu_number, int encoder_position) {   //fu
 
   menu_frame.frame_queued = true;   //flag to send frame on new loop
 
-  return (0);
 }
 
 
