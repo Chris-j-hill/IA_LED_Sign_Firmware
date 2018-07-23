@@ -90,7 +90,11 @@ void Coms_Serial::init_serial() {
 
   init_software_serial_to_megas(mega_parameters.baud_rate);
   Serial.println("Setup done");
-  ping();
+  //ping();
+  mega_parameters.detected1 = true;
+  mega_parameters.detected2 = true;
+  mega_parameters.detected3 = true;
+  mega_parameters.detected4 = true;
   init_frames(); //build constant parts of frames
 }
 
@@ -134,6 +138,10 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
 
+  Serial_1.println("Hello 1");
+  Serial_2.println("Hello 2");
+  Serial_3.println("Hello 3");
+  Serial_4.println("Hello 4");
 }
 
 void Coms_Serial::ping() {

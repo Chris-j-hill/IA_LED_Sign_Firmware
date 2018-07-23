@@ -13,10 +13,27 @@ Y End Pos:80
 X Loops:2
 Y Loops:3
 Disp time:100000
-Next File:STRING2.TXT
+Next File:STRING2
 }
 {
 String:this is a new string, whoopity, scoop, poop, kanye 2020
+Red:3
+Green:5
+Blue:7
+Size:4
+X Speed:-3
+Y Speed:10
+X Start Pos:10
+Y Start Pos:-10
+X End Pos:-100
+Y End Pos:100
+X Loops:5
+Y Loops:5
+Disp time:100000
+Next File:String4.txt
+}
+{(STRING2)
+String:from string 2 file
 Red:3
 Green:5
 Blue:7

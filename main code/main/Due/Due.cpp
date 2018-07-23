@@ -46,14 +46,16 @@ void due_setup() {
   encoder.init_encoder();
   encoder.init_button();
   menu.init_menu_tree();
-  nativeUsb.init_native_usb();
+  
   light_sensor.init_LDR();
   current_meter.init_current_meter();
   graphics.init_cursor();
-  coms_serial.init_serial();
-    fans.init_fans();
+  fans.init_fans();
   fans.init_temp_sensors();
   led_strip.init_led_strip();
+  nativeUsb.init_native_usb();
+  coms_serial.init_serial();
+
 }
 
 

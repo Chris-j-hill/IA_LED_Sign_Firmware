@@ -49,7 +49,7 @@ class Coms_Serial: public Coms {
 
 
     void ping();
-    void init_software_serial_to_megas(int speed = 115200);
+    void init_software_serial_to_megas(int speed = COMS_SPEED);
     void Serial_write_frame(byte address) ;                                  //function to actually send the frame to given address
 
   public:

@@ -37,6 +37,7 @@ extern struct SD_Card card2;
 extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
+extern Encoder encoder;
 // list of valid sensor prefix's for sending non string data to the megas.
 // append this as required and add to switch statements in due and mega code
 //const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
@@ -333,7 +334,7 @@ int Coms::init_frames() {
 
 
 int Coms::build_menu_data_frame(byte menu_number, int encoder_position) {   //function to build the frame to send menu info
-  int type = 4;
+  byte type = 4;
 
   Sprint(F("Building menu frame: Menu"));
   Sprint(menu_number);
@@ -341,8 +342,8 @@ int Coms::build_menu_data_frame(byte menu_number, int encoder_position) {   //fu
   Sprintln(encoder_position);
 
   menu_frame.frame_buffer[4] = (byte) menu_number;
-  menu_frame.frame_buffer[5] = (byte) get_text_encoder_position(1);
-  menu_frame.frame_buffer[6] = (byte) get_text_encoder_position(2);
+  menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(1);
+  menu_frame.frame_buffer[6] = (byte) encoder.get_text_encoder_position(2);
 
   menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.header_checksum; //initial checksum
 

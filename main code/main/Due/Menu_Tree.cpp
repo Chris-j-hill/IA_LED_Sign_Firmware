@@ -77,6 +77,8 @@ void Menu::display_menu() {
 
   if (MENU_VISABLITIY_TIMOUT < millis() - time_since_menu_last_changed) {
     current_menu = DEFAULT_MENU;
+    encoder.recenter_encoder();
+    coms_serial.send_menu_frame(DEFAULT_MENU, encoder_parameters.position);
   }
 
   switch (current_menu) {

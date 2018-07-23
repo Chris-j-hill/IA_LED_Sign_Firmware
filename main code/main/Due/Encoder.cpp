@@ -78,7 +78,7 @@ void update_button_ISR() {
 }
 
 
-int get_text_encoder_position(int byte_number) {  //function to return the MSB or LSB of the current hue value to send
+byte Encoder::get_text_encoder_position(byte byte_number) {  //function to return the MSB or LSB of the current hue value to send
 
   if (byte_number == 1) { //looking for MSB
     if (encoder_parameters.position < 0)

@@ -208,10 +208,10 @@ byte Host::data_set_LUT(String data_set) {
     return REPORT_LDR_CONFIG;
 
 
-  
+
   //check substring for text
-  String sub_string_data_set = data_set.substring(0, data_set.length()-1);
-  if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT]){
+  String sub_string_data_set = data_set.substring(0, data_set.length() - 1);
+  if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT]) {
     last_command = data_set;
     return REPORT_TEXT;
   }
@@ -864,7 +864,7 @@ void Host::print_sd_cards() {
 
 void Host::print_text(String command) {
 
-  String obj_num_as_char = command.substring(command.length()-1);
+  String obj_num_as_char = command.substring(command.length() - 1);
   byte obj_num = obj_num_as_char.toInt();
   if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)
     obj_num = 0;
@@ -875,8 +875,8 @@ void Host::print_text(String command) {
   }
   if (text_cursor[obj_num].object_used)
     yes();
-  else{
-    no();space();
+  else {
+    no(); space();
   }
   tab(); tab();
 
@@ -907,8 +907,8 @@ void Host::print_text(String command) {
 
   if (text_parameters[obj_num].use_hue)
     yes();
-  else{
-    no();space();
+  else {
+    no(); space();
   }
   tab(); tab();
 
@@ -935,7 +935,7 @@ void Host::print_text(String command) {
   if (abs(text_cursor[obj_num].y_pos_dir - 128 < 100)) space();
   if (text_cursor[obj_num].y_pos_dir - 128 >= 0) space();
   space();
-  tab();tab();
+  tab(); tab();
 
   Serial.print(text_cursor[obj_num].x_start);
   if (abs(text_cursor[obj_num].x_start < 10)) space();
@@ -949,7 +949,7 @@ void Host::print_text(String command) {
   if (text_cursor[obj_num].y_start >= 0) space();
   space();
 
-  tab();tab();
+  tab(); tab();
   Serial.print(text_cursor[obj_num].x_end);
   if (abs(text_cursor[obj_num].x_end < 10)) space();
   if (abs(text_cursor[obj_num].x_end < 100)) space();
@@ -962,7 +962,7 @@ void Host::print_text(String command) {
   if (text_cursor[obj_num].y_end >= 0) space();
   space();
 
-  tab();tab();
+  tab(); tab();
 
   Serial.print(text_cursor[obj_num].x_limit_min);
   space();
@@ -1120,6 +1120,7 @@ void Host::print_menu_tree_options(int cur_menu) {
       case TEXT_COLOUR_GREEN:           Serial.print(menu_items.text_colour_green_menu);        break;
       case TEXT_COLOUR_BLUE:            Serial.print(menu_items.text_colour_blue_menu);         break;
       case TEXT_COLOUR_HUE:             Serial.print(menu_items.text_colour_hue_menu);          break;
+      case TEXT_OBJ_SELECTION_MENU:     Serial.print(menu_items.text_obj_select_menu);          break;
     }
   }
 }
@@ -1293,6 +1294,17 @@ void Host::position_to_menu_value() {
       Serial.print(divide_string);
       Serial.print(menu_limits.scroll_speed_menu - 128);
       break;
+
+    case TEXT_OBJ_SELECTION_MENU:
+      switch (encoder_parameters.position) {
+        case 0: Serial.print(menu_items.RETURN);                    break;
+        case 1: Serial.print(menu_items.text_obj_0_menu);           break;
+        case 2: Serial.print(menu_items.text_obj_1_menu);           break;
+        case 3: Serial.print(menu_items.text_obj_2_menu);           break;
+        case 4: Serial.print(menu_items.text_obj_3_menu);           break;
+        case 5: Serial.print(menu_items.text_obj_4_menu);           break;
+      }
+      break;
   }
 
 }
@@ -1410,13 +1422,13 @@ void HostNativeUSB::get_serial() {
 
 void HostNativeUSB::request_data(byte location) {
 
-// a note on the location variable
-// this variable is encoded. 
-// values in range 0-9 correspond to string objects 0-9
-// value 10 is requesting the next instruction
-// value 20 is requesting ip address
-// etc...
-// see put_data_into_loc funcition below, though be aware loc is /10 to better extract stings
+  // a note on the location variable
+  // this variable is encoded.
+  // values in range 0-9 correspond to string objects 0-9
+  // value 10 is requesting the next instruction
+  // value 20 is requesting ip address
+  // etc...
+  // see put_data_into_loc funcition below, though be aware loc is /10 to better extract stings
 
   if (location >= 0 && location < NUM_USB_COMMANDS) { //sanity check location
     String tx = request_keyword + space_colon_string + location;
@@ -1427,8 +1439,8 @@ void HostNativeUSB::request_data(byte location) {
       delay(2); //short delay to allow some data to arrive
 
       String rx_string = SerialUSB.readString();
-      byte obj_num = location%10; //the obj_num is encoded into the units part of the location, a location of 02 indicated request string 2 (text_str[2]) 
-      put_data_into_loc(rx_string, location/10, obj_num);
+      byte obj_num = location % 10; //the obj_num is encoded into the units part of the location, a location of 02 indicated request string 2 (text_str[2])
+      put_data_into_loc(rx_string, location / 10, obj_num);
     }
     else
       Serial.print(F("Native usb timeout waiting for pi"));

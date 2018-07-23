@@ -46,8 +46,6 @@ void update_button_ISR();
 
 void init_encoder_ISR();
 void init_button_ISR();
-int get_text_encoder_position(int byte_number);
-
 
 class Encoder {
 
@@ -75,7 +73,8 @@ class Encoder {
    
    void encoder_position_limits();        // software limits on encoder range
    void set_encoder_position(int val);      // take value input and set the encoder current position to this
-   
+   byte get_text_encoder_position(byte byte_number);  //upper or lower byte of position
+
 };
 
 #endif // Configuration_H
