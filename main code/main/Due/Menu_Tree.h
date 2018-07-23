@@ -191,7 +191,7 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
   uint16_t text_colour_hue_max          = HUE_MAX_VALUE;
   byte scroll_speed_menu_x              = 255;
   byte scroll_speed_menu_y              = 255;
-
+  byte select_text_obj_menu             = MAX_NUM_OF_TEXT_OBJECTS;
 
 };
 

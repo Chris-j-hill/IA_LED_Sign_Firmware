@@ -15,10 +15,10 @@ struct Encoder_Struct {   //structure for the encoder
   volatile int position = 0;      //position = no. of pulses/2
   const int center = 0;           // center position, use as reference origin
   int pinALast;
-  volatile int aVal; 
+  volatile int aVal;
   volatile bool encoder_moved_ISR = false;    // has the encoder moved, if so do functions
-  bool encoder_moved = false;                // interrupt will arrive mid loop, wait until end of loop check if encoder moved, 
-                                          // set clean loop true, do functions on next loop then set both false when finished
+  bool encoder_moved = false;                // interrupt will arrive mid loop, wait until end of loop check if encoder moved,
+  // set clean loop true, do functions on next loop then set both false when finished
   bool enabled = false;
   bool is_attached = false;
 
@@ -28,7 +28,7 @@ struct Encoder_Struct {   //structure for the encoder
 
 //data related to the button on the encoder
 struct Button_Struct {
-  
+
   int button_pin = BUTTON_PIN;              // pin num
   volatile bool button_pressed_ISR = false;     // has the button been pressed recently
   bool button_pressed = false;
@@ -55,14 +55,14 @@ class Encoder {
     void disable_encoder();
     void enable_button();
     void disable_button();
-    
+
   public:
-    Encoder(){}
+    Encoder() {}
     void init_encoder();
     void init_button();
 
 
-    
+
     void recenter_encoder();             // reset position to encoder_parameters.center
 
     void handle_interupts();            // handle interrupt interpretation in code. Use structures  interrupt bool value (eg encoder_moved) to identify if an interrupt occured in the last loop.
@@ -70,11 +70,12 @@ class Encoder {
     // to execute their code. the proceedure should go, interrupt happens, interrupt bool set true, loop ends, handle interrupts checks
     // if interrupt occured, if yes set interrupt bool to false and clean loop to true, functions in loop use clean loop run their code,
     // loop ends, handle interrupts sets clean loop false
-   
-   void encoder_position_limits();        // software limits on encoder range
-   void set_encoder_position(int val);      // take value input and set the encoder current position to this
-   byte get_text_encoder_position(byte byte_number);  //upper or lower byte of position
 
+    void encoder_position_limits();        // software limits on encoder range
+    void set_encoder_position(int val);      // take value input and set the encoder current position to this
+    byte get_text_encoder_position(byte byte_number);  //upper or lower byte of position
+    inline void below_zero_limit();
+    inline void above_upper_limit(int limit);
 };
 
 #endif // Configuration_H

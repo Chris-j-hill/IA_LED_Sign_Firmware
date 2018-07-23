@@ -54,7 +54,6 @@ bool supress_frame_to_this_screen = false;  // use this to supress text frame to
 
 bool menu_just_changed = false;
 
-
 //menu class methods
 
 void Menu::init_menu_tree() {
@@ -71,18 +70,21 @@ void Menu::init_menu_tree() {
 //level 1 menus
 void Menu::display_menu() {
 
+  //static bool reset_to_default_sent = false; //edge detector variable, when menu timeout, configure as default current menu (only once)
+
   if (encoder_parameters.encoder_moved) {
     encoder.encoder_position_limits();    //make sure encoder position is within the range limits of the current menu
   }
 
-  if (MENU_VISABLITIY_TIMOUT < millis() - time_since_menu_last_changed) {
+  if ((current_menu != DEFAULT_MENU && current_menu != STARTUP) && (millis() > time_since_menu_last_changed + MENU_VISABLITIY_TIMOUT)) {
     current_menu = DEFAULT_MENU;
     encoder.recenter_encoder();
     coms_serial.send_menu_frame(DEFAULT_MENU);
   }
 
+
   switch (current_menu) {
-    case STARTUP:                     display_startup_sequence();
+    case STARTUP:                     display_startup_sequence(); break;
     case DEFAULT_MENU:                default_display(); break;
     case MAIN_MENU:                   display_main_menu(); break;
     case SCREEN_MODE_MENU:            display_screen_mode_menu(); break;
@@ -111,36 +113,46 @@ void Menu::display_menu() {
 }
 
 void Menu::display_startup_sequence() {
-
+  
+  static bool get_new_start_time = true;
+  
   if (encoder_parameters.encoder_moved) {} //disregard encoder and button for this
 
   if (button_parameters.button_pressed) {}
 
-  time_since_menu_startup_run = millis();  //log time this function was run
-  coms_serial.send_menu_frame(STARTUP);
-  current_menu = DEFAULT_MENU;  // force this as next menu
-}
+  if (get_new_start_time) {
+    time_since_menu_startup_run = millis();  //log time this function was run
+    coms_serial.send_menu_frame(STARTUP);
+    get_new_start_time = false;
+  }
+  
+  else if (millis() > TIME_TO_DISPLAY_STARTUP + time_since_menu_startup_run) {
 
-void Menu::default_display() {
-  current_menu = DEFAULT_MENU;  //return to this menu until current_menu changed
-
-  //only run if startup finished
-  if (millis() - time_since_menu_startup_run > TIME_TO_DISPLAY_STARTUP) {
-    if (menu_just_changed) {
-      encoder.recenter_encoder();
-      coms_serial.send_menu_frame(DEFAULT_MENU);
-      menu_just_changed = false;
-    }
-
-    if (button_parameters.button_pressed) {
-      current_menu = MAIN_MENU;
-      menu_just_changed = true;
-      time_since_menu_last_changed = millis();
-      button_parameters.button_pressed = false;
-    }
+    current_menu = DEFAULT_MENU;  // force this as next menu
+    get_new_start_time = true; //next time we run this it will start delay period again
+    menu_just_changed = true;
   }
   else {
     encoder_parameters.encoder_moved = false;   //ignore button presses and encoder input before startup finished
+    button_parameters.button_pressed = false;
+  }
+}
+
+void Menu::default_display() {
+  
+  current_menu = DEFAULT_MENU;  //return to this menu until current_menu changed
+
+  if (menu_just_changed) {
+    encoder.recenter_encoder();
+    //Serial.println("Hello world");
+    coms_serial.send_menu_frame(DEFAULT_MENU);
+    menu_just_changed = false;
+  }
+
+  if (button_parameters.button_pressed) {
+    current_menu = MAIN_MENU;
+    menu_just_changed = true;
+    time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
   }
 }

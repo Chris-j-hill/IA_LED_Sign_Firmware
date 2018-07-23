@@ -197,111 +197,129 @@ void Encoder::set_encoder_position(int val)      // take value input and set the
   encoder_parameters.PosCount = val << 1;
 }
 
+inline void Encoder::below_zero_limit() {
+  set_encoder_position(0);
+  encoder_parameters.encoder_moved = false;
+}
+
+inline void Encoder::above_upper_limit(int limit) {
+  set_encoder_position(limit);
+  encoder_parameters.encoder_moved = false;
+}
+
 void Encoder::encoder_position_limits() {
   switch (menu.get_current_menu()) {
     case MAIN_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.main_menu) set_encoder_position(menu_limits.main_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.main_menu) above_upper_limit(menu_limits.main_menu);
       break;
 
     case SCREEN_MODE_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.screen_mode_menu) set_encoder_position(menu_limits.screen_mode_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.screen_mode_menu) above_upper_limit(menu_limits.screen_mode_menu);
       break;
 
     case BRIGHTNESS_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.brightness_menu) set_encoder_position(menu_limits.brightness_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.brightness_menu) above_upper_limit(menu_limits.brightness_menu);
       break;
 
     case TEXT_SETTINGS_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.text_settings_menu) set_encoder_position(menu_limits.text_settings_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.text_settings_menu) above_upper_limit(menu_limits.text_settings_menu);
       break;
 
     case FAN_SETTINGS_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.fan_settings_menu) set_encoder_position(menu_limits.fan_settings_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.fan_settings_menu) above_upper_limit(menu_limits.fan_settings_menu);
       break;
 
     case INTERNET_CONFIG_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.internet_config_menu) set_encoder_position(menu_limits.internet_config_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.internet_config_menu) above_upper_limit(menu_limits.internet_config_menu);
       break;
 
     case SD_CARD_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.sd_cards_menu) set_encoder_position(menu_limits.sd_cards_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.sd_cards_menu) above_upper_limit(menu_limits.sd_cards_menu);
       break;
 
     case LED_STRIP_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.led_strip_menu) set_encoder_position(menu_limits.led_strip_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.led_strip_menu) above_upper_limit(menu_limits.led_strip_menu);
       break;
 
     case TEXT_SIZE_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.text_size_menu) set_encoder_position(menu_limits.text_size_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.text_size_menu) above_upper_limit(menu_limits.text_size_menu);
       break;
 
     case TEXT_COLOUR_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.text_colour_menu) set_encoder_position(menu_limits.text_colour_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.text_colour_menu) above_upper_limit(menu_limits.text_colour_menu);
       break;
 
     case SCROLL_SPEED_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) set_encoder_position(menu_limits.scroll_speed_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) above_upper_limit(menu_limits.scroll_speed_menu);
       break;
 
     case FAN_SPEED_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.fan_speed_menu) set_encoder_position(menu_limits.fan_speed_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.fan_speed_menu) above_upper_limit(menu_limits.fan_speed_menu);
       break;
 
     case MIN_FAN_SPEED_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.minimum_fan_speed_menu) set_encoder_position(menu_limits.minimum_fan_speed_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.minimum_fan_speed_menu) above_upper_limit(menu_limits.minimum_fan_speed_menu);
       break;
 
     case SD_FOLDERS_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.SD_card_folders_menu) set_encoder_position(menu_limits.SD_card_folders_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.SD_card_folders_menu) above_upper_limit(menu_limits.SD_card_folders_menu);
       break;
 
     case LED_STRIP_BRIGHTNESS_MENU:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.led_strip_brightness_menu) set_encoder_position(menu_limits.led_strip_brightness_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.led_strip_brightness_menu) above_upper_limit(menu_limits.led_strip_brightness_menu);
       break;
 
     case TEXT_COLOUR_RED:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.text_colour_red_menu) set_encoder_position(menu_limits.text_colour_red_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.text_colour_red_menu) above_upper_limit(menu_limits.text_colour_red_menu);
       break;
 
     case TEXT_COLOUR_GREEN:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.text_colour_green_menu) set_encoder_position(menu_limits.text_colour_green_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.text_colour_green_menu) above_upper_limit(menu_limits.text_colour_green_menu);
       break;
 
     case TEXT_COLOUR_BLUE:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.text_colour_blue_menu) set_encoder_position(menu_limits.text_colour_blue_menu);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.text_colour_blue_menu) above_upper_limit(menu_limits.text_colour_blue_menu);
       break;
 
     case TEXT_COLOUR_HUE:
-      if (encoder_parameters.position < menu_limits.text_colour_hue_min) set_encoder_position(menu_limits.text_colour_hue_min);
-      else if (encoder_parameters.position > menu_limits.text_colour_hue_max) set_encoder_position(menu_limits.text_colour_hue_max);
+      if (encoder_parameters.position < menu_limits.text_colour_hue_min) {
+        set_encoder_position(menu_limits.text_colour_hue_min);
+        encoder_parameters.encoder_moved = false;
+      }
+      else if (encoder_parameters.position > menu_limits.text_colour_hue_max) above_upper_limit(menu_limits.text_colour_hue_max);
       break;
 
     case SCROLL_SPEED_MENU_X:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) set_encoder_position(menu_limits.scroll_speed_menu_x);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.scroll_speed_menu_x) above_upper_limit(menu_limits.scroll_speed_menu_x);
       break;
 
     case SCROLL_SPEED_MENU_Y:
-      if (encoder_parameters.position < 0) set_encoder_position(0);
-      else if (encoder_parameters.position > menu_limits.scroll_speed_menu) set_encoder_position(menu_limits.scroll_speed_menu_y);
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.scroll_speed_menu_y) above_upper_limit(menu_limits.scroll_speed_menu_y);
+      break;
+
+    case TEXT_OBJ_SELECTION_MENU:
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.select_text_obj_menu) above_upper_limit(menu_limits.select_text_obj_menu);
       break;
   }
 }

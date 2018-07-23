@@ -305,7 +305,7 @@ byte Coms::get_text_colour_hue(byte byte_number, byte obj_num) { //function to r
 
 int Coms::init_frames() {
   //menu_frame
-  menu_frame.frame_length = FRAME_OVERHEAD + 3;
+  menu_frame.frame_length = FRAME_OVERHEAD + 3;   //three pieces of data, current menu + 2 encoder pos bytes
   menu_frame.frame_type = 4;
 
   menu_frame.frame_buffer[0] = menu_frame.frame_length;
@@ -334,7 +334,7 @@ int Coms::init_frames() {
 
 
 void Coms::build_menu_data_frame(byte menu_number) {   //function to build the frame to send menu info
-  byte type = 4;
+  //byte type = 4;
 
   menu_frame.frame_buffer[4] = (byte) menu_number;
   menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(1);
@@ -342,7 +342,7 @@ void Coms::build_menu_data_frame(byte menu_number) {   //function to build the f
 
   menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.header_checksum; //initial checksum
 
-  for (int alpha = HEADER_LENGTH; alpha < menu_frame.checksum_address; alpha++) { //sum of elements
+  for (byte alpha = HEADER_LENGTH; alpha < menu_frame.checksum_address; alpha++) { //sum of elements
     menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.frame_buffer[menu_frame.checksum_address] + menu_frame.frame_buffer[alpha];
   }
   menu_frame.frame_buffer[menu_frame.checksum_address] = (byte) 256 - (menu_frame.frame_buffer[menu_frame.checksum_address] % 256); //calc checksum
