@@ -16,7 +16,7 @@ Disp time:100000
 Next File:STRING2
 }
 {
-String:this is a new string, whoopity, scoop, poop, kanye 2020
+String:this is a new string
 Red:3
 Green:5
 Blue:7
@@ -30,10 +30,10 @@ Y End Pos:100
 X Loops:5
 Y Loops:5
 Disp time:100000
-Next File:String4.txt
+Next File:String4
 }
 {(STRING2)
-String:from string 2 file
+String:from string 2 config
 Red:3
 Green:5
 Blue:7
@@ -47,5 +47,5 @@ Y End Pos:100
 X Loops:5
 Y Loops:5
 Disp time:100000
-Next File:String4.txt
+Next File:String4
 }

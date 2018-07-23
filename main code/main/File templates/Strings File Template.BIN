@@ -1,3 +1,4 @@
+{
 String:string to display
 Red:2
 Green:4
@@ -13,5 +14,21 @@ Y End Pos:255
 X Loops:2
 Y Loops:10
 Disp time:100000
-Next File:Next file in the chain.txt
+Next File: Next config name in the chain
 Screen Mode:0
+}
+
+{(Next config name in the chain)
+String:second string to display
+Red:100
+Green:101
+Blue:102
+Hue:1000
+Size:3
+X Speed:1
+Y Speed:0
+X Start Pos:0
+Y Start Pos:0
+X End Pos:255
+Y End Pos:0
+}
