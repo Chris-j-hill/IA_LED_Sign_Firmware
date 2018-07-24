@@ -39,9 +39,8 @@ void due_setup() {
 #endif
 
   host.init_serial();
-  //  host.check_serial();
-  //  host.print_messages();
-    card.init_sd_cards();
+
+  card.init_sd_cards();
 
   encoder.init_encoder();
   encoder.init_button();
@@ -61,32 +60,36 @@ void due_setup() {
 
 void due_loop() {
   while (1) {
-
-    // //do these periodically based on config
-    // cards.check_for_sd_card_inserted();
-    // internet.check_connection();
+    // update screen brightness based on ldr and current meter readings
+    current_meter.get_readings();
+    light_sensor.get_readings();
     graphics.update_brightness();
 
+    // get temperature readings and update fan speeds
     fans.update_temperatures();
     fans.set_fan_speed();
+
+    // update led strip brightness frequency of interrupt
     led_strip.led_strip_set_freq();
-    light_sensor.get_readings();
+
+    // check the encoder
     encoder.handle_interupts();
+
+    // push menu updates to screens 
     menu.display_menu();
-    current_meter.get_readings();
 
-    // update_display();  //push additional data to screens as required
-    //
-    // //do this based speed variable
-    //update_text_location(); //write location variable to be sent by interrupt
+    //check for user serial input and print requested data
     host.check_serial();
-    card.check_for_sd_card();
     host.print_messages();
-
-
+    
+    // check if sd card mounted and log data if possible
+    card.check_for_sd_card();
     //card.update_data_log();
-    //coms_serial.check_queues();
-    graphics.get_next_string_config_profile();
+
+
+    //TO DO:
+    // internet.check_connection();
+    //graphics.get_next_string_config_profile();
     
   }
 

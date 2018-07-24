@@ -46,10 +46,10 @@ void Graphics::update_brightness() {
   }
 }
 
-void dummy_text_config(){
-    text_cursor[0].object_used = true;
-    text_cursor[1].object_used = true;
-    text_parameters[0].text_size = 1;
+void dummy_text_config() {
+  text_cursor[0].object_used = true;
+  text_cursor[1].object_used = true;
+  text_parameters[0].text_size = 1;
 }
 
 void Graphics::init_cursor() {
@@ -62,7 +62,9 @@ void Graphics::init_cursor() {
   attach_timer_pos_update();
   configure_limits();
   reset_position();
+#ifdef RUN_TEXT_CONFIG
   dummy_text_config();
+#endif
 }
 
 
