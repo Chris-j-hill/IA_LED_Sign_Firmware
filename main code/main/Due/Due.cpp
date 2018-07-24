@@ -78,14 +78,14 @@ void due_loop() {
     // update_display();  //push additional data to screens as required
     //
     // //do this based speed variable
-    // update_text_location(); //write location variable to be sent by interrupt
+    //update_text_location(); //write location variable to be sent by interrupt
     host.check_serial();
     card.check_for_sd_card();
     host.print_messages();
 
 
     //card.update_data_log();
-    coms_serial.check_queues();
+    //coms_serial.check_queues();
     graphics.get_next_string_config_profile();
     
   }

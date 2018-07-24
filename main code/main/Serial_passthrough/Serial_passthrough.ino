@@ -24,27 +24,30 @@ void setup() {
   // initialize both serial ports:
   Serial.begin(115200);
   Serial1.begin(9600);
-//  bool pinged = false;
-//  String rx = "\0";
-//  while (!pinged) {
-//    if (Serial1.available() != 0) {
-//      rx = Serial1.readString();
-//      if (rx == "ping") {
-//        Serial1.write("p");
-//        pinged = true;
-//      }
-//    }
-//
-//  }
+  //  bool pinged = false;
+  //  String rx = "\0";
+  //  while (!pinged) {
+  //    if (Serial1.available() != 0) {
+  //      rx = Serial1.readString();
+  //      if (rx == "ping") {
+  //        Serial1.write("p");
+  //        pinged = true;
+  //      }
+  //    }
+  //
+  //  }
 }
 
 void loop() {
   // read from port 1, send to port 0:
   if (Serial1.available()) {
+    Serial.println();
     int inByte = Serial1.read();
-    Serial.print((char)inByte);
+
+
+    Serial.print(inByte);
     Serial.print("\t");
-    Serial.println(inByte);
+    Serial.println((char)inByte);
   }
 
   // read from port 0, send to port 1:

@@ -38,7 +38,7 @@
 
 #define SCREEN_BRIGHTNESS_UPDATE_PERIOD 500
 
-#define POS_UPDATE_ISR_FREQ 5//hz
+#define POS_UPDATE_ISR_FREQ 2//hz
 
 #define XY_SPEED_UNITS 0.1//speed of +1 moves XY_SPEED_UNITS pixels per second
 
@@ -66,8 +66,8 @@ struct Text {
 struct Text_cursor {        //xy coordinates of cursor position
   int x = 0;
   int y = 0;
-  byte x_pos_dir = 138;   //direction and speed of the cursor, static = 128
-  byte y_pos_dir = 118;
+  byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
+  byte y_pos_dir = 127;
 
   int x_start = 0;  // limits for pos, also specify direction, overflow values
   int y_start = 0;  // if conflict between direction and speed and start end points, points win take speed magnitude
@@ -120,7 +120,6 @@ class Graphics {
 
   public:
     Graphics() {}
-    void flip_direction();
     void update_brightness();
 
     void update_colour();

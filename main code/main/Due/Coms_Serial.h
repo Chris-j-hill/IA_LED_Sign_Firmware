@@ -63,7 +63,7 @@ class Coms_Serial: public Coms {
     void send_all_text_frames(bool send_now = false);
     void send_all_sensor_data_frames(bool send_now = false);
     void send_text_frame(byte obj_num, byte address = 0);
-    void send_pos_frame();
+    void send_pos_frame(byte obj_num);
 
     void check_queues();
 

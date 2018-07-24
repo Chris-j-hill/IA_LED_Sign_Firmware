@@ -173,15 +173,11 @@ void Coms::pack_disp_string_frame(uint16_t frame_offset, byte obj_num) {   //fun
 
 void Coms::build_pos_frame(byte obj_num) {
 
-
-  Sprint(F("Sending cursor positions to address "));
-  Sprintln(address);
-
   pack_xy_coordinates(obj_num);        //seperate function to bit shift values to correct order.
   pos_frame.frame_buffer[8] =  text_cursor[obj_num].x_pos_dir;
   pos_frame.frame_buffer[9] =  text_cursor[obj_num].y_pos_dir;
-  pos_frame.frame_buffer[10] = (byte) comms_delay;
-  pos_frame.frame_buffer[11] = (byte) text_cursor[obj_num].ISR_freq;
+  pos_frame.frame_buffer[10] = comms_delay; //maybe implement this to sync up screens if needed
+  pos_frame.frame_buffer[11] = obj_num;
 
   pos_frame.frame_buffer[pos_frame.checksum_address] = pos_frame.header_checksum; //zero checksum
   for (int alpha = HEADER_LENGTH; alpha < pos_frame.checksum_address; alpha++) { //sum of elements
@@ -189,9 +185,8 @@ void Coms::build_pos_frame(byte obj_num) {
   }
   pos_frame.frame_buffer[pos_frame.checksum_address] = (byte) 256 - (pos_frame.frame_buffer[pos_frame.checksum_address] % 256); //calc checksum
 
-  pos_frame.frame_queued = true; //flag to send frame on new loop
+  //pos_frame.frame_queued = true; //flag to send frame on new loop
 
-  //return (0);
 }
 
 void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 bytes to send the x and y positions of the text cursor
@@ -203,40 +198,45 @@ void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 by
 
   // NOTE: current implementation will overflow if an out of bounds coordinate is presented (+/-32738 is usable)
   //       I cant see a reason this would be an issue so not fixing it for now
+//
+//  byte x_pos_LSB = 0;
+//  byte x_pos_MSB = 0;
+//  byte y_pos_LSB = 0;
+//  byte y_pos_MSB = 0;
+//
+//
+//  if (abs(text_cursor[obj_num].x) > 32738 || abs(text_cursor[obj_num].y) > 32738) //print warning that coordinate will be wrong
+//    Sprintln("WARNING: failed to send correct coordinate, out of bounds, overflow likely to occur");
+//
+//  if (text_cursor[obj_num].x > 0) {
+//    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
+//    x_pos_MSB = x_pos_MSB + 128; //greater than zero, set MSB to 1
+//    x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
+//  }
+//  else {
+//    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
+//    x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
+//  }
+//
+//  if (text_cursor[obj_num].y > 0) {
+//    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
+//    y_pos_MSB = y_pos_MSB + 128; //greater than zero, set MSB to 1
+//    y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
+//  }
+//  else {
+//    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
+//    y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
+//  }
+//
+//  pos_frame.frame_buffer[4] = x_pos_MSB;   //write new values to frame
+//  pos_frame.frame_buffer[5] = x_pos_LSB;
+//  pos_frame.frame_buffer[6] = y_pos_MSB;
+//  pos_frame.frame_buffer[7] = y_pos_LSB;
 
-  byte x_pos_LSB = 0;
-  byte x_pos_MSB = 0;
-  byte y_pos_LSB = 0;
-  byte y_pos_MSB = 0;
-
-
-  if (abs(text_cursor[obj_num].x) > 32738 || abs(text_cursor[obj_num].y) > 32738) //print warning that coordinate will be wrong
-    Sprintln("WARNING: failed to send correct coordinate, out of bounds, overflow likely to occur");
-
-  if (text_cursor[obj_num].x > 0) {
-    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
-    x_pos_MSB = x_pos_MSB + 128; //greater than zero, set MSB to 1
-    x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
-  }
-  else {
-    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
-    x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
-  }
-
-  if (text_cursor[obj_num].y > 0) {
-    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
-    y_pos_MSB = y_pos_MSB + 128; //greater than zero, set MSB to 1
-    y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
-  }
-  else {
-    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
-    y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
-  }
-
-  pos_frame.frame_buffer[4] = x_pos_MSB;   //write new values to frame
-  pos_frame.frame_buffer[5] = x_pos_LSB;
-  pos_frame.frame_buffer[6] = y_pos_MSB;
-  pos_frame.frame_buffer[7] = y_pos_LSB;
+  pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
+  pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
+  pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0xFF);
+  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);;
 
 }
 

@@ -34,13 +34,6 @@ extern struct SD_Strings SD_string;
 extern Card card;
 bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS] = {false};
 
-void Graphics::flip_direction() {
-
-  for (byte obj_num = 0; obj_num < MAX_NUM_OF_TEXT_OBJECTS; obj_num++) {
-    text_cursor[obj_num].x_pos_dir = (-1 * (text_cursor[obj_num].x_pos_dir - 128)) + 128;
-    text_cursor[obj_num].y_pos_dir = (-1 * (text_cursor[obj_num].y_pos_dir - 128)) + 128;
-  }
-}  //flip the direction currently scrolling
 
 void Graphics::update_brightness() {
 
@@ -53,6 +46,11 @@ void Graphics::update_brightness() {
   }
 }
 
+void dummy_text_config(){
+    text_cursor[0].object_used = true;
+    text_cursor[1].object_used = true;
+    text_parameters[0].text_size = 1;
+}
 
 void Graphics::init_cursor() {
   //    if (enable_cursor)
@@ -64,7 +62,9 @@ void Graphics::init_cursor() {
   attach_timer_pos_update();
   configure_limits();
   reset_position();
+  dummy_text_config();
 }
+
 
 void attach_timer_pos_update() {
   //attach pos update interrupt
@@ -142,7 +142,6 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
       }
 
 
-
       if (text_cursor[i].y_start_set && text_cursor[i].y_end_set) {
         y_incr = abs(y_incr);
         if (text_cursor[i].y_start > text_cursor[i].y_end)
@@ -189,8 +188,7 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
       }
 
       //send out data
-      coms_serial.build_pos_frame(i);
-
+      coms_serial.send_pos_frame(i);
     }
   }
 }
@@ -209,7 +207,7 @@ void Graphics::get_next_string_config_profile() {
 
 void Graphics::configure_limits(byte obj_num) {
 
-  if (text_cursor[obj_num].x_start_set && text_cursor[obj_num].x_end_set) {
+  if (text_cursor[obj_num].x_start_set && text_cursor[obj_num].x_end_set) { //limit configured from profile
     if (text_cursor[obj_num].x_end > text_cursor[obj_num].x_start) {
       text_cursor[obj_num].x_limit_max = text_cursor[obj_num].x_end;
       text_cursor[obj_num].x_limit_min = text_cursor[obj_num].x_start;
@@ -222,7 +220,7 @@ void Graphics::configure_limits(byte obj_num) {
       text_cursor[obj_num].x_limit_max = text_cursor[obj_num].x_limit_min = text_cursor[obj_num].x_start;
   }
 
-  else {
+  else {   //limit auto configured
     text_cursor[obj_num].x_limit_min = -1 * (text_parameters[obj_num].text_size * text_parameters[obj_num].text_width * text_parameters[obj_num].text_str_length);
     text_cursor[obj_num].x_limit_max = TOTAL_WIDTH;
   }
@@ -247,8 +245,8 @@ void Graphics::configure_limits(byte obj_num) {
 
 }
 
-void Graphics::reset_position(byte obj_num) {
 
+void Graphics::reset_position(byte obj_num) {
 
   if (text_cursor[obj_num].x_start_set && text_cursor[obj_num].x_end_set)
     text_cursor[obj_num].x = text_cursor[obj_num].x_start;

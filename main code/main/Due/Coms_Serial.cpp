@@ -138,6 +138,11 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
 
+  Serial_1.flush();
+  Serial_2.flush();
+  Serial_3.flush();
+  Serial_4.flush();
+
   Serial_1.println("Hello 1");
   Serial_2.println("Hello 2");
   Serial_3.println("Hello 3");
@@ -310,28 +315,32 @@ void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write
 
   this -> build_menu_data_frame(cur_menu);
 
-  if (menu.get_menu_width() != 0) {   //not sure why it would be this but include for completeness
+  if (menu.get_menu_width() != 0 && mega_enabled[3]) {   //not sure why it would be this but include for completeness
     this -> write_menu_frame(3);  //write frame to address 3
   }
 
-  if (menu.get_menu_width() > 64) {
+  if (menu.get_menu_width() > 64 && mega_enabled[2]) {
     this -> write_menu_frame(2);
   }
 
-  if (menu.get_menu_width() > 128) {
+  if (menu.get_menu_width() > 128 && mega_enabled[1]) {
     this -> write_menu_frame(1);
   }
 
-  if (menu.get_menu_width() > 192) {
+  if (menu.get_menu_width() > 192 && mega_enabled[0]) {
     this -> write_menu_frame(0);
   }
-
-
-
 }
 
-void Coms_Serial::send_pos_frame() {  //build frame and send position to all megas
+void Coms_Serial::send_pos_frame(byte obj_num) {  //build frame and send position to all megas
 
+  build_pos_frame(obj_num);
+
+  for (byte i = 0; i < NUM_SCREENS ; i++) {
+    if (mega_enabled[i]) {
+      write_pos_frame(i);
+    }
+  }
 }
 
 void write_sensor_data_frame(byte address) {
@@ -365,27 +374,23 @@ void Coms_Serial::write_menu_frame(byte address) {   //function to actually send
 }
 
 void Coms_Serial::write_pos_frame(byte address) {
-  if (!mega_enabled[address]) {
 
-    Sprint(F("Mega disabled, no pos sent \t address: "));
-    Sprintln(address);
+  if (address == 0 && mega_parameters.detected1) {
+   // delayMicroseconds(1000);//ensure previous trnasmission complete
+    Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);
   }
 
-  if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
-    Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);
-
-  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
+  else if (address == 1 && mega_parameters.detected2) {
+   // delayMicroseconds(1000);
     Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);
-
-  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
+  }
+  else if (address == 2 && mega_parameters.detected3) {
+    //delayMicroseconds(1000);
     Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);
-
-  else  if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
+  }
+  else  if (address == 3 && mega_parameters.detected4) {
+    //delayMicroseconds(1000);
     Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);
-
-  else {
-    Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
-    Sprintln(address);
   }
 }
 
@@ -483,7 +488,7 @@ void Coms_Serial::write_text_frame() {}  // send to all at once
 
 void Coms_Serial::check_queues() {
 
-  check_pos_frame_queue();
+  //check_pos_frame_queue();
   //check_sensor_date_frame_queue();
   //check_text_frame_queue();
   //check_menu_frame_queue();
@@ -921,7 +926,7 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_LENGTH + 2 * offset] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + 2 * offset] = menu.get_selected_object();
       break;
-      
+
     default:  Sprint("Error: Prefix not defined. Prefix :");
       Sprintln(sensor_prefix);
 
