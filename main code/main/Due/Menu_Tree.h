@@ -101,8 +101,10 @@ struct Menu_tree_items {
 
   // SD cards folder
   String sd_cards_menu            PROGMEM           = "SD Cards";
-  String enable_ext_card          PROGMEM           = "Enable Port";
-  String disable_ext_card         PROGMEM           = "Disable Port";
+  String enable_ext_card          PROGMEM           = "Mount External Card";
+  String disable_ext_card         PROGMEM           = "Eject External Card";
+  String enable_int_card          PROGMEM           = "Mount Internal Card";
+  String disable_int_card         PROGMEM           = "Eject Internal Card";
   String sd_card_folders          PROGMEM           = "Read Folders";
 
   // Led Strip folder
@@ -207,6 +209,11 @@ class Menu {
     byte num_obj_enabled = 0;
 
     byte menu_width = DEFAULT_MENU_WIDTH;
+
+    //used to select which screen should display data related to the due, no need to push to all
+    // variable set in constructor
+    byte left_most_address_displaying_menu =0;// (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+
     
     // menu functions, these dont send menu option text, only menu reference variable to the megas
     // NB: menu items stored in LUT on both mega and due for display and feedback over com port
@@ -249,7 +256,9 @@ class Menu {
 
   public:
 
-    Menu() {};
+    Menu() {
+      left_most_address_displaying_menu = (TOTAL_WIDTH / get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.99... = 2 etc
+      };
     void init_menu_tree();
     void display_menu();
     inline void set_menu_width(byte width){

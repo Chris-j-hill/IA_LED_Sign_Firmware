@@ -1166,9 +1166,13 @@ void Host::position_to_menu_value() {
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                    break;
         case 1: Serial.print(menu_items.fan_speed_settings);        break;
-        case 2: Serial.print(menu_items.fan_enable);                break;
-        case 3: Serial.print(menu_items.fan_disable);               break;
-        case 4: Serial.print(menu_items.minimum_rotating_speed);    break;
+        case 2:
+          if (!fan_parameters.enabled)
+            Serial.print(menu_items.fan_enable);
+          else
+            Serial.print(menu_items.fan_disable);
+          break;
+        case 3: Serial.print(menu_items.minimum_rotating_speed);    break;
       }
       break;
 
@@ -1186,8 +1190,18 @@ void Host::position_to_menu_value() {
     case SD_CARD_MENU:
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                    break;
-        case 1: Serial.print(menu_items.enable_ext_card);           break;
-        case 2: Serial.print(menu_items.disable_ext_card);          break;
+        case 1:
+          if (card1.enabled)
+            Serial.print(menu_items.enable_ext_card);
+          else
+            Serial.print(menu_items.disable_ext_card);
+          break;
+        case 2:
+          if (card2.enabled)
+            Serial.print(menu_items.enable_int_card);
+          else
+            Serial.print(menu_items.disable_int_card);
+          break;
         case 3: Serial.print(menu_items.sd_card_folders);           break;
       }
       break;
@@ -1195,9 +1209,13 @@ void Host::position_to_menu_value() {
     case LED_STRIP_MENU:
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                    break;
-        case 1: Serial.print(menu_items.enable_led_strip);          break;
-        case 2: Serial.print(menu_items.disable_led_strip);         break;
-        case 3: Serial.print(menu_items.led_strip_brightness);      break;
+        case 1:
+          if (!led_strip_parameters.enabled)
+            Serial.print(menu_items.enable_led_strip);
+          else
+            Serial.print(menu_items.disable_led_strip);
+          break;
+        case 2: Serial.print(menu_items.led_strip_brightness);      break;
       }
       break;
 
@@ -1208,8 +1226,12 @@ void Host::position_to_menu_value() {
         case 2: Serial.print(menu_items.text_colour_green);         break;
         case 3: Serial.print(menu_items.text_colour_blue);          break;
         case 4: Serial.print(menu_items.text_colour_hue);           break;
-        case 5: Serial.print(menu_items.text_colour_use_hue);       break;
-        case 6: Serial.print(menu_items.text_colour_use_rgb);       break;
+        case 5:
+          if (text_parameters[menu.get_selected_object()].use_hue)
+            Serial.print(menu_items.text_colour_use_rgb);
+          else
+            Serial.print(menu_items.text_colour_use_hue);
+          break;
       }
       break;
 
@@ -1219,7 +1241,7 @@ void Host::position_to_menu_value() {
       break;
 
     case TEXT_SIZE_MENU:
-      Serial.print(text_parameters[0].text_size);
+      Serial.print(text_parameters[menu.get_selected_object()].text_size);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_size_menu);
       break;
@@ -1254,25 +1276,25 @@ void Host::position_to_menu_value() {
       break;
 
     case TEXT_COLOUR_RED:
-      Serial.print(text_parameters[0].red);
+      Serial.print(text_parameters[menu.get_selected_object()].red);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_red_menu);
       break;
 
     case TEXT_COLOUR_GREEN:
-      Serial.print(text_parameters[0].green);
+      Serial.print(text_parameters[menu.get_selected_object()].green);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_green_menu);
       break;
 
     case TEXT_COLOUR_BLUE:
-      Serial.print(text_parameters[0].blue);
+      Serial.print(text_parameters[menu.get_selected_object()].blue);
       Serial.print(divide_string);
       Serial.print(menu_limits.text_colour_blue_menu);
       break;
 
     case TEXT_COLOUR_HUE:
-      Serial.print(text_parameters[0].hue);
+      Serial.print(text_parameters[menu.get_selected_object()].hue);
       Serial.print(" -> range: ");
       Serial.print(menu_limits.text_colour_hue_min);
       Serial.print(divide_string);
@@ -1280,7 +1302,7 @@ void Host::position_to_menu_value() {
       break;
 
     case SCROLL_SPEED_MENU_X:
-      Serial.print(text_cursor[0].x_pos_dir - 128);
+      Serial.print(text_cursor[menu.get_selected_object()].x_pos_dir - 128);
       Serial.print(" -> range: -");
       Serial.print(menu_limits.scroll_speed_menu - 129);
       Serial.print(divide_string);
@@ -1288,7 +1310,7 @@ void Host::position_to_menu_value() {
       break;
 
     case SCROLL_SPEED_MENU_Y:
-      Serial.print(text_cursor[0].y_pos_dir - 128);
+      Serial.print(text_cursor[menu.get_selected_object()].y_pos_dir - 128);
       Serial.print(" -> range: -");
       Serial.print(menu_limits.scroll_speed_menu - 129);
       Serial.print(divide_string);
