@@ -186,7 +186,7 @@ void Encoder::handle_interupts() {   // function to repond to an ISR.
 void Encoder::recenter_encoder() {
 
   encoder_parameters.position = encoder_parameters.center;
-  encoder_parameters.PosCount = encoder_parameters.center << 1;
+  encoder_parameters.PosCount = (encoder_parameters.center << 1)*encoder_parameters.sensitivity;
 
 }
 
@@ -194,7 +194,7 @@ void Encoder::recenter_encoder() {
 void Encoder::set_encoder_position(int val)      // take value input and set the encoder current position to this
 {
   encoder_parameters.position = val;
-  encoder_parameters.PosCount = val << 1;
+  encoder_parameters.PosCount = (val <<1)*encoder_parameters.sensitivity;
 }
 
 inline void Encoder::below_zero_limit() {

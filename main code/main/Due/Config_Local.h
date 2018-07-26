@@ -90,6 +90,8 @@
 
 #define MAX_NUM_OF_TEXT_OBJECTS 5
 
+//#define ALLOW_SCREEN_BRIGHTNESS_AUTO_ADJUSTMENT
+
 // ______ Prefixes for sensor data _______
 
 

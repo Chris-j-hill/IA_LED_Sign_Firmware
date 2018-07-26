@@ -179,7 +179,6 @@ void Menu::display_main_menu() {
       case 1: current_menu = SCREEN_MODE_MENU;        break;
       case 2: current_menu = BRIGHTNESS_MENU;         break;
       case 3: current_menu = TEXT_OBJ_SELECTION_MENU; break;
-      //      case 3: current_menu = TEXT_SETTINGS_MENU;      break;
       case 4: current_menu = FAN_SETTINGS_MENU;       break;
       case 5: current_menu = INTERNET_CONFIG_MENU;    break;
       case 6: current_menu = SD_CARD_MENU;            break;
@@ -619,7 +618,7 @@ void Menu::display_min_fan_speed_menu() {
     current_menu = FAN_SETTINGS_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
-    encoder.set_encoder_position(4);
+    encoder.set_encoder_position(3);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -670,14 +669,13 @@ void Menu::display_led_strip_brightness_menu() {
     coms_serial.send_menu_frame(LED_STRIP_BRIGHTNESS_MENU);
     for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
       coms_serial.send_specific_calibration_data(PREFIX_LED_STRIP_BRIGHTNESS, i, false, 0);
-
   }
 
   if (button_parameters.button_pressed) {
     current_menu = LED_STRIP_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
-    encoder.set_encoder_position(3);
+    encoder.set_encoder_position(2);
   }
 
   if (encoder_parameters.encoder_moved) {

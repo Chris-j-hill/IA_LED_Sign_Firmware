@@ -41,7 +41,9 @@ void Graphics::update_brightness() {
   if (screen_brightness != target_brightness && (millis() - SCREEN_BRIGHTNESS_UPDATE_PERIOD) > last_brightness_update) {
     screen_brightness = target_brightness;
     for (int i = 0; i < NUM_SCREENS; i++)
+#ifdef ALLOW_SCREEN_BRIGHTNESS_AUTO_ADJUSTMENT
       coms_serial.send_specific_calibration_data(PREFIX_SCREEN_BRIGHTNESS, i, false, 0);  //push to screens
+#endif
     last_brightness_update = millis();
   }
 }

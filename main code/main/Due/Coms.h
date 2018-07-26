@@ -32,8 +32,6 @@ using namespace arduino_due;
 #define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
 
-//#define MEGA_SERIAL_BUFFER_LENGTH 32
-
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 #define MEGA_SERIAL_BUFFER_LENGTH 32
