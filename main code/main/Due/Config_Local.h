@@ -72,6 +72,7 @@
 
 //#define ALLOW_CONFIG_CHAINING   // allow strings profiles to be chained together, ie display one for specified time then move to next
 
+//default startup conditions
 #define ENABLE_FANS
 #define ENABLE_LED_STRIP
 #define ENABLE_TEMPERATURE_SENSORS
@@ -83,8 +84,6 @@
 #define ENABLE_SD_CARDS
 #define ENABLE_ETHERNET
 #define ENABLE_WIFI
-
-#define RUN_I2C_SCANNER_TEST  // identify connected addresses
 
 #define DISABLE_WARNING_MESSAGES  //option to disable warning messages within the menu system
 
@@ -185,6 +184,13 @@
 #define DEFAULT_MENU_WIDTH 64
 
 
+//________configure interrupt priority___________
 
+//https://forum.arduino.cc/index.php?topic=506814.0
+//https://www.keil.com/pack/doc/cmsis/Core/html/group__NVIC__gr.html#ga7e1129cd8a196f4284d41db3e82ad5c8
+#define SOFT_SERIAL_PRIORITY  0  // set timers to highest priority
+#define POS_FRAME_PRIORITY    1  // set pos frame as mid priority
+#define LED_STRIP_PRIORITY    2  //set everything else as low priority
+#define FAN_PRIORITY          2
 #endif // Config_Local_h
 #endif // Configuration_H

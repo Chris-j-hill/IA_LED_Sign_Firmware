@@ -8,7 +8,8 @@
 
 #define PING_WAIT_PERIOD 200
 
-
+#define MEGA_SERIAL_CONNECTION_TESTING  // define to fake a positive response from ping test on initialisation for megas
+                                        // useful if megas not loaded with correct code (eg megas running serial passthrough)
 
 struct   Mega_Serial_Parameters {
 

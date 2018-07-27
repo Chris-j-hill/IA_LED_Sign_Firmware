@@ -65,14 +65,57 @@ bool enable_serial = false;
 bool serial_enabled = false;
 
 
+#if RX_PIN_1 == 15              //configure Serial_1 as hardware or software serial depending on defined pin
+#define Serial_1 Serial3
+#elif RX_PIN_1 == 17
+#define Serial_1 Serial2
+#elif RX_PIN_1 == 19
+#define Serial_1 Serial1
+#else
 serial_tc5_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_1 = serial_tc5;
+#define SERIAL_1_IS_SOFT
+#endif
+
+#if RX_PIN_2 == 15
+#define Serial_2 Serial3
+#elif RX_PIN_2 == 17
+#define Serial_2 Serial2
+#elif RX_PIN_2 == 19
+#define Serial_2 Serial1
+#else
 serial_tc6_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_2 = serial_tc6;
+#define SERIAL_2_IS_SOFT
+#endif
+
+#if RX_PIN_3 == 15
+#define Serial_3 Serial3
+#elif RX_PIN_3 == 17
+#define Serial_3 Serial2
+#elif RX_PIN_3 == 19
+#define Serial_3 Serial1
+#else
 serial_tc7_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_3 = serial_tc7;
+#define SERIAL_3_IS_SOFT
+#endif
+
+#if RX_PIN_4 == 15
+#define Serial_4 Serial3
+#elif RX_PIN_4 == 17
+#define Serial_4 Serial2
+#elif RX_PIN_4 == 19
+#define Serial_4 Serial1
+#else
 serial_tc8_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_4 = serial_tc8;
+#define SERIAL_4_IS_SOFT
+#endif
+
+
+
+
 
 Mega_Serial_Parameters mega_parameters;
 
@@ -90,11 +133,14 @@ void Coms_Serial::init_serial() {
 
   init_software_serial_to_megas(mega_parameters.baud_rate);
   Serial.println("Setup done");
-  //ping();
-  mega_parameters.detected1 = true;
+#ifndef MEGA_SERIAL_CONNECTION_TESTING  //ignore ping if testing with serial passthrough code on mega
+  ping();
+#else
+  mega_parameters.detected1 = true;   // temporarily do this for testing
   mega_parameters.detected2 = true;
   mega_parameters.detected3 = true;
   mega_parameters.detected4 = true;
+#endif
   init_frames(); //build constant parts of frames
 }
 
@@ -104,6 +150,7 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
   if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
     return;
 
+#ifdef SERIAL_1_IS_SOFT
   Serial_1.begin(
     RX_PIN_1,
     TX_PIN_1,
@@ -112,7 +159,12 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
+#else
+  Serial_1.begin(speed);
+#endif
 
+
+#ifdef SERIAL_2_IS_SOFT
   Serial_2.begin(
     RX_PIN_2,
     TX_PIN_2,
@@ -120,7 +172,13 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );
+  );  
+#else
+  Serial_2.begin(speed);
+#endif
+
+
+#ifdef SERIAL_3_IS_SOFT
   Serial_3.begin(
     RX_PIN_3,
     TX_PIN_3,
@@ -129,6 +187,12 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
+#else
+  Serial_3.begin(speed);
+#endif
+
+
+#ifdef SERIAL_4_IS_SOFT
   Serial_4.begin(
     RX_PIN_4,
     TX_PIN_4,
@@ -136,8 +200,13 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );
+  );  
+#else
+  Serial_4.begin(speed);
+#endif
 
+
+#ifdef MEGA_SERIAL_CONNECTION_TESTING   // simple code to allow used to see start of transmission
   Serial_1.flush();
   Serial_2.flush();
   Serial_3.flush();
@@ -147,6 +216,7 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
   Serial_2.println("Hello 2");
   Serial_3.println("Hello 3");
   Serial_4.println("Hello 4");
+#endif
 }
 
 void Coms_Serial::ping() {
@@ -376,12 +446,12 @@ void Coms_Serial::write_menu_frame(byte address) {   //function to actually send
 void Coms_Serial::write_pos_frame(byte address) {
 
   if (address == 0 && mega_parameters.detected1) {
-   // delayMicroseconds(1000);//ensure previous trnasmission complete
+    // delayMicroseconds(1000);//ensure previous trnasmission complete
     Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);
   }
 
   else if (address == 1 && mega_parameters.detected2) {
-   // delayMicroseconds(1000);
+    // delayMicroseconds(1000);
     Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);
   }
   else if (address == 2 && mega_parameters.detected3) {
@@ -933,13 +1003,12 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   }
 
 
-  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= MEGA_SERIAL_BUFFER_LENGTH-3) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
+  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= MEGA_SERIAL_BUFFER_LENGTH - 3) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
     return (false);
   }
   else //frame to be sent
   {
-    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2)+2;
-    Serial.println(sensor_data_frame.frame_length);
+    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2;
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
     sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
     sensor_data_frame.frame_buffer[2] = 1;
@@ -948,7 +1017,7 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
     for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
       sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
     }
-    
+
     sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = sensor_data_frame.checksum;
     write_sensor_data_frame(address);
     return (true);                    //frame_sent, send notification back
