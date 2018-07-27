@@ -35,6 +35,9 @@ extern Card card;
 bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS] = {false};
 
 
+#define POS_TIMER Timer3
+#define POS_TIMER_INTERRUPT TC2_IRQn
+
 void Graphics::update_brightness() {
 
   byte target_brightness = light_sensor.calculate_target_brightness();  //
@@ -48,7 +51,7 @@ void Graphics::update_brightness() {
   }
 }
 
-void dummy_text_config() {
+void dummy_text_config() {    //use this to enable the pos frame and cursor positions
   text_cursor[0].object_used = true;
   text_cursor[1].object_used = true;
   text_parameters[0].text_size = 1;
@@ -75,12 +78,13 @@ void attach_timer_pos_update() {
   if (!timers.pos_timer_attached) {
     timers.pos_timer_attached = true;       //indicate the timer is attached
 
-    Timer3.attachInterrupt(send_pos_interrupt);   //attach ISR
+    POS_TIMER.attachInterrupt(send_pos_interrupt);   //attach ISR
     set_pos_update_frequency(POS_UPDATE_ISR_FREQ);         // set the freq
 
-    Timer3.start();
-    Sprintln(F("Attached pos timer"));
-  }
+    POS_TIMER.start();
+    NVIC_SetPriority (POS_TIMER_INTERRUPT, POS_FRAME_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
+
+   }
 }
 
 void set_pos_update_frequency(byte freq) {
@@ -89,7 +93,7 @@ void set_pos_update_frequency(byte freq) {
     Sprintln(F("From 'set_pos_update_frequency': trying to set frequency but timer not attached"));
   }
   else {  //all good, set freq
-    Timer3.setFrequency(freq);   //set interval
+    POS_TIMER.setFrequency(freq);   //set interval
 
   }
 }

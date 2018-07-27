@@ -74,6 +74,7 @@ bool serial_enabled = false;
 #else
 serial_tc5_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_1 = serial_tc5;
+#define SERIAL_1_TIMER  TC5_IRQn    //see soft_uart.cpp
 #define SERIAL_1_IS_SOFT
 #endif
 
@@ -86,6 +87,7 @@ auto& Serial_1 = serial_tc5;
 #else
 serial_tc6_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_2 = serial_tc6;
+#define SERIAL_2_TIMER  TC6_IRQn    
 #define SERIAL_2_IS_SOFT
 #endif
 
@@ -98,6 +100,7 @@ auto& Serial_2 = serial_tc6;
 #else
 serial_tc7_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_3 = serial_tc7;
+#define SERIAL_3_TIMER  TC7_IRQn    
 #define SERIAL_3_IS_SOFT
 #endif
 
@@ -110,6 +113,7 @@ auto& Serial_3 = serial_tc7;
 #else
 serial_tc8_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_4 = serial_tc8;
+#define SERIAL_4_TIMER  TC8_IRQn  
 #define SERIAL_4_IS_SOFT
 #endif
 
@@ -159,6 +163,7 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
+  NVIC_SetPriority (SERIAL_1_TIMER, SOFT_SERIAL_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
 #else
   Serial_1.begin(speed);
 #endif
@@ -172,7 +177,9 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );  
+  ); 
+  
+  NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY); 
 #else
   Serial_2.begin(speed);
 #endif
@@ -187,6 +194,8 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
+  
+  NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
 #else
   Serial_3.begin(speed);
 #endif
@@ -200,7 +209,9 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
-  );  
+  );
+  
+  NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);  
 #else
   Serial_4.begin(speed);
 #endif

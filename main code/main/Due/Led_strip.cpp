@@ -17,7 +17,8 @@ bool enable_led_strip = true;
 bool enable_led_strip = false;
 #endif
 
-
+#define LED_STRIP_TIMER Timer1              //make sure these two lines match, see DueTimer.cpp
+#define LED_STRIP_TIMER_INTERRUPT TC1_IRQn
 
 // ______  non class functions _______
 
@@ -27,25 +28,25 @@ int attach_timer_led_strip() {
   if (!timers.led_strip_timer_attached && led_strip_parameters.enabled) {
     timers.led_strip_timer_attached = true;       //indicate the timer is attached
 
-    Timer1.attachInterrupt(fade_led_strip);   //attach ISR
+    LED_STRIP_TIMER.attachInterrupt(fade_led_strip);   //attach ISR
     byte fail = led_strip_init_freq();          // set the freq to based on the programmed interval
 
     if (fail != 0) {
-      Sprintln(F("Failed to attach led strip timer"));
       timers.led_strip_timer_attached = false;      //failed to attach
       return (1);    //stop code
     }
 
     timers.led_strip_timer_attached = true;       //indicate the timer is attached
-    Timer1.start();
-    Sprintln(F("Attached led strip timer"));
+    LED_STRIP_TIMER.start();
+    NVIC_SetPriority (LED_STRIP_TIMER_INTERRUPT, LED_STRIP_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
+
   }
   return (0);
 }
 
 byte led_strip_init_freq() {
-  Timer1.setPeriod(led_strip_parameters.change_interval * 1000);    //initially set fast, and slow later if needed
-  return (Timer1.getPeriod() != led_strip_parameters.change_interval * 1000);
+  LED_STRIP_TIMER.setPeriod(led_strip_parameters.change_interval * 1000);    //initially set fast, and slow later if needed
+  return (LED_STRIP_TIMER.getPeriod() != led_strip_parameters.change_interval * 1000);
 }
 
 byte Led_Strip::led_strip_set_freq() {      //function to set the frequency of the led strip interrupt, use at the end of a main loop iteration
@@ -60,8 +61,8 @@ byte Led_Strip::led_strip_set_freq() {      //function to set the frequency of t
     else {
       if (led_strip_parameters.target_brightness == led_strip_parameters.current_brightness) {
         if (led_strip_parameters.fast_interval) { //if values the same and using fast interval, set to slow interval
-          Timer1.setPeriod(led_strip_parameters.led_stable_interval * 1000); //period in microseconds
-          Timer1.start();
+          LED_STRIP_TIMER.setPeriod(led_strip_parameters.led_stable_interval * 1000); //period in microseconds
+          LED_STRIP_TIMER.start();
         }
         led_strip_parameters.fast_interval = false;
         return (0);
@@ -69,8 +70,8 @@ byte Led_Strip::led_strip_set_freq() {      //function to set the frequency of t
 
       if (led_strip_parameters.target_brightness != led_strip_parameters.current_brightness) {
         if (!led_strip_parameters.fast_interval) { //if values not the same and using slow interval, set to fast interval
-          Timer1.setPeriod(led_strip_parameters.change_interval * 1000);
-          Timer1.start();
+          LED_STRIP_TIMER.setPeriod(led_strip_parameters.change_interval * 1000);
+          LED_STRIP_TIMER.start();
         }
         led_strip_parameters.fast_interval = true;
         return (0);

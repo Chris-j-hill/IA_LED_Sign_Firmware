@@ -28,24 +28,26 @@ bool enable_temp_sensor = true;
 bool enable_temp_sensor = false;
 #endif
 
+#define FAN_TIMER Timer2
+#define FAN_TIMER_INTERRUPT TC2_IRQn
 
 int attach_timer_fan() {
   //attach fan interrupt
   if (!timers.fan_timer_attached & fan_parameters.enabled) {
     timers.fan_timer_attached = true;       //indicate the timer is attached
 
-    Timer2.attachInterrupt(fade_fans);   // attach ISR
+    FAN_TIMER.attachInterrupt(fade_fans);   // attach ISR
     bool fail = fans_set_freq();          // set the freq to based on the programmed interval
 
     if (fail) {
-      Sprintln("Failed to attach fan timer");
       timers.fan_timer_attached = false;
       fan_parameters.enabled = false;
       return (-1);    //stop code
     }
 
-    Timer2.start();
-    Sprintln("Attached fan timer");
+    FAN_TIMER.start();    
+    NVIC_SetPriority (FAN_TIMER_INTERRUPT, FAN_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
+
   }
 }
 
@@ -75,9 +77,9 @@ void fade_fans() {         // interrupt to change the current value of the fans 
 }
 
 bool fans_set_freq() {     //interrupt to set the frequency the fans are adjusted
-  Timer2.setPeriod(fan_parameters.fan_change_interval * 1000);
-  //Timer2.start();   //<- not needed unless resetting freq after initial setup
-  return (Timer2.getPeriod() != fan_parameters.fan_change_interval * 1000);
+  FAN_TIMER.setPeriod(fan_parameters.fan_change_interval * 1000);
+  //FAN_TIMER.start();   //<- not needed unless resetting freq after initial setup
+  return (FAN_TIMER.getPeriod() != fan_parameters.fan_change_interval * 1000);
 }
 
 
