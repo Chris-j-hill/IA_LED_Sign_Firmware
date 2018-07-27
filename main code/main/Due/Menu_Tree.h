@@ -278,7 +278,9 @@ class Menu {
     inline byte get_previous_menu() {
       return previous_menu;
     }
-    //  void add_menu_to_send_queue(int menu);
+    
+    inline void send_cailbration_data_to_megas(byte data, byte starting_address=0, byte ending_address = NUM_SCREENS);
+     
 };
 
 

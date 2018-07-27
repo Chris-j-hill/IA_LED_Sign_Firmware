@@ -223,8 +223,7 @@ void Menu::display_screen_mode_menu() {
 
     }
     if (encoder_parameters.position >= 1 && encoder_parameters.position <= 4) {
-      for (int i = 0; i < NUM_SCREENS; i++)
-        coms_serial.send_specific_calibration_data(PREFIX_SCREEN_MODE, i, false, 0);
+      send_cailbration_data_to_megas(PREFIX_SCREEN_MODE);
     }
     if (encoder_parameters.position == 0)
       menu_just_changed = true;
@@ -241,8 +240,7 @@ void Menu::display_screen_brightness_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(screen_brightness);
     coms_serial.send_menu_frame(BRIGHTNESS_MENU);
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_SCREEN_BRIGHTNESS, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_SCREEN_BRIGHTNESS);
   }
 
   if (button_parameters.button_pressed) {
@@ -256,8 +254,7 @@ void Menu::display_screen_brightness_menu() {
     screen_brightness = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_SCREEN_BRIGHTNESS, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_SCREEN_BRIGHTNESS);
   }
 }
 
@@ -485,8 +482,7 @@ void Menu::display_text_size_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].text_size);
     coms_serial.send_menu_frame(TEXT_SIZE_MENU);
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SIZE_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_SIZE_0 + obj_selected);
   }
 
   if (button_parameters.button_pressed) {
@@ -500,8 +496,7 @@ void Menu::display_text_size_menu() {
     text_parameters[obj_selected].text_size = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SIZE_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_SIZE_0 + obj_selected);
   }
 }
 
@@ -581,8 +576,7 @@ void Menu::display_fan_speed_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(map(fan_parameters.target_speed, fan_parameters.fan_minimum, 255, 0, 100));
     coms_serial.send_menu_frame(FAN_SPEED_MENU);
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_FAN_SPEED, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_FAN_SPEED, left_most_address_displaying_menu);
   }
 
   if (button_parameters.button_pressed) {
@@ -597,9 +591,7 @@ void Menu::display_fan_speed_menu() {
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
     fan_parameters.manual = true;     //set manual mode
-
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_FAN_SPEED, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_FAN_SPEED, left_most_address_displaying_menu);
   }
 }
 
@@ -610,8 +602,7 @@ void Menu::display_min_fan_speed_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(fan_parameters.fan_minimum);
     coms_serial.send_menu_frame(MIN_FAN_SPEED_MENU);
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_FAN_MINIMUM_SPEED, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_FAN_MINIMUM_SPEED, left_most_address_displaying_menu);
   }
 
   if (button_parameters.button_pressed) {
@@ -625,9 +616,8 @@ void Menu::display_min_fan_speed_menu() {
     fan_parameters.fan_minimum = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
+    send_cailbration_data_to_megas(PREFIX_FAN_MINIMUM_SPEED, left_most_address_displaying_menu);
 
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_FAN_MINIMUM_SPEED, i, false, 0);
   }
 }
 
@@ -655,6 +645,7 @@ void Menu::display_sd_folder_menu() {
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
+    //send_cailbration_data_to_megas(PREFIX_LED_STRIP_BRIGHTNESS, left_most_address_displaying_menu);
     //    for (int i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
     //      coms_serial.send_specific_calibration_data(PREFIX_FAN_SPEED, i, false, 0);
   }
@@ -667,8 +658,7 @@ void Menu::display_led_strip_brightness_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(led_strip_parameters.target_brightness);
     coms_serial.send_menu_frame(LED_STRIP_BRIGHTNESS_MENU);
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_LED_STRIP_BRIGHTNESS, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_LED_STRIP_BRIGHTNESS, left_most_address_displaying_menu);
   }
 
   if (button_parameters.button_pressed) {
@@ -682,9 +672,7 @@ void Menu::display_led_strip_brightness_menu() {
     led_strip_parameters.target_brightness = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
-
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_LED_STRIP_BRIGHTNESS, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_LED_STRIP_BRIGHTNESS, left_most_address_displaying_menu);
   }
 }
 
@@ -697,8 +685,7 @@ void Menu::display_text_colour_red_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].red);
     coms_serial.send_menu_frame(TEXT_COLOUR_RED);
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_R_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_COLOUR_R_0 + obj_selected);
   }
 
   if (button_parameters.button_pressed) {
@@ -712,10 +699,8 @@ void Menu::display_text_colour_red_menu() {
     text_parameters[obj_selected].red = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
+    send_cailbration_data_to_megas(PREFIX_TEXT_COLOUR_R_0 + obj_selected);
 
-
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_R_0 + obj_selected, i, false, 0);
   }
 }
 
@@ -726,8 +711,7 @@ void Menu::display_text_colour_green_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].green);
     coms_serial.send_menu_frame(TEXT_COLOUR_GREEN);
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_COLOUR_G_0 + obj_selected);
   }
 
   if (button_parameters.button_pressed) {
@@ -741,9 +725,7 @@ void Menu::display_text_colour_green_menu() {
     text_parameters[obj_selected].green = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
-
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_COLOUR_G_0 + obj_selected);
   }
 }
 
@@ -755,9 +737,7 @@ void Menu::display_text_colour_blue_menu() {
     menu_just_changed = false;
     encoder.set_encoder_position(text_parameters[obj_selected].blue);
     coms_serial.send_menu_frame(TEXT_COLOUR_BLUE);
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0 + obj_selected, i, false, 0);
-
+    send_cailbration_data_to_megas(PREFIX_TEXT_COLOUR_B_0 + obj_selected);
   }
 
   if (button_parameters.button_pressed) {
@@ -771,9 +751,7 @@ void Menu::display_text_colour_blue_menu() {
     text_parameters[obj_selected].blue = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
-
-    for (byte i = 0; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_COLOUR_B_0 + obj_selected);
   }
 }
 
@@ -803,6 +781,7 @@ void Menu::display_text_colour_hue_menu() {
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
+    //dont ue function here as sending two values in same frame
     for (byte i = 0; i < NUM_SCREENS; i++) {
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0 + obj_selected, i, true, 0);
       coms_serial.send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_selected, i, false, 1);
@@ -817,8 +796,7 @@ void Menu::display_text_scroll_speed_x() {
     menu_just_changed = false;
     encoder.set_encoder_position(text_cursor[obj_selected].x_pos_dir);    //will require offset of 128 when displayed for clarity
     coms_serial.send_menu_frame(SCROLL_SPEED_MENU);
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_X_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_SCROLL_SPEED_X_0 + obj_selected, left_most_address_displaying_menu);
   }
 
   if (button_parameters.button_pressed) {
@@ -836,8 +814,8 @@ void Menu::display_text_scroll_speed_x() {
     time_since_menu_last_changed = millis();
 
     // remember due controls speeds, objects on screen are not controlled by megas
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_X_0 + obj_selected, i, false, 0);
+    send_cailbration_data_to_megas(PREFIX_TEXT_SCROLL_SPEED_X_0 + obj_selected, left_most_address_displaying_menu);
+
   }
 }
 void Menu::display_text_scroll_speed_y() {
@@ -847,8 +825,8 @@ void Menu::display_text_scroll_speed_y() {
     menu_just_changed = false;
     encoder.set_encoder_position(text_cursor[obj_selected].y_pos_dir);    //will require offset of 128 when displayed for clarity
     coms_serial.send_menu_frame(SCROLL_SPEED_MENU);
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_Y_0 + obj_selected, i, false, 0); 
+    send_cailbration_data_to_megas(PREFIX_TEXT_SCROLL_SPEED_Y_0 + obj_selected, left_most_address_displaying_menu);
+
   }
 
   if (button_parameters.button_pressed) {
@@ -865,8 +843,8 @@ void Menu::display_text_scroll_speed_y() {
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
 
-    for (byte i = left_most_address_displaying_menu; i < NUM_SCREENS; i++)
-      coms_serial.send_specific_calibration_data(PREFIX_TEXT_SCROLL_SPEED_Y_0 + obj_selected, i, false, 0); 
+    send_cailbration_data_to_megas(PREFIX_TEXT_SCROLL_SPEED_Y_0 + obj_selected, left_most_address_displaying_menu);
+
   }
 }
 
@@ -881,4 +859,8 @@ void Menu::check_obj_enabled() {
   num_obj_enabled = counter;
 }
 
+inline void Menu::send_cailbration_data_to_megas(byte data, byte starting_address, byte ending_address) {
+  for (byte i = starting_address; i < ending_address; i++)
+    coms_serial.send_specific_calibration_data(0, i, false, 0);
+}
 #endif  // Menu_CPP
