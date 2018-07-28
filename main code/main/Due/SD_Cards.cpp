@@ -493,6 +493,7 @@ void Card::check_for_sd_card() {
           retrieve_data(EXT_NETWORK_FILE);//get contents
         if (card1.disp_string_file_exists)
           retrieve_data(EXT_STRING_FILE);
+          graphics.push_string_data();//push string and related data (size, colour etc)
         if (card1.calibration_file_exists)
           retrieve_data(EXT_CALIBRATION_FILE);
 
@@ -522,6 +523,7 @@ void Card::check_for_sd_card() {
           retrieve_data(INT_NETWORK_FILE);
         if (card2.disp_string_file_exists)
           retrieve_data(INT_STRING_FILE);
+          graphics.push_string_data();//push string and related data (size, colour etc)
         if (card2.calibration_file_exists)
           retrieve_data(INT_CALIBRATION_FILE);
       }
@@ -1328,7 +1330,7 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
             if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
               strncpy(text_str[i], data_found, sizeof(text_str));
               text_parameters[i].text_str_length = reads;
-              coms_serial.send_all_text_frames(true);
+              text_parameters[i].megas_up_to_date = false;
               text_cursor[i].object_used = true;  // set as true once string found, ignore if data provided but no string
 
             }

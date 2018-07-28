@@ -13,6 +13,7 @@
 extern struct LDR_Struct light_sensor_parameters;
 extern Light_Sensor light_sensor;
 extern Coms_Serial coms_serial;
+extern Graphics graphics;
 extern struct Timers timers;
 Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
@@ -84,7 +85,7 @@ void attach_timer_pos_update() {
     POS_TIMER.start();
     NVIC_SetPriority (POS_TIMER_INTERRUPT, POS_FRAME_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
 
-   }
+  }
 }
 
 void set_pos_update_frequency(byte freq) {
@@ -195,8 +196,8 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
         }
       }
 
-      //send out data
-      coms_serial.send_pos_frame(i);
+      if (graphics.check_transmission_enabled()) //update positions but prevent text transmission if also using serial for somethign else
+        coms_serial.send_pos_frame(i);
     }
   }
 }
@@ -290,7 +291,22 @@ void Graphics::configure_limits() {
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
     configure_limits(i);
   }
+}
+
+void Graphics::push_string_data() {
+
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+    if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date) { //if the object is enabled and has been changed by something
+      disable_pos_isr();  // disable pos isr while we push the string
+      coms_serial.send_text_frame(i);
+      coms_serial.send_text_calibration_data(i); //send all related text data
+      text_parameters[i].megas_up_to_date = true; //confirm text up to date
+      enable_pos_isr();   //enable pos isr again
+    }
+  }
+
 
 }
+
 
 #endif  // Graphics_CPP

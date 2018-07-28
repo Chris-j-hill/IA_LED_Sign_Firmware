@@ -54,12 +54,19 @@ void due_setup() {
   led_strip.init_led_strip();
   nativeUsb.init_native_usb();
   coms_serial.init_serial();
-
+  
 }
 
 
 void due_loop() {
   while (1) {
+
+    //push string and related data if new data retrieved
+    graphics.push_string_data(); 
+
+    //check for requests from megas (eg transmission errors)
+    coms_serial.check_megas();
+    
     // update screen brightness based on ldr and current meter readings
     current_meter.get_readings();
     light_sensor.get_readings();

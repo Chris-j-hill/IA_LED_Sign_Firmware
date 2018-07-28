@@ -87,7 +87,7 @@ auto& Serial_1 = serial_tc5;
 #else
 serial_tc6_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_2 = serial_tc6;
-#define SERIAL_2_TIMER  TC6_IRQn    
+#define SERIAL_2_TIMER  TC6_IRQn
 #define SERIAL_2_IS_SOFT
 #endif
 
@@ -100,7 +100,7 @@ auto& Serial_2 = serial_tc6;
 #else
 serial_tc7_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_3 = serial_tc7;
-#define SERIAL_3_TIMER  TC7_IRQn    
+#define SERIAL_3_TIMER  TC7_IRQn
 #define SERIAL_3_IS_SOFT
 #endif
 
@@ -113,7 +113,7 @@ auto& Serial_3 = serial_tc7;
 #else
 serial_tc8_declaration(RX_BUF_LENGTH, TX_BUF_LENGTH);
 auto& Serial_4 = serial_tc8;
-#define SERIAL_4_TIMER  TC8_IRQn  
+#define SERIAL_4_TIMER  TC8_IRQn
 #define SERIAL_4_IS_SOFT
 #endif
 
@@ -177,9 +177,9 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
-  ); 
-  
-  NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY); 
+  );
+
+  NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY);
 #else
   Serial_2.begin(speed);
 #endif
@@ -194,7 +194,7 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
-  
+
   NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
 #else
   Serial_3.begin(speed);
@@ -210,8 +210,8 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
     soft_uart::parity_codes::NO_PARITY,
     soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
-  
-  NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);  
+
+  NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);
 #else
   Serial_4.begin(speed);
 #endif
@@ -293,18 +293,16 @@ void Coms_Serial::ping() {
 }
 
 
-void Coms_Serial::send_all_text_frames(bool send_now) {   // send the text frame to all megas
+void Coms_Serial::send_all_text_frames() {   // send the text frame to all megas
 
-  if ((send_now = true) || (millis() > time_since_last_sent_text_frame + TEXT_TRANSMIT_PERIOD)) {
-    time_since_last_sent_text_frame = millis();
-    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-      if (text_cursor[i].object_used)
-        send_text_frame(i); //send this string to all megas
-    }
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+    if (text_cursor[i].object_used)
+      send_text_frame(i); //send this string to all megas
   }
+
 }
 
-void Coms_Serial::send_text_frame(byte obj_num, byte address) {   //function to send strings to display on screen
+void Coms_Serial::send_text_frame(byte obj_num) {   //function to send strings to display on screen
 
   // function calculates the number of frames required to send the string, then loops,
   // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
@@ -335,7 +333,10 @@ void Coms_Serial::send_text_frame(byte obj_num, byte address) {   //function to 
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
     text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
 
-    write_text_frame(address);
+    write_text_frame(0);  //send to all megas
+    write_text_frame(1);
+    write_text_frame(2);
+    write_text_frame(3);
 
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
     delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
@@ -389,19 +390,19 @@ void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write
 
   build_menu_data_frame(cur_menu);
   byte menu_width = menu.get_menu_width();
-  if ((menu_width >= 0 && mega_enabled[3])|| menu.is_all_system_menu(cur_menu)) {   //not sure why it would be this but include for completeness
+  if ((menu_width >= 0 && mega_enabled[3]) || menu.is_all_system_menu(cur_menu)) {  //not sure why it would be this but include for completeness
     write_menu_frame(3);  //write frame to address 3
   }
 
-  if ((menu_width > 64 && mega_enabled[2])|| menu.is_all_system_menu(cur_menu)) {
+  if ((menu_width > 64 && mega_enabled[2]) || menu.is_all_system_menu(cur_menu)) {
     write_menu_frame(2);
   }
 
-  if ((menu_width > 128 && mega_enabled[1])|| menu.is_all_system_menu(cur_menu)) {
+  if ((menu_width > 128 && mega_enabled[1]) || menu.is_all_system_menu(cur_menu)) {
     write_menu_frame(1);
   }
 
-  if ((menu_width > 192 && mega_enabled[0])|| menu.is_all_system_menu(cur_menu)) {
+  if ((menu_width > 192 && mega_enabled[0]) || menu.is_all_system_menu(cur_menu)) {
     write_menu_frame(0);
   }
 }
@@ -559,15 +560,6 @@ void Coms_Serial::send_long_text_frame(byte address) {
 
 void Coms_Serial::write_text_frame() {}  // send to all at once
 
-
-void Coms_Serial::check_queues() {
-
-  //check_pos_frame_queue();
-  //check_sensor_date_frame_queue();
-  //check_text_frame_queue();
-  //check_menu_frame_queue();
-
-}
 
 inline void Coms_Serial::check_sensor_date_frame_queue() {
   if (sensor_data_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
@@ -1014,19 +1006,62 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   {
     sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2; //header+content+new+data+trailer
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
-//    sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
-//    sensor_data_frame.frame_buffer[2] = 1;
-//    sensor_data_frame.frame_buffer[3] = 1;
-//    sensor_data_frame.checksum = 0; //calculate checksum
-//    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
-//      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
-//    }
+    //    sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
+    //    sensor_data_frame.frame_buffer[2] = 1;
+    //    sensor_data_frame.frame_buffer[3] = 1;
+    //    sensor_data_frame.checksum = 0; //calculate checksum
+    //    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
+    //      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
+    //    }
 
     sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 2] = generate_checksum(SENSOR_FRAME_TYPE);
     sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = ENDBYTE_CHARACTER;
-    
+
     write_sensor_data_frame(address);
     return (true);                    //frame_sent, send notification back
+  }
+
+}
+
+
+void Coms_Serial::send_text_calibration_data(byte obj_num) {
+
+  for (byte i = 0; i < NUM_SCREENS; i++) {
+
+    send_specific_calibration_data(PREFIX_TEXT_SIZE_0 + obj_num, i, true, 0);
+    send_specific_calibration_data(PREFIX_TEXT_COLOUR_R_0 + obj_num, i, true, 1);
+    send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0 + obj_num, i, true, 2);
+    send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0 + obj_num, i, true, 3);
+    if (text_parameters[obj_num].use_hue) {
+      send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, true, 4);
+      send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0 + obj_num, i, true, 5);
+      send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_num, i, false, 6);
+    }
+    else
+      send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, false, 4);
+  }
+}
+
+void Coms_Serial::check_megas() {
+  // !!!!   not implemented on megas 28/7/18    !!!!
+  if (Serial_1.available() > 0) {
+    String rx = Serial_1.readString(); //read until '\0' recieved
+    //    decode_serial_rx(rx);
+  }
+
+  if (Serial_2.available() > 0) {
+    String rx = Serial_2.readString();
+    //    decode_serial_rx(rx);
+  }
+
+  if (Serial_3.available() > 0) {
+    String rx = Serial_3.readString();
+    //    decode_serial_rx(rx);
+  }
+
+  if (Serial_4.available() > 0) {
+    String rx = Serial_4.readString();
+    //    decode_serial_rx(rx);
   }
 
 }

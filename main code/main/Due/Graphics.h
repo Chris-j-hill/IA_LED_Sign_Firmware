@@ -56,10 +56,8 @@ struct Text {
   int hue = 0;
   bool use_hue = false;     //if true, use hue value, otherwise colour using rgb
 
-  bool mega1_updated = false;   //is the mega up to date with current string
-  bool mega2_updated = false;
-  bool mega3_updated = false;
-  bool mega4_updated = false;
+  bool megas_up_to_date = false;   //is the mega up to date with this objects string
+
 };
 
 
@@ -80,10 +78,10 @@ struct Text_cursor {        //xy coordinates of cursor position
   bool x_end_set = false;
   bool y_end_set = false;
 
-  bool mega1_updated = false;   //is the mega up to date with current positions, useful if not sending text displaying menu option
-  bool mega2_updated = false;
-  bool mega3_updated = false;
-  bool mega4_updated = false;
+//  bool mega1_updated = false;   //is the mega up to date with current positions, useful if not sending text displaying menu option
+//  bool mega2_updated = false;
+//  bool mega3_updated = false;
+//  bool mega4_updated = false;
 
   byte ISR_freq = POS_UPDATE_ISR_FREQ;
 
@@ -118,7 +116,7 @@ void send_pos_interrupt();     // interrupt to send pos data to all megas
 class Graphics {
 
   private:
-
+    bool transmission_enabled = true; //disable transmission within pos update isr (used to allow complete text string to be transmitted uninterrupted)
   public:
     Graphics() {}
     void update_brightness();
@@ -132,6 +130,17 @@ class Graphics {
     void reset_position(byte obj_num);
     void reset_position();
     void get_next_string_config_profile();
+    void push_string_data();
+    inline void disable_pos_isr(){
+      transmission_enabled = false;
+    }
+    
+    inline void enable_pos_isr(){
+      transmission_enabled = true;
+    }
+    inline bool check_transmission_enabled(){
+      return transmission_enabled;
+    }
 };
 
 
