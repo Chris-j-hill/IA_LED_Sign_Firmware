@@ -323,7 +323,7 @@ void Coms_Serial::send_text_frame(byte obj_num, byte address) {   //function to 
       text_frame.frame_buffer[0]  = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
-      text_frame.frame_buffer[0]  = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (HEADER_LENGTH + TRAILER_LENGTH) - 1; //remaining frame is (string length - text offset)+ (5 bytes overhead) -1 for obj_num
+      text_frame.frame_buffer[0]  = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (FRAME_OVERHEAD) - 1; //remaining frame is (string length - text offset)+ (5 bytes overhead) -1 for obj_num
 
 
     text_frame.frame_buffer[1] = (byte) text_frame.frame_type;
@@ -382,34 +382,27 @@ void Coms_Serial::Serial_write_frame(byte address) {   //function to actually se
 
 
 
-//void Coms_Serial::write_frame(int address) {
-//#if defined(USE_SERIAL_TO_MEGAS)
-//  Serial_write_frame(address);
-//#else
-//#error "I2C coms protocol not defined, cant send frame"
-//#endif
-//}
 
 
 
 void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write_menu_frame for relevant addresses
 
-  this -> build_menu_data_frame(cur_menu);
-
-  if (menu.get_menu_width() != 0 && mega_enabled[3]) {   //not sure why it would be this but include for completeness
-    this -> write_menu_frame(3);  //write frame to address 3
+  build_menu_data_frame(cur_menu);
+  byte menu_width = menu.get_menu_width();
+  if ((menu_width >= 0 && mega_enabled[3])|| menu.is_all_system_menu(cur_menu)) {   //not sure why it would be this but include for completeness
+    write_menu_frame(3);  //write frame to address 3
   }
 
-  if (menu.get_menu_width() > 64 && mega_enabled[2]) {
-    this -> write_menu_frame(2);
+  if ((menu_width > 64 && mega_enabled[2])|| menu.is_all_system_menu(cur_menu)) {
+    write_menu_frame(2);
   }
 
-  if (menu.get_menu_width() > 128 && mega_enabled[1]) {
-    this -> write_menu_frame(1);
+  if ((menu_width > 128 && mega_enabled[1])|| menu.is_all_system_menu(cur_menu)) {
+    write_menu_frame(1);
   }
 
-  if (menu.get_menu_width() > 192 && mega_enabled[0]) {
-    this -> write_menu_frame(0);
+  if ((menu_width > 192 && mega_enabled[0])|| menu.is_all_system_menu(cur_menu)) {
+    write_menu_frame(0);
   }
 }
 
@@ -1019,23 +1012,24 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   }
   else //frame to be sent
   {
-    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2;
+    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2; //header+content+new+data+trailer
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
-    sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
-    sensor_data_frame.frame_buffer[2] = 1;
-    sensor_data_frame.frame_buffer[3] = 1;
-    sensor_data_frame.checksum = 0; //calculate checksum
-    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
-      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
-    }
+//    sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
+//    sensor_data_frame.frame_buffer[2] = 1;
+//    sensor_data_frame.frame_buffer[3] = 1;
+//    sensor_data_frame.checksum = 0; //calculate checksum
+//    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
+//      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
+//    }
 
-    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = sensor_data_frame.checksum;
+    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 2] = generate_checksum(SENSOR_FRAME_TYPE);
+    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = ENDBYTE_CHARACTER;
+    
     write_sensor_data_frame(address);
     return (true);                    //frame_sent, send notification back
   }
 
 }
-
 
 
 #endif //USE_SERIAL_TO_MEGAS

@@ -203,7 +203,7 @@ class Menu {
   private:
     byte current_menu = 0;    //use to keep track of where we are. use switch statement to navigate based on this value
     byte previous_menu = 0;    //can be used if one menu option may be available from two locations in the tree
-    
+
     byte obj_selected = 0; //text obj selected in text settings sub menu
     byte obj_enabled[MAX_NUM_OF_TEXT_OBJECTS] = {0};    //list of enabled text objects eg 1,3,4 are enabled
     byte num_obj_enabled = 0;
@@ -212,9 +212,9 @@ class Menu {
 
     //used to select which screen should display data related to the due, no need to push to all
     // variable set in constructor
-    byte left_most_address_displaying_menu =0;// (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
+    byte left_most_address_displaying_menu = 0; // (TOTAL_WIDTH / menu.get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.9... = 2 etc
 
-    
+
     // menu functions, these dont send menu option text, only menu reference variable to the megas
     // NB: menu items stored in LUT on both mega and due for display and feedback over com port
 
@@ -258,29 +258,33 @@ class Menu {
 
     Menu() {
       left_most_address_displaying_menu = (TOTAL_WIDTH / get_menu_width()) - 1; //  (256/64)-1 = 3 -> (256/65)-1 = 2.99... = 2 etc
-      };
+    };
     void init_menu_tree();
     void display_menu();
-    inline void set_menu_width(byte width){
+    inline void set_menu_width(byte width) {
       menu_width = width;   //change the width of the menu on the screen
     }
-    inline byte get_menu_width(){
+    inline byte get_menu_width() {
       return menu_width;
     }
-    
+
     inline byte get_selected_object() {
       return obj_selected;
     }
-    
+
     inline byte get_current_menu() {
       return current_menu;
     }
     inline byte get_previous_menu() {
       return previous_menu;
     }
+
+    inline bool is_all_system_menu(byte menu) { //return true if test menu is startup or default with previous menu being startup
+      return (menu == STARTUP || (menu == DEFAULT_MENU && previous_menu == STARTUP));
+    }
     
-    inline void send_cailbration_data_to_megas(byte data, byte starting_address=0, byte ending_address = NUM_SCREENS);
-     
+    inline void send_cailbration_data_to_megas(byte data, byte starting_address = 0, byte ending_address = NUM_SCREENS);
+
 };
 
 

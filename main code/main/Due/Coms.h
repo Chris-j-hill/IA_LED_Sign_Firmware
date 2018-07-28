@@ -25,9 +25,11 @@ using namespace arduino_due;
 
 
 #define HEADER_LENGTH 4  //length,type,num frames, frame no
-#define TRAILER_LENGTH 1 //just checksum
-#define DATA_IDENTIFIER_BYTE  2   //frame type byte
-#define FRAME_LENGTH_BYTE  1
+#define TRAILER_LENGTH 2 //checksum and end byte
+#define FRAME_TYPE_BYTE  1   
+#define FRAME_LENGTH_BYTE  0
+
+#define ENDBYTE_CHARACTER 255 // can scan through serial until this is reached on mega end if error detected 
 
 #define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
@@ -39,7 +41,10 @@ using namespace arduino_due;
 #define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
                                                                                                       // need different approach for bitmaps...
 
-
+#define TEXT_FRAME_TYPE     1
+#define POS_FRAME_TYPE      2
+#define SENSOR_FRAME_TYPE   3
+#define MENU_FRAME_TYPE     4
 
 
 
@@ -110,7 +115,7 @@ class Coms {
 
     //  todo
     void echo_menu();
-    int generate_checksum();
+    byte generate_checksum(byte frame_type);
     int error_check();
     
     int get_frame_code();

@@ -24,18 +24,7 @@ void setup() {
   // initialize both serial ports:
   Serial.begin(115200);
   Serial1.begin(9600);
-  //  bool pinged = false;
-  //  String rx = "\0";
-  //  while (!pinged) {
-  //    if (Serial1.available() != 0) {
-  //      rx = Serial1.readString();
-  //      if (rx == "ping") {
-  //        Serial1.write("p");
-  //        pinged = true;
-  //      }
-  //    }
-  //
-  //  }
+
 }
 
 void loop() {
