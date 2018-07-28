@@ -293,98 +293,45 @@ void Coms_Serial::ping() {
 }
 
 
-void Coms_Serial::send_all_text_frames() {   // send the text frame to all megas
-
-  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-    if (text_cursor[i].object_used)
-      send_text_frame(i); //send this string to all megas
-  }
-
-}
-
 void Coms_Serial::send_text_frame(byte obj_num) {   //function to send strings to display on screen
 
   // function calculates the number of frames required to send the string, then loops,
   // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
   // it also calls the send frame function to send it on to the specified address when frame complete
 
-
+  byte space_available_in_frame = FRAME_DATA_LENGTH-1;// going to transmit obj num and data in same frame, so one byte less for string
 
   //text_cursor.x_min = -text_parameters.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
 
-  text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / (FRAME_DATA_LENGTH)); //send this many frames
+  text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / space_available_in_frame); //send this many frames
   text_frame.this_frame = 1;
 
   do {    //loop to send multiple frames if string is long
 
     if (text_frame.num_frames != text_frame.this_frame)
-      text_frame.frame_buffer[0]  = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
+      
+      text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
-      text_frame.frame_buffer[0]  = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (FRAME_OVERHEAD) - 1; //remaining frame is (string length - text offset)+ (5 bytes overhead) -1 for obj_num
+      text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
 
-
-    text_frame.frame_buffer[1] = (byte) text_frame.frame_type;
-    text_frame.frame_buffer[2] = (byte) text_frame.num_frames;
-    text_frame.frame_buffer[3] = (byte) text_frame.this_frame;
+    text_frame.frame_buffer[0] = text_frame.frame_length;
+    text_frame.frame_buffer[1] = text_frame.frame_type;
+    text_frame.frame_buffer[2] = text_frame.num_frames;
+    text_frame.frame_buffer[3] = text_frame.this_frame;
     text_frame.frame_buffer[4] = obj_num;
     text_frame.checksum = text_frame.frame_buffer[0] + text_frame.frame_buffer[1] + text_frame.frame_buffer[2] + text_frame.frame_buffer[3] + text_frame.frame_buffer[4];
 
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
-    text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
+    //text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
 
-    write_text_frame(0);  //send to all megas
-    write_text_frame(1);
-    write_text_frame(2);
-    write_text_frame(3);
+    write_text_frame();  //send to all megas
 
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
     delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
 
   } while (text_frame.this_frame <= text_frame.num_frames);
 }
-
-
-void Coms_Serial::Serial_write_frame(byte address) {   //function to actually send the frame to given address
-
-  if (address == 1 || address == 0) {
-    if (mega_enabled[0] && mega_parameters.detected1) {
-      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-        Serial_1.write(text_frame.frame_buffer[i]);
-      }
-    }
-  }
-  else if (address == 2 || address == 0) {
-    if (mega_enabled[1] && mega_parameters.detected2) {
-      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-        Serial_2.write(text_frame.frame_buffer[i]);
-      }
-    }
-  }
-  else if (address == 3 || address == 0) {
-    if (mega_enabled[2] && mega_parameters.detected3) {
-      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-        Serial_3.write(text_frame.frame_buffer[i]);
-      }
-    }
-  }
-  else  if (address == 4 || address == 0) {
-    if (mega_enabled[3] && mega_parameters.detected4) {
-      for (int i = 0; i < text_frame.frame_buffer[0]; i++) {
-        Serial_4.write(text_frame.frame_buffer[i]);
-      }
-    }
-  }
-  //clear frame from last iteration
-  for (int beta = 0; beta < MEGA_SERIAL_BUFFER_LENGTH; beta++) {
-    text_frame.frame_buffer[beta] = 0;
-  }
-}
-
-
-
-
-
 
 void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write_menu_frame for relevant addresses
 
@@ -471,176 +418,82 @@ void Coms_Serial::write_pos_frame(byte address) {
 
 
 void Coms_Serial::write_text_frame(byte address) {
-  if (!mega_enabled[address]) {
 
-    Sprint(F("Mega disabled, no text sent \t address: "));
-    Sprintln(address);
-  }
-
-  if (text_frame.send_extended_buffer) {
-    this -> send_long_text_frame(address);
-  }
-  else {
-    this -> send_short_text_frame(address);
-  }
-}
-
-
-void Coms_Serial::send_short_text_frame(byte address) {
-  if (address == 0) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_1.write(text_frame.frame_buffer[i]);
-
+  if (address == 0 && mega_enabled[0] && mega_parameters.detected1) {
+    Serial.println(text_frame.frame_length);
+    for (byte i = 0; i < text_frame.frame_length; i++){
+      Serial.print(text_frame.frame_buffer[i]);
+      Serial.print(" ");
     }
+    Serial.println();
+    Serial_1.write(text_frame.frame_buffer, text_frame.frame_length);
   }
-  else if (address == 1) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_2.write(text_frame.frame_buffer[i]);
 
-    }
-  }
-  else if (address == 2) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_3.write(text_frame.frame_buffer[i]);
+  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
+    Serial_2.write(text_frame.frame_buffer, text_frame.frame_length);
 
-    }
-  }
-  else  if (address == 3) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_4.write(text_frame.frame_buffer[i]);
+  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
+    Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);
 
-    }
-  }
-  else {
-    Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
-    Sprintln(address);
-  }
-}
-
-
-void Coms_Serial::send_long_text_frame(byte address) {
-  if (address == 0) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_1.write(text_frame.frame_buffer[i]);
-
-    }
-  }
-  else if (address == 1) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_2.write(text_frame.frame_buffer[i]);
-
-    }
-  }
-  else if (address == 2) {
-    for (int i = 0; i < text_frame.frame_length; i++) {
-      Serial_3.write(text_frame.frame_buffer[i]);
-
-    }
-  }
-  else  if (address == 3) {
-    for (byte j = 1; j < text_frame.num_frames; j++) {
-      int offset = MEGA_SERIAL_BUFFER_LENGTH * (j - 1);
-      for (byte i = 0; i < text_frame.frame_length; i++) {
-        Serial_4.write(text_frame.frame_buffer[i + offset]);
-
-      }
-      delay(5); //short delay after sending each 32 byte frame
-    }
-    int offset = MEGA_SERIAL_BUFFER_LENGTH * (text_frame.num_frames - 1) - MEGA_SERIAL_BUFFER_LENGTH; // offset of final
-    for (byte i = 1; i < text_frame.frame_buffer[offset + 3]; i++) {
-      Serial_4.write(text_frame.frame_buffer[i + offset]);
-
-    }
-  }
-  else {
-    Sprint(F("Address invalid, no pos sent to mega \t attempted address:"));
-    Sprintln(address);
-  }
-}
-
-void Coms_Serial::write_text_frame() {}  // send to all at once
-
-
-inline void Coms_Serial::check_sensor_date_frame_queue() {
-  if (sensor_data_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
-    sensor_data_frame.frame_queued = false;
-    for (byte i = 0; i < 4; i++) {
-      write_sensor_data_frame(i);
-    }
-  }
-}
-
-inline void Coms_Serial::check_text_frame_queue() {
-  if (text_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
-    text_frame.frame_queued = false;
-    for (byte i = 0; i < 4; i++) {
-      write_text_frame(i);
-    }
-  }
-}
-
-inline void Coms_Serial::check_pos_frame_queue() {
-  if (pos_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
-    pos_frame.frame_queued = false;
-    for (byte i = 0; i < 4; i++) {
-      write_pos_frame(i);
-    }
-  }
-}
-
-inline void Coms_Serial::check_menu_frame_queue() {
-  if (menu_frame.frame_queued) {     // check if frame was queued recently, if so send to all megas
-    menu_frame.frame_queued = false;
-    for (byte i = 0; i < 4; i++) {
-      write_menu_frame(i);
-    }
-  }
+  else if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
+    Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);
 }
 
 
 
-void Coms_Serial::send_all_calibration_data(byte address) {     //function to send all data
+inline void Coms_Serial::write_text_frame() {  // send to all at once
 
-  //function to send all the sensor data. loop through all sensor values
+  write_text_frame(0);
+  write_text_frame(1);
+  write_text_frame(2);
+  write_text_frame(3);
 
-  byte frameNum = 1;
-  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
-  int offset = 0;
-  bool frame_to_be_sent = false;
-
-  sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
-  sensor_data_frame.frame_buffer[2] = numFrames;
-  sensor_data_frame.frame_buffer[3] = frameNum;
-
-  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
-
-    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
-      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
-
-    }
-    else
-      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
-
-    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
-      offset++;
-
-    else if (frame_to_be_sent) {
-      frameNum++;     //increment the frame number
-      offset = 0;     //reset offset for new frame
-
-      write_sensor_data_frame(1);
-      write_sensor_data_frame(2);
-      write_sensor_data_frame(3);
-      write_sensor_data_frame(4);
-
-      sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
-      sensor_data_frame.frame_buffer[2] = numFrames;
-      sensor_data_frame.frame_buffer[3] = frameNum;
-    }
-  }
 }
 
-bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
+
+//
+//void Coms_Serial::send_all_calibration_data(byte address) {     //function to send all data
+//
+//  //function to send all the sensor data. loop through all sensor values
+//
+//  byte frameNum = 1;
+//  byte numFrames = ((sizeof(to_mega_prefix_array) * 2) / 26) + 1;
+//  int offset = 0;
+//  bool frame_to_be_sent = false;
+//
+//  sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
+//  sensor_data_frame.frame_buffer[2] = numFrames;
+//  sensor_data_frame.frame_buffer[3] = frameNum;
+//
+//  for (int alpha = 0; alpha < sizeof(to_mega_prefix_array) + 1; alpha++) {
+//
+//    if (alpha == sizeof(to_mega_prefix_array)) { //if last byte
+//      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, false,  offset);   //indicate this is the last element
+//
+//    }
+//    else
+//      frame_to_be_sent = send_specific_calibration_data(to_mega_prefix_array[alpha],  address, true, offset);    //pack byte and dont send
+//
+//    if (!frame_to_be_sent)  //if the frame was sent (function returns 1), reset offset otherwise increment
+//      offset++;
+//
+//    else if (frame_to_be_sent) {
+//      frameNum++;     //increment the frame number
+//      offset = 0;     //reset offset for new frame
+//
+//      write_sensor_data_frame(1);
+//      write_sensor_data_frame(2);
+//      write_sensor_data_frame(3);
+//      write_sensor_data_frame(4);
+//
+//      sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;        //set frame starting bytes
+//      sensor_data_frame.frame_buffer[2] = numFrames;
+//      sensor_data_frame.frame_buffer[3] = frameNum;
+//    }
+//  }
+//}
+
+void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
 
   // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
   // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
@@ -999,11 +852,8 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   }
 
 
-  if (more_bytes && (HEADER_LENGTH + (offset * 2)) <= MEGA_SERIAL_BUFFER_LENGTH - 3) { //this round element 29 an 30 written (ok), next round 30 and 31 writted then full
-    return (false);
-  }
-  else //frame to be sent
-  {
+  if (!more_bytes || ((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH - 2)) // if more than 30 bytes in frame accounted for, or no byte left to pack then send frame
+  { // otherwise well be able to fit at least one more group of data in frame
     sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2; //header+content+new+data+trailer
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
     //    sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
@@ -1018,8 +868,8 @@ bool Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
     sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = ENDBYTE_CHARACTER;
 
     write_sensor_data_frame(address);
-    return (true);                    //frame_sent, send notification back
   }
+  else {} //ehh, do somthing to accommodate frame full condition
 
 }
 

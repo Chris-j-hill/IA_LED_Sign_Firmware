@@ -20,8 +20,8 @@
 using namespace arduino_due;
 #define COMS_SPEED 9600         //speed of coms between due and megas when using serial
 #define SOFT_UART_BIT_RATE COMS_SPEED // 57600 38400 1200 19200 9600 115200 300
-#define RX_BUF_LENGTH 64 // software serial port's reception buffer length 
-#define TX_BUF_LENGTH 64 // software serial port's transmision buffer length
+#define RX_BUF_LENGTH 512 // software serial port's reception buffer length 
+#define TX_BUF_LENGTH 512 // software serial port's transmision buffer length
 
 
 #define HEADER_LENGTH 4  //length,type,num frames, frame no
@@ -31,7 +31,7 @@ using namespace arduino_due;
 
 #define ENDBYTE_CHARACTER 255 // can scan through serial until this is reached on mega end if error detected 
 
-#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-HEADER_LENGTH-TRAILER_LENGTH
+#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH - HEADER_LENGTH - TRAILER_LENGTH
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
 
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
@@ -96,7 +96,7 @@ class Coms {
 
     int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
     int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
-    void pack_disp_string_frame(uint16_t frame_offset, byte obj_num);        //function to pack a frame of text to display
+    void pack_disp_string_frame(uint16_t frame_num, byte obj_num);        //function to pack a frame of text to display
     void build_pos_frame(byte obj_num);                                               //function to send the xy coordinates along with a number of other related variables
     void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
 //    int send_all_calibration_data(int address);                          //function to send all data calibration

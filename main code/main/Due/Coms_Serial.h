@@ -36,41 +36,29 @@ class Coms_Serial: public Coms {
     void write_menu_frame(byte address);
     void write_pos_frame(byte address);
     void write_text_frame(byte address);
-    void write_text_frame();   // send to all at once
-
-    inline void check_pos_frame_queue();
-    inline void check_sensor_date_frame_queue();
-    inline void check_text_frame_queue();
-    inline void check_menu_frame_queue();
-
-    void send_long_text_frame(byte address);
-    void send_short_text_frame(byte address);
-
-
+    inline void write_text_frame();   // send to all at once
 
 
     void ping();
     void init_software_serial_to_megas(int speed = COMS_SPEED);
-    void Serial_write_frame(byte address) ;                                  //function to actually send the frame to given address
-
+    
   public:
 
     Coms_Serial() {}
 
     void init_serial();
 
-    void write_frame(int address);
     void send_menu_frame(byte menu);
-    void send_all_text_frames();
-    void send_all_sensor_data_frames(bool send_now = false);
     void send_text_frame(byte obj_num);
     void send_pos_frame(byte obj_num);
-
-    void send_all_calibration_data(byte address);                          //function to send all data calibration
-    bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
-
     void send_text_calibration_data(byte obj_num);
+    void send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
+
+    
     void check_megas(); //check if megas sent anything
+
+
+    //void send_all_calibration_data(byte address);      legacy function, impractical to send all parameters, and unnecessary 
 };
 
 

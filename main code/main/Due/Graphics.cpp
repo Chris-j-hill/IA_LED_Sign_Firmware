@@ -25,7 +25,7 @@ byte screen_mode = 0; //mode of operation on startup should be both displaying
 //mode2: both off
 //mode3: other side on
 
-char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {"this is a test4 this is a test5 this is a test6"};
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"},{"this is a test1"},{"this is a test2"},{"this is a test3"},{"this is a test4"}};
 
 extern byte screen_brightness;
 
@@ -34,6 +34,8 @@ volatile bool send_pos_now;
 extern struct SD_Strings SD_string;
 extern Card card;
 bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS] = {false};
+
+#define DISABLE_POS_TRANSMISSION
 
 
 #define POS_TIMER Timer3
@@ -195,9 +197,10 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
 
         }
       }
-
-      if (graphics.check_transmission_enabled()) //update positions but prevent text transmission if also using serial for somethign else
+#ifndef DISABLE_POS_TRANSMISSION
+      if (graphics.check_transmission_enabled()) //update positions but prevent text transmission if also using serial for something else
         coms_serial.send_pos_frame(i);
+#endif
     }
   }
 }
@@ -295,10 +298,12 @@ void Graphics::configure_limits() {
 
 void Graphics::push_string_data() {
 
+  //loop through objects, push to all megas if enabled and not updated
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
     if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date) { //if the object is enabled and has been changed by something
       disable_pos_isr();  // disable pos isr while we push the string
       coms_serial.send_text_frame(i);
+//      delay(1);
       coms_serial.send_text_calibration_data(i); //send all related text data
       text_parameters[i].megas_up_to_date = true; //confirm text up to date
       enable_pos_isr();   //enable pos isr again

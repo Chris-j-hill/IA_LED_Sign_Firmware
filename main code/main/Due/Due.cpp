@@ -63,7 +63,7 @@ void due_loop() {
 
     //push string and related data if new data retrieved
     graphics.push_string_data(); 
-
+    
     //check for requests from megas (eg transmission errors)
     coms_serial.check_megas();
     
