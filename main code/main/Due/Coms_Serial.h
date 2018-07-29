@@ -13,17 +13,12 @@
 
 struct   Mega_Serial_Parameters {
 
-  bool enabled1 = MEGA_1_ENABLED;
-  bool enabled2 = MEGA_2_ENABLED;
-  bool enabled3 = MEGA_3_ENABLED;
-  bool enabled4 = MEGA_4_ENABLED;
-
   bool detected1 = false;
   bool detected2 = false;
   bool detected3 = false;
   bool detected4 = false;
 
-  uint16_t baud_rate = COMS_SPEED; //<- max stable baud rate = 57600
+  uint16_t baud_rate = COMS_SPEED;
 
 };
 
