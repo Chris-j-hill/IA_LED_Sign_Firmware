@@ -74,94 +74,12 @@ bool mega_enabled[4] = {true, true, true, true};  // ignore communication if boa
 
 
 
-int Coms::startup_handshake() {  //code to delay the due in initialisation and enable mega startup, simply wait until the megas all set ready pin high
-
-#ifdef USING_SIMPLE_BINARY_NODE_READY_PROTOCOL
-  pinMode(due_ready_pin, OUTPUT);           //due handshake
-  pinMode(mega1_ready_pin, INPUT_PULLUP);
-  pinMode(mega2_ready_pin, INPUT_PULLUP);
-  pinMode(mega3_ready_pin, INPUT_PULLUP);
-  pinMode(mega4_ready_pin, INPUT_PULLUP);
-
-  digitalWrite(due_ready_pin, HIGH);
-
-  bool ready = false;
-  int startup_time = millis();
-  while (!ready) {
-
-    bool mega1_ready = !digitalRead(mega1_ready_pin);
-    bool mega2_ready = !digitalRead(mega2_ready_pin);
-    bool mega3_ready = !digitalRead(mega3_ready_pin);
-    bool mega4_ready = !digitalRead(mega4_ready_pin);
-
-    if (!mega_enabled[0]) mega1_ready = true;
-    if (!mega_enabled[1]) mega2_ready = true;
-    if (!mega_enabled[2]) mega3_ready = true;
-    if (!mega_enabled[3]) mega4_ready = true;
-
-    //Serial.println(mega1_ready);
-    if (mega1_ready && mega2_ready && mega3_ready && mega4_ready)
-      ready = true;
-
-    if (millis() > startup_time + 5000) { //provide ample time for mega to start
-      Serial.println(F("Startup time exceeded, mega(s) not responding"));
-      return (-1);
-    }
-  }
-  return (0);
-#else
-
-  delay(STARTUP_DUE_DELAY_PERIOD);
-
-#endif
-}
-
-//int Coms::send_disp_string_frame(int address) {   //function to send strings to display on screen
-//
-//  // function calculates the number of frames required to send the string, then loops,
-//  // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
-//  // it also calls the send frame function to send it on to the specified address when frame complete
-//
-//
-//
-//  text_cursor.x_min = -text.text_width*strlen(text_str)*2; // set this based on size of string being sent, will update if string changed
-//
-//  text_frame.num_frames = 1 + (strlen(text_str) / (FRAME_DATA_LENGTH)); //send this many frames
-//  text_frame.this_frame = 1;
-//
-//  do {    //loop to send multiple frames if string is long
-//
-//    if (text_frame.num_frames != text_frame.this_frame)
-//      text_frame.frame_buffer[0]  = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
-//
-//    else
-//      text_frame.frame_buffer[0]  = strlen(text_str) - ((frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (FRAME_OVERHEAD); //remaining frame is string length-text offset+5 bytes overhead
-//
-//
-//    text_frame.frame_buffer[1] = (byte) text_frame.frame_type;
-//    text_frame.frame_buffer[2] = (byte) text_frame.num_frames;
-//    text_frame.frame_buffer[3] = (byte) text_frame.this_frame;
-//    text_frame.checksum = text_frame.frame_buffer[0] + text_frame.frame_buffer[1] + text_frame.frame_buffer[2] + text_frame.frame_buffer[3] ;
-//
-//    pack_disp_string_frame(type, frame.this_frame);//function to pack the frame with which ever data is relevant
-//    text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - frame.checksum;
-//
-//    write_text_frame();
-//
-//    text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
-//    delayMicroseconds(10000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
-//
-//  } while (text_frame.this_frame <= text_frame.num_frames);
-//
-//  return (0);
-//}
-
 void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //function to pack a frame of text to display
 
   // function to pack a frame based on a given offset (ie this frames number)
   // maybe generalise later to accept calls from multiple frame building methods
 
-  uint16_t frame_offset = ((frame_num - 1) * (FRAME_DATA_LENGTH-1)); //if this frame is 1 offset in data set is 0, if 2 offset 26, etc
+  uint16_t frame_offset = ((frame_num - 1) * (FRAME_DATA_LENGTH - 1)); //if this frame is 1 offset in data set is 0, if 2 offset 26, etc
 
   for (int i = 0; i < strlen(text_str[obj_num]) - frame_offset; i++) { //loop through string until end or break
     text_frame.frame_buffer[i + HEADER_LENGTH + 1] = (byte)text_str[obj_num][frame_offset + i]; //HEADER_LENGTH+1 for text obj_num
@@ -169,9 +87,9 @@ void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //functi
     if (i == FRAME_DATA_LENGTH) break;     //copy string until end or 27 bytes copied
   }
 
-  text_frame.frame_buffer[text_frame.frame_length-2] = generate_checksum(TEXT_FRAME_TYPE);
-  text_frame.frame_buffer[text_frame.frame_length-1] = ENDBYTE_CHARACTER;
-  }
+  text_frame.frame_buffer[text_frame.frame_length - 2] = generate_checksum(TEXT_FRAME_TYPE);
+  text_frame.frame_buffer[text_frame.frame_length - 1] = ENDBYTE_CHARACTER;
+}
 
 void Coms::build_pos_frame(byte obj_num) {
 
@@ -188,7 +106,7 @@ void Coms::build_pos_frame(byte obj_num) {
   //  pos_frame.frame_buffer[pos_frame.checksum_address] = (byte) 256 - (pos_frame.frame_buffer[pos_frame.checksum_address] % 256); //calc checksum
 
   pos_frame.frame_buffer[pos_frame.checksum_address] = generate_checksum(POS_FRAME_TYPE);
-  pos_frame.frame_buffer[pos_frame.checksum_address+1] = ENDBYTE_CHARACTER;
+  pos_frame.frame_buffer[pos_frame.checksum_address + 1] = ENDBYTE_CHARACTER;
 
 }
 
@@ -244,52 +162,16 @@ void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 by
 }
 
 
-int Coms::send_all_pos_on_interrupt() {    // function to send pos data to all megas if timer interrupt has indicated they should be sent
-
-  if (!timers.pos_timer_attached) {
-    Sprintln(F("Error: Cant send pos, timer not enabled"));
-    return (-1);
-  }
-
-  if (send_pos_now) {   //send pos based on timer interrupt variable
-    send_pos_frame(1);   // send frames
-    send_pos_frame(2);
-    send_pos_frame(3);
-    send_pos_frame(4);
-    send_pos_now = false;
-  }
-  return (0);
-}
-
-int Coms::send_all_pos_now() {   //function to send all the positional info now, not wait for timer to trigger flag
-
-  send_pos_frame(1);   // send frames
-  send_pos_frame(2);
-  send_pos_frame(3);
-  send_pos_frame(4);
-
-  return (0);
-}
-
-int Coms::calc_delay() {    // function to calculate the dalay in sending frames to the megas
+void Coms::calc_delay() {    // function to calculate the dalay in sending frames to the megas
   // this could be useful for syncing up the screen updates. this value is only necessary for the pos data
   //frame as the other ones dont require accurate timing
 
   int beta = millis();
 
-  send_all_pos_now();
+  //send_all_pos_now();
   beta = millis() - beta;
   comms_delay = beta / 4; //time to send one frame
 
-  return (0);
-}
-
-
-void Coms::print_frame() {
-  for (int alpha = 0; alpha < text_frame.frame_buffer[0]; alpha++) {
-    Sprint((char)text_frame.frame_buffer[alpha]);
-  }
-  Sprintln("");
 }
 
 byte Coms::get_text_colour_hue(byte byte_number, byte obj_num) { //function to return the MSB or LSB of the current hue value to send
@@ -357,7 +239,7 @@ void Coms::build_menu_data_frame(byte menu_number) {   //function to build the f
   //  menu_frame.frame_buffer[menu_frame.checksum_address] = (byte) 256 - (menu_frame.frame_buffer[menu_frame.checksum_address] % 256); //calc checksum
 
   menu_frame.frame_buffer[menu_frame.checksum_address] = generate_checksum(MENU_FRAME_TYPE);
-  menu_frame.frame_buffer[menu_frame.checksum_address+1] = ENDBYTE_CHARACTER;
+  menu_frame.frame_buffer[menu_frame.checksum_address + 1] = ENDBYTE_CHARACTER;
 
 
 }
@@ -384,9 +266,9 @@ byte Coms::generate_checksum(byte frame_type) {
       frame_length = menu_frame.frame_length;
       frame_index_zero = menu_frame.frame_buffer;
       break;
-    default: 
-    Serial.println("checksum calc error");
-    return (0);
+    default:
+      Serial.println("checksum calc error");
+      return (0);
   }
 
   //calculate checksum
@@ -399,5 +281,12 @@ byte Coms::generate_checksum(byte frame_type) {
 
 }
 
+bool Coms::error_sanity_check(byte frame_num, byte obj_num) {
+  if (!text_cursor[obj_num].object_used)
+    return false;
+  if (frame_num > (1 + (strlen(text_str[obj_num]) / (FRAME_DATA_LENGTH - 1)))) //requested frame num not possible for this obj
+    return false;
+  return true;
+}
 
 #endif // Coms_CPP

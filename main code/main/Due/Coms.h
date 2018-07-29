@@ -26,7 +26,7 @@ using namespace arduino_due;
 
 #define HEADER_LENGTH 4  //length,type,num frames, frame no
 #define TRAILER_LENGTH 2 //checksum and end byte
-#define FRAME_TYPE_BYTE  1   
+#define FRAME_TYPE_BYTE  1
 #define FRAME_LENGTH_BYTE  0
 
 #define ENDBYTE_CHARACTER 255 // can scan through serial until this is reached on mega end if error detected 
@@ -39,15 +39,21 @@ using namespace arduino_due;
 #define MEGA_SERIAL_BUFFER_LENGTH 32
 #define MAX_TWEET_SIZE 100
 #define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
-                                                                                                      // need different approach for bitmaps...
+// need different approach for bitmaps...
 
 #define TEXT_FRAME_TYPE     1
 #define POS_FRAME_TYPE      2
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
 
+#define MEGA_RX_FRAME_LENGTH 3
+/*
+   Nack frame format
 
-
+   Frame num
+   Obj num
+   Checksum   <- if were recieving garbage this could be necessary
+*/
 
 struct Frame {            //frame details for the due, seperate one for the mega below
 
@@ -62,7 +68,7 @@ struct Frame {            //frame details for the due, seperate one for the mega
   byte header_checksum = 0;   //can calculate in advance for some pos and menu frames to save time
   uint16_t checksum_address = 0;   // can also allocate in advance for pos and menu frames
   bool frame_queued = false;    //queue frame this loop to send at the beginning of next
-  
+
 };
 
 
@@ -88,41 +94,31 @@ Nack_details nack;
 class Coms {
 
   private:
-
-
+    
   public:
 
     Coms() {}
-
-    int startup_handshake();      //startup sequence to ensure due boots first and transmission begins when all megas are ready
-    int send_disp_string_frame(int address);                             //complete function to send strings over i2c to display on specified screen
+    
+    
     void pack_disp_string_frame(uint16_t frame_num, byte obj_num);        //function to pack a frame of text to display
     void build_pos_frame(byte obj_num);                                               //function to send the xy coordinates along with a number of other related variables
     void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
-//    int send_all_calibration_data(int address);                          //function to send all data calibration
-//    bool send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
-    int send_all_pos_on_interrupt();     // function to send pos data to all megas periodically based on timer interrupt
-    int send_all_pos_now();
-    int send_all_text();    // send the text frame to all megas
-    void print_frame();      //print the currently stored frame to the serial monitor
-
+    
     byte get_text_colour_hue(byte byte_number, byte obj_num);                            //function to return the MSB or LSB of the current hue value to send over i2c
 
-    int calc_delay();
+    void calc_delay();
 
     void build_menu_data_frame(byte menu_number);    //function to build the frame to send menu info
-    int init_frames();  //set length elements of frames
-
-    //  todo
-    void echo_menu();
+    int init_frames();  //set constant elements of frames
     byte generate_checksum(byte frame_type);
-    int error_check();
+   
+    bool error_sanity_check(byte frame_num, byte obj_num);  //if obj in use and string could occupy this frame number
     
-    int get_frame_code();
-    int get_data();             //extract data from frame
+    
+    //  todo
+    void echo_menu(); //is this needed
 
-
-
+   
 };
 
 

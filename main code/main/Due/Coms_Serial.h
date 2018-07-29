@@ -49,7 +49,7 @@ class Coms_Serial: public Coms {
     void init_serial();
 
     void send_menu_frame(byte menu);
-    void send_text_frame(byte obj_num);
+    void send_text_frame(byte obj_num, int8_t address =-1);
     void send_pos_frame(byte obj_num);
     void send_text_calibration_data(byte obj_num);
     void send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset);  //function to send specific value
@@ -57,7 +57,8 @@ class Coms_Serial: public Coms {
     
     void check_megas(); //check if megas sent anything
 
-
+    void decode_serial_rx(String rx, byte address);
+    void send_partial_text_frame(byte address, byte obj_num, byte frame_num);
     //void send_all_calibration_data(byte address);      legacy function, impractical to send all parameters, and unnecessary 
 };
 

@@ -292,16 +292,13 @@ void Coms_Serial::ping() {
     Serial.println("timeout");
 }
 
-
-void Coms_Serial::send_text_frame(byte obj_num) {   //function to send strings to display on screen
+void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function to send strings to display on screen
 
   // function calculates the number of frames required to send the string, then loops,
-  // generates a frame hader and fills up to 27 bytes of the string and calculates the checksum
-  // it also calls the send frame function to send it on to the specified address when frame complete
+  // generates a frame header and fills up to 25 bytes of the string and calculates the checksum
+  // it also calls the write_text_frame function to send it on to the specified address when frame populated
 
-  byte space_available_in_frame = FRAME_DATA_LENGTH-1;// going to transmit obj num and data in same frame, so one byte less for string
-
-  //text_cursor.x_min = -text_parameters.text_width * strlen(text_str) * 2; // set this based on size of string being sent, will update if string changed
+  byte space_available_in_frame = FRAME_DATA_LENGTH - 1; // going to transmit obj num and data in same frame, so one byte less for string
 
   text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / space_available_in_frame); //send this many frames
   text_frame.this_frame = 1;
@@ -309,7 +306,6 @@ void Coms_Serial::send_text_frame(byte obj_num) {   //function to send strings t
   do {    //loop to send multiple frames if string is long
 
     if (text_frame.num_frames != text_frame.this_frame)
-      
       text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
@@ -320,18 +316,46 @@ void Coms_Serial::send_text_frame(byte obj_num) {   //function to send strings t
     text_frame.frame_buffer[2] = text_frame.num_frames;
     text_frame.frame_buffer[3] = text_frame.this_frame;
     text_frame.frame_buffer[4] = obj_num;
-    text_frame.checksum = text_frame.frame_buffer[0] + text_frame.frame_buffer[1] + text_frame.frame_buffer[2] + text_frame.frame_buffer[3] + text_frame.frame_buffer[4];
-
+    
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
-    //text_frame.frame_buffer[text_frame.frame_buffer[0] - 1] = (byte)256 - text_frame.checksum;
-
-    write_text_frame();  //send to all megas
-
+   
+    if (address == -1)
+      write_text_frame();  //send to all megas
+    else
+      write_text_frame(address);  //only send specific one mega
+      
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
     delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
 
   } while (text_frame.this_frame <= text_frame.num_frames);
 }
+
+
+void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame_num){
+  
+  byte space_available_in_frame = FRAME_DATA_LENGTH - 1; // going to transmit obj num and data in same frame, so one byte less for string
+
+  text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / space_available_in_frame); //send this many frames
+  text_frame.this_frame = frame_num;
+
+    if (text_frame.num_frames != text_frame.this_frame)
+      text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
+
+    else
+      text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
+
+    text_frame.frame_buffer[0] = text_frame.frame_length;
+    text_frame.frame_buffer[1] = text_frame.frame_type;
+    text_frame.frame_buffer[2] = text_frame.num_frames;
+    text_frame.frame_buffer[3] = text_frame.this_frame;
+    text_frame.frame_buffer[4] = obj_num;
+    
+    pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
+    write_text_frame(address);  //only send specific one mega
+      
+}
+
+
 
 void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write_menu_frame for relevant addresses
 
@@ -421,7 +445,7 @@ void Coms_Serial::write_text_frame(byte address) {
 
   if (address == 0 && mega_enabled[0] && mega_parameters.detected1) {
     Serial.println(text_frame.frame_length);
-    for (byte i = 0; i < text_frame.frame_length; i++){
+    for (byte i = 0; i < text_frame.frame_length; i++) {
       Serial.print(text_frame.frame_buffer[i]);
       Serial.print(" ");
     }
@@ -893,27 +917,59 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
 }
 
 void Coms_Serial::check_megas() {
-  // !!!!   not implemented on megas 28/7/18    !!!!
+
   if (Serial_1.available() > 0) {
     String rx = Serial_1.readString(); //read until '\0' recieved
-    //    decode_serial_rx(rx);
+    decode_serial_rx(rx, 0);
   }
 
   if (Serial_2.available() > 0) {
     String rx = Serial_2.readString();
-    //    decode_serial_rx(rx);
+    decode_serial_rx(rx, 1);
   }
 
   if (Serial_3.available() > 0) {
     String rx = Serial_3.readString();
-    //    decode_serial_rx(rx);
+    decode_serial_rx(rx, 2);
   }
 
   if (Serial_4.available() > 0) {
     String rx = Serial_4.readString();
-    //    decode_serial_rx(rx);
+    decode_serial_rx(rx, 3);
+  }
+}
+
+void Coms_Serial::decode_serial_rx(String rx, byte address) {
+
+  if (rx.length() > MEGA_RX_FRAME_LENGTH + 1) // if more than expected content + null char
+    rx = rx.substring(rx.length() - MEGA_RX_FRAME_LENGTH);  //get substring
+
+  char char_array[MEGA_RX_FRAME_LENGTH] = {'\0'};
+  strcpy(char_array, rx.c_str());
+
+  //verify checksum
+  byte check_sum = 0;
+  for (byte i = 0; i < MEGA_RX_FRAME_LENGTH - 1; i++) {
+    check_sum = char_array[i];
   }
 
+  if (!(check_sum == char_array[MEGA_RX_FRAME_LENGTH - 1])) //probably not a request, mega will request again after timout if it was corrupted
+    return;
+  else {
+    byte frame_num = char_array[0];
+    byte obj_num = char_array[1];
+
+    if (error_sanity_check(frame_num, obj_num)){  //case where mega knows what data is missing, send exact data required
+      send_partial_text_frame(address, obj_num, frame_num);
+    }
+    else { // resend all objects to this mega, hard to be sure what went wrong
+      for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+        if (text_cursor[obj_num].object_used) {
+          send_text_frame(i, address);
+        }
+      }
+    }
+  }
 }
 
 
