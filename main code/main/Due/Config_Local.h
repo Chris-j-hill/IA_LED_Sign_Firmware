@@ -82,8 +82,10 @@
 #define ENABLE_ENCODER
 #define ENABLE_BUTTON
 #define ENABLE_SD_CARDS
+#define ENABLE_CARD_LED
 #define ENABLE_ETHERNET
 #define ENABLE_WIFI
+
 
 #define DISABLE_WARNING_MESSAGES  //option to disable warning messages within the menu system
 

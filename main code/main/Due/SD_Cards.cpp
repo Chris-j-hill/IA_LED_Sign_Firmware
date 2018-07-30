@@ -86,6 +86,16 @@ extern byte screen_brightness;
 extern byte screen_mode;
 
 
+Card_LED card_led;
+byte CARD_LED_RED[3] = {255, 0, 0};
+byte CARD_LED_GREEN[3] = {0, 255, 0};
+byte CARD_LED_ORANGE[3] = {255, 140, 0};
+byte CARD_LED_PURPLE[3] = {128, 0, 128};
+
+byte CARD_LED_READING[3] = {0}; //mapping to these arrays in constructor
+byte CARD_LED_MOUNTED[3]= {0};
+byte CARD_LED_UNMOUNTED[3]= {0};
+byte CARD_LED_CARD_NOT_FOUND[3]= {0};
 
 
 
@@ -473,6 +483,9 @@ void Card::check_for_sd_card() {
 
       external_sd_card_prev_read_time = millis();
       if (external_sd_card.begin(card1.pin) && !card1.detected) {
+
+        card_led.set_card_colour(CARD_LED_READING); //indicate were reading from card
+
         card1.detected = true;
         check_for_files(EXTERNAL_CARD);  //check if files exist on external card
 
@@ -493,14 +506,18 @@ void Card::check_for_sd_card() {
           retrieve_data(EXT_NETWORK_FILE);//get contents
         if (card1.disp_string_file_exists)
           retrieve_data(EXT_STRING_FILE);
-          graphics.push_string_data();//push string and related data (size, colour etc)
+        graphics.push_string_data();//push string and related data (size, colour etc)
         if (card1.calibration_file_exists)
           retrieve_data(EXT_CALIBRATION_FILE);
 
+        card_led.set_card_colour(CARD_LED_MOUNTED); //back to normal
       }
       else if (!external_sd_card.begin(card1.pin) && card1.detected) { //card was previously detected but not initialising now
         card1.detected = false;
         files_dont_exist(EXTERNAL_CARD);
+      }
+      else if (!external_sd_card.begin(card1.pin) && !card1.detected) {  // card expected but probably not inserted
+        card_led.set_card_colour(CARD_LED_CARD_NOT_FOUND);
       }
     }
   }
@@ -513,17 +530,19 @@ void Card::check_for_sd_card() {
         check_for_files(INTERNAL_CARD);  //check if files exist on external card
 
         if (card1.enabled && card1.detected) {
+          card_led.set_card_colour(CARD_LED_READING);
           copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD);
           copy_file(EXT_STRING_FILE, INT_STRING_FILE, EXTERNAL_CARD , INTERNAL_CARD);
           copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
           copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+          card_led.set_card_colour(CARD_LED_MOUNTED);
         }
 
         if (card2.network_file_exists)
           retrieve_data(INT_NETWORK_FILE);
         if (card2.disp_string_file_exists)
           retrieve_data(INT_STRING_FILE);
-          graphics.push_string_data();//push string and related data (size, colour etc)
+        graphics.push_string_data();//push string and related data (size, colour etc)
         if (card2.calibration_file_exists)
           retrieve_data(INT_CALIBRATION_FILE);
       }
@@ -1148,6 +1167,7 @@ void Card::safely_eject_card(byte card) {
   else if (card == EXTERNAL_CARD) {
     card1.enabled = false;
     card1.detected = false;
+    card_led.set_card_colour(CARD_LED_UNMOUNTED);
   }
 }
 
@@ -1162,6 +1182,7 @@ void Card::mount_card(byte card) {
   else if (card == EXTERNAL_CARD) {
     card1.enabled = true;
     card1.detected = false;
+    card_led.set_card_colour(CARD_LED_MOUNTED);
   }
 }
 
@@ -1431,9 +1452,28 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
 }
 
 
+Card_LED::Card_LED() {
+#ifdef ENABLE_CARD_LED
 
+  pinMode(red_pin, OUTPUT);
+  pinMode(green_pin, OUTPUT);
+  pinMode(blue_pin, OUTPUT);
 
+  memcpy(CARD_LED_READING, CARD_LED_RED, 3);
+  memcpy(CARD_LED_MOUNTED, CARD_LED_PURPLE, 3);
+  memcpy(CARD_LED_UNMOUNTED, CARD_LED_GREEN, 3);
+  memcpy(CARD_LED_CARD_NOT_FOUND, CARD_LED_ORANGE, 3);
 
+#endif
+}
+
+void Card_LED::set_card_colour(byte colour[3]) {
+#ifdef ENABLE_CARD_LED
+  analogWrite(red_pin, colour[0]);
+  analogWrite(green_pin, colour[1]);
+  analogWrite(blue_pin, colour[2]);
+#endif
+}
 
 
 

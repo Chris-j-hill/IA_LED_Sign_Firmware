@@ -18,29 +18,19 @@
 #define LDR1        A0      // these require external pullup resistors
 #define LDR2        A1      // maybe change to none adjacent pins, adjacent pins seem to interfere significantly if one is floating
 
-#define CURRENT_METER_1 A2
+#define CURRENT_METER_1 A2  
 #define CURRENT_METER_2 A3      
 
-#define TEMP1       26
+#define TEMP1       26  //read using one wire protocol
 #define TEMP2       27
 #define TEMP3       28
 
+#define SD_LED_RED_PIN  10  //choose hardware pwm (possible addition to add software pwm, not many timers left though)
+#define SD_LED_GREEN_PIN 11
+#define SD_LED_BLUE_PIN 12
 
 #define SD1_ENABLE  4
 #define SD2_ENABLE  44
-
-#define NACK_PIN1   16      //pins for the due
-#define NACK_PIN2   17
-#define NACK_PIN3   18
-#define NACK_PIN4   19
-
-#define NOTIFIER    13      //led pin, use to notify of data stuff happening
-
-#define due_ready_pin        45   //startup handshake pins
-#define mega1_ready_pin      46
-#define mega2_ready_pin      47
-#define mega3_ready_pin      48
-#define mega4_ready_pin      49
 
 
 //NB: configure ports to run on hardware serial if possible, should auto configure in setup code

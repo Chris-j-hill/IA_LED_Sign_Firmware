@@ -95,7 +95,7 @@
 #define STRING_FILE_COMMAND_Y_END_POS       "Y End Pos"
 #define STRING_FILE_COMMAND_NUM_LOOPS_X     "X Loops"
 #define STRING_FILE_COMMAND_NUM_LOOPS_Y     "Y Loops"
-#define STRING_FILE_COMMAND_DISP_TIME       "Disp time" 
+#define STRING_FILE_COMMAND_DISP_TIME       "Disp time"
 #define STRING_FILE_COMMAND_NEXT_FILE       "Next File"   //<- define file to read after defined loops is completed
 #define STRING_FILE_COMMAND_SCREEN_MODE     "Screen Mode"
 
@@ -134,9 +134,6 @@
 #define CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN1      "ldr min 1"
 #define CALIBRATION_FILE_COMMAND_LDR_CONFIG_MIN2      "ldr min 2"
 
-
-
-
 #define CALIBRATION_FILE_DATA_CHAR_LENGTH 10
 
 
@@ -172,15 +169,15 @@ class Card {
 
   private:
 
-//    int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
-//    int extract_network_data();
-//    int buffer_in_header();         // return 1 if the colon is in the header, otherwise 0
-//    int buffer_is_network();         // check if network stored in buffer
-//    int buffer_is_password();        // check if password stored in buffer
-//    int buffer_is_default();        // check if default string stored in buffer
-//    int string_length();      // calculate the length of the relevent string in file
-//    int remove_card_1();
-//    int log_temp_to_sd();               // log data to the sd card data related to temps over time
+    //    int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
+    //    int extract_network_data();
+    //    int buffer_in_header();         // return 1 if the colon is in the header, otherwise 0
+    //    int buffer_is_network();         // check if network stored in buffer
+    //    int buffer_is_password();        // check if password stored in buffer
+    //    int buffer_is_default();        // check if default string stored in buffer
+    //    int string_length();      // calculate the length of the relevent string in file
+    //    int remove_card_1();
+    //    int log_temp_to_sd();               // log data to the sd card data related to temps over time
 
 
 
@@ -190,9 +187,9 @@ class Card {
     void files_dont_exist(byte device);   //set all file_exists variables to false when device connection lost
 
     void retrieve_string(String filename, byte obj_num, bool get_next_config);
-        
+
     void log_data(String filename, bool truncate = false, bool print_header = false);
-    
+
   public:
 
     Card();
@@ -209,9 +206,25 @@ class Card {
 
     void safely_eject_card(byte card);
     void mount_card(byte card);
-    void retrieve_data(String filename, byte obj_num =0, bool get_next_config = false);
+    void retrieve_data(String filename, byte obj_num = 0, bool get_next_config = false);
 
 };
 
+
+class Card_LED {
+
+  private:
+
+    byte red_pin = SD_LED_RED_PIN;
+    byte green_pin = SD_LED_GREEN_PIN;
+    byte blue_pin = SD_LED_BLUE_PIN;
+
+  public:
+    Card_LED();
+
+    void set_card_colour(byte colour[3]);
+
+
+};
 
 #endif  // SD_Cards_H
