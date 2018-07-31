@@ -918,22 +918,22 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
 
 void Coms_Serial::check_megas() {
 
-  if (Serial_1.available() > 0) {
+  if (Serial_1.available() > 0 && mega_parameters.detected1) {
     String rx = Serial_1.readString(); //read until '\0' recieved
     decode_serial_rx(rx, 0);
   }
 
-  if (Serial_2.available() > 0) {
+  if (Serial_2.available() > 0 && mega_parameters.detected2) {
     String rx = Serial_2.readString();
     decode_serial_rx(rx, 1);
   }
 
-  if (Serial_3.available() > 0) {
+  if (Serial_3.available() > 0 && mega_parameters.detected3) {
     String rx = Serial_3.readString();
     decode_serial_rx(rx, 2);
   }
 
-  if (Serial_4.available() > 0) {
+  if (Serial_4.available() > 0 && mega_parameters.detected4) {
     String rx = Serial_4.readString();
     decode_serial_rx(rx, 3);
   }

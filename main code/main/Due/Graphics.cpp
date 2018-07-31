@@ -304,7 +304,6 @@ void Graphics::push_string_data() {
     if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date) { //if the object is enabled and has been changed by something
       disable_pos_isr();  // disable pos isr while we push the string
       coms_serial.send_text_frame(i);
-//      delay(1);
       coms_serial.send_text_calibration_data(i); //send all related text data
       text_parameters[i].megas_up_to_date = true; //confirm text up to date
       enable_pos_isr();   //enable pos isr again

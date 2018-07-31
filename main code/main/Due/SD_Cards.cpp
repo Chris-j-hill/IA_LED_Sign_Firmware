@@ -87,17 +87,30 @@ extern byte screen_mode;
 
 
 Card_LED card_led;
-byte CARD_LED_RED[3] = {255, 0, 0};
-byte CARD_LED_GREEN[3] = {0, 255, 0};
-byte CARD_LED_ORANGE[3] = {255, 140, 0};
-byte CARD_LED_PURPLE[3] = {128, 0, 128};
 
-byte CARD_LED_READING[3] = {0}; //mapping to these arrays in constructor
-byte CARD_LED_MOUNTED[3]= {0};
-byte CARD_LED_UNMOUNTED[3]= {0};
-byte CARD_LED_CARD_NOT_FOUND[3]= {0};
+//byte CARD_LED_RED[3] = {255, 0, 0};
+//byte CARD_LED_GREEN[3] = {0, 255, 0};
+//byte CARD_LED_ORANGE[3] = {255, 120, 0};
+//byte CARD_LED_PURPLE[3] = {128, 0, 190};
+//byte CARD_LED_BLUE[3] = {0, 0, 255};
+
+bool CARD_LED_RED[3] = {1, 0, 0};
+bool CARD_LED_GREEN[3] = {0, 1, 0};
+bool CARD_LED_ORANGE[3] = {1, 1, 0};
+bool CARD_LED_PURPLE[3] = {1, 0, 1};
+bool CARD_LED_BLUE[3] = {0, 0, 1};
 
 
+//more useful colour names
+bool CARD_LED_READING[3] = {0}; //mapping to these arrays in constructor
+bool CARD_LED_MOUNTED[3] = {0};
+bool CARD_LED_UNMOUNTED[3] = {0};
+bool CARD_LED_CARD_NOT_FOUND[3] = {0};
+
+
+char command [COMMAND_LENGTH] = {'\0'};
+char config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
+char data_found[MAX_TWEET_SIZE] = {'\0'};
 
 void ram_stats() {
   char *heapend = sbrk(0);
@@ -115,8 +128,11 @@ void ram_stats() {
 
 
 Card::Card() {
-  card1.pin = SD2_ENABLE;
-  card2.pin = SD1_ENABLE;
+
+  //#define SD1_ENABLE  45    //internal sd card CS pin
+  //#define SD2_ENABLE  44
+  card1.pin = SD1_ENABLE;
+  card2.pin = SD2_ENABLE;
 
   card1.enabled = enable_sd_cards;
   card2.enabled = enable_sd_cards;
@@ -465,9 +481,9 @@ Card::Card() {
 //}
 
 void Card::init_sd_cards() {
+
   pinMode(card1.pin, OUTPUT);
   digitalWrite(card1.pin, HIGH);
-
 
   pinMode(card2.pin, OUTPUT);
   digitalWrite(card2.pin, HIGH);
@@ -482,7 +498,10 @@ void Card::check_for_sd_card() {
     if (millis() > external_sd_card_prev_read_time + (card1.detected ? 5 * CHECK_EXTERNAL_SD_CARD_PERIOD : CHECK_EXTERNAL_SD_CARD_PERIOD)) { //if card detected, reduce polling frequency, only need quick response on insertion
 
       external_sd_card_prev_read_time = millis();
-      if (external_sd_card.begin(card1.pin) && !card1.detected) {
+      //noInterrupts();
+      bool card_found = external_sd_card.begin(card1.pin);  //this is very slow, ensure only test once
+      //interrupts();
+      if (card_found && !card1.detected) {
 
         card_led.set_card_colour(CARD_LED_READING); //indicate were reading from card
 
@@ -504,19 +523,19 @@ void Card::check_for_sd_card() {
         Serial.println("Retrieve files");
         if (card1.network_file_exists)   //if file exists
           retrieve_data(EXT_NETWORK_FILE);//get contents
-        if (card1.disp_string_file_exists)
+        if (card1.disp_string_file_exists) {
           retrieve_data(EXT_STRING_FILE);
-        graphics.push_string_data();//push string and related data (size, colour etc)
+          // text_parameters[0].megas_up_to_date = false;
+          graphics.push_string_data();//push retrieved string and related data (size, colour etc) to megas
+        }
         if (card1.calibration_file_exists)
           retrieve_data(EXT_CALIBRATION_FILE);
 
         card_led.set_card_colour(CARD_LED_MOUNTED); //back to normal
       }
-      else if (!external_sd_card.begin(card1.pin) && card1.detected) { //card was previously detected but not initialising now
+      else if (!card_found && card1.detected) { //card was previously detected but not initialising now, card removed edge detector
         card1.detected = false;
         files_dont_exist(EXTERNAL_CARD);
-      }
-      else if (!external_sd_card.begin(card1.pin) && !card1.detected) {  // card expected but probably not inserted
         card_led.set_card_colour(CARD_LED_CARD_NOT_FOUND);
       }
     }
@@ -525,7 +544,9 @@ void Card::check_for_sd_card() {
     if (millis() > internal_sd_card_prev_read_time + (card2.detected ? 5 * CHECK_INTERNAL_SD_CARD_PERIOD : CHECK_INTERNAL_SD_CARD_PERIOD)) {
 
       internal_sd_card_prev_read_time = millis();
-      if (internal_sd_card.begin(card2.pin) && !card2.detected) {
+      bool card_found = internal_sd_card.begin(card2.pin);  //this is very slow, ensure only test once
+
+      if (card_found && !card2.detected) {
         card2.detected = true;
         check_for_files(INTERNAL_CARD);  //check if files exist on external card
 
@@ -546,7 +567,7 @@ void Card::check_for_sd_card() {
         if (card2.calibration_file_exists)
           retrieve_data(INT_CALIBRATION_FILE);
       }
-      else if (!internal_sd_card.begin(card2.pin, SPI_HALF_SPEED) && card2.detected) {
+      else if (!card_found && card2.detected) {
         card2.detected = false;
         files_dont_exist(INTERNAL_CARD);
       }
@@ -1157,14 +1178,14 @@ void Card::update_data_log(byte give_priority_to) {
   }
 }
 
-void Card::safely_eject_card(byte card) {
+void Card::safely_eject_card(byte card_num) {
 
-  if (card == INTERNAL_CARD) { //stop checking for card
-    card2.enabled = false;
+  if (card_num == INTERNAL_CARD) { // stop checking for card
+    card2.enabled = false;     // prevent scanning for card
     card2.detected = false;
   }
 
-  else if (card == EXTERNAL_CARD) {
+  else if (card_num == EXTERNAL_CARD) {
     card1.enabled = false;
     card1.detected = false;
     card_led.set_card_colour(CARD_LED_UNMOUNTED);
@@ -1172,17 +1193,17 @@ void Card::safely_eject_card(byte card) {
 }
 
 
-void Card::mount_card(byte card) {
+void Card::mount_card(byte card_num) {
 
-  if (card == INTERNAL_CARD) { //check for card
-    card2.enabled = true;
+  if (card_num == INTERNAL_CARD) { //check for card
+    card2.enabled = true;     // allow scanning for card
     card2.detected = false;   //on first detection, read card
   }
 
-  else if (card == EXTERNAL_CARD) {
+  else if (card_num == EXTERNAL_CARD) {
     card1.enabled = true;
     card1.detected = false;
-    card_led.set_card_colour(CARD_LED_MOUNTED);
+    card_led.set_card_colour(CARD_LED_CARD_NOT_FOUND);
   }
 }
 
@@ -1217,12 +1238,16 @@ void Card::files_dont_exist(byte device) {
 //}
 
 
-
+//spooky function, behaves weirdly, possible memery issue?
 void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) {
   byte i = 0;
   int16_t char_read;
   byte max_i = MAX_NUM_OF_TEXT_OBJECTS;
   ram_stats();
+
+  SD_Card card1_temp = card1; //fix this issue, bodge fix for now
+  SD_Card card2_temp = card2; //this functions seems to over write card 1 and 2 struct data
+
   /*if (get_next_config && filename == INT_STRING_FILE) {
     internal_sd_card.set_as_active();
     if (!internal_sd_card.exists(INT_STRING_FILE)) {
@@ -1272,12 +1297,15 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
     return;
   }
 
+  //  Serial.print(card1.pin);
+  //  Serial.print("\t");
+  //  Serial.println(card2.pin);
+
 
   bool break_after_one_config_profile = false;  //if meant to look for one specific profile
 
   while (char_read != -1 && i < max_i && !break_after_one_config_profile) { //scan file for text obj maker ('{')
-    //   Serial.print(F("i="));
-    //     Serial.println(i);
+    if (file1.peek() == -1) break;
     char_read = file1.read();
 
     if (char_read == -1 ) break;
@@ -1302,7 +1330,9 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
 
           int reads = 0;
           if (get_next_config) {        //if were meant to be looking for a specific text config block
-            char config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
+            //            char config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
+            config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
+
             bool outside_config_profile_name = true;
             while (char_read != ')') {  //search until we find the specific identifier
               char_read = file1.read();
@@ -1324,11 +1354,11 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
             }
           }
           reads = 0;
-          char command [COMMAND_LENGTH] = {'\0'};
+          //char command [COMMAND_LENGTH] = {'\0'};
+          command [COMMAND_LENGTH] = {'\0'};
 
           while (reads < COMMAND_LENGTH) {
             char_read = file1.read();
-            //            Serial.print((char)char_read);
             if ((char)char_read == ':' || (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
             else {
               command[reads] = (char)char_read;
@@ -1337,7 +1367,8 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
           }
           //Serial.println();
           if (char_read == ':') {
-            char data_found[MAX_TWEET_SIZE] = {'\0'};
+            //char data_found[MAX_TWEET_SIZE] = {'\0'};
+            data_found[MAX_TWEET_SIZE] = {'\0'};
             reads = 0;
             while (reads < MAX_TWEET_SIZE) {
               char_read = file1.read();
@@ -1411,7 +1442,6 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
               if (value_found > 0) {
                 text_cursor[i].str_disp_time = value_found;
                 text_cursor[i].found_time = true;
-
               }
             }
             else if (strcmp(command, STRING_FILE_COMMAND_NEXT_FILE) == 0)   {
@@ -1446,9 +1476,23 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
         i++;
       }
     }
+    //  Serial.print(card1.pin);
+    //  Serial.print("\t");
+    //  Serial.println(card2.pin);
   }
   file1.close();
 
+  //  Serial.print(card1_temp.pin);
+  //  Serial.print("\t");
+  //  Serial.println(card2_temp.pin);
+
+  card1 = card1_temp; //fix this issue, see top of function
+  card2 = card2_temp;
+
+  //  Serial.print(card1.pin);
+  //  Serial.print("\t");
+  //  Serial.println(card2.pin);
+  ram_stats();
 }
 
 
@@ -1459,19 +1503,49 @@ Card_LED::Card_LED() {
   pinMode(green_pin, OUTPUT);
   pinMode(blue_pin, OUTPUT);
 
+#ifdef CARD_LED_OUTPUT_INVERTING  //invert the values of each colour
+  for (byte i = 0; i < 3; i++) {
+    CARD_LED_RED[i] =  !CARD_LED_RED[i];
+    CARD_LED_PURPLE[i] =  !CARD_LED_PURPLE[i];
+    CARD_LED_GREEN[i] =  !CARD_LED_GREEN[i];
+    CARD_LED_ORANGE[i] =  !CARD_LED_ORANGE[i];
+    CARD_LED_BLUE[i] = !CARD_LED_BLUE[i];
+  }
+
+#endif
   memcpy(CARD_LED_READING, CARD_LED_RED, 3);
-  memcpy(CARD_LED_MOUNTED, CARD_LED_PURPLE, 3);
+  memcpy(CARD_LED_MOUNTED, CARD_LED_BLUE, 3);
   memcpy(CARD_LED_UNMOUNTED, CARD_LED_GREEN, 3);
   memcpy(CARD_LED_CARD_NOT_FOUND, CARD_LED_ORANGE, 3);
 
 #endif
 }
 
-void Card_LED::set_card_colour(byte colour[3]) {
+void compare_colour(bool colour[3]) {
+
+  if (colour[0] == CARD_LED_RED[0] && colour[1] == CARD_LED_RED[1] && colour[2] == CARD_LED_RED[2])
+    Serial.println("red");
+  else if (colour[0] == CARD_LED_PURPLE[0] && colour[1] == CARD_LED_PURPLE[1] && colour[2] == CARD_LED_PURPLE[2])
+    Serial.println("purple");
+  else if (colour[0] == CARD_LED_GREEN[0] && colour[1] == CARD_LED_GREEN[1] && colour[2] == CARD_LED_GREEN[2])
+    Serial.println("green");
+  else if (colour[0] == CARD_LED_ORANGE[0] && colour[1] == CARD_LED_ORANGE[1] && colour[2] == CARD_LED_ORANGE[2])
+    Serial.println("orange");
+  else if (colour[0] == CARD_LED_BLUE[0] && colour[1] == CARD_LED_BLUE[1] && colour[2] == CARD_LED_BLUE[2])
+    Serial.println("blue");
+}
+
+void Card_LED::set_card_colour(bool colour[3]) {
 #ifdef ENABLE_CARD_LED
-  analogWrite(red_pin, colour[0]);
-  analogWrite(green_pin, colour[1]);
-  analogWrite(blue_pin, colour[2]);
+  //compare_colour(colour);
+
+  digitalWrite(red_pin, colour[0]);
+  digitalWrite(green_pin, colour[1]);
+  digitalWrite(blue_pin, colour[2]);
+
+  //  Serial.println(colour[0]);
+  //  Serial.println(colour[1]);
+  //  Serial.println(colour[2]);
 #endif
 }
 

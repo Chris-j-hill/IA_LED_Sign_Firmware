@@ -17,7 +17,6 @@
 // class constructors
 
 Coms_Serial    coms_serial;
-//Coms_i2c       coms_i2c;
 Card           card;
 Menu           menu;
 Internet       internet;
@@ -29,8 +28,6 @@ Light_Sensor   light_sensor;
 Graphics       graphics;
 Host           host;
 HostNativeUSB  nativeUsb;
-
-
 Timers timers; //timers struct
 
 void due_setup() {
@@ -65,7 +62,7 @@ void due_loop() {
     graphics.push_string_data(); 
     
     //check for requests from megas (eg transmission errors)
-    coms_serial.check_megas();
+    //coms_serial.check_megas();
     
     // update screen brightness based on ldr and current meter readings
     current_meter.get_readings();
@@ -85,7 +82,7 @@ void due_loop() {
     // push menu updates to screens 
     menu.display_menu();
 
-    //check for user serial input and print requested data
+    //check for user seria  l input and print requested data
     host.check_serial();
     host.print_messages();
     

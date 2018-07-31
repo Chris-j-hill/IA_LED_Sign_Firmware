@@ -7,9 +7,6 @@
 #include "Due_Libraries.h"                //file containing all class files and 3rd party libraries used
 
 
-
-
-
 void due_setup();
 
 void due_loop();

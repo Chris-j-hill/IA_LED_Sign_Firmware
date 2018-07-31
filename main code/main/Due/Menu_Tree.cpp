@@ -414,17 +414,17 @@ void Menu::display_SD_cards_menu() {
     switch (encoder_parameters.position) {
       case 0: current_menu = MAIN_MENU;          break;
       case 1:
-        if (card1.enabled)
-          card.mount_card(1);
-        else
-          card.safely_eject_card(1);
+        if (!card1.enabled)           // if card not enabled
+          card.mount_card(EXTERNAL_CARD);         // show mount card option
+        else                          // otherwise
+          card.safely_eject_card(EXTERNAL_CARD);  // show eject option
         break;
 
       case 2:
-        if (card2.enabled)
-          card.mount_card(2);
+        if (!card2.enabled)
+          card.mount_card(INTERNAL_CARD);
         else
-          card.safely_eject_card(2);
+          card.safely_eject_card(INTERNAL_CARD);
         break;
       case 3: current_menu = SD_FOLDERS_MENU;    break;
 

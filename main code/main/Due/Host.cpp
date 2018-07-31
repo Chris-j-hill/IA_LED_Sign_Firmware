@@ -15,9 +15,9 @@
 #include "Current_Control.h"
 #include "SD_Cards.h"
 
+extern Menu menu;
 
 Serial_Sub_Menu serial_sub_menu_items;
-
 
 //access to structs
 extern struct Temp_sensor temp_parameters;
@@ -28,7 +28,6 @@ extern struct Encoder_Struct encoder_parameters;
 extern struct Button_Struct button_parameters;
 extern struct Menu_tree_items menu_items;
 extern struct Menu_tree_menu_limits menu_limits;
-extern struct Menu menu;
 extern struct Frame text_frame;
 extern struct LDR_Struct light_sensor_parameters;
 extern struct Current_Meter_Struct current_meter_parameters;
@@ -324,7 +323,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
     case REPORT_ENCODER:
       switch (index) {
         case 0: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinA)                        : Serial.println(pin_error_msg);                              break;
-        case 1: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinA)                        : Serial.println(pin_error_msg);                              break;
+        case 1: (r_w == 'r')  ?  Serial.println(encoder_parameters.pinB)                        : Serial.println(pin_error_msg);                              break;
         case 2: (r_w == 'r')  ?  Serial.println(encoder_parameters.PosCount / 2)                : encoder_parameters.PosCount = value * 2;
           (r_w == 'r')  ?                                                                 : encoder_parameters.position = value;                        break;  //change both
         case 3: (r_w == 'r')  ?  Serial.println(encoder_parameters.enabled)                     : encoder_parameters.enabled = value;                         break;
@@ -1127,7 +1126,7 @@ void Host::print_menu_tree_options(int cur_menu) {
 
 
 void Host::position_to_menu_value() {
-  //given our current menu, what item is the encoder selecting
+  //given our current menu, display what item the encoder positioned on
   switch (menu.get_current_menu()) {
     case MAIN_MENU:
       switch (encoder_parameters.position) {
@@ -1191,13 +1190,13 @@ void Host::position_to_menu_value() {
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                    break;
         case 1:
-          if (card1.enabled)
+          if (!card1.enabled)
             Serial.print(menu_items.enable_ext_card);
           else
             Serial.print(menu_items.disable_ext_card);
           break;
         case 2:
-          if (card2.enabled)
+          if (!card2.enabled)
             Serial.print(menu_items.enable_int_card);
           else
             Serial.print(menu_items.disable_int_card);

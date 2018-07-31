@@ -137,6 +137,8 @@
 #define CALIBRATION_FILE_DATA_CHAR_LENGTH 10
 
 
+#define CARD_LED_OUTPUT_INVERTING
+
 
 struct SD_Strings {
 
@@ -204,8 +206,8 @@ class Card {
 
     void update_data_log(byte give_priority_to = 0);
 
-    void safely_eject_card(byte card);
-    void mount_card(byte card);
+    void safely_eject_card(byte card_num);
+    void mount_card(byte card_num);
     void retrieve_data(String filename, byte obj_num = 0, bool get_next_config = false);
 
 };
@@ -219,10 +221,11 @@ class Card_LED {
     byte green_pin = SD_LED_GREEN_PIN;
     byte blue_pin = SD_LED_BLUE_PIN;
 
+
   public:
     Card_LED();
 
-    void set_card_colour(byte colour[3]);
+    void set_card_colour(bool colour[3]);
 
 
 };

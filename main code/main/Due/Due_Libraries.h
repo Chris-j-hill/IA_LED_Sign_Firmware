@@ -19,7 +19,7 @@
 #include "DueTimer.h"       // wrapper library to handle timers 0-4 
 
 //https://github.com/antodom/soft_uart
-#include "soft_uart.h"
+#include "libs/soft_uart-master/soft_uart.h"
 
 #include "Due_DHT11.h"
 
