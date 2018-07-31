@@ -51,7 +51,7 @@ byte led_strip_init_freq() {
 
 byte Led_Strip::led_strip_set_freq() {      //function to set the frequency of the led strip interrupt, use at the end of a main loop iteration
 
-  static int led_strip_period_update_timer = millis();
+  static int32_t led_strip_period_update_timer = millis();
 
   if (millis() > led_strip_period_update_timer + LED_STRIP_PERIOD_UPDATE_INTERVAL) {
     if (!timers.led_strip_timer_attached) {

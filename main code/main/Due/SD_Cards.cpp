@@ -1085,7 +1085,7 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
 
 void Card::update_data_log(byte give_priority_to) {
 
-  static int last_log_time = millis();
+  static uint32_t last_log_time = millis();
   static byte logging_on_device = 0;      // what device were we last using
   static bool first_internal_card_log_event = true; //print header if first time logging to this device
   static bool first_external_card_log_event = true;

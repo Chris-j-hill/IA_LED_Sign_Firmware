@@ -18,7 +18,6 @@ extern struct Timers timers;
 Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
-int last_brightness_update = 0;
 byte screen_mode = 0; //mode of operation on startup should be both displaying
 //mode0: both on
 //mode1: one side on
@@ -43,8 +42,8 @@ bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS] = {false};
 #define POS_TIMER_INTERRUPT TC2_IRQn
 
 void Graphics::update_brightness() {
-
-  byte target_brightness = light_sensor.calculate_target_brightness();  //
+  static uint32_t last_brightness_update = millis();
+  byte target_brightness = light_sensor.calculate_target_brightness();  
   if (screen_brightness != target_brightness && (millis() - SCREEN_BRIGHTNESS_UPDATE_PERIOD) > last_brightness_update) {
     screen_brightness = target_brightness;
     for (int i = 0; i < NUM_SCREENS; i++)

@@ -386,7 +386,8 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
 }
 
 void Host::print_messages() {
-  static uint32_t last_message_print_time;
+  
+  static uint32_t last_message_print_time = millis();
   static byte previously_reporting = 0; // reset header counter if just changed printing messages
 
   if (millis() > last_message_print_time + MESSAGE_DELAY_PERIOD) { // check if specified time delay elapsed

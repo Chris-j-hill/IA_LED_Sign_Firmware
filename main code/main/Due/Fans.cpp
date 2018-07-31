@@ -15,7 +15,7 @@ dht11 Temp3;
 Temp_sensor temp_parameters;
 Fan_Struct fan_parameters;        //create fan struct
 extern struct Timers timers;
-extern 
+extern
 #ifdef ENABLE_FANS
 bool enable_fans = true;   //initialise on startup?
 #else
@@ -45,7 +45,7 @@ int attach_timer_fan() {
       return (-1);    //stop code
     }
 
-    FAN_TIMER.start();    
+    FAN_TIMER.start();
     NVIC_SetPriority (FAN_TIMER_INTERRUPT, FAN_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
 
   }
@@ -150,9 +150,12 @@ void Fans::init_temp_sensors() {    //code to initialise temp sensors
 
 int Fans::set_fan_speed() {
 
-  this -> calculate_avg_temp();
+  static uint32_t last_set_fan_speed = millis();
 
-  this -> calculate_fan_speed();
+  if (millis() > last_set_fan_speed + TEMP_UPDATE_DELAY_PERIOD) {
+    calculate_avg_temp();
+    calculate_fan_speed();
+  }
 
 }
 

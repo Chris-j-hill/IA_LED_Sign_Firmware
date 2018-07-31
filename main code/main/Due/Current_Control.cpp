@@ -196,7 +196,7 @@ void Light_Sensor::avg_sensor_result() {
 }
 
 void Light_Sensor::get_readings() {
-  static int previous_ldr_read_time = millis();
+  static uint32_t previous_ldr_read_time = millis();
 
   if (millis() > LDR_UPDATE_PERIOD + previous_ldr_read_time) {
     previous_ldr_read_time = millis();
@@ -264,7 +264,7 @@ void Current_Meter::set_current_limit(byte value) {
 
 void Current_Meter::get_readings() {
 
-  static int previous_current_read_time = millis();
+  static uint32_t previous_current_read_time = millis();
 
   if (millis() > previous_current_read_time + CURRENT_METER_UPDATE_PERIOD) {
     previous_current_read_time = millis();
