@@ -22,19 +22,19 @@
 #define REPORT_SD_CARD        11
 
 #define REPORT_LDR_CONFIG     12
-#define DUMP_FILE             13
+//#define DUMP_FILE             13
 
 
 
 #define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow...
-#define MESSAGE_DELAY_PERIOD    400   //delay this many ms between message prints
+#define MESSAGE_DELAY_PERIOD    300   //delay this many ms between message prints
 //class to manage all functions regarding communication with due host device (probably a pi)
 
 #define MAX_NUM_MENU_OPTIONS 14
 #define NUM_MENU_ITEMS 14
 
 #define NUM_USB_COMMANDS 8
-#define NATIVE_USB_TIMEOUT_PERIOD 10
+#define NATIVE_USB_TIMEOUT_PERIOD 50
 
 struct Serial_Sub_Menu {
   String prepend_commands PROGMEM = "to read a value above, type -r followed by the command, to write a new value type -w and append the value(eg fans -w pin 10)";

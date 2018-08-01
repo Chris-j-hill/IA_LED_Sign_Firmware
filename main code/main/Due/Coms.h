@@ -37,7 +37,7 @@ using namespace arduino_due;
 
 #define MEGA_SERIAL_BUFFER_LENGTH 32
 #define MAX_TWEET_SIZE 100
-#define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
+//#define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
 // need different approach for bitmaps...
 
 #define TEXT_FRAME_TYPE     1
@@ -57,7 +57,7 @@ using namespace arduino_due;
 struct Frame {            //frame details for the due, seperate one for the mega below
 
   byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH]; // use to pack single frame
-  byte extended_frame_buffer[MAX_FRAME_SIZE];   // large buffer to store sequence of frames to transmit later, eg text_frame generated and in queue
+  //byte extended_frame_buffer[MAX_FRAME_SIZE];   // large buffer to store sequence of frames to transmit later, eg text_frame generated and in queue
   bool send_extended_buffer = false;
   byte frame_length = 0;
   byte frame_type = 1;
@@ -69,25 +69,6 @@ struct Frame {            //frame details for the due, seperate one for the mega
   bool frame_queued = false;    //queue frame this loop to send at the beginning of next
 
 };
-
-
-
-#ifdef ENABLE_ERROR_CHECKING
-struct Nack_details {
-  byte mega1_failed_frame_type = 0;   // the type of frame last sent, to recalculate
-  byte mega2_failed_frame_type = 0;
-  byte mega3_failed_frame_type = 0;
-  byte mega4_failed_frame_type = 0;
-
-  byte mega1_failed_frame_number = 0;   // the frame number that failed
-  byte mega2_failed_frame_number = 0;
-  byte mega3_failed_frame_number = 0;
-  byte mega4_failed_frame_number = 0;
-};
-Nack_details nack;
-#endif // ENABLE_ERROR_CHECKING
-
-
 
 
 class Coms {

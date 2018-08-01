@@ -16,8 +16,8 @@
 
 // print error msg, any SD error codes, and halt.
 // store messages in flash
-#define errorExit(msg) errorHalt_P(PSTR(msg))
-#define initError(msg) initErrorHalt_P(PSTR(msg))
+//#define errorExit(msg) errorHalt_P(PSTR(msg))
+//#define initError(msg) initErrorHalt_P(PSTR(msg))
 
 #define set_as_active() chvol()
 
@@ -29,15 +29,10 @@
 #define MAX_DEFAULT_NO_NETWORK_STRING_LENGTH  2*NETWORK_INFO_NAME_LENGTH
 
 
-#define WAIT_TIME_FOR_SD_ON_STARTUP 40000 // wait this long before stopping code
-
-#ifndef EXPECTS_SD_ON_STARTUP
-#define DEFAULT_STARTUP_STRING_NO_SD_CARD "Not searching for sd card, heres some text instead"
-#endif
-
 //#define ENCRYPT_LOCAL           // encrypt copied data
-#define DISABLE_EXTERNAL_PORT   // disable external port once data copied
+#define DISABLE_EXTERNAL_PORT     // disable external port once data copied, wont log to external or allow user to select new string file (without remounting card through menu or otherwise)
 
+//#define ALLOW_CONFIG_CHAINING   // allow strings profiles to be chained together, ie display one for specified time then move to next
 
 
 #define ALLOW_INSTRUCTION_FILES
@@ -46,6 +41,9 @@
 #define ALLOW_DATA_LOG_FILES
 #define ALLOW_DISP_STRING_FILES
 #define ALLOW_NETWORK_FILES
+
+#define EXTERNAL_SD_CARD_DIRECTORY_NAME "/EXTERNAL"
+#define INTERNAL_SD_CARD_DIRECTORY_NAME "/INTERNAL"
 
 #define  EXT_NETWORK_FILE "NetworksE.BIN"
 #define  INT_NETWORK_FILE "NetworksI.BIN"
@@ -136,9 +134,7 @@
 
 #define CALIBRATION_FILE_DATA_CHAR_LENGTH 10
 
-
 #define CARD_LED_OUTPUT_INVERTING
-
 
 struct SD_Strings {
 

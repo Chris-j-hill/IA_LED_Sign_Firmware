@@ -43,26 +43,6 @@ bool enable_sd_cards = false;
 bool sd_cards_enabled = false;
 
 
-const uint8_t SD2_CS = SD1_ENABLE;   // chip select for internal_sd_card
-const uint8_t SD1_CS = SD2_ENABLE;  // chip select for external_sd_card
-
-//const uint8_t SD_FILE_COPY_BUF_SIZE = 100;
-//uint8_t sd_file_copy_buffer[SD_FILE_COPY_BUF_SIZE];
-
-//char sd_file_read_buffer[67];       //buffer to read some data, dont need to read whole file at once, and doing so could be problematic if file large,
-//read 15 bytes to recognise id word (eg Network) and have 50 bytes for string (default could be long) and two for \n type characters
-
-// put sd card file name strings here:
-
-const char *sd_ext_dir = EXTERNAL_SD_CARD_DIRECTORY_NAME;
-const char *sd_int_dir = INTERNAL_SD_CARD_DIRECTORY_NAME;
-
-const char *sd_ext_file = NETWORK_LOGIN_FILENAME;
-const char *sd_int_file = NETWORK_LOGIN_FILENAME;
-
-//char copy_buffer[1024] = {'\0'};
-
-
 SD_Card card1;    //external card struct
 SD_Card card2;    //internal card struct
 
@@ -493,7 +473,7 @@ void Card::check_for_sd_card() {
 
   static uint32_t internal_sd_card_prev_read_time = millis();
   static uint32_t external_sd_card_prev_read_time = millis();
-
+  static bool auto_eject_ext_card_now = false;
   if (card1.enabled) {
     if (millis() > external_sd_card_prev_read_time + (card1.detected ? 5 * CHECK_EXTERNAL_SD_CARD_PERIOD : CHECK_EXTERNAL_SD_CARD_PERIOD)) { //if card detected, reduce polling frequency, only need quick response on insertion
 
@@ -509,7 +489,7 @@ void Card::check_for_sd_card() {
         check_for_files(EXTERNAL_CARD);  //check if files exist on external card
 
         if (card2.enabled && card2.detected) {            //attempt to update to newer version if both internal and external cards exist
-
+          
           if (card1.network_file_exists)// if file exists on external device, copy
             copy_file(EXT_NETWORK_FILE, INT_NETWORK_FILE, EXTERNAL_CARD , INTERNAL_CARD );
           if (card1.disp_string_file_exists)
@@ -518,6 +498,9 @@ void Card::check_for_sd_card() {
             copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
           if (card1.bitmap_file_exists)
             copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
+
+          //sucessfully copied all files, at the end of this function, eject card
+          auto_eject_ext_card_now = true;
         }
 
         Serial.println("Retrieve files");
@@ -532,6 +515,7 @@ void Card::check_for_sd_card() {
           retrieve_data(EXT_CALIBRATION_FILE);
 
         card_led.set_card_colour(CARD_LED_MOUNTED); //back to normal
+
       }
       else if (!card_found && card1.detected) { //card was previously detected but not initialising now, card removed edge detector
         card1.detected = false;
@@ -557,6 +541,9 @@ void Card::check_for_sd_card() {
           copy_file(EXT_CALIBRATION_FILE, INT_CALIBRATION_FILE, EXTERNAL_CARD , INTERNAL_CARD);
           copy_file(EXT_BITMAP_FILE, INT_BITMAP_FILE, EXTERNAL_CARD , INTERNAL_CARD);
           card_led.set_card_colour(CARD_LED_MOUNTED);
+
+          //sucessfully copied all files, at the end of this function, eject card
+          auto_eject_ext_card_now = true;
         }
 
         if (card2.network_file_exists)
@@ -573,6 +560,12 @@ void Card::check_for_sd_card() {
       }
     }
   }
+  #ifdef DISABLE_EXTERNAL_PORT
+  if(auto_eject_ext_card_now){
+    auto_eject_ext_card_now= false; // dont run this every loop
+    safely_eject_card(EXTERNAL);    // eject card
+  }
+  #endif
 }
 
 void Card::check_for_files(byte card_to_check) {
@@ -1026,12 +1019,14 @@ void Card::log_data(String filename, bool truncate, bool print_header) {
 
   char header_buff[] = "Time,Fans,AvgTemp,Current,LDR,ScreenBrightness";
   char buf[10];
+
   String time_ = String(millis());
   String fans_ = String(fan_parameters.target_speed);
   String temp_ = String(temp_parameters.avg);
   String current_ = String(current_meter_parameters.total);
   String light_ = String(light_sensor_parameters.avg_reading);
   String screen_ = String(screen_brightness);
+
   String data_to_write = time_ + ',' + fans_ + ',' + temp_ + ',' + current_ + ',' + light_ + ',' + screen_;
   char data_buff[data_to_write.length()];
 
@@ -1238,6 +1233,7 @@ void Card::files_dont_exist(byte device) {
 //}
 
 
+
 //spooky function, behaves weirdly, possible memery issue?
 void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) {
   byte i = 0;
@@ -1303,23 +1299,30 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
 
 
   bool break_after_one_config_profile = false;  //if meant to look for one specific profile
-
+  bool x_start = false;   //place holders until file read
+  bool y_start = false;
+  bool x_end = false;
+  bool y_end = false;
+  bool disp_loops_found_x = false;
+  bool disp_loops_found_y = false;
+  bool disp_time_found = false;
+  bool next_file_found = false;
+  uint16_t reads = 0;
   while (char_read != -1 && i < max_i && !break_after_one_config_profile) { //scan file for text obj maker ('{')
-    if (file1.peek() == -1) break;
     char_read = file1.read();
 
     if (char_read == -1 ) break;
     else if (char_read == '{') {   //found an obj marker, decode until '}' found
       //       Serial.println(F("found obj marker"));
 
-      bool x_start = false;   //place holders until file read
-      bool y_start = false;
-      bool x_end = false;
-      bool y_end = false;
-      bool disp_loops_found_x = false;
-      bool disp_loops_found_y = false;
-      bool disp_time_found = false;
-      bool next_file_found = false;
+      x_start = false;   //place holders until file read
+      y_start = false;
+      x_end = false;
+      y_end = false;
+      disp_loops_found_x = false;
+      disp_loops_found_y = false;
+      disp_time_found = false;
+      next_file_found = false;
 
       if (file1.peek() == 13) //skip return carraige
         file1.read();
@@ -1328,20 +1331,22 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
       if (file1.peek() != 40) {
         while (char_read != '}') {
 
-          int reads = 0;
+          reads = 0;
+
           if (get_next_config) {        //if were meant to be looking for a specific text config block
             //            char config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
             config_name[CONFIG_PROFILE_NAME_LENGTH] = {'\0'};
 
             bool outside_config_profile_name = true;
+
             while (char_read != ')') {  //search until we find the specific identifier
               char_read = file1.read();
               if (char_read == -1) break;
-              else if (char_read == '(') {
-                memset( config_name, '\0', CONFIG_PROFILE_NAME_LENGTH );  //found the start of a config profile
+              else if (char_read == '(' && outside_config_profile_name) {
+                memset(config_name, '\0', CONFIG_PROFILE_NAME_LENGTH);  //found the start of a config profile
                 outside_config_profile_name = false;
               }
-              else if (char_read == ')')
+              else if (char_read == ')' && !outside_config_profile_name)
                 outside_config_profile_name = true;
               else if (!outside_config_profile_name) {
                 //Serial.print((char)char_read);
@@ -1354,8 +1359,8 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
             }
           }
           reads = 0;
-          //char command [COMMAND_LENGTH] = {'\0'};
-          command [COMMAND_LENGTH] = {'\0'};
+          memset(command, '\0', COMMAND_LENGTH);
+          //command [COMMAND_LENGTH] = {'\0'};
 
           while (reads < COMMAND_LENGTH) {
             char_read = file1.read();
@@ -1368,7 +1373,8 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
           //Serial.println();
           if (char_read == ':') {
             //char data_found[MAX_TWEET_SIZE] = {'\0'};
-            data_found[MAX_TWEET_SIZE] = {'\0'};
+            //            data_found[MAX_TWEET_SIZE] = {'\0'};
+            memset(data_found, '\0', MAX_TWEET_SIZE);
             reads = 0;
             while (reads < MAX_TWEET_SIZE) {
               char_read = file1.read();

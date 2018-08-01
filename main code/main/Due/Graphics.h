@@ -12,6 +12,7 @@
 #define RED_MAX_VALUE 7
 #define GREEN_MAX_VALUE 7
 #define BLUE_MAX_VALUE 7
+
 #elif defined(USING_COLOUR_SET_444)
 #define RED_MAX_VALUE 15
 #define GREEN_MAX_VALUE 15

@@ -59,19 +59,6 @@
 #define USING_COLOUR_SET_888      // highest resolution, requires down sampling inputs (actual output colour might not be as expected)
 
 
-// ______ SD Variables _________
-
-#define EXPECTS_SD_ON_STARTUP   //if not defined, will not search for sd card, will carry on with default string since no internet connectivity
-
-#define EXTERNAL_SD_CARD_DIRECTORY_NAME "/EXTERNAL"
-#define INTERNAL_SD_CARD_DIRECTORY_NAME "/INTERNAL"
-
-//#define STRING_SUB_DIR "STRINGS"
-
-#define NETWORK_LOGIN_FILENAME "Networks.BIN"
-
-//#define ALLOW_CONFIG_CHAINING   // allow strings profiles to be chained together, ie display one for specified time then move to next
-
 //default startup conditions
 #define ENABLE_FANS
 #define ENABLE_LED_STRIP

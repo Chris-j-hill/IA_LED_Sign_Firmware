@@ -283,8 +283,8 @@ inline double Current_Meter::reading_to_amps(uint16_t value, byte sensor_type) {
   //formula from here: https://www.14core.com/introduction-of-acs712-current-sensor-module-30a-with-arduino/
 
   if (sensor_type == THIRTY_AMP) return 0.044 * value - 3.78;// for 30A mode    <-default
-  if (sensor_type == TWENTY_AMP) return 0.19 * value - 25; //for 20A mode and
-  if (sensor_type == FIVE_AMP) return  0.0264 * value - 13.51;//for 5A mode,
+  else if (sensor_type == TWENTY_AMP) return 0.19 * value - 25; //for 20A mode and
+  else if (sensor_type == FIVE_AMP) return  0.0264 * value - 13.51;//for 5A mode,
 
 }
 
