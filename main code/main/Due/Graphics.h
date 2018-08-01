@@ -45,6 +45,10 @@
 
 #define RUN_TEXT_CONFIG //define this to populate some text objects with minimal data, forces pos interrupt to send frames
 
+#define POS_TIMER Timer3
+#define POS_TIMER_INTERRUPT TC2_IRQn
+
+
 struct Text {
   byte text_width = ASCII_CHARACTER_BASIC_WIDTH;
   byte text_height = ASCII_CHARACTER_BASIC_HEIGHT;

@@ -17,8 +17,6 @@ bool enable_led_strip = true;
 bool enable_led_strip = false;
 #endif
 
-#define LED_STRIP_TIMER Timer1              //make sure these two lines match, see DueTimer.cpp
-#define LED_STRIP_TIMER_INTERRUPT TC1_IRQn
 
 // ______  non class functions _______
 

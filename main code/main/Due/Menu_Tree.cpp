@@ -71,8 +71,6 @@ void Menu::init_menu_tree() {
 //level 1 menus
 void Menu::display_menu() {
 
-  //static bool reset_to_default_sent = false; //edge detector variable, when menu timeout, configure as default current menu (only once)
-
   if (encoder_parameters.encoder_moved) {
     encoder.encoder_position_limits();    //make sure encoder position is within the range limits of the current menu
   }

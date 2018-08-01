@@ -25,7 +25,7 @@ byte screen_mode = 0; //mode of operation on startup should be both displaying
 //mode3: other side on
 
 //some default text strings
-char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"},{"this is a test1"},{"this is a test2"},{"this is a test3"},{"this is a test4"}};
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"}, {"this is a test1"}, {"this is a test2"}, {"this is a test3"}, {"this is a test4"}};
 
 extern byte screen_brightness;
 
@@ -35,15 +35,10 @@ extern struct SD_Strings SD_string;
 extern Card card;
 bool get_new_config[MAX_NUM_OF_TEXT_OBJECTS] = {false};
 
-#define DISABLE_POS_TRANSMISSION
-
-
-#define POS_TIMER Timer3
-#define POS_TIMER_INTERRUPT TC2_IRQn
 
 void Graphics::update_brightness() {
   static uint32_t last_brightness_update = millis();
-  byte target_brightness = light_sensor.calculate_target_brightness();  
+  byte target_brightness = light_sensor.calculate_target_brightness();
   if (screen_brightness != target_brightness && (millis() - SCREEN_BRIGHTNESS_UPDATE_PERIOD) > last_brightness_update) {
     screen_brightness = target_brightness;
     for (int i = 0; i < NUM_SCREENS; i++)
@@ -298,7 +293,22 @@ void Graphics::configure_limits() {
 
 void Graphics::push_string_data() {
 
+  static uint16_t num_text_transmissions = 0;
+
   //loop through objects, push to all megas if enabled and not updated
+  
+#ifdef FORCE_TEXT_FRAME_TRANSMISSION  //for testing, ignore if mega updated, send anyway (limit number fo times)
+  if (num_text_transmissions < NUM_TEXT_TRANSMISSIONS) {
+    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+      disable_pos_isr();  // disable pos isr while we push the string
+      coms_serial.send_text_frame(i);
+      coms_serial.send_text_calibration_data(i); //send all related text data
+      text_parameters[i].megas_up_to_date = true; //confirm text up to date
+      enable_pos_isr();   //enable pos isr again
+    }
+    num_text_transmissions++;
+  }
+#else
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
     if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date) { //if the object is enabled and has been changed by something
       disable_pos_isr();  // disable pos isr while we push the string
@@ -308,6 +318,8 @@ void Graphics::push_string_data() {
       enable_pos_isr();   //enable pos isr again
     }
   }
+#endif
+
 
 
 }

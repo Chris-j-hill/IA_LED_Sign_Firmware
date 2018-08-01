@@ -9,6 +9,10 @@
 #define LED_STRIP_DEFUALT_BRIGHTNESS 255   
 #define LED_STRIP_PERIOD_UPDATE_INTERVAL 500
 
+#define LED_STRIP_TIMER Timer1              //make sure these two lines match, see DueTimer.cpp
+#define LED_STRIP_TIMER_INTERRUPT TC1_IRQn
+
+
 struct Led_Strip_Struct {
   byte pin = LED_STRIP;                  // attached to
   byte target_brightness = LED_STRIP_DEFUALT_BRIGHTNESS;        // value to approach

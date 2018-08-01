@@ -38,11 +38,8 @@ extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern Encoder encoder;
-// list of valid sensor prefix's for sending non string data to the megas.
-// append this as required and add to switch statements in due and mega code
-//const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
 
-byte time_since_last_sent_text_frame = 0;
+
 bool send_text_now = false;
 extern volatile bool send_pos_now;  //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
 
@@ -157,7 +154,7 @@ void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 by
   pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
   pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
   pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0xFF);
-  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);;
+  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);
 
 }
 
@@ -165,27 +162,31 @@ void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 by
 void Coms::calc_delay() {    // function to calculate the dalay in sending frames to the megas
   // this could be useful for syncing up the screen updates. this value is only necessary for the pos data
   //frame as the other ones dont require accurate timing
-
-  int beta = millis();
+  int time_to_read_millis = abs(millis() - millis());
+  uint32_t round_trip_time = millis();
 
   //send_all_pos_now();
-  beta = millis() - beta;
-  comms_delay = beta / 4; //time to send one frame
+  round_trip_time = millis() - round_trip_time - time_to_read_millis;
+  comms_delay = round_trip_time / (NUM_SCREENS * 2); //time to send one frame
 
 }
 
 byte Coms::get_text_colour_hue(byte byte_number, byte obj_num) { //function to return the MSB or LSB of the current hue value to send
 
-  if (byte_number == 1) { //looking for MSB
-    if (text_parameters[obj_num].hue < 0)
-      return (abs(text_parameters[obj_num].hue) / 256);    //get quotient of absolute value and 256 rounded down
+//  if (byte_number == 1) { //looking for MSB
+//    if (text_parameters[obj_num].hue < 0)
+//      return (abs(text_parameters[obj_num].hue) /256);    //get quotient of absolute value and 256 rounded down
+//
+//    else
+//      return (abs(text_parameters[obj_num].hue) / 256 + 128); //add 128 to indicate positve number
+//  }
+//  else if (byte_number == 2) { //LSB
+//    return (abs(text_parameters[obj_num].hue) % 256);    //get modulo of value and 256;
+//  }
 
-    else
-      return (abs(text_parameters[obj_num].hue) / 256 + 128); //add 128 to indicate positve number
-  }
-  else if (byte_number == 2) { //LSB
-    return (abs(text_parameters[obj_num].hue) % 256);    //get modulo of value and 256;
-  }
+  if (byte_number == 1) return ((text_parameters[obj_num].hue >> 8) & 0xFF);   //return msb
+  else return (text_parameters[obj_num].hue & 0xFF);
+
 }
 
 int Coms::init_frames() {

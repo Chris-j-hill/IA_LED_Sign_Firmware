@@ -24,6 +24,10 @@
 
 #define TEMP_UPDATE_DELAY_PERIOD 500
 
+#define FAN_TIMER Timer2
+#define FAN_TIMER_INTERRUPT TC2_IRQn
+
+
 struct Temp_sensor{
 
   byte pin1 = TEMP1;

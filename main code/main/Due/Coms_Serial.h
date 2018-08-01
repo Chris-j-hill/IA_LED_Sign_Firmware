@@ -8,8 +8,6 @@
 
 #define PING_WAIT_PERIOD 200
 
-#define MEGA_SERIAL_CONNECTION_TESTING  // define to fake a positive response from ping test on initialisation for megas
-                                        // useful if megas not loaded with correct code (eg megas running serial passthrough)
 
 struct   Mega_Serial_Parameters {
 
@@ -17,8 +15,6 @@ struct   Mega_Serial_Parameters {
   bool detected2 = false;
   bool detected3 = false;
   bool detected4 = false;
-
-  uint16_t baud_rate = COMS_SPEED;
 
 };
 
@@ -32,10 +28,14 @@ class Coms_Serial: public Coms {
     void write_pos_frame(byte address);
     void write_text_frame(byte address);
     inline void write_text_frame();   // send to all at once
-
-
+    void write_frame(byte address, byte frame_type); //general function to send a given frame type to specified address, does not check for mega enabled or detected
+    inline bool mega_status(byte address); // checks conditions to send frame or not
+    
     void ping();
-    void init_software_serial_to_megas(int speed = COMS_SPEED);
+    void init_software_serial_to_megas();
+
+    void disable_timer_interrupts();
+    void enable_timer_interrupts();
     
   public:
 

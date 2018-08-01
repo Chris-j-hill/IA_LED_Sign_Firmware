@@ -28,8 +28,6 @@ bool enable_temp_sensor = true;
 bool enable_temp_sensor = false;
 #endif
 
-#define FAN_TIMER Timer2
-#define FAN_TIMER_INTERRUPT TC2_IRQn
 
 int attach_timer_fan() {
   //attach fan interrupt

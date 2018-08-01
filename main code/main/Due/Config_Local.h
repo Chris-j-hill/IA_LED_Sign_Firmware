@@ -22,6 +22,22 @@
 
 
 
+// some variables used to test the system with no mega attached
+
+#define MEGA_SERIAL_CONNECTION_TESTING  // define to fake a positive response from ping test on initialisation for megas
+                                        // useful if megas not loaded with correct code (eg megas running serial passthrough)
+
+#define DISABLE_POS_TRANSMISSION    //stops trnasmission of pos in interrupt
+#define FORCE_TEXT_FRAME_TRANSMISSION
+
+
+
+
+#ifdef FORCE_TEXT_FRAME_TRANSMISSION
+#define NUM_TEXT_TRANSMISSIONS  1
+#endif
+
+
 #define USE_SERIAL_TO_MEGAS
 //#define USE_I2C_TO_MEGAS
 

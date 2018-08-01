@@ -12,11 +12,6 @@
 #include "Led_Strip.h"
 #include "Encoder.h"
 #include "Menu_Tree.h"
-extern struct Frame text_frame;
-extern struct Frame sensor_data_frame;
-extern struct Frame menu_frame;
-extern struct Frame pos_frame;
-
 
 
 //give access to these structs
@@ -32,25 +27,32 @@ extern struct SD_Card card1;
 extern struct SD_Card card2;
 extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
+extern struct Frame text_frame;
+extern struct Frame sensor_data_frame;
+extern struct Frame menu_frame;
+extern struct Frame pos_frame;
 
+
+//arrays for current display strings
 extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
 
+//menu object
 extern Menu menu;
 
-const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90,
-                                     100, 101, 102, 103, 104,
-                                     110, 111, 112, 113, 114,
-                                     120, 121, 122, 123, 124,
-                                     130, 131, 132, 133, 134,
-                                     140, 141, 142, 143, 144,
-                                     150, 151, 152, 153, 154,
-                                     160, 161, 162, 163, 164,
-                                     170, 180, 190, 191,
-                                     200, 201, 202, 203, 204,
-                                     210, 211, 212, 213, 214
-                                    };
-
-extern byte time_since_last_sent_text_frame;
+// used when sending all calibration data, is this ever done?
+//const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90,
+//                                     100, 101, 102, 103, 104,
+//                                     110, 111, 112, 113, 114,
+//                                     120, 121, 122, 123, 124,
+//                                     130, 131, 132, 133, 134,
+//                                     140, 141, 142, 143, 144,
+//                                     150, 151, 152, 153, 154,
+//                                     160, 161, 162, 163, 164,
+//                                     170, 180, 190, 191,
+//                                     200, 201, 202, 203, 204,
+//                                     210, 211, 212, 213, 214,
+//                                     220, 221, 222, 223, 224,
+//                                     230};
 
 
 extern bool mega_enabled[4];
@@ -117,25 +119,23 @@ auto& Serial_4 = serial_tc8;
 #define SERIAL_4_IS_SOFT
 #endif
 
-
+const char return_carraige[2] = {'\r', '\n'};
 
 
 
 Mega_Serial_Parameters mega_parameters;
 
-char ping_string[] PROGMEM = "ping";
-char expected_ping_rx PROGMEM = 'p';
+const char ping_string[] = "ping";
+const char expected_ping_rx = 'p';
 
 extern byte screen_brightness;
 extern byte screen_mode;
 
-//methods for Coms_Serial class
-
 #ifdef USE_SERIAL_TO_MEGAS
 
 void Coms_Serial::init_serial() {
-
-  init_software_serial_to_megas(mega_parameters.baud_rate);
+  
+  init_software_serial_to_megas();
   Serial.println("Setup done");
 #ifndef MEGA_SERIAL_CONNECTION_TESTING  //ignore ping if testing with serial passthrough code on mega
   ping();
@@ -149,23 +149,20 @@ void Coms_Serial::init_serial() {
 }
 
 
-void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
-  //ensure the speed is a standard baud rate
-  if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
-    return;
+void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
 
 #ifdef SERIAL_1_IS_SOFT
   Serial_1.begin(
     RX_PIN_1,
     TX_PIN_1,
-    speed,
+    SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::stop_bit_codes::TWO_STOP_BITS
   );
   NVIC_SetPriority (SERIAL_1_TIMER, SOFT_SERIAL_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
 #else
-  Serial_1.begin(speed);
+  Serial_1.begin(COMS_SPEED, SERIAL_8E2);
 #endif
 
 
@@ -173,15 +170,15 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
   Serial_2.begin(
     RX_PIN_2,
     TX_PIN_2,
-    speed,
+    SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::stop_bit_codes::TWO_STOP_BITS
   );
 
   NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_2.begin(speed);
+  Serial_2.begin(COMS_SPEED, SERIAL_8E2);
 #endif
 
 
@@ -189,15 +186,15 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
   Serial_3.begin(
     RX_PIN_3,
     TX_PIN_3,
-    speed,
+    SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::stop_bit_codes::TWO_STOP_BITS
   );
 
   NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_3.begin(speed);
+  Serial_3.begin(COMS_SPEED, SERIAL_8E2);
 #endif
 
 
@@ -205,15 +202,15 @@ void Coms_Serial::init_software_serial_to_megas(int speed) {   // initialise ser
   Serial_4.begin(
     RX_PIN_4,
     TX_PIN_4,
-    speed,
+    SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::stop_bit_codes::TWO_STOP_BITS
   );
 
   NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_4.begin(speed);
+  Serial_4.begin(COMS_SPEED, SERIAL_8E2);
 #endif
 
 
@@ -238,17 +235,30 @@ void Coms_Serial::ping() {
   //  Serial_3.println(ping_string);
   //Serial_4.println(ping_string);
 
-  int ping_time = millis();
+  uint32_t ping_time = millis();
 
-  if (mega_enabled[0])
-    Serial_1.write(ping_string, sizeof(ping_string));
-  if (mega_enabled[1])
-    Serial_2.write(ping_string, sizeof(ping_string));
-  if (mega_enabled[2])
-    Serial_3.write(ping_string, sizeof(ping_string));
-  if (mega_enabled[3])
-    Serial_4.write(ping_string, sizeof(ping_string));
+  if (mega_enabled[0]) {
+    write_frame(0, PING_STRING_TYPE);
+    //Serial_1.write(ping_string, sizeof(ping_string));
+    //Serial_1.write(return_carraige, 2);
+  }
+  if (mega_enabled[1]) {
+    write_frame(1, PING_STRING_TYPE);
+    //Serial_2.write(ping_string, sizeof(ping_string));
+    //Serial_2.write(return_carraige, 2);
+  }
+  if (mega_enabled[2]) {
+    write_frame(2, PING_STRING_TYPE);
+    //Serial_3.write(ping_string, sizeof(ping_string));
+    //Serial_3.write(return_carraige, 2);
+  }
+  if (mega_enabled[3]) {
+    write_frame(3, PING_STRING_TYPE);
+    //Serial_4.write(ping_string, sizeof(ping_string));
+    //Serial_4.write(return_carraige, 2);
+  }
 
+  //wait for response
   while (millis() < ping_time + PING_WAIT_PERIOD) {
     char ping_rx = '\0';
     if (mega_enabled[0] && Serial_1.available() != 0) {
@@ -316,64 +326,61 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
     text_frame.frame_buffer[2] = text_frame.num_frames;
     text_frame.frame_buffer[3] = text_frame.this_frame;
     text_frame.frame_buffer[4] = obj_num;
-    
+
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
-   
+
     if (address == -1)
       write_text_frame();  //send to all megas
     else
       write_text_frame(address);  //only send specific one mega
-      
-    text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
-    delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
 
+    text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
+    //delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
   } while (text_frame.this_frame <= text_frame.num_frames);
 }
 
 
-void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame_num){
-  
+void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame_num) {
+
   byte space_available_in_frame = FRAME_DATA_LENGTH - 1; // going to transmit obj num and data in same frame, so one byte less for string
 
   text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / space_available_in_frame); //send this many frames
   text_frame.this_frame = frame_num;
 
-    if (text_frame.num_frames != text_frame.this_frame)
-      text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
+  if (text_frame.num_frames != text_frame.this_frame)
+    text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
-    else
-      text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
+  else
+    text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
 
-    text_frame.frame_buffer[0] = text_frame.frame_length;
-    text_frame.frame_buffer[1] = text_frame.frame_type;
-    text_frame.frame_buffer[2] = text_frame.num_frames;
-    text_frame.frame_buffer[3] = text_frame.this_frame;
-    text_frame.frame_buffer[4] = obj_num;
-    
-    pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
-    write_text_frame(address);  //only send specific one mega
-      
+  text_frame.frame_buffer[0] = text_frame.frame_length;
+  text_frame.frame_buffer[1] = text_frame.frame_type;
+  text_frame.frame_buffer[2] = text_frame.num_frames;
+  text_frame.frame_buffer[3] = text_frame.this_frame;
+  text_frame.frame_buffer[4] = obj_num;
+
+  pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
+  write_text_frame(address);  //only send specific one mega
+
 }
-
-
 
 void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write_menu_frame for relevant addresses
 
   build_menu_data_frame(cur_menu);
   byte menu_width = menu.get_menu_width();
-  if ((menu_width >= 0 && mega_enabled[3]) || menu.is_all_system_menu(cur_menu)) {  //not sure why it would be this but include for completeness
+  if (menu_width >= 0 || menu.is_all_system_menu(cur_menu)) {  //not sure why it would be less than zero width but include for completeness
     write_menu_frame(3);  //write frame to address 3
   }
 
-  if ((menu_width > 64 && mega_enabled[2]) || menu.is_all_system_menu(cur_menu)) {
+  if (menu_width > 64 || menu.is_all_system_menu(cur_menu)) {
     write_menu_frame(2);
   }
 
-  if ((menu_width > 128 && mega_enabled[1]) || menu.is_all_system_menu(cur_menu)) {
+  if (menu_width > 128 || menu.is_all_system_menu(cur_menu)) {
     write_menu_frame(1);
   }
 
-  if ((menu_width > 192 && mega_enabled[0]) || menu.is_all_system_menu(cur_menu)) {
+  if (menu_width > 192 || menu.is_all_system_menu(cur_menu)) {
     write_menu_frame(0);
   }
 }
@@ -383,97 +390,172 @@ void Coms_Serial::send_pos_frame(byte obj_num) {  //build frame and send positio
   build_pos_frame(obj_num);
 
   for (byte i = 0; i < NUM_SCREENS ; i++) {
-    if (mega_enabled[i]) {
-      write_pos_frame(i);
-    }
+    write_pos_frame(i);
   }
 }
 
 void Coms_Serial::write_sensor_data_frame(byte address) {
 
-  if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
-    Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
-
-  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
-    Serial_2.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
-
-  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
-    Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
-
-  else if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
-    Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
+  if (mega_status(address))       write_frame(address, SENSOR_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, SENSOR_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, SENSOR_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, SENSOR_FRAME_TYPE);
 }
 
 void Coms_Serial::write_menu_frame(byte address) {   //function to actually send the frame to given address
 
-  if (address == 0 && mega_enabled[0] && mega_parameters.detected1)
-    Serial_1.write(menu_frame.frame_buffer, menu_frame.frame_length);
-
-  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
-    Serial_2.write(menu_frame.frame_buffer, menu_frame.frame_length);
-
-  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
-    Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);
-
-  else if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
-    Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);
+  if (mega_status(address))       write_frame(address, MENU_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, MENU_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, MENU_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, MENU_FRAME_TYPE);
 }
 
 void Coms_Serial::write_pos_frame(byte address) {
 
-  if (address == 0 && mega_parameters.detected1) {
-    // delayMicroseconds(1000);//ensure previous trnasmission complete
-    Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);
-  }
-
-  else if (address == 1 && mega_parameters.detected2) {
-    // delayMicroseconds(1000);
-    Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);
-  }
-  else if (address == 2 && mega_parameters.detected3) {
-    //delayMicroseconds(1000);
-    Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);
-  }
-  else  if (address == 3 && mega_parameters.detected4) {
-    //delayMicroseconds(1000);
-    Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);
-  }
+  if (mega_status(address))       write_frame(address, POS_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, POS_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, POS_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, POS_FRAME_TYPE);
 }
-
 
 void Coms_Serial::write_text_frame(byte address) {
 
-  if (address == 0 && mega_enabled[0] && mega_parameters.detected1) {
-    Serial.println(text_frame.frame_length);
-    for (byte i = 0; i < text_frame.frame_length; i++) {
-      Serial.print(text_frame.frame_buffer[i]);
-      Serial.print(" ");
-    }
-    Serial.println();
-    Serial_1.write(text_frame.frame_buffer, text_frame.frame_length);
-  }
-
-  else if (address == 1 && mega_enabled[1] && mega_parameters.detected2)
-    Serial_2.write(text_frame.frame_buffer, text_frame.frame_length);
-
-  else if (address == 2 && mega_enabled[2] && mega_parameters.detected3)
-    Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);
-
-  else if (address == 3 && mega_enabled[3] && mega_parameters.detected4)
-    Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);
+  if (mega_status(address))       write_frame(address, TEXT_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
+  else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
 }
 
+void Coms_Serial::write_frame(byte address, byte frame_type) {
+
+  switch (address) {
+    case 0:
+#ifdef SERIAL_1_IS_SOFT
+      disable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+      switch (frame_type) {
+        // NB: use serial write not print as it forces the processor to stop until sent, avoids chance of mega serial buffer overflow
+        // maybe implement acknoledge system in future
+        case TEXT_FRAME_TYPE:     Serial_1.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
+        case POS_FRAME_TYPE:      Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
+        case MENU_FRAME_TYPE:     Serial_1.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
+        case SENSOR_FRAME_TYPE:   Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
+        case PING_STRING_TYPE:    Serial_1.write(ping_string, sizeof(ping_string));                                 break;
+      }
+      Serial_1.write(return_carraige, 2); //used for end of frame detection if mega is confused
+
+#ifdef SERIAL_1_IS_SOFT
+      enable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+
+      break;
+    case 1:
+#ifdef SERIAL_2_IS_SOFT
+      disable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+      switch (frame_type) {
+        case TEXT_FRAME_TYPE:     Serial_2.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
+        case POS_FRAME_TYPE:      Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
+        case MENU_FRAME_TYPE:     Serial_2.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
+        case SENSOR_FRAME_TYPE:   Serial_2.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
+        case PING_STRING_TYPE:    Serial_2.write(ping_string, sizeof(ping_string));                                 break;
+      }
+      Serial_2.write(return_carraige, 2);
+
+#ifdef SERIAL_2_IS_SOFT
+      enable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+
+      break;
+    case 2:
+#ifdef SERIAL_3_IS_SOFT
+      disable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+      switch (frame_type) {
+        case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
+        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
+        case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
+        case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
+        case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
+      }
+      Serial_3.write(return_carraige, 2);
+
+#ifdef SERIAL_3_IS_SOFT
+      enable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+
+      break;
+    case 3:
+#ifdef SERIAL_4_IS_SOFT
+      disable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+      switch (frame_type) {
+        case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
+        case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
+        case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
+        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
+        case PING_STRING_TYPE:    Serial_4.write(ping_string, sizeof(ping_string));                                 break;
+      }
+      Serial_4.write(return_carraige, 2);
+
+#ifdef SERIAL_4_IS_SOFT
+      enable_timer_interrupts(); //stop all processes that could cause issues
+#endif
+
+      break;
+  }
+}
+
+void Coms_Serial::disable_timer_interrupts() {
+  if (timers.led_strip_timer_attached){
+    LED_STRIP_TIMER.stop();
+  }
+
+  if (timers.fan_timer_attached) {
+    FAN_TIMER.stop();
+  }
+
+  if (timers.pos_timer_attached) {
+    POS_TIMER.stop();
+  }
+}
+
+void Coms_Serial::enable_timer_interrupts() {
+  if (timers.led_strip_timer_attached){
+    LED_STRIP_TIMER.start();
+  }
+
+  if (timers.fan_timer_attached) {
+    FAN_TIMER.start();
+  }
+
+  if (timers.pos_timer_attached) {
+    POS_TIMER.start();
+  }
+}
 
 
 inline void Coms_Serial::write_text_frame() {  // send to all at once
 
   write_text_frame(0);
+  delayMicroseconds(3000);
   write_text_frame(1);
+  delayMicroseconds(3000);
   write_text_frame(2);
+  delayMicroseconds(3000);
   write_text_frame(3);
+  delayMicroseconds(3000);
 
 }
 
+inline bool Coms_Serial::mega_status(byte address) {
+  switch (address) {
+    case 0: return (mega_enabled[0] && mega_parameters.detected1); break;
+    case 1: return (mega_enabled[1] && mega_parameters.detected2); break;
+    case 2: return (mega_enabled[2] && mega_parameters.detected3); break;
+    case 3: return (mega_enabled[3] && mega_parameters.detected4); break;
+  }
+}
 
 //
 //void Coms_Serial::send_all_calibration_data(byte address) {     //function to send all data
@@ -959,7 +1041,7 @@ void Coms_Serial::decode_serial_rx(String rx, byte address) {
     byte frame_num = char_array[0];
     byte obj_num = char_array[1];
 
-    if (error_sanity_check(frame_num, obj_num)){  //case where mega knows what data is missing, send exact data required
+    if (error_sanity_check(frame_num, obj_num)) { //case where mega knows what data is missing, send exact data required
       send_partial_text_frame(address, obj_num, frame_num);
     }
     else { // resend all objects to this mega, hard to be sure what went wrong

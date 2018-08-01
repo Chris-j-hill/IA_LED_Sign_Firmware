@@ -28,7 +28,8 @@ Light_Sensor   light_sensor;
 Graphics       graphics;
 Host           host;
 HostNativeUSB  nativeUsb;
-Timers timers; //timers struct
+
+struct Timers timers; //timers struct
 
 void due_setup() {
 #ifndef DUE_ENABLED    //stop code imidiately if due disabled
@@ -58,9 +59,10 @@ void due_setup() {
 void due_loop() {
   while (1) {
 
-    //push string and related data if new data retrieved
+    //push string and related data if new data retrieved    
     graphics.push_string_data(); 
     
+  
     //check for requests from megas (eg transmission errors)
     //coms_serial.check_megas();
     
@@ -87,6 +89,7 @@ void due_loop() {
     host.print_messages();
     
     // check if sd card mounted and log data if possible
+    
     card.check_for_sd_card();
     //card.update_data_log();
 

@@ -18,7 +18,8 @@
 
 // variables for initialising soft serial for comms
 using namespace arduino_due;
-#define COMS_SPEED 9600         //speed of coms between due and megas when using serial (available baud rates  1200 9600 19200 38400 57600 115200)
+#define COMS_SPEED 19200         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
+#define SOFT_COMS_SPEED 4800      // software serial speed, nb this may get in the way if transmitting large amounts of data very slowly
 #define RX_BUF_LENGTH 256 // software serial port's reception buffer length 
 #define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
 
@@ -44,6 +45,7 @@ using namespace arduino_due;
 #define POS_FRAME_TYPE      2
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
+#define PING_STRING_TYPE    5
 
 #define MEGA_RX_FRAME_LENGTH 3
 /*
