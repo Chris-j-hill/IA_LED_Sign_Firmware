@@ -4,7 +4,8 @@
 #include "Mega.h"
 #include "Mega_Pins.h"                     //list of pins used in each board
 #include "Graphics.h"
-
+#include "Host.h"
+#include "Coms_Serial.h"
 
 extern struct Screen_Struct screen_parameters;
 
@@ -13,20 +14,25 @@ extern struct Screen_Struct screen_parameters;
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE2, false, 64);
 Menu menu;
 Graphics graphics;
-  
-void mega_setup(){
-// configure_address();
-//  coms_serial.init_serial();
-//  graphics.init_screen();
+Coms_Serial coms_serial;
+Host host;
 
   
+void mega_setup(){
+ configure_address();
+ host.init_serial();    //enable printing to monitor
+ coms_serial.init_serial(); //enable coms port to due
+//  graphics.init_screen();
+  Serial.println("done init"); 
   }
   
   
 void mega_loop(){
-//   coms_serial.check_serial();  //deal with any serial recieved reently and send nack if needed
+    while(1){
+   coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
 //   graphics.update_menus();    // specifically display the menus if they are needed
 //   graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
+    }
   }
 
 

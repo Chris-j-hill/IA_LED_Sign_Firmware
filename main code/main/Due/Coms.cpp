@@ -91,10 +91,10 @@ void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //functi
 void Coms::build_pos_frame(byte obj_num) {
 
   pack_xy_coordinates(obj_num);        //seperate function to bit shift values to correct order.
-  pos_frame.frame_buffer[8] =  text_cursor[obj_num].x_pos_dir;
-  pos_frame.frame_buffer[9] =  text_cursor[obj_num].y_pos_dir;
-  pos_frame.frame_buffer[10] = comms_delay; //maybe implement this to sync up screens if needed
-  pos_frame.frame_buffer[11] = obj_num;
+  pos_frame.frame_buffer[7] =  text_cursor[obj_num].x_pos_dir;
+  pos_frame.frame_buffer[8] =  text_cursor[obj_num].y_pos_dir;
+  pos_frame.frame_buffer[9] = comms_delay; //maybe implement this to sync up screens if needed
+  pos_frame.frame_buffer[10] = obj_num;
 
   //  pos_frame.frame_buffer[pos_frame.checksum_address] = pos_frame.header_checksum; //zero checksum
   //  for (int alpha = HEADER_LENGTH; alpha < pos_frame.checksum_address; alpha++) { //sum of elements
@@ -151,10 +151,10 @@ void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 by
   //  pos_frame.frame_buffer[6] = y_pos_MSB;
   //  pos_frame.frame_buffer[7] = y_pos_LSB;
 
-  pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
-  pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
-  pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0xFF);
-  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);
+  pos_frame.frame_buffer[3] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
+  pos_frame.frame_buffer[4] = (text_cursor[obj_num].x & 0xFF);
+  pos_frame.frame_buffer[5] = ((text_cursor[obj_num].y >> 8) & 0xFF);
+  pos_frame.frame_buffer[6] = (text_cursor[obj_num].y & 0xFF);
 
 }
 
@@ -195,32 +195,32 @@ int Coms::init_frames() {
   text_frame.frame_type = TEXT_FRAME_TYPE;
 
   // pos frame
-  pos_frame.frame_length = FRAME_OVERHEAD + 8;
+  pos_frame.frame_length = POS_FRAME_LENGTH;
   pos_frame.frame_type = POS_FRAME_TYPE;
   pos_frame.frame_buffer[0] = pos_frame.frame_length;
   pos_frame.frame_buffer[1] = pos_frame.frame_type;
-  pos_frame.frame_buffer[2] = 1;
-  pos_frame.frame_buffer[3] = 1;
-  pos_frame.header_checksum = pos_frame.frame_buffer[0] + pos_frame.frame_buffer[1] + pos_frame.frame_buffer[2] + pos_frame.frame_buffer[3];
-  pos_frame.checksum_address = pos_frame.frame_length - 2;
+  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1,1);
+  
+  pos_frame.header_checksum = pos_frame.frame_buffer[0] + pos_frame.frame_buffer[1] + pos_frame.frame_buffer[2];
+  pos_frame.checksum_address = pos_frame.frame_length - TRAILER_LENGTH;
 
   // sensor_data_frame
   sensor_data_frame.frame_type = SENSOR_FRAME_TYPE;
   sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
-  sensor_data_frame.frame_buffer[2] = 1;
-  sensor_data_frame.frame_buffer[3] = 1;
-  sensor_data_frame.header_checksum = sensor_data_frame.frame_buffer[1] + sensor_data_frame.frame_buffer[2] + sensor_data_frame.frame_buffer[3];
+  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1,1); //doesnt matter if it thinks theres one frame or many, data not related to eachother
+  
+  sensor_data_frame.header_checksum = sensor_data_frame.frame_buffer[1] + sensor_data_frame.frame_buffer[2];
 
 
   //menu_frame
-  menu_frame.frame_length = FRAME_OVERHEAD + 3;   //three pieces of data, current menu + 2 encoder pos bytes
+  menu_frame.frame_length =MENU_FRAME_LENGTH;   //three pieces of data, current menu + 2 encoder pos bytes
   menu_frame.frame_type = MENU_FRAME_TYPE;
 
   menu_frame.frame_buffer[0] = menu_frame.frame_length;
   menu_frame.frame_buffer[1] = menu_frame.frame_type;
-  menu_frame.frame_buffer[2] = 1;
-  menu_frame.frame_buffer[3] = 1;
-  menu_frame.header_checksum = menu_frame.frame_buffer[0] + menu_frame.frame_buffer[1] + menu_frame.frame_buffer[2] + menu_frame.frame_buffer[3];
+  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1,1);
+  
+  menu_frame.header_checksum = menu_frame.frame_buffer[0] + menu_frame.frame_buffer[1] + menu_frame.frame_buffer[2];
   menu_frame.checksum_address = menu_frame.frame_length - 2;
 }
 
@@ -228,9 +228,9 @@ int Coms::init_frames() {
 void Coms::build_menu_data_frame(byte menu_number) {   //function to build the frame to send menu info
   //byte type = 4;
 
-  menu_frame.frame_buffer[4] = (byte) menu_number;
-  menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(1);
-  menu_frame.frame_buffer[6] = (byte) encoder.get_text_encoder_position(2);
+  menu_frame.frame_buffer[3] = (byte) menu_number;
+  menu_frame.frame_buffer[4] = (byte) encoder.get_text_encoder_position(1);
+  menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(2);
 
   //  menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.header_checksum; //initial checksum
   //

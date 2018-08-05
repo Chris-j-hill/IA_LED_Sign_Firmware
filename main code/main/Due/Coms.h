@@ -16,6 +16,8 @@
 //https://github.com/antodom/soft_uart
 #include "soft_uart.h"
 
+
+
 // variables for initialising soft serial for comms
 using namespace arduino_due;
 #define COMS_SPEED 19200         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
@@ -24,19 +26,20 @@ using namespace arduino_due;
 #define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
 
 
-#define HEADER_LENGTH 4  //length,type,num frames, frame no
-#define TRAILER_LENGTH 2 //checksum and end byte
-#define FRAME_TYPE_BYTE  1
-#define FRAME_LENGTH_BYTE  0
+#define HEADER_LENGTH 4  //length,type,num frames, obj num
+#define TRAILER_LENGTH 3 //2 checksums and end byte
+#define FRAME_TYPE_BYTE  1  //location of ...
+#define FRAME_LENGTH_BYTE  0  //location of ...
 
 #define ENDBYTE_CHARACTER 255 // can scan through serial until this is reached on mega end if error detected 
 
-#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH - HEADER_LENGTH - TRAILER_LENGTH
+#define MEGA_SERIAL_BUFFER_LENGTH 64 // must match or be less than SERIAL_RX_BUFFER_SIZE in hardware->arduino->avr->cores->arduino->HardwareSerial.h
 #define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
+#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD
+
 
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
-#define MEGA_SERIAL_BUFFER_LENGTH 32
 #define MAX_TWEET_SIZE 100
 //#define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
 // need different approach for bitmaps...
@@ -47,10 +50,15 @@ using namespace arduino_due;
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
 
-#define MEGA_RX_FRAME_LENGTH 3
+#define POS_FRAME_LENGTH FRAME_OVERHEAD + 8
+#define MENU_FRAME_LENGTH FRAME_OVERHEAD + 3
+
+#define PACK_FRAME_NUM_DATA(a, b) (a<<5 & b) & 0b11101110 //ensure parity bits are zero in case not used
+
+#define MEGA_RX_FRAME_LENGTH 4
 /*
    Nack frame format
-
+   Frame type
    Frame num
    Obj num
    Checksum   <- if were recieving garbage this could be necessary

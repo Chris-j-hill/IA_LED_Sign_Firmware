@@ -43,7 +43,7 @@ void due_setup() {
   encoder.init_encoder();
   encoder.init_button();
   menu.init_menu_tree();
-  
+
   light_sensor.init_LDR();
   current_meter.init_current_meter();
   graphics.init_cursor();
@@ -52,20 +52,32 @@ void due_setup() {
   led_strip.init_led_strip();
   nativeUsb.init_native_usb();
   coms_serial.init_serial();
-  
+
+  //graphics.push_string_data();
+  byte test_header[4] = {32, 1, (0x1 << 5) | (0x1 << 1) , (2 << 4)};
+  for (byte i = 0; i < 4; i++) {
+    Serial.println();
+    Serial.println(test_header[i], BIN);
+  }
+  while (1) {
+        Serial3.println();
+    Serial3.write(test_header, 4);
+    Serial3.println();
+    delay(500);
+  }
 }
 
 
 void due_loop() {
   while (1) {
 
-    //push string and related data if new data retrieved    
-    graphics.push_string_data(); 
-    
-  
+    //push string and related data if new data retrieved
+    graphics.push_string_data();
+
+
     //check for requests from megas (eg transmission errors)
     //coms_serial.check_megas();
-    
+
     // update screen brightness based on ldr and current meter readings
     current_meter.get_readings();
     light_sensor.get_readings();
@@ -81,15 +93,15 @@ void due_loop() {
     // check the encoder
     encoder.handle_interupts();
 
-    // push menu updates to screens 
+    // push menu updates to screens
     menu.display_menu();
 
     //check for user seria  l input and print requested data
     host.check_serial();
     host.print_messages();
-    
+
     // check if sd card mounted and log data if possible
-    
+
     card.check_for_sd_card();
     //card.update_data_log();
 
@@ -97,7 +109,7 @@ void due_loop() {
     //TO DO:
     // internet.check_connection();
     //graphics.get_next_string_config_profile();
-    
+
   }
 
 }

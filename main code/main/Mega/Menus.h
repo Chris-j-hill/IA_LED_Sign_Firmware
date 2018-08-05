@@ -260,7 +260,7 @@ class Menu {
   private:
 
     byte current_menu = DEFAULT_MENU;
-
+    
 
     void clear_background_text(); //clear area for menu
 
@@ -306,7 +306,9 @@ class Menu {
     byte get_current_menu() {
       return current_menu;
     }
-
+    byte set_current_menu(byte cur_menu){
+      current_menu = cur_menu;
+    }
 
 
 

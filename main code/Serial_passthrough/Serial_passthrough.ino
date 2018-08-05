@@ -23,7 +23,7 @@
 void setup() {
   // initialize both serial ports:
   Serial.begin(115200);
-  Serial1.begin(4800, SERIAL_8N2);
+  Serial1.begin(19200, SERIAL_8N2);
 
 }
 
@@ -38,10 +38,10 @@ void loop() {
     Serial.print("\t");
     Serial.println((char)inByte);
   }
-
-  // read from port 0, send to port 1:
-  if (Serial.available()) {
-    int inByte = Serial.read();
-    Serial1.write(inByte);
-  }
+//
+//  // read from port 0, send to port 1:
+//  if (Serial.available()) {
+//    int inByte = Serial.read();
+//    Serial1.write(inByte);
+//  }
 }

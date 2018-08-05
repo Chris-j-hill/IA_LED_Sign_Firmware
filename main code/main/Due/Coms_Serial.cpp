@@ -323,9 +323,8 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
 
     text_frame.frame_buffer[0] = text_frame.frame_length;
     text_frame.frame_buffer[1] = text_frame.frame_type;
-    text_frame.frame_buffer[2] = text_frame.num_frames;
-    text_frame.frame_buffer[3] = text_frame.this_frame;
-    text_frame.frame_buffer[4] = obj_num;
+    text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames,text_frame.this_frame);
+    text_frame.frame_buffer[3] = obj_num;
 
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
 
@@ -355,9 +354,8 @@ void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame
 
   text_frame.frame_buffer[0] = text_frame.frame_length;
   text_frame.frame_buffer[1] = text_frame.frame_type;
-  text_frame.frame_buffer[2] = text_frame.num_frames;
-  text_frame.frame_buffer[3] = text_frame.this_frame;
-  text_frame.frame_buffer[4] = obj_num;
+  text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames,text_frame.this_frame);
+  text_frame.frame_buffer[3] = obj_num;
 
   pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
   write_text_frame(address);  //only send specific one mega
@@ -599,7 +597,7 @@ inline bool Coms_Serial::mega_status(byte address) {
 //  }
 //}
 
-void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, int offset) { //sensor to send specific value
+void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, uint16_t offset) { //sensor to send specific value
 
   // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
   // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously

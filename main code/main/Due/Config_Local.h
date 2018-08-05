@@ -187,6 +187,7 @@
 //#define SKIP_INTITAL_STARTUP_SEQUENCE
 
 #define DEFAULT_MENU_WIDTH 64
+#define MEGA_SERIAL_BUFFER_LENGTH 32 // must match or be less than SERIAL_RX_BUFFER_SIZE in hardware->arduino->avr->cores->arduino->HardwareSerial.h
 
 
 //________configure interrupt priority___________

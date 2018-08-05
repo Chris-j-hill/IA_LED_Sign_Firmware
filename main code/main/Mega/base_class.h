@@ -12,7 +12,7 @@
 //
 //    int HEADER_LENGTH = 3;
 //    int TRAILER_LENGTH = 2;
-//    int DATA_IDENTIFIER_BYTE = 2;
+//    int FRAME_TYPE_BYTE = 2;
 //    int FRAME_LENGTH_BYTE = 1;
 //
 //    //byte frame_type;             // frame type defines what is to be done with info, ie where string should go or other operation
@@ -77,7 +77,7 @@
 //  }
 //
 //#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-//  Serial1.begin(COMS_SPEED);    //init comms link , serial1 on megas
+//  Serial_1.begin(COMS_SPEED);    //init comms link , serial1 on megas
 //  Serial.println(F("Soft com initialised"));
 //#else
 //

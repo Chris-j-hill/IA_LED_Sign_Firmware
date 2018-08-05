@@ -25,7 +25,18 @@ byte screen_mode = 0; //mode of operation on startup should be both displaying
 //mode3: other side on
 
 //some default text strings
+#if MAX_NUM_OF_TEXT_OBJECTS == 5
 char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"}, {"this is a test1"}, {"this is a test2"}, {"this is a test3"}, {"this is a test4"}};
+#elif MAX_NUM_OF_TEXT_OBJECTS == 4
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"}, {"this is a test1"}, {"this is a test2"}, {"this is a test3"}};
+#elif MAX_NUM_OF_TEXT_OBJECTS == 3
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"}, {"this is a test1"}, {"this is a test2"}};
+#elif MAX_NUM_OF_TEXT_OBJECTS == 2
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"}, {"this is a test1"}};
+#elif MAX_NUM_OF_TEXT_OBJECTS == 1
+char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE] = {{"this is a test0"}};
+#endif
+
 
 extern byte screen_brightness;
 

@@ -17,7 +17,12 @@
 #define Sprint(a)
 #endif
 
-//#define DO_ERROR_CHECKING
+#define DO_ERROR_CHECKING //calculate checksum
+
+#ifdef DO_ERROR_CHECKING
+//#define DO_HEAVY_ERROR_CHECKING   // parity checking each byte and checksum
+//#define DO_HEADER_ERROR_CHECKING  // hamming encoded header bytes for one bit correction
+#endif
 
 #define USE_SERIAL_TO_MEGAS
 #define USE_I2C_TO_MEGAS
@@ -169,6 +174,8 @@
 
 
 #define DEFAULT_MENU_WIDTH 64
+
+
                           
 #endif //CONFIGURATION_H
 #endif // LOCAL_CONFIG_H
