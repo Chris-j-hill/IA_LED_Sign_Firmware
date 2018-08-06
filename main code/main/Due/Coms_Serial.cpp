@@ -125,9 +125,6 @@ const char return_carraige[2] = {'\r', '\n'};
 
 Mega_Serial_Parameters mega_parameters;
 
-const char ping_string[] = "ping";
-const char expected_ping_rx = 'p';
-
 extern byte screen_brightness;
 extern byte screen_mode;
 

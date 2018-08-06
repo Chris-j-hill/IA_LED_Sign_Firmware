@@ -50,10 +50,23 @@ using namespace arduino_due;
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
 
+const char ping_string[] = "ping";
+const char expected_ping_rx = 'p';
+
 #define POS_FRAME_LENGTH FRAME_OVERHEAD + 8
 #define MENU_FRAME_LENGTH FRAME_OVERHEAD + 3
+#define PING_FRAME_LENGTH FRAME_OVERHEAD + sizeof(ping_string)
 
-#define PACK_FRAME_NUM_DATA(a, b) (a<<5 & b) & 0b11101110 //ensure parity bits are zero in case not used
+#define PACK_FRAME_NUM_DATA(a, b) ((a<<5 & b) & 0b11101110) //ensure parity bits are zero in case not used
+#define GET_FRAME_NUM_DATA(a)     (a & 0b11100000)
+#define GET_THIS_FRAME_DATA(a)    (a & 0b00000111)
+
+#define generate_checksum_13(a)   generate_checksum(a, 0x1FFF)
+
+#define CHECKSUM_3_BIT_LOC 3
+#define CHECKSUM_3_BIT_MASK 0b00001110
+
+
 
 #define MEGA_RX_FRAME_LENGTH 4
 /*
@@ -81,38 +94,74 @@ struct Frame {            //frame details for the due, seperate one for the mega
 };
 
 
+const byte parity[] =//LUT for parity check, byte value is index, content is 0 if even parity, 1 if odd
+{
+  0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0,
+  1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
+  1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1,
+  0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0,
+  1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1,
+  0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0,
+  0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1,
+  0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1,
+  1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1,
+  0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0,
+  0, 1, 0, 1, 1, 0
+};
+
 class Coms {
 
   private:
+
+    void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
+
+    void set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int start_from = 0); // set parity of last bit for all bytes excpet last two(ie the checksums, which is dependant on the value of the bytes)
+    void set_verical_parity_byte(byte frame_length);
+    void set_header_parity(byte frame_type);
+    inline byte parity_of(byte value);
+    void set_checksum_13(uint16_t checksum,byte frame_type);
+
+  protected:
+
+    void pack_disp_string_frame(uint16_t frame_num, byte obj_num);        //function to pack a frame of text to display
+    void build_pos_frame(byte obj_num);                                               //function to send the xy coordinates along with a number of other related variables
+    byte get_text_colour_hue(byte byte_number, byte obj_num);                            //function to return the MSB or LSB of the current hue value
+    void build_menu_data_frame(byte menu_number);    //function to build the frame to send menu info
+    bool error_sanity_check(byte frame_num, byte obj_num);  //if obj in use and string could occupy this frame number
+    void set_frame_parity_and_checksum(byte frame_type, byte frame_length);    //pack frame with parity bits
+    uint16_t generate_checksum(byte frame_type, uint16_t modulo_mask = 0xFF);// generate checksum, default is 8 bit checksum
     
+
   public:
 
     Coms() {}
-    
-    
-    void pack_disp_string_frame(uint16_t frame_num, byte obj_num);        //function to pack a frame of text to display
-    void build_pos_frame(byte obj_num);                                               //function to send the xy coordinates along with a number of other related variables
-    void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
-    
-    byte get_text_colour_hue(byte byte_number, byte obj_num);                            //function to return the MSB or LSB of the current hue value to send over i2c
 
     void calc_delay();
+    void init_frames();  //set constant elements of frames
 
-    void build_menu_data_frame(byte menu_number);    //function to build the frame to send menu info
-    int init_frames();  //set constant elements of frames
-    byte generate_checksum(byte frame_type);
-   
-    bool error_sanity_check(byte frame_num, byte obj_num);  //if obj in use and string could occupy this frame number
-    
-    
+
     //  todo
     void echo_menu(); //is this needed
 
-   
+
 };
 
-
-
+//
+//
+//class Encode{
+//  private:
+//    byte parity_bit_loc =8;
+//  public:
+//  Encode(){}
+//};
+//
+//class Decode{
+//  private:
+//
+//  public:
+//  Decode(){}
+//
+//};
 
 #endif  //Coms_H
 

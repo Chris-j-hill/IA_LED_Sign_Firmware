@@ -54,12 +54,24 @@
 #define NUM_ALLOWED_FRAMES      8// 3 bits of data
 
 
-#define APPLY_THIS_FRAME_MASK(a) ((a >> 1) & 0b00000111)
-#define APPLY_FRAME_NUM_MASK(a)  ((a >> 5) & 0b00000111)
-#define APPLY_OBJ_NUM_MASK(a)    ((a >> 4) & 0b00001111)
+#define APPLY_FRAME_LENGTH_MASK(a) ((a >> 1) & 0b00111111)  //isolate data
+#define APPLY_FRAME_TYPE_MASK(a)   ((a >> 1) & 0b00000111)
+#define APPLY_THIS_FRAME_MASK(a)   ((a >> 1) & 0b00000111)  
+#define APPLY_FRAME_NUM_MASK(a)    ((a >> 5) & 0b00000111)
+#define APPLY_OBJ_NUM_MASK(a)      ((a >> 4) & 0b00001111)
+
+#define APPLY_FRAME_LENGTH_PARITY_MASK(a) (a & 0b00000001)  //isolate parity bit in header byte
+#define APPLY_FRAME_TYPE_PARITY_MASK(a)   (a & 0b00000001) 
+#define APPLY_THIS_FRAME_PARITY_MASK(a)   (a & 0b00000001)
+#define APPLY_FRAME_NUM_PARITY_MASK(a)    ((a >> 4)&0b00000001)
+#define APPLY_OBJ_NUM_PARITY_MASK(a)      (a & 0b00000001)
+
+
 #define GET_GLOBAL_POS(a, b) (a<<8 & b)
 #define GET_TEXT_DIR(a) a-128
 #define GET_ENCODER_POS(a, b) GET_GLOBAL_POS(a, b)
+
+
 
 //#define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 

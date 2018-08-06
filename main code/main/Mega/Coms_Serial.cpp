@@ -208,19 +208,20 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
   // no encoding, other than checksum at the end, in this case
   // so just have to check if the values are reasonable
 
+
+  //isolate data in case encoded but encoding not enabled at this end
+  byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_buffer[FRAME_LENGTH_LOC]);
+  byte frame_type = APPLY_FRAME_TYPE_MASK(temp_buffer[FRAME_TYPE_LOC]);
   byte num_frames = APPLY_FRAME_NUM_MASK(temp_buffer[NUM_OF_FRAMES_LOC]); //do these here to save multiple calulations
   byte this_frame = APPLY_THIS_FRAME_MASK(temp_buffer[FRAME_NUMBER_LOC]);
   byte obj_num = APPLY_OBJ_NUM_MASK(temp_buffer[OBJ_NUM_LOC]);
 
 
   Serial.print("frame length = ");
-  Serial.println(temp_buffer[FRAME_LENGTH_LOC]);
+  Serial.println(frame_length);
 
   Serial.print("frame type = ");
-  Serial.println(temp_buffer[FRAME_TYPE_LOC]);
-
-  Serial.print(" = ");
-  Serial.println(temp_buffer[FRAME_NUMBER_LOC],BIN);
+  Serial.println(frame_type);
   
   Serial.print("num frame = ");
   Serial.println(num_frames);
@@ -232,6 +233,9 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
   Serial.println(obj_num);
   Serial.println();
 
+
+  // list of tests of header to check if its reasonable
+  
   if (temp_buffer[FRAME_LENGTH_LOC] > MEGA_SERIAL_BUFFER_LENGTH || temp_buffer[FRAME_LENGTH_LOC] < FRAME_OVERHEAD)        goto badframe; //out of bounds frame length
   else if (temp_buffer[FRAME_TYPE_LOC] > NUM_ALLOWED_FRAME_TYPES)                                                         goto badframe; //out of bounds frame type
   else if (num_frames < this_frame)           goto badframe; //check if this frame is greater than num frames
@@ -246,9 +250,10 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
 
   else if (temp_buffer[FRAME_TYPE_LOC] == TEXT_FRAME_TYPE && num_frames > EXPECTED_MAX_TEXT_FRAMES)                       goto badframe;  //if text frame, we know the max size the text can be
   else if (temp_buffer[FRAME_TYPE_LOC] == SENSOR_FRAME_TYPE && num_frames > EXPECTED_MAX_SENSOR_DATA_FRAMES)              goto badframe;  //if sensor frame, we know how many pieces of data there are
+  else if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                                            goto badframe;  //check the obj num is reasonable
 
-
-  else { //frame header data plausable, proceed
+  //TESTS PASSED: frame header data plausable, proceed to save data
+  else { 
     if (temp_buffer[FRAME_TYPE_LOC] == TEXT_FRAME_TYPE ) {
       text_frame.num_frames = num_frames;
       text_frame.num_frames = this_frame;
@@ -279,7 +284,7 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
       goto badframe;
     }
 
-    return temp_buffer[FRAME_TYPE_LOC];    //only return true if frame header reasonable and frame type is defined
+    return temp_buffer[FRAME_TYPE_LOC];    //only return non false value if frame header reasonable and frame type is defined
   }
 
   //do this when a bad frame if recieved
@@ -298,10 +303,15 @@ byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
 #endif
 
 #ifdef DO_HEAVY_ERROR_CHECKING
-  //check parity bits
-  //if error in more than two lines discard, cant recover
-  //else if error in frame_length, get code to read until endbyte,\r,\n found or MEGA_SERIAL_BUFFER_LENGTH reached
-  //else return frame_type
+//  check parity bits of header
+//  if error in more than two lines discard, cant recover
+//  else if error in frame_length, get code to read until endbyte,\r,\n found or MEGA_SERIAL_BUFFER_LENGTH reached
+//  else return frame_type
+
+  for( byte i=0;i<HEADER_LENGTH;i++){
+    
+  }
+
 #endif
 
 

@@ -22,7 +22,7 @@ Frame text_frame;
 Frame menu_frame;
 Frame pos_frame;
 Frame sensor_data_frame;
-
+Frame ping_frame;
 //give access to these structs
 extern struct Led_Strip_Struct led_strip_parameters;
 extern struct Temp_sensor temp_parameters;
@@ -173,23 +173,23 @@ void Coms::calc_delay() {    // function to calculate the dalay in sending frame
 
 byte Coms::get_text_colour_hue(byte byte_number, byte obj_num) { //function to return the MSB or LSB of the current hue value to send
 
-//  if (byte_number == 1) { //looking for MSB
-//    if (text_parameters[obj_num].hue < 0)
-//      return (abs(text_parameters[obj_num].hue) /256);    //get quotient of absolute value and 256 rounded down
-//
-//    else
-//      return (abs(text_parameters[obj_num].hue) / 256 + 128); //add 128 to indicate positve number
-//  }
-//  else if (byte_number == 2) { //LSB
-//    return (abs(text_parameters[obj_num].hue) % 256);    //get modulo of value and 256;
-//  }
+  //  if (byte_number == 1) { //looking for MSB
+  //    if (text_parameters[obj_num].hue < 0)
+  //      return (abs(text_parameters[obj_num].hue) /256);    //get quotient of absolute value and 256 rounded down
+  //
+  //    else
+  //      return (abs(text_parameters[obj_num].hue) / 256 + 128); //add 128 to indicate positve number
+  //  }
+  //  else if (byte_number == 2) { //LSB
+  //    return (abs(text_parameters[obj_num].hue) % 256);    //get modulo of value and 256;
+  //  }
 
   if (byte_number == 1) return ((text_parameters[obj_num].hue >> 8) & 0xFF);   //return msb
   else return (text_parameters[obj_num].hue & 0xFF);
 
 }
 
-int Coms::init_frames() {
+void Coms::init_frames() {
 
   // text frame
   text_frame.frame_type = TEXT_FRAME_TYPE;
@@ -199,29 +199,32 @@ int Coms::init_frames() {
   pos_frame.frame_type = POS_FRAME_TYPE;
   pos_frame.frame_buffer[0] = pos_frame.frame_length;
   pos_frame.frame_buffer[1] = pos_frame.frame_type;
-  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1,1);
-  
+  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
+
   pos_frame.header_checksum = pos_frame.frame_buffer[0] + pos_frame.frame_buffer[1] + pos_frame.frame_buffer[2];
   pos_frame.checksum_address = pos_frame.frame_length - TRAILER_LENGTH;
 
   // sensor_data_frame
   sensor_data_frame.frame_type = SENSOR_FRAME_TYPE;
   sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
-  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1,1); //doesnt matter if it thinks theres one frame or many, data not related to eachother
-  
+  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1); //doesnt matter if it thinks theres one frame or many, data not related to eachother
+
   sensor_data_frame.header_checksum = sensor_data_frame.frame_buffer[1] + sensor_data_frame.frame_buffer[2];
 
 
   //menu_frame
-  menu_frame.frame_length =MENU_FRAME_LENGTH;   //three pieces of data, current menu + 2 encoder pos bytes
+  menu_frame.frame_length = MENU_FRAME_LENGTH;  //three pieces of data, current menu + 2 encoder pos bytes
   menu_frame.frame_type = MENU_FRAME_TYPE;
 
   menu_frame.frame_buffer[0] = menu_frame.frame_length;
   menu_frame.frame_buffer[1] = menu_frame.frame_type;
-  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1,1);
-  
+  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
+
   menu_frame.header_checksum = menu_frame.frame_buffer[0] + menu_frame.frame_buffer[1] + menu_frame.frame_buffer[2];
   menu_frame.checksum_address = menu_frame.frame_length - 2;
+
+  //ping frame
+  ping_frame.frame_length = PING_FRAME_LENGTH;
 }
 
 
@@ -245,10 +248,12 @@ void Coms::build_menu_data_frame(byte menu_number) {   //function to build the f
 
 }
 
-byte Coms::generate_checksum(byte frame_type) {
+uint16_t Coms::generate_checksum(byte frame_type, uint16_t modulo_mask) {
 
   byte *frame_index_zero;  //pointer to address of first element of given array
   byte frame_length;
+
+
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
@@ -267,17 +272,22 @@ byte Coms::generate_checksum(byte frame_type) {
       frame_length = menu_frame.frame_length;
       frame_index_zero = menu_frame.frame_buffer;
       break;
+    case PING_STRING_TYPE:
+      frame_length = ping_frame.frame_length;
+      frame_index_zero = ping_frame.frame_buffer;
+      break;
     default:
       Serial.println("checksum calc error");
       return (0);
   }
 
   //calculate checksum
-  byte checksum = 0;
+  uint16_t checksum = 0;  //set checksum as 16 bit number and modulo to fit
   for (byte i = 0; i < frame_length - 2; i++) {
     checksum += *(frame_index_zero + i);          //sum all elements
   }
 
+  checksum = checksum & modulo_mask;
   return checksum;
 
 }
@@ -290,4 +300,171 @@ bool Coms::error_sanity_check(byte frame_num, byte obj_num) {
   return true;
 }
 
+
+void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
+
+  set_header_parity(frame_type);  //same regardless of frame type or length
+
+  if (frame_type == TEXT_FRAME_TYPE) {
+
+    set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
+    //set_eighth_parity_bits(frame_length);// set parity of last bit for all bytes except trailer(ie the checksums, which is dependant on the value of the bytes)
+    set_verical_parity_byte(frame_length);
+    set_checksum_13(generate_checksum_13(frame_type), frame_type); //macro to generate 13 bit checksum
+  }
+
+  else if (frame_type == POS_FRAME_TYPE) {
+
+  }
+
+  else if (frame_type == SENSOR_FRAME_TYPE) {
+
+  }
+
+  else if (frame_type == MENU_FRAME_TYPE) {
+
+  }
+
+  else if (frame_type == PING_STRING_TYPE) {
+
+  }
+  else return;
+}
+
+void Coms::set_header_parity(byte frame_type) {
+
+  switch (frame_type) {
+    case TEXT_FRAME_TYPE:
+      text_frame.frame_buffer[0] = (text_frame.frame_buffer[0] << 1) | (parity_of(text_frame.frame_buffer[0]));
+      text_frame.frame_buffer[1] = (text_frame.frame_buffer[1] << 1) | (parity_of(text_frame.frame_buffer[1]));
+      text_frame.frame_buffer[2] = (text_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(text_frame.frame_buffer[2])) << 4)); //isolate three data bits, get parity, move parity in correct loc
+      text_frame.frame_buffer[2] = (text_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( text_frame.frame_buffer[2] ))));
+      text_frame.frame_buffer[3] = (text_frame.frame_buffer[3] << 1) | (parity_of(text_frame.frame_buffer[3]));
+      break;
+    case POS_FRAME_TYPE:
+      pos_frame.frame_buffer[0] = (pos_frame.frame_buffer[0] << 1) | (parity_of(pos_frame.frame_buffer[0]));
+      pos_frame.frame_buffer[1] = (pos_frame.frame_buffer[1] << 1) | (parity_of(pos_frame.frame_buffer[1]));
+      pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(pos_frame.frame_buffer[2])) << 4));
+      pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( pos_frame.frame_buffer[2] ))));
+      pos_frame.frame_buffer[3] = (pos_frame.frame_buffer[3] << 1) | (parity_of(pos_frame.frame_buffer[3]));
+      break;
+
+    case SENSOR_FRAME_TYPE:
+      sensor_data_frame.frame_buffer[0] = (sensor_data_frame.frame_buffer[0] << 1) | (parity_of(sensor_data_frame.frame_buffer[0]));
+      sensor_data_frame.frame_buffer[1] = (sensor_data_frame.frame_buffer[1] << 1) | (parity_of(sensor_data_frame.frame_buffer[1]));
+      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(sensor_data_frame.frame_buffer[2])) << 4));
+      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( sensor_data_frame.frame_buffer[2] ))));
+      sensor_data_frame.frame_buffer[3] = (sensor_data_frame.frame_buffer[3] << 1) | (parity_of(sensor_data_frame.frame_buffer[3]));
+      break;
+
+    case MENU_FRAME_TYPE:
+      menu_frame.frame_buffer[0] = (menu_frame.frame_buffer[0] << 1) | (parity_of(menu_frame.frame_buffer[0]));
+      menu_frame.frame_buffer[1] = (menu_frame.frame_buffer[1] << 1) | (parity_of(menu_frame.frame_buffer[1]));
+      menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(menu_frame.frame_buffer[2])) << 4));
+      menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( menu_frame.frame_buffer[2] ))));
+      menu_frame.frame_buffer[3] = (menu_frame.frame_buffer[3] << 1) | (parity_of(menu_frame.frame_buffer[3]));
+      break;
+
+    case PING_STRING_TYPE:
+      ping_frame.frame_buffer[0] = (ping_frame.frame_buffer[0] << 1) | (parity_of(ping_frame.frame_buffer[0]));
+      ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
+      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
+      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
+      ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3] << 1) | (parity_of(ping_frame.frame_buffer[3]));
+      break;
+
+    default:
+      Serial.println("header parity calc error");
+      return;
+  }
+}
+
+inline byte Coms::parity_of(byte value) {
+  return parity[value];   //LUT of parity given up to 8 bit value
+}
+
+
+
+void Coms::set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int start_from) { // set parity of last bit for all bytes excpet last two(ie the checksums, which is dependant on the value of the bytes)
+
+  //loc = 0 parity bit is MSB
+  //loc = 7 parity bit is LSB
+
+
+  byte loc_bit_suppress_mask = 0;
+  switch (bit_loc) {
+    case 0:
+      loc_bit_suppress_mask = 0x7F;
+      break;
+    case 1:
+      loc_bit_suppress_mask = 0xBF;
+      break;
+    case 2:
+      loc_bit_suppress_mask = 0xDF;
+      break;
+    case 3:
+      loc_bit_suppress_mask  = 0xEF;
+      break;
+    case 4:
+      loc_bit_suppress_mask = 0xF7;
+      break;
+    case 5:
+      loc_bit_suppress_mask = 0xFB;
+      break;
+    case 6:
+      loc_bit_suppress_mask = 0xFD;
+      break;
+    case 7:
+      loc_bit_suppress_mask = 0xFE;
+      break;
+    default: return;
+  }
+  byte suppress_data_mask = ~ loc_bit_suppress_mask; //is inverse of suppress mask
+  byte shift_by = 7 - bit_loc;
+
+
+  for (int i = start_from; i < buf_length; i++) {
+    buf[i] = (buf[i] & loc_bit_suppress_mask) | ((parity_of(buf[i]) << shift_by) & suppress_data_mask);
+  }
+}
+
+
+
+void Coms::set_verical_parity_byte(byte frame_length) {
+
+}
+
+
+void set_checksum_13(uint16_t checksum, byte frame_type) {
+
+  byte three_bit = ((checksum >> 7) & 0b00001110);
+  byte eight_bit = (checksum & 0xFF);
+  byte disp_from_frame_end = 2;
+  switch (frame_type) {
+    case TEXT_FRAME_TYPE:
+      text_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (text_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
+      text_frame.frame_buffer[text_frame.frame_length - disp_from_frame_end] = eight_bit;
+      break;
+    case POS_FRAME_TYPE:
+      pos_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (pos_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
+      pos_frame.frame_buffer[pos_frame.frame_length - disp_from_frame_end] = eight_bit;
+      break;
+    case SENSOR_FRAME_TYPE:
+      sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
+      sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - disp_from_frame_end] = eight_bit;
+      break;
+    case MENU_FRAME_TYPE:
+      menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
+      menu_frame.frame_buffer[menu_frame.frame_length - disp_from_frame_end] = eight_bit;
+      break;
+    case PING_STRING_TYPE:
+      ping_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (ping_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
+      ping_frame.frame_buffer[ping_frame.frame_length - 2] = eight_bit;
+      break;
+    default:
+      Serial.println("set checksum error");
+      return;
+
+  }
+}
 #endif // Coms_CPP
