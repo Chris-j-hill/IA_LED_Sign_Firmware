@@ -335,7 +335,7 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 
     set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
     //set_eighth_parity_bits(frame_length);// set parity of last bit for all bytes except trailer(ie the checksums, which is dependant on the value of the bytes)
-    set_verical_parity_byte(frame_length);
+    set_verical_parity_byte(text_frame.frame_buffer ,text_frame.frame_length-3);
     set_checksum_13(generate_checksum_13(frame_type), frame_type); //macro to generate 13 bit checksum
   }
 
@@ -450,21 +450,31 @@ void Coms::set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int s
   }
   byte suppress_data_mask = ~ loc_bit_suppress_mask; //is inverse of suppress mask
   byte shift_bit_by = 7 - bit_loc;  //locate bit in byte for parity
-  byte shift_data_by =1;
+  byte shift_data_by =1;  //hard code data shift, change this to split data and shift in two parts to allow parity to be located anywhere
   
   for (int i = start_from; i < buf_length; i++) {
-    Serial.print("before :");
-    Serial.println(buf[i],BIN);
+//    Serial.print("before :");
+//    Serial.println(buf[i],BIN);
     buf[i] = ((buf[i]<<shift_data_by)  & loc_bit_suppress_mask) | (parity_of(buf[i]) & suppress_data_mask);
-    Serial.print("after  :");
-    Serial.println(buf[i],BIN);
-    Serial.println();
+//    Serial.print("after  :");
+//    Serial.println(buf[i],BIN);
+//    Serial.println();
   }
 }
 
 
 
-void Coms::set_verical_parity_byte(byte frame_length) {
+void Coms::set_verical_parity_byte(byte *buf, int checksum_loc,int start_byte) {
+
+  byte count =0;
+  byte mask =1;
+  for(byte j =0; j<8 ;j++){
+    //byte mask = 1<<j
+  for (int i = start_byte; i< checksum_loc;i++){
+    count+= ((buf[i]>>j)&mask); 
+  }
+  buf[checksum_loc] = buf[checksum_loc] | ((count & mask)<<j);
+  }
 
 }
 

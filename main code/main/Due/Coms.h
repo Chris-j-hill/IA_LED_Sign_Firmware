@@ -110,7 +110,7 @@ class Coms {
     void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
 
     void set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int start_from = 0); // set parity of last bit for all bytes excpet last two(ie the checksums, which is dependant on the value of the bytes)
-    void set_verical_parity_byte(byte frame_length);
+    void set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte =0);
     
     inline byte parity_of(byte value);
     void set_checksum_13(uint16_t checksum,byte frame_type);

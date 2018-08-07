@@ -31,7 +31,19 @@ HostNativeUSB  nativeUsb;
 
 struct Timers timers; //timers struct
 
+
+
 extern struct Frame text_frame;
+void printzeros(byte var) {
+  for (unsigned int test = 0x80; test; test >>= 1) {
+    Serial.write(var  & test ? '1' : '0');
+  }
+//  Serial.println();
+}
+
+
+
+
 
 void due_setup() {
 #ifndef DUE_ENABLED    //stop code imidiately if due disabled
@@ -66,7 +78,8 @@ void due_setup() {
     
     Serial.print(text_frame.frame_buffer[i]);
     Serial.print("\t");
-    Serial.println(text_frame.frame_buffer[i],BIN);
+    printzeros(text_frame.frame_buffer[i]);
+    Serial.println();
   }
   
 //  while (1) {
