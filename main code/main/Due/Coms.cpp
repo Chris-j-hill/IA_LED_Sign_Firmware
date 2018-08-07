@@ -13,7 +13,8 @@
 #include "SD_Cards.h"
 #include "Led_Strip.h"
 #include "Encoder.h"
-
+#include "LUTS.h"
+#include "Config_Local.h"
 
 // variables
 
@@ -73,18 +74,34 @@ bool mega_enabled[4] = {true, true, true, true};  // ignore communication if boa
 
 void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //function to pack a frame of text to display
 
-  // function to pack a frame based on a given offset (ie this frames number)
-  // maybe generalise later to accept calls from multiple frame building methods
+  // function to pack a frame based on a given offset (ie this frames_num)
 
   uint16_t frame_offset = ((frame_num - 1) * (FRAME_DATA_LENGTH - 1)); //if this frame is 1 offset in data set is 0, if 2 offset 26, etc
 
   for (int i = 0; i < strlen(text_str[obj_num]) - frame_offset; i++) { //loop through string until end or break
     text_frame.frame_buffer[i + HEADER_LENGTH + 1] = (byte)text_str[obj_num][frame_offset + i]; //HEADER_LENGTH+1 for text obj_num
-    //    text_frame.checksum = text_frame.checksum + (byte)text_frame.frame_buffer[i + HEADER_LENGTH + 1];
-    if (i == FRAME_DATA_LENGTH) break;     //copy string until end or 27 bytes copied
+    if (i == FRAME_DATA_LENGTH) break;     //copy string until end or max bytes copied (frame full)
   }
 
+
+  //incorporate error correcting data
+#ifdef DO_ERROR_CHECKING  //do at least minimal error checking using 8 bit checksum
+#ifdef DO_HEAVY_ERROR_CHECKING     // parity checking each byte and 13 bit checksum, hamming encoding done inside function
+  set_frame_parity_and_checksum(TEXT_FRAME_TYPE, text_frame.frame_length);
+
+#else
+#ifdef DO_HEADER_ERROR_CORRECTING    // just do hamming but no parity, then do 8 bit checksum
+  hamming_encoder(frame_type);
   text_frame.frame_buffer[text_frame.frame_length - 2] = generate_checksum(TEXT_FRAME_TYPE);
+#endif
+#endif
+
+#ifndef DO_HEAVY_ERROR_CHECKING //if neither defined, just do 8 bit checksum
+#ifndef DO_HEADER_ERROR_CORRECTING
+  text_frame.frame_buffer[text_frame.frame_length - 2] = generate_checksum(TEXT_FRAME_TYPE);
+#endif
+#endif
+#endif
   text_frame.frame_buffer[text_frame.frame_length - 1] = ENDBYTE_CHARACTER;
 }
 
@@ -303,8 +320,17 @@ bool Coms::error_sanity_check(byte frame_num, byte obj_num) {
 
 void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 
+  //heavy error checking sets parity of all bytes and 13 bit checksum
+#ifdef DO_HEAVY_ERROR_CHECKING
   set_header_parity(frame_type);  //same regardless of frame type or length
+#endif
 
+  //header error correction applies hamming code
+#ifdef DO_HEADER_ERROR_CORRECTING
+  hamming_encoder(frame_type);
+#endif
+
+#ifdef DO_HEAVY_ERROR_CHECKING
   if (frame_type == TEXT_FRAME_TYPE) {
 
     set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
@@ -329,6 +355,7 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 
   }
   else return;
+#endif
 }
 
 void Coms::set_header_parity(byte frame_type) {
@@ -339,7 +366,7 @@ void Coms::set_header_parity(byte frame_type) {
       text_frame.frame_buffer[1] = (text_frame.frame_buffer[1] << 1) | (parity_of(text_frame.frame_buffer[1]));
       text_frame.frame_buffer[2] = (text_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(text_frame.frame_buffer[2])) << 4)); //isolate three data bits, get parity, move parity in correct loc
       text_frame.frame_buffer[2] = (text_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( text_frame.frame_buffer[2] ))));
-      text_frame.frame_buffer[3] = (text_frame.frame_buffer[3] << 1) | (parity_of(text_frame.frame_buffer[3]));
+      text_frame.frame_buffer[3] = (text_frame.frame_buffer[3]       | (parity_of(text_frame.frame_buffer[3])));
       break;
     case POS_FRAME_TYPE:
       pos_frame.frame_buffer[0] = (pos_frame.frame_buffer[0] << 1) | (parity_of(pos_frame.frame_buffer[0]));
@@ -391,6 +418,8 @@ void Coms::set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int s
   //loc = 7 parity bit is LSB
 
 
+//NB:  logic not working for non MSB parity bit
+
   byte loc_bit_suppress_mask = 0;
   switch (bit_loc) {
     case 0:
@@ -420,11 +449,16 @@ void Coms::set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int s
     default: return;
   }
   byte suppress_data_mask = ~ loc_bit_suppress_mask; //is inverse of suppress mask
-  byte shift_by = 7 - bit_loc;
-
-
+  byte shift_bit_by = 7 - bit_loc;  //locate bit in byte for parity
+  byte shift_data_by =1;
+  
   for (int i = start_from; i < buf_length; i++) {
-    buf[i] = (buf[i] & loc_bit_suppress_mask) | ((parity_of(buf[i]) << shift_by) & suppress_data_mask);
+    Serial.print("before :");
+    Serial.println(buf[i],BIN);
+    buf[i] = ((buf[i]<<shift_data_by)  & loc_bit_suppress_mask) | (parity_of(buf[i]) & suppress_data_mask);
+    Serial.print("after  :");
+    Serial.println(buf[i],BIN);
+    Serial.println();
   }
 }
 
@@ -435,7 +469,7 @@ void Coms::set_verical_parity_byte(byte frame_length) {
 }
 
 
-void set_checksum_13(uint16_t checksum, byte frame_type) {
+void Coms::set_checksum_13(uint16_t checksum, byte frame_type) {
 
   byte three_bit = ((checksum >> 7) & 0b00001110);
   byte eight_bit = (checksum & 0xFF);

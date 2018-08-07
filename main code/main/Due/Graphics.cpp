@@ -307,21 +307,14 @@ void Graphics::push_string_data() {
   static uint16_t num_text_transmissions = 0;
 
   //loop through objects, push to all megas if enabled and not updated
-  
-#ifdef FORCE_TEXT_FRAME_TRANSMISSION  //for testing, ignore if mega updated, send anyway (limit number fo times)
-  if (num_text_transmissions < NUM_TEXT_TRANSMISSIONS) {
-    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-      disable_pos_isr();  // disable pos isr while we push the string
-      coms_serial.send_text_frame(i);
-      coms_serial.send_text_calibration_data(i); //send all related text data
-      text_parameters[i].megas_up_to_date = true; //confirm text up to date
-      enable_pos_isr();   //enable pos isr again
-    }
-    num_text_transmissions++;
-  }
-#else
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-    if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date) { //if the object is enabled and has been changed by something
+
+#ifdef FORCE_TEXT_FRAME_TRANSMISSION// different condition for testing purposes, ignore if they were updated, just push set number of times
+    if (num_text_transmissions < NUM_TEXT_TRANSMISSIONS) 
+#else
+    if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date)  //if the object is enabled and has been changed by something
+#endif
+    {
       disable_pos_isr();  // disable pos isr while we push the string
       coms_serial.send_text_frame(i);
       coms_serial.send_text_calibration_data(i); //send all related text data
@@ -329,6 +322,8 @@ void Graphics::push_string_data() {
       enable_pos_isr();   //enable pos isr again
     }
   }
+#ifdef FORCE_TEXT_FRAME_TRANSMISSION  //if testing code, increment push count
+  num_text_transmissions++;
 #endif
 
 

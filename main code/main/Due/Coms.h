@@ -26,8 +26,13 @@ using namespace arduino_due;
 #define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
 
 
-#define HEADER_LENGTH 4  //length,type,num frames, obj num
+#define HEADER_LENGTH 3  //length,type,num frames, obj num
+
+#ifdef DO_HEAVY_ERROR_CHECKING
 #define TRAILER_LENGTH 3 //2 checksums and end byte
+#else
+#define TRAILER_LENGTH 2  // one checksum and endbyte
+#endif
 #define FRAME_TYPE_BYTE  1  //location of ...
 #define FRAME_LENGTH_BYTE  0  //location of ...
 
@@ -57,7 +62,10 @@ const char expected_ping_rx = 'p';
 #define MENU_FRAME_LENGTH FRAME_OVERHEAD + 3
 #define PING_FRAME_LENGTH FRAME_OVERHEAD + sizeof(ping_string)
 
-#define PACK_FRAME_NUM_DATA(a, b) ((a<<5 & b) & 0b11101110) //ensure parity bits are zero in case not used
+#define PACK_FRAME_NUM_DATA(a, b) (((a<<5) | (b<<1)) & 0b11101110) //ensure parity bits are zero in case not used
+#define PACK_OBJ_NUM_DATA(a) (a<<4)
+
+
 #define GET_FRAME_NUM_DATA(a)     (a & 0b11100000)
 #define GET_THIS_FRAME_DATA(a)    (a & 0b00000111)
 
@@ -94,20 +102,6 @@ struct Frame {            //frame details for the due, seperate one for the mega
 };
 
 
-const byte parity[] =//LUT for parity check, byte value is index, content is 0 if even parity, 1 if odd
-{
-  0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0,
-  1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
-  1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1,
-  0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0,
-  1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1,
-  0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0,
-  0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1,
-  0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1,
-  1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1,
-  0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0,
-  0, 1, 0, 1, 1, 0
-};
 
 class Coms {
 
@@ -117,7 +111,7 @@ class Coms {
 
     void set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int start_from = 0); // set parity of last bit for all bytes excpet last two(ie the checksums, which is dependant on the value of the bytes)
     void set_verical_parity_byte(byte frame_length);
-    void set_header_parity(byte frame_type);
+    
     inline byte parity_of(byte value);
     void set_checksum_13(uint16_t checksum,byte frame_type);
 
@@ -130,15 +124,17 @@ class Coms {
     bool error_sanity_check(byte frame_num, byte obj_num);  //if obj in use and string could occupy this frame number
     void set_frame_parity_and_checksum(byte frame_type, byte frame_length);    //pack frame with parity bits
     uint16_t generate_checksum(byte frame_type, uint16_t modulo_mask = 0xFF);// generate checksum, default is 8 bit checksum
-    
+    void hamming_encoder(byte frame_type){}
 
   public:
 
-    Coms() {}
+    //should be very little needs to be public in this class, mostly called through coms_serial
 
+    Coms() {}
+     
     void calc_delay();
     void init_frames();  //set constant elements of frames
-
+    void set_header_parity(byte frame_type);
 
     //  todo
     void echo_menu(); //is this needed

@@ -131,7 +131,7 @@ extern byte screen_mode;
 #ifdef USE_SERIAL_TO_MEGAS
 
 void Coms_Serial::init_serial() {
-  
+
   init_software_serial_to_megas();
   Serial.println("Setup done");
 #ifndef MEGA_SERIAL_CONNECTION_TESTING  //ignore ping if testing with serial passthrough code on mega
@@ -320,9 +320,9 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
 
     text_frame.frame_buffer[0] = text_frame.frame_length;
     text_frame.frame_buffer[1] = text_frame.frame_type;
-    text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames,text_frame.this_frame);
-    text_frame.frame_buffer[3] = obj_num;
-
+    text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames, text_frame.this_frame);
+    text_frame.frame_buffer[3] = PACK_OBJ_NUM_DATA(obj_num);
+  
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
 
     if (address == -1)
@@ -351,9 +351,9 @@ void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame
 
   text_frame.frame_buffer[0] = text_frame.frame_length;
   text_frame.frame_buffer[1] = text_frame.frame_type;
-  text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames,text_frame.this_frame);
-  text_frame.frame_buffer[3] = obj_num;
-
+  text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames, text_frame.this_frame);
+  text_frame.frame_buffer[3] = PACK_OBJ_NUM_DATA(obj_num);
+    
   pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
   write_text_frame(address);  //only send specific one mega
 
@@ -502,7 +502,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
 }
 
 void Coms_Serial::disable_timer_interrupts() {
-  if (timers.led_strip_timer_attached){
+  if (timers.led_strip_timer_attached) {
     LED_STRIP_TIMER.stop();
   }
 
@@ -516,7 +516,7 @@ void Coms_Serial::disable_timer_interrupts() {
 }
 
 void Coms_Serial::enable_timer_interrupts() {
-  if (timers.led_strip_timer_attached){
+  if (timers.led_strip_timer_attached) {
     LED_STRIP_TIMER.start();
   }
 

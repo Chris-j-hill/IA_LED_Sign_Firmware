@@ -55,26 +55,24 @@ void due_setup() {
   nativeUsb.init_native_usb();
   coms_serial.init_serial();
 
-  graphics.push_string_data();
-//  byte test_header[4] = {32, 1, (0x1 << 5) | (0x1 << 1) , (2 << 4)};
-//  text_frame.frame_buffer[0] = test_header[0];
-//  text_frame.frame_buffer[1] = test_header[1];
-//  text_frame.frame_buffer[2] = test_header[2];
-//  text_frame.frame_buffer[3] = test_header[3];
-  //coms_serial.set_header_parity(1);
-  for (byte i = 0; i < text_frame.frame_length; i++) {
-    
-    Serial.print(text_frame.frame_buffer[i]);
-    Serial.print("\t");
+  //graphics.push_string_data();
+  byte test_header[4] = {32, 1, (0x1 << 5) | (0x1 << 1) , (2 << 4)};
+  text_frame.frame_buffer[0] = test_header[0];
+  text_frame.frame_buffer[1] = test_header[1];
+  text_frame.frame_buffer[2] = test_header[2];
+  text_frame.frame_buffer[3] = test_header[3];
+  coms_serial.set_header_parity(1);
+  for (byte i = 0; i < 4; i++) {
+    Serial.println();
+    Serial.println(test_header[i], BIN);
     Serial.println(text_frame.frame_buffer[i],BIN);
   }
-  
-//  while (1) {
-//        Serial3.println();
-//    Serial3.write(text_frame.frame_buffer, text_frame.frame_length);
-//    Serial3.println();
-//    delay(500);
-//  }
+  while (1) {
+        Serial3.println();
+    Serial3.write(test_header, 4);
+    Serial3.println();
+    delay(500);
+  }
 }
 
 

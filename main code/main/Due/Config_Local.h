@@ -20,6 +20,12 @@
 #define Sprint(a)
 #endif
 
+#define DO_ERROR_CHECKING //calculate checksum
+
+#ifdef DO_ERROR_CHECKING
+#define DO_HEAVY_ERROR_CHECKING     // parity checking each byte and checksum
+//#define DO_HEADER_ERROR_CORRECTING  // hamming encoded header bytes for bit correction
+#endif
 
 
 // some variables used to test the system with no mega attached

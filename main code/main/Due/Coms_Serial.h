@@ -8,6 +8,7 @@
 
 #define PING_WAIT_PERIOD 200
 
+//#define PACK_FRAME_NUM_DATA(a, b) (((a<<5) & (b<<1)) & 0b11101110) //ensure parity bits are zero in case not used
 
 struct   Mega_Serial_Parameters {
 
