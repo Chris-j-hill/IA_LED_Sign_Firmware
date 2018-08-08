@@ -21,7 +21,7 @@
 
 #ifdef DO_ERROR_CHECKING
 //#define DO_HEAVY_ERROR_CHECKING   // parity checking each byte and checksum
-//#define DO_HEADER_ERROR_CHECKING  // hamming encoded header bytes for one bit correction
+//#define DO_HEADER_ERROR_CORRECTING  // hamming encoded header bytes for one bit correction
 #endif
 
 #define USE_SERIAL_TO_MEGAS

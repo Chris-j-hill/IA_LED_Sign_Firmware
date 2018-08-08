@@ -141,7 +141,7 @@ void Coms_Serial::read_buffer() {
           //          for (byte i = 0; i < HEADER_LENGTH; i++)
           //            Serial.println(temp_buffer[i]);
 
-          #ifdef DO_HEADER_ERROR_CHECKING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
+          #ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
                 byte frame_type = error_check_encoded_header(temp_buffer);
           #else
                 byte frame_type = error_check_unencoded_header(temp_buffer);
@@ -164,7 +164,7 @@ void Coms_Serial::read_buffer() {
     //        Serial.println((char)temp_buffer[i]);
     //      }
     //      Serial.println();
-    //#ifdef DO_HEADER_ERROR_CHECKING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
+    //#ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
     //      byte frame_type = error_check_encoded_header(temp_buffer);
     //#else
     //      byte frame_type = error_check_unencoded_header(temp_buffer);
@@ -295,7 +295,7 @@ badframe:
 
 byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
 
-#ifdef DO_HEADER_ERROR_CHECKING
+#ifdef DO_HEADER_ERROR_CORRECTING
   // run hamming decoding
   //check syndrome
 

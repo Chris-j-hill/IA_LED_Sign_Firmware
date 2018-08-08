@@ -15,15 +15,16 @@
 #include "Encoder.h"
 #include "LUTS.h"
 #include "Config_Local.h"
-
+#include "Menu_Tree.h"
 // variables
 
 //create these structs
-Frame text_frame;
-Frame menu_frame;
-Frame pos_frame;
-Frame sensor_data_frame;
-Frame ping_frame;
+struct Frame text_frame;
+struct Frame menu_frame;
+struct Frame pos_frame;
+struct Frame sensor_data_frame;
+struct Frame ping_frame;
+
 //give access to these structs
 extern struct Led_Strip_Struct led_strip_parameters;
 extern struct Temp_sensor temp_parameters;
@@ -39,7 +40,7 @@ extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern Encoder encoder;
-
+extern Menu menu;
 
 bool send_text_now = false;
 extern volatile bool send_pos_now;  //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
@@ -79,14 +80,14 @@ void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //functi
   uint16_t frame_offset = ((frame_num - 1) * (FRAME_DATA_LENGTH - 1)); //if this frame is 1 offset in data set is 0, if 2 offset 26, etc
 
   for (int i = 0; i < strlen(text_str[obj_num]) - frame_offset; i++) { //loop through string until end or break
-    text_frame.frame_buffer[i + HEADER_LENGTH + 1] = (byte)text_str[obj_num][frame_offset + i]; //HEADER_LENGTH+1 for text obj_num
+    text_frame.frame_buffer[i + HEADER_LENGTH] = (byte)text_str[obj_num][frame_offset + i]; //HEADER_LENGTH+1 for text obj_num
     if (i == FRAME_DATA_LENGTH) break;     //copy string until end or max bytes copied (frame full)
   }
 
 
   //incorporate error correcting data
 #ifdef DO_ERROR_CHECKING  //do at least minimal error checking using 8 bit checksum
-#ifdef DO_HEAVY_ERROR_CHECKING     // parity checking each byte and 13 bit checksum, hamming encoding done inside function
+#ifdef DO_HEAVY_ERROR_CHECKING     // parity checking each byte and 11 bit checksum, hamming encoding done inside function
   set_frame_parity_and_checksum(TEXT_FRAME_TYPE, text_frame.frame_length);
 
 #else
@@ -106,72 +107,24 @@ void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //functi
 }
 
 void Coms::build_pos_frame(byte obj_num) {
-
+  //bytes 0-2 pre initialised
+  pos_frame.frame_buffer[3] = PACK_OBJ_NUM_DATA(obj_num);
   pack_xy_coordinates(obj_num);        //seperate function to bit shift values to correct order.
-  pos_frame.frame_buffer[7] =  text_cursor[obj_num].x_pos_dir;
-  pos_frame.frame_buffer[8] =  text_cursor[obj_num].y_pos_dir;
-  pos_frame.frame_buffer[9] = comms_delay; //maybe implement this to sync up screens if needed
-  pos_frame.frame_buffer[10] = obj_num;
+  pos_frame.frame_buffer[8] =  text_cursor[obj_num].x_pos_dir;
+  pos_frame.frame_buffer[9] =  text_cursor[obj_num].y_pos_dir;
+  pos_frame.frame_buffer[10] = comms_delay; //maybe implement this to sync up screens if needed
 
-  //  pos_frame.frame_buffer[pos_frame.checksum_address] = pos_frame.header_checksum; //zero checksum
-  //  for (int alpha = HEADER_LENGTH; alpha < pos_frame.checksum_address; alpha++) { //sum of elements
-  //    pos_frame.frame_buffer[pos_frame.checksum_address] = pos_frame.frame_buffer[pos_frame.checksum_address] + pos_frame.frame_buffer[alpha];
-  //  }
-  //  pos_frame.frame_buffer[pos_frame.checksum_address] = (byte) 256 - (pos_frame.frame_buffer[pos_frame.checksum_address] % 256); //calc checksum
-
-  pos_frame.frame_buffer[pos_frame.checksum_address] = generate_checksum(POS_FRAME_TYPE);
+  set_frame_parity_and_checksum(POS_FRAME_TYPE, pos_frame.frame_length);
   pos_frame.frame_buffer[pos_frame.checksum_address + 1] = ENDBYTE_CHARACTER;
 
 }
 
-void Coms::pack_xy_coordinates(byte obj_num) {       //function to pack the 4 bytes to send the x and y positions of the text cursor
-
-  // Wire.write can only handle bytes (0-256) whereas we will need to use positive and negaitve values potientially significantly larger than 256
-  // to accomplish this two sucessive bytes are sent to repersent one number. to deal with positive and negative numbers, the coordinate is split into
-  // two bytes, leasat significant 8 bits are the second byte and the most significant 7 bits are in the first byte sent. if the coordinate is negaitve the
-  // remaining bit is set 0 and 1 otherwise.
-
-  // NOTE: current implementation will overflow if an out of bounds coordinate is presented (+/-32738 is usable)
-  //       I cant see a reason this would be an issue so not fixing it for now
-  //
-  //  byte x_pos_LSB = 0;
-  //  byte x_pos_MSB = 0;
-  //  byte y_pos_LSB = 0;
-  //  byte y_pos_MSB = 0;
-  //
-  //
-  //  if (abs(text_cursor[obj_num].x) > 32738 || abs(text_cursor[obj_num].y) > 32738) //print warning that coordinate will be wrong
-  //    Sprintln("WARNING: failed to send correct coordinate, out of bounds, overflow likely to occur");
-  //
-  //  if (text_cursor[obj_num].x > 0) {
-  //    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
-  //    x_pos_MSB = x_pos_MSB + 128; //greater than zero, set MSB to 1
-  //    x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
-  //  }
-  //  else {
-  //    x_pos_MSB = text_cursor[obj_num].x >> 8; //take the multiples 256 and set as MS byte
-  //    x_pos_LSB = text_cursor[obj_num].x % 256; //take the modulo to get the LS byte
-  //  }
-  //
-  //  if (text_cursor[obj_num].y > 0) {
-  //    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
-  //    y_pos_MSB = y_pos_MSB + 128; //greater than zero, set MSB to 1
-  //    y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
-  //  }
-  //  else {
-  //    y_pos_MSB = text_cursor[obj_num].y >> 8; //take the multiples 256 and set as MS byte
-  //    y_pos_LSB = text_cursor[obj_num].y % 256; //take the modulo to get the LS byte
-  //  }
-  //
-  //  pos_frame.frame_buffer[4] = x_pos_MSB;   //write new values to frame
-  //  pos_frame.frame_buffer[5] = x_pos_LSB;
-  //  pos_frame.frame_buffer[6] = y_pos_MSB;
-  //  pos_frame.frame_buffer[7] = y_pos_LSB;
-
-  pos_frame.frame_buffer[3] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
-  pos_frame.frame_buffer[4] = (text_cursor[obj_num].x & 0xFF);
-  pos_frame.frame_buffer[5] = ((text_cursor[obj_num].y >> 8) & 0xFF);
-  pos_frame.frame_buffer[6] = (text_cursor[obj_num].y & 0xFF);
+inline void Coms::pack_xy_coordinates(byte obj_num) {
+  //function to pack the 4 bytes to send the x and y positions of the text cursor
+  pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
+  pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
+  pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0xFF);
+  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);
 
 }
 
@@ -190,19 +143,10 @@ void Coms::calc_delay() {    // function to calculate the dalay in sending frame
 
 byte Coms::get_text_colour_hue(byte byte_number, byte obj_num) { //function to return the MSB or LSB of the current hue value to send
 
-  //  if (byte_number == 1) { //looking for MSB
-  //    if (text_parameters[obj_num].hue < 0)
-  //      return (abs(text_parameters[obj_num].hue) /256);    //get quotient of absolute value and 256 rounded down
-  //
-  //    else
-  //      return (abs(text_parameters[obj_num].hue) / 256 + 128); //add 128 to indicate positve number
-  //  }
-  //  else if (byte_number == 2) { //LSB
-  //    return (abs(text_parameters[obj_num].hue) % 256);    //get modulo of value and 256;
-  //  }
-
-  if (byte_number == 1) return ((text_parameters[obj_num].hue >> 8) & 0xFF);   //return msb
-  else return (text_parameters[obj_num].hue & 0xFF);
+  if (byte_number == 1)
+    return ((text_parameters[obj_num].hue >> 8) & 0xFF);   //return msb
+  else
+    return (text_parameters[obj_num].hue & 0xFF);
 
 }
 
@@ -219,12 +163,12 @@ void Coms::init_frames() {
   pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
 
   pos_frame.header_checksum = pos_frame.frame_buffer[0] + pos_frame.frame_buffer[1] + pos_frame.frame_buffer[2];
-  pos_frame.checksum_address = pos_frame.frame_length - TRAILER_LENGTH;
+  pos_frame.checksum_address = pos_frame.frame_length - 2;
 
   // sensor_data_frame
   sensor_data_frame.frame_type = SENSOR_FRAME_TYPE;
   sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
-  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1); //doesnt matter if it thinks theres one frame or many, data not related to eachother
+  sensor_data_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1); //doesnt matter if it thinks theres one frame or many, data not related to eachother
 
   sensor_data_frame.header_checksum = sensor_data_frame.frame_buffer[1] + sensor_data_frame.frame_buffer[2];
 
@@ -235,7 +179,7 @@ void Coms::init_frames() {
 
   menu_frame.frame_buffer[0] = menu_frame.frame_length;
   menu_frame.frame_buffer[1] = menu_frame.frame_type;
-  pos_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
+  menu_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
 
   menu_frame.header_checksum = menu_frame.frame_buffer[0] + menu_frame.frame_buffer[1] + menu_frame.frame_buffer[2];
   menu_frame.checksum_address = menu_frame.frame_length - 2;
@@ -246,20 +190,14 @@ void Coms::init_frames() {
 
 
 void Coms::build_menu_data_frame(byte menu_number) {   //function to build the frame to send menu info
-  //byte type = 4;
 
-  menu_frame.frame_buffer[3] = (byte) menu_number;
-  menu_frame.frame_buffer[4] = (byte) encoder.get_text_encoder_position(1);
-  menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(2);
+  menu_frame.frame_buffer[3] = (byte) menu.get_selected_object();
+  menu_frame.frame_buffer[4] = (byte) menu_number;
+  menu_frame.frame_buffer[5] = (byte) encoder.get_text_encoder_position(1);
+  menu_frame.frame_buffer[6] = (byte) encoder.get_text_encoder_position(2);
 
-  //  menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.header_checksum; //initial checksum
-  //
-  //  for (byte alpha = HEADER_LENGTH; alpha < menu_frame.checksum_address; alpha++) { //sum of elements
-  //    menu_frame.frame_buffer[menu_frame.checksum_address] = menu_frame.frame_buffer[menu_frame.checksum_address] + menu_frame.frame_buffer[alpha];
-  //  }
-  //  menu_frame.frame_buffer[menu_frame.checksum_address] = (byte) 256 - (menu_frame.frame_buffer[menu_frame.checksum_address] % 256); //calc checksum
-
-  menu_frame.frame_buffer[menu_frame.checksum_address] = generate_checksum(MENU_FRAME_TYPE);
+  set_frame_parity_and_checksum(MENU_FRAME_TYPE, menu_frame.frame_length);
+  //  menu_frame.frame_buffer[menu_frame.checksum_address] = generate_checksum(MENU_FRAME_TYPE);
   menu_frame.frame_buffer[menu_frame.checksum_address + 1] = ENDBYTE_CHARACTER;
 
 
@@ -320,7 +258,7 @@ bool Coms::error_sanity_check(byte frame_num, byte obj_num) {
 
 void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 
-  //heavy error checking sets parity of all bytes and 13 bit checksum
+  //heavy error checking sets parity of all bytes and 11 bit checksum
 #ifdef DO_HEAVY_ERROR_CHECKING
   set_header_parity(frame_type);  //same regardless of frame type or length
 #endif
@@ -333,26 +271,29 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 #ifdef DO_HEAVY_ERROR_CHECKING
   if (frame_type == TEXT_FRAME_TYPE) {
 
-    set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
-    //set_eighth_parity_bits(frame_length);// set parity of last bit for all bytes except trailer(ie the checksums, which is dependant on the value of the bytes)
-    set_verical_parity_byte(text_frame.frame_buffer ,text_frame.frame_length-3);
-    set_checksum_13(generate_checksum_13(frame_type), frame_type); //macro to generate 13 bit checksum
+    set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH + 1);
+    set_verical_parity_byte(text_frame.frame_buffer , text_frame.frame_length - 3);
+    set_checksum_11(generate_checksum_11(frame_type), frame_type); //macro to generate 11 bit checksum
   }
 
-  else if (frame_type == POS_FRAME_TYPE) {
-
+  else if (frame_type == POS_FRAME_TYPE) {  //set parity bits for
+    set_verical_parity_byte(pos_frame.frame_buffer , pos_frame.frame_length - 3);
+    set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == SENSOR_FRAME_TYPE) {
-
+    set_verical_parity_byte(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length - 3);
+    set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == MENU_FRAME_TYPE) {
-
+    set_verical_parity_byte(menu_frame.frame_buffer , menu_frame.frame_length - 3);
+    set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == PING_STRING_TYPE) {
-
+    set_verical_parity_byte(ping_frame.frame_buffer , ping_frame.frame_length - 3);
+    set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
   else return;
 #endif
@@ -373,15 +314,15 @@ void Coms::set_header_parity(byte frame_type) {
       pos_frame.frame_buffer[1] = (pos_frame.frame_buffer[1] << 1) | (parity_of(pos_frame.frame_buffer[1]));
       pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(pos_frame.frame_buffer[2])) << 4));
       pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( pos_frame.frame_buffer[2] ))));
-      pos_frame.frame_buffer[3] = (pos_frame.frame_buffer[3] << 1) | (parity_of(pos_frame.frame_buffer[3]));
+      pos_frame.frame_buffer[3] = (pos_frame.frame_buffer[3]       | (parity_of(pos_frame.frame_buffer[3])));
       break;
 
     case SENSOR_FRAME_TYPE:
       sensor_data_frame.frame_buffer[0] = (sensor_data_frame.frame_buffer[0] << 1) | (parity_of(sensor_data_frame.frame_buffer[0]));
       sensor_data_frame.frame_buffer[1] = (sensor_data_frame.frame_buffer[1] << 1) | (parity_of(sensor_data_frame.frame_buffer[1]));
       sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(sensor_data_frame.frame_buffer[2])) << 4));
-      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( sensor_data_frame.frame_buffer[2] ))));
-      sensor_data_frame.frame_buffer[3] = (sensor_data_frame.frame_buffer[3] << 1) | (parity_of(sensor_data_frame.frame_buffer[3]));
+      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA(sensor_data_frame.frame_buffer[2] ))));
+      //sensor_data_frame.frame_buffer[3] = (sensor_data_frame.frame_buffer[3]       | (parity_of(sensor_data_frame.frame_buffer[3])));
       break;
 
     case MENU_FRAME_TYPE:
@@ -389,7 +330,7 @@ void Coms::set_header_parity(byte frame_type) {
       menu_frame.frame_buffer[1] = (menu_frame.frame_buffer[1] << 1) | (parity_of(menu_frame.frame_buffer[1]));
       menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(menu_frame.frame_buffer[2])) << 4));
       menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( menu_frame.frame_buffer[2] ))));
-      menu_frame.frame_buffer[3] = (menu_frame.frame_buffer[3] << 1) | (parity_of(menu_frame.frame_buffer[3]));
+      menu_frame.frame_buffer[3] = (menu_frame.frame_buffer[3]       | (parity_of(menu_frame.frame_buffer[3])));
       break;
 
     case PING_STRING_TYPE:
@@ -397,7 +338,7 @@ void Coms::set_header_parity(byte frame_type) {
       ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
       ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
       ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
-      ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3] << 1) | (parity_of(ping_frame.frame_buffer[3]));
+      ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3]       | (parity_of(ping_frame.frame_buffer[3])));
       break;
 
     default:
@@ -418,7 +359,7 @@ void Coms::set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int s
   //loc = 7 parity bit is LSB
 
 
-//NB:  logic not working for non MSB parity bit
+  //NB:  logic not working for non MSB parity bit
 
   byte loc_bit_suppress_mask = 0;
   switch (bit_loc) {
@@ -450,38 +391,34 @@ void Coms::set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int s
   }
   byte suppress_data_mask = ~ loc_bit_suppress_mask; //is inverse of suppress mask
   byte shift_bit_by = 7 - bit_loc;  //locate bit in byte for parity
-  byte shift_data_by =1;  //hard code data shift, change this to split data and shift in two parts to allow parity to be located anywhere
-  
+  byte shift_data_by = 1; //hard code data shift, change this to split data and shift in two parts to allow parity to be located anywhere
+
   for (int i = start_from; i < buf_length; i++) {
-//    Serial.print("before :");
-//    Serial.println(buf[i],BIN);
-    buf[i] = ((buf[i]<<shift_data_by)  & loc_bit_suppress_mask) | (parity_of(buf[i]) & suppress_data_mask);
-//    Serial.print("after  :");
-//    Serial.println(buf[i],BIN);
-//    Serial.println();
+    buf[i] = ((buf[i] << shift_data_by)  & loc_bit_suppress_mask) | (parity_of(buf[i]) & suppress_data_mask);
   }
 }
 
 
 
-void Coms::set_verical_parity_byte(byte *buf, int checksum_loc,int start_byte) {
+void Coms::set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte) {
 
-  byte count =0;
-  byte mask =1;
-  for(byte j =0; j<8 ;j++){
-    //byte mask = 1<<j
-  for (int i = start_byte; i< checksum_loc;i++){
-    count+= ((buf[i]>>j)&mask); 
-  }
-  buf[checksum_loc] = buf[checksum_loc] | ((count & mask)<<j);
-  }
 
+  byte mask = 0x1;
+  buf[checksum_loc] = 0;
+  for (byte j = 0; j < 8 ; j++) {
+
+    byte count = 0; //total set bits for this column
+    for (int i = start_byte; i < checksum_loc; i++) {
+      count += ((buf[i] >> j) & mask);
+    }
+    buf[checksum_loc] = buf[checksum_loc] | ((count & mask) << j);
+  }
 }
 
 
-void Coms::set_checksum_13(uint16_t checksum, byte frame_type) {
+void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
 
-  byte three_bit = ((checksum >> 7) & 0b00001110);
+  byte three_bit = ((checksum >> 7) & 0b00001110);  //shift by 7 and ignore lowest bit
   byte eight_bit = (checksum & 0xFF);
   byte disp_from_frame_end = 2;
   switch (frame_type) {

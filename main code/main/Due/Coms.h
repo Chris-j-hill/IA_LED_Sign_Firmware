@@ -26,7 +26,7 @@ using namespace arduino_due;
 #define TX_BUF_LENGTH 256 // software serial port's transmision buffer length
 
 
-#define HEADER_LENGTH 3  //length,type,num frames, obj num
+#define HEADER_LENGTH 4  //length,type,num frames, obj num
 
 #ifdef DO_HEAVY_ERROR_CHECKING
 #define TRAILER_LENGTH 3 //2 checksums and end byte
@@ -58,7 +58,7 @@ using namespace arduino_due;
 const char ping_string[] = "ping";
 const char expected_ping_rx = 'p';
 
-#define POS_FRAME_LENGTH FRAME_OVERHEAD + 8
+#define POS_FRAME_LENGTH FRAME_OVERHEAD + 7
 #define MENU_FRAME_LENGTH FRAME_OVERHEAD + 3
 #define PING_FRAME_LENGTH FRAME_OVERHEAD + sizeof(ping_string)
 
@@ -69,7 +69,7 @@ const char expected_ping_rx = 'p';
 #define GET_FRAME_NUM_DATA(a)     (a & 0b11100000)
 #define GET_THIS_FRAME_DATA(a)    (a & 0b00000111)
 
-#define generate_checksum_13(a)   generate_checksum(a, 0x1FFF)
+#define generate_checksum_11(a)   generate_checksum(a, 0x1FFF)
 
 #define CHECKSUM_3_BIT_LOC 3
 #define CHECKSUM_3_BIT_MASK 0b00001110
@@ -107,13 +107,13 @@ class Coms {
 
   private:
 
-    void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
+    inline void pack_xy_coordinates(byte obj_num) ;                                          //function to pack the 4 bytes to send the x and y positions of the text cursor
 
     void set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int start_from = 0); // set parity of last bit for all bytes excpet last two(ie the checksums, which is dependant on the value of the bytes)
-    void set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte =0);
+    void set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte = 0);
     
     inline byte parity_of(byte value);
-    void set_checksum_13(uint16_t checksum,byte frame_type);
+    void set_checksum_11(uint16_t checksum,byte frame_type);
 
   protected:
 
@@ -142,22 +142,6 @@ class Coms {
 
 };
 
-//
-//
-//class Encode{
-//  private:
-//    byte parity_bit_loc =8;
-//  public:
-//  Encode(){}
-//};
-//
-//class Decode{
-//  private:
-//
-//  public:
-//  Decode(){}
-//
-//};
 
 #endif  //Coms_H
 

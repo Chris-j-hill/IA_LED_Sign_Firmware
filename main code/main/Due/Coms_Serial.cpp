@@ -316,7 +316,7 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
       text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
-      text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
+      text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD); //remaining frame is (string length - text offset)+ (6 bytes overhead)
 
     text_frame.frame_buffer[0] = text_frame.frame_length;
     text_frame.frame_buffer[1] = text_frame.frame_type;
@@ -599,8 +599,12 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   // function to pack a frame with specific sensor data. the bool more_bytes can be used if htis is called as part of a loop to send more than one value
   // in the case that more_bytes is true it will hold off sending the frame until it is called and is false. offset is the number of sensor readings previously
   // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
-  byte type = 3;
+
   int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
+  
+  while((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH){  //if trying to place it in location outside available space
+    offset -= ((MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD)>>2);       //subtract off full frames and fill from from lowest available index
+  }
 
   //switch statement to pack the frame;
   switch (sensor_prefix) {
@@ -955,17 +959,10 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
 
   if (!more_bytes || ((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH - 2)) // if more than 30 bytes in frame accounted for, or no byte left to pack then send frame
   { // otherwise well be able to fit at least one more group of data in frame
-    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2; //header+content+new+data+trailer
+    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2)+ 2; //header+content+new+data+trailer
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
-    //    sensor_data_frame.frame_buffer[1] = sensor_data_frame.frame_type;
-    //    sensor_data_frame.frame_buffer[2] = 1;
-    //    sensor_data_frame.frame_buffer[3] = 1;
-    //    sensor_data_frame.checksum = 0; //calculate checksum
-    //    for (int alpha = 0; alpha < sensor_data_frame.frame_length - 1; alpha++) {
-    //      sensor_data_frame.checksum = sensor_data_frame.checksum + sensor_data_frame.frame_buffer[alpha];
-    //    }
 
-    sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 2] = generate_checksum(SENSOR_FRAME_TYPE);
+    set_frame_parity_and_checksum(SENSOR_FRAME_TYPE, sensor_data_frame.frame_length);
     sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = ENDBYTE_CHARACTER;
 
     write_sensor_data_frame(address);

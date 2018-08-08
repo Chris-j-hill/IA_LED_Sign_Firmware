@@ -38,9 +38,16 @@ frame_raw = [0 0 0 0 0 0 1 1;% 1 bit parity check
 
          %%
 [h, g, n, k] = hammgen(5);
-g = g(1:16,1:31);
+% g = g(1:16,1:31);
+binaryVectorToHex(g);
 
-word = [randi([0,1],1,16)];% zeros(1,10)];
+% for higher redundancy
+% [h, g, n, k] = hammgen(8);  %3 bits of redundancy
+% g = g(1:23,1:31);
+
+% word = [randi([0,1],1,26)];% zeros(1,10)];
+
+word = [0 0 0 1  0 1 1 0 1 0 0 1 1 0 0 1 1 0 0 1 1 0 1 0 0 1];
 code_word = mod(word*g,2);
 
 %%

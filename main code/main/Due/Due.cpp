@@ -34,15 +34,10 @@ struct Timers timers; //timers struct
 
 
 extern struct Frame text_frame;
-void printzeros(byte var) {
-  for (unsigned int test = 0x80; test; test >>= 1) {
-    Serial.write(var  & test ? '1' : '0');
-  }
-//  Serial.println();
-}
+extern struct Frame sensor_data_frame;
 
-
-
+extern Frame menu_frame;
+extern Frame pos_frame;
 
 
 void due_setup() {
@@ -68,26 +63,51 @@ void due_setup() {
   coms_serial.init_serial();
 
   graphics.push_string_data();
-//  byte test_header[4] = {32, 1, (0x1 << 5) | (0x1 << 1) , (2 << 4)};
-//  text_frame.frame_buffer[0] = test_header[0];
-//  text_frame.frame_buffer[1] = test_header[1];
-//  text_frame.frame_buffer[2] = test_header[2];
-//  text_frame.frame_buffer[3] = test_header[3];
-  //coms_serial.set_header_parity(1);
+  encoder.set_encoder_position(1000);
+  coms_serial.send_menu_frame(12);
+  coms_serial.send_pos_frame(3);
+
   for (byte i = 0; i < text_frame.frame_length; i++) {
-    
+
     Serial.print(text_frame.frame_buffer[i]);
     Serial.print("\t");
-    printzeros(text_frame.frame_buffer[i]);
-    Serial.println();
+    host.println_bits(text_frame.frame_buffer[i], 8, BIN);
   }
-  
-//  while (1) {
-//        Serial3.println();
-//    Serial3.write(text_frame.frame_buffer, text_frame.frame_length);
-//    Serial3.println();
-//    delay(500);
-//  }
+Serial.println();
+Serial.println();
+
+  for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
+
+    Serial.print(sensor_data_frame.frame_buffer[i]);
+    Serial.print("\t");
+    host.println_bits(sensor_data_frame.frame_buffer[i], 8, BIN);
+  }
+Serial.println();
+Serial.println();
+
+  for (byte i = 0; i < menu_frame.frame_length; i++) {
+
+    Serial.print(menu_frame.frame_buffer[i]);
+    Serial.print("\t");
+    host.println_bits(menu_frame.frame_buffer[i], 8, BIN);
+  }
+Serial.println();
+Serial.println();
+
+  for (byte i = 0; i < pos_frame.frame_length; i++) {
+
+    Serial.print(pos_frame.frame_buffer[i]);
+    Serial.print("\t");
+    host.println_bits(pos_frame.frame_buffer[i], 8, BIN);
+  }
+Serial.println();
+Serial.println();
+  //  while (1) {
+  //        Serial3.println();
+  //    Serial3.write(text_frame.frame_buffer, text_frame.frame_length);
+  //    Serial3.println();
+  //    delay(500);
+  //  }
 }
 
 
