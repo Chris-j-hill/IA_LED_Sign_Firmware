@@ -106,68 +106,158 @@ void Coms_Serial::read_buffer() {
 
   if (Serial_1.available() > 1) { //only create variables if data arrived, require start and first byte of frame
 
-    if (Serial_1.peek() == 13) {
-      Serial_1.read();
+    if (Serial_1.read() == 13) {
+      //Serial_1.read();
       if (Serial_1.peek() == 10) {
         Serial_1.read();
-        byte_queued();
-        //delay(1); //wait for some more bytes
-
+        delayMicroseconds(1000); //wait for some more bytes
+        if (Serial_1.available() == 0) return;
+        else {
+          if (Serial_1.peek() == 13) return;
+          while (Serial_1.available() < 4) {}
+          delay(1);
+        }
+        Serial.println();
         if (Serial_1.available() > 0) { //just recieved start byte and data imediately after, probably frame
-
+          //while(Serial_1.available() < 4){}
+          //delay(3);
           byte temp_header[HEADER_LENGTH] = {0};
+          byte bytes_read = 0;
+          temp_header[0] = Serial_1.read();
+          temp_header[1] = Serial_1.read();
+          temp_header[2] = Serial_1.read();
+          temp_header[3] = Serial_1.read();
 
-          //          read_frame
-          byte bytes_read = Serial_1.readBytes(temp_header, HEADER_LENGTH);
-          if (bytes_read<HEADER_LENGTH)//if we read less than required amount before timeout this must not be a frame
-          return;
-          
-#ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
-          byte frame_type = error_check_encoded_header(temp_header);
-#else
-          byte frame_type = error_check_unencoded_header(temp_header);
+          if (temp_header[0] == 13 && temp_header[1] == 10)
+            return;
+
+          //          //          read_frame
+          //          byte bytes_read = Serial_1.readBytes(temp_header, HEADER_LENGTH);
+
+          Serial.println("header values = ");
+          for (byte i = 0; i < 4; i++)
+            Serial.println(temp_header[i]);
+          Serial.println();
+
+
+#ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded using hamming matrix, cant read data directly, decode first and update header values
+          error_check_encoded_header(temp_header);
 #endif
+          //now sanity check values
+          byte frame_type = error_check_unencoded_header(temp_header);
 
           //in some cases we know exactly how long the frame will be,in others we must parse until indicated amount is read
           if (frame_type == TEXT_FRAME_TYPE) {
+            byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_header[FRAME_LENGTH_LOC]);
+            byte data[frame_length] = {0};
 
+            bytes_read = Serial_1.readBytes(data, frame_length - HEADER_LENGTH);
+            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
+            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
+
+            for (byte i = 0; i < sizeof(data); i++)
+              Serial.println(data[i]);
+
+            if (error_check_frame_body(data, frame_type, text_frame.frame_length)) //if frame ok, save data
+              unpack_pos_frame(data);
+
+            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
+              byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
+              byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(temp_header[OBJ_NUM_LOC]);
+              request_frame_retransmission(TEXT_FRAME_TYPE, this_frame, obj_num);
+              Serial.println(F("specific frame requested"));
+            }
           }
 
           else if (frame_type == POS_FRAME_TYPE) {
             byte data[POS_FRAME_LENGTH] = {0};
-            bytes_read = Serial_1.readBytes(data, POS_FRAME_LENGTH-HEADER_LENGTH);
-            memmove(data+HEADER_LENGTH, data, bytes_read);  //move elements back in frame
+            bytes_read = Serial_1.readBytes(data, POS_FRAME_LENGTH - HEADER_LENGTH);
+            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
-            
-            if(error_check_frame_body(data, frame_type, pos_frame.frame_length))  //if frame ok, save data
-            unpack_pos_frame(data);
-           
-            else{//do nothing if pos frame recieved in error, new one coming soon
-              
-            }
-            
-            }
 
+            for (byte i = 0; i < sizeof(data); i++)
+              Serial.println(data[i]);
+
+            if (error_check_frame_body(data, frame_type, pos_frame.frame_length)) //if frame ok, save data
+              unpack_pos_frame(data);
+
+            else { //do nothing if pos frame recieved in error, new one coming soon
+            }
+          }
+          
           else if (frame_type == SENSOR_FRAME_TYPE) {
+            byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_header[FRAME_LENGTH_LOC]);
+            byte data[frame_length] = {0};
+            bytes_read = Serial_1.readBytes(data, frame_length - HEADER_LENGTH);
+            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
+            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
+            for (byte i = 0; i < sizeof(data); i++)
+              Serial.println(data[i]);
+
+            if (error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) //if frame ok, save data
+              unpack_sensor_data_frame(data);
+
+            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
+              byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
+              byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(temp_header[OBJ_NUM_LOC]);
+              request_frame_retransmission(SENSOR_FRAME_TYPE, this_frame, obj_num);
+              Serial.println(F("specific frame requested"));
+            }
           }
 
           else if (frame_type == MENU_FRAME_TYPE) {
 
+            byte data[MENU_FRAME_LENGTH] = {0};
+            bytes_read = Serial_1.readBytes(data, MENU_FRAME_LENGTH - HEADER_LENGTH);
+            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
+            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
+
+            for (byte i = 0; i < sizeof(data); i++)
+              Serial.println(data[i]);
+
+            if (error_check_frame_body(data, frame_type, menu_frame.frame_length)) //if frame ok, save data
+              unpack_menu_frame(data);
+
+            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
+              byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
+              byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(temp_header[OBJ_NUM_LOC]);
+              request_frame_retransmission(MENU_FRAME_TYPE, this_frame, obj_num);
+              Serial.println(F("specific frame requested"));
+            }
           }
 
           else if (frame_type == PING_STRING_TYPE) {
+            byte data[PING_STRING_TYPE] = {0};
+            bytes_read = Serial_1.readBytes(data, MENU_FRAME_LENGTH - HEADER_LENGTH);
+            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
+            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
+            for (byte i = 0; i < sizeof(data); i++)
+              Serial.println(data[i]);
+
+            if (error_check_frame_body(data, frame_type, ping_frame.frame_length)) { //if frame ok, save data
+              ping_good();
+              Serial.println(F("ping good sent"));
+            }
+            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
+              ping_bad();
+              Serial.println(F("ping bad sent"));
+            }
           }
 
-
+          //          if (Serial_1.peek() == 13) {  //clear out remaining println
+          //            Serial_1.read();
+          //            if (Serial_1.peek() == 10)
+          //              Serial_1.read();
+          //          }
         }
       }
     }
   }
 }
 
-void Coms_Serial::receive_frame(byte *temp_buffer) { //header read, checks done, now read remaining bytes
+void Coms_Serial::receive_frame(byte * temp_buffer) { //header read, checks done, now read remaining bytes
 
   for (byte i = HEADER_LENGTH; i < MEGA_SERIAL_BUFFER_LENGTH; i++) {
     if (!byte_queued()) return;
@@ -175,7 +265,7 @@ void Coms_Serial::receive_frame(byte *temp_buffer) { //header read, checks done,
   }
 }
 
-byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
+byte Coms_Serial::error_check_unencoded_header(byte * temp_buffer) {
 
   // do some sanity checks on the data, dont assume its correct
   // no encoding, other than checksum at the end, in this case
@@ -190,83 +280,88 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
   byte obj_num = APPLY_OBJ_NUM_MASK(temp_buffer[OBJ_NUM_LOC]);
 
 
-  Serial.print("frame length = ");
+  Serial.print(F("frame length = "));
   Serial.println(frame_length);
 
-  Serial.print("frame type = ");
+  Serial.print(F("frame type = "));
   Serial.println(frame_type);
 
-  Serial.print("num frame = ");
+  Serial.print(F("num frame = "));
   Serial.println(num_frames);
 
-  Serial.print("this frame = ");
+  Serial.print(F("this frame = "));
   Serial.println(this_frame);
 
-  Serial.print("obj num = ");
+  Serial.print(F("obj num = "));
   Serial.println(obj_num);
   Serial.println();
 
-
   // list of tests of header to check if its reasonable
 
-  if (temp_buffer[FRAME_LENGTH_LOC] > MEGA_SERIAL_BUFFER_LENGTH || temp_buffer[FRAME_LENGTH_LOC] < FRAME_OVERHEAD)        goto badframe; //out of bounds frame length
-  else if (temp_buffer[FRAME_TYPE_LOC] > NUM_ALLOWED_FRAME_TYPES)                                                         goto badframe; //out of bounds frame type
-  else if (num_frames < this_frame)           goto badframe; //check if this frame is greater than num frames
+  if (frame_length > MEGA_SERIAL_BUFFER_LENGTH || frame_length < FRAME_OVERHEAD)                          goto badframe; //out of bounds frame length
+  else if (frame_type > NUM_ALLOWED_FRAME_TYPES)                                                          goto badframe; //out of bounds frame type
+  else if (num_frames < this_frame)                                                                       goto badframe; //check if this frame is greater than num frames
 
-  else if (temp_buffer[FRAME_TYPE_LOC] == POS_FRAME_TYPE && temp_buffer[FRAME_LENGTH_LOC] != POS_FRAME_LENGTH)            goto badframe; //if ping, menu or pos frame, we know how long they should be
-  else if (temp_buffer[FRAME_TYPE_LOC] == MENU_FRAME_TYPE && temp_buffer[FRAME_LENGTH_LOC] != MENU_FRAME_LENGTH)          goto badframe;
-  else if (temp_buffer[FRAME_TYPE_LOC] == PING_STRING_TYPE && temp_buffer[FRAME_LENGTH_LOC] != PING_FRAME_LENGTH)         goto badframe;
+  else if (frame_type == POS_FRAME_TYPE && frame_length != POS_FRAME_LENGTH)                              goto badframe; //if ping, menu or pos frame, we know how long they should be
+  else if (frame_type == MENU_FRAME_TYPE && frame_length != MENU_FRAME_LENGTH)                            goto badframe;
+  else if (frame_type == PING_STRING_TYPE && frame_length != PING_FRAME_LENGTH)                           goto badframe;
 
-  else if (temp_buffer[FRAME_TYPE_LOC] == POS_FRAME_TYPE && num_frames > EXPECTED_NUM_POS_FRAMES)                         goto badframe; // we know there should only be one of these frames
-  else if (temp_buffer[FRAME_TYPE_LOC] == MENU_FRAME_TYPE && num_frames > EXPECTED_NUM_MENU_FRAMES)                       goto badframe;
-  else if (temp_buffer[FRAME_TYPE_LOC] == PING_STRING_TYPE && num_frames > EXPECTED_NUM_PING_FRAMES)                      goto badframe;
+  else if (frame_type == POS_FRAME_TYPE && num_frames > EXPECTED_NUM_POS_FRAMES)                         goto badframe; // we know there should only be one of these frames
+  else if (frame_type == MENU_FRAME_TYPE && num_frames > EXPECTED_NUM_MENU_FRAMES)                       goto badframe;
+  else if (frame_type == PING_STRING_TYPE && num_frames > EXPECTED_NUM_PING_FRAMES)                      goto badframe;
 
-  else if (temp_buffer[FRAME_TYPE_LOC] == TEXT_FRAME_TYPE && num_frames > EXPECTED_MAX_TEXT_FRAMES)                       goto badframe;  //if text frame, we know the max size the text can be
-  else if (temp_buffer[FRAME_TYPE_LOC] == SENSOR_FRAME_TYPE && num_frames > EXPECTED_MAX_SENSOR_DATA_FRAMES)              goto badframe;  //if sensor frame, we know how many pieces of data there are
-  else if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                                            goto badframe;  //check the obj num is reasonable
+  else if (frame_type == TEXT_FRAME_TYPE && num_frames > EXPECTED_MAX_TEXT_FRAMES)                       goto badframe;  //if text frame, we know the max size the text can be
+  else if (frame_type == SENSOR_FRAME_TYPE && num_frames > EXPECTED_MAX_SENSOR_DATA_FRAMES)              goto badframe;  //if sensor frame, we know how many pieces of data there are
+  else if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                           goto badframe;  //check the obj num is reasonable
+
+#ifdef DO_HEAVY_ERROR_CHECKING  //parity bits included, confirm these are right too
+
+#endif
 
   //TESTS PASSED: frame header data plausable, proceed to save data
   else {
-    if (temp_buffer[FRAME_TYPE_LOC] == TEXT_FRAME_TYPE ) {
+    if (frame_type == TEXT_FRAME_TYPE ) {
       text_frame.num_frames = num_frames;
       text_frame.num_frames = this_frame;
-      text_frame.frame_length = temp_buffer[FRAME_LENGTH_LOC];
+      text_frame.frame_length = frame_length;
     }
-    else if (temp_buffer[FRAME_TYPE_LOC] == POS_FRAME_TYPE ) {
+    else if (frame_type == POS_FRAME_TYPE ) {
       pos_frame.num_frames = num_frames;
       pos_frame.num_frames = this_frame;
-      pos_frame.frame_length = temp_buffer[FRAME_LENGTH_LOC];
+      pos_frame.frame_length = frame_length;
     }
-    else if (temp_buffer[FRAME_TYPE_LOC] == SENSOR_FRAME_TYPE ) {
+    else if (frame_type == SENSOR_FRAME_TYPE ) {
       sensor_data_frame.num_frames = num_frames;
       sensor_data_frame.num_frames = this_frame;
-      sensor_data_frame.frame_length = temp_buffer[FRAME_LENGTH_LOC];
+      sensor_data_frame.frame_length = frame_length;
     }
-    else if (temp_buffer[FRAME_TYPE_LOC] == MENU_FRAME_TYPE ) {
+    else if (frame_type == MENU_FRAME_TYPE ) {
       menu_frame.num_frames = num_frames;
       menu_frame.num_frames = this_frame;
-      menu_frame.frame_length = temp_buffer[FRAME_LENGTH_LOC];
+      menu_frame.frame_length = frame_length;
     }
-    else if (temp_buffer[FRAME_TYPE_LOC] == PING_STRING_TYPE ) {
+    else if (frame_type == PING_STRING_TYPE ) {
       ping_frame.num_frames = num_frames;
       ping_frame.num_frames = this_frame;
-      ping_frame.frame_length = temp_buffer[FRAME_LENGTH_LOC];
+      ping_frame.frame_length = frame_length;
     }
     else {  //frame type not accounted for, handle as bad frame
-      Serial.println(F("Frame not recognised assume bas frame"));
+      Serial.println(F("Frame not recognised assume bad frame"));
       goto badframe;
     }
 
-    return temp_buffer[FRAME_TYPE_LOC];    //only return non false value if frame header reasonable and frame type is defined
+    return frame_type;    //only return non false value if frame header reasonable and frame type is defined
   }
 
   //do this when a bad frame if recieved
 badframe:
   Serial.println(F("bad frame recieved"));
+  request_frame_retransmission();
+  Serial.println(F("frame requested"));
   return 0;
 }
 
-byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
+byte Coms_Serial::error_check_encoded_header(byte * temp_buffer) {
 
 #ifdef DO_HEADER_ERROR_CORRECTING
   // run hamming decoding
@@ -275,15 +370,25 @@ byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
 
 #endif
 
+  byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_buffer[FRAME_LENGTH_LOC]);
+  byte frame_type = APPLY_FRAME_TYPE_MASK(temp_buffer[FRAME_TYPE_LOC]);
+  byte num_frames = APPLY_FRAME_NUM_MASK(temp_buffer[NUM_OF_FRAMES_LOC]); //do these here to save multiple calulations
+  byte this_frame = APPLY_THIS_FRAME_MASK(temp_buffer[FRAME_NUMBER_LOC]);
+  byte obj_num = APPLY_OBJ_NUM_MASK(temp_buffer[OBJ_NUM_LOC]);
+
 #ifdef DO_HEAVY_ERROR_CHECKING
   //  check parity bits of header
   //  if error in more than two lines discard, cant recover
   //  else if error in frame_length, get code to read until endbyte,\r,\n found or MEGA_SERIAL_BUFFER_LENGTH reached
   //  else return frame_type
-
+  Serial.println("check for errors");
   for ( byte i = 0; i < HEADER_LENGTH; i++) {
-
+    if (parity_of(temp_buffer[i])) {
+      Serial.println("odd parity");
+      return 0;
+    }
   }
+  return (frame_type);
 
 #endif
 

@@ -54,6 +54,10 @@ class Coms_Serial: public Coms {
 //    void received_ping_frame(byte *temp_buffer);
       void receive_frame(byte *temp_buffer);
 
+    void request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num){}  //
+    void request_frame_retransmission(){}
+
+    
     inline void ping_good() { //respond indicating good connection
       Serial_1.println("ping_g");
     };

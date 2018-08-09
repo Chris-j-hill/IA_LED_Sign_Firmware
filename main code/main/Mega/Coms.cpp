@@ -7,6 +7,7 @@
 #include "Menus.h"
 #include "Local_Config.h"
 #include "Graphics.h"
+#include "LUTS.h"
 
 Frame text_frame;
 Frame menu_frame;
@@ -389,7 +390,7 @@ bool Coms::validate_checksum(byte *temp_buffer) {
 
 #ifdef DO_ERROR_CHECKING
 #ifdef DO_HEAVY_ERROR_CHECKING //parity check each byte and 13 bit checksum of entire frame
-#error ("heavy error checking not implemented")
+//#error ("heavy error checking not implemented")
 
 #else //simple 8 bit checksum of frame
 
@@ -453,6 +454,11 @@ byte set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //return t
 
 }
 
+byte Coms::parity_of(byte value) {
+  return parity[value];   //LUT of parity given up to 8 bit value
+}
+
+
 bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length) {} //if frame ok return true
 void Coms::unpack_pos_frame(byte *data) {}
 void Coms::unpack_menu_frame(byte *data) {}
@@ -460,5 +466,7 @@ void Coms::unpack_text_frame(byte *data) {}
 void Coms::unpack_ping_frame(byte *data) {}
 void Coms::unpack_sensor_data_frame(byte *data) {}
 void Coms::remove_byte_parity_bit() {}
+
+
 
 #endif // COMS_CPP

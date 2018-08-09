@@ -472,7 +472,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
       Serial_1.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
-        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   while(1);break; 
+        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   while(1){}break; 
         case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;

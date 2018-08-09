@@ -39,7 +39,7 @@
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
 
-#define POS_FRAME_LENGTH      FRAME_OVERHEAD + 8
+#define POS_FRAME_LENGTH      FRAME_OVERHEAD + 7
 #define MENU_FRAME_LENGTH     FRAME_OVERHEAD + 3
 #define PING_FRAME_LENGTH     FRAME_OVERHEAD +4   //not implemented 3/8/18
 
@@ -109,6 +109,10 @@ class Coms {
     inline int calc_pos(byte MSB, byte LSB);
     inline int calc_local_pos(byte MSB, byte LSB);
 
+
+  protected:
+    byte parity_of(byte data);
+    
   public:
     Coms() {}
 
