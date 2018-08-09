@@ -322,7 +322,7 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
     text_frame.frame_buffer[1] = text_frame.frame_type;
     text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames, text_frame.this_frame);
     text_frame.frame_buffer[3] = PACK_OBJ_NUM_DATA(obj_num);
-  
+
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
 
     if (address == -1)
@@ -353,7 +353,7 @@ void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame
   text_frame.frame_buffer[1] = text_frame.frame_type;
   text_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(text_frame.num_frames, text_frame.this_frame);
   text_frame.frame_buffer[3] = PACK_OBJ_NUM_DATA(obj_num);
-    
+
   pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
   write_text_frame(address);  //only send specific one mega
 
@@ -428,6 +428,8 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
 #ifdef SERIAL_1_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
+      Serial_1.write(return_carraige, 2); //used for start of frame detection
+
       switch (frame_type) {
         // NB: use serial write not print as it forces the processor to stop until sent, avoids chance of mega serial buffer overflow
         // maybe implement acknoledge system in future
@@ -437,7 +439,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
         case SENSOR_FRAME_TYPE:   Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_1.write(ping_string, sizeof(ping_string));                                 break;
       }
-      Serial_1.write(return_carraige, 2); //used for end of frame detection if mega is confused
+      Serial_1.write(return_carraige, 2); //used for end of frame detection
 
 #ifdef SERIAL_1_IS_SOFT
       enable_timer_interrupts(); //stop all processes that could cause issues
@@ -448,6 +450,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
 #ifdef SERIAL_2_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
+      Serial_1.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_2.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
@@ -466,9 +469,10 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
 #ifdef SERIAL_3_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
+      Serial_1.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
-        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
+        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   while(1);break; 
         case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
@@ -484,6 +488,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
 #ifdef SERIAL_4_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
+      Serial_1.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
@@ -601,9 +606,9 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   // written, so the place to write the new data is 4+2*offset for the prefix and 5+2*offset for the data
 
   int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
-  
-  while((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH){  //if trying to place it in location outside available space
-    offset -= ((MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD)>>2);       //subtract off full frames and fill from from lowest available index
+
+  while ((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH) { //if trying to place it in location outside available space
+    offset -= ((MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD) >> 2);     //subtract off full frames and fill from from lowest available index
   }
 
   //switch statement to pack the frame;
@@ -959,7 +964,7 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
 
   if (!more_bytes || ((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH - 2)) // if more than 30 bytes in frame accounted for, or no byte left to pack then send frame
   { // otherwise well be able to fit at least one more group of data in frame
-    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2)+ 2; //header+content+new+data+trailer
+    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2; //header+content+new+data+trailer
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
 
     set_frame_parity_and_checksum(SENSOR_FRAME_TYPE, sensor_data_frame.frame_length);

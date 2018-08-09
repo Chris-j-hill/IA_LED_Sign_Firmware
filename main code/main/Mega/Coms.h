@@ -121,66 +121,17 @@ class Coms {
 
     bool validate_checksum(byte *temp_buffer);
     void frame_cpy(byte *temp_buffer, byte frame_type);
-    int set_hue_colour(byte receivedData, int dataType) {}
+    byte set_hue_colour(byte receivedData, byte obj_num ,byte data_loc);//set the value of hue
+    bool error_check_frame_body(byte *buf, byte frame_type, byte frame_length);  //if frame ok return true
+    void unpack_pos_frame(byte *data);
+    void unpack_menu_frame(byte *data);
+    void unpack_text_frame(byte *data);
+    void unpack_ping_frame(byte *data);
+    void unpack_sensor_data_frame(byte *data);
+    void remove_byte_parity_bit();  //strip data of parity bit
+    
+    
 };
 
-//
-//class mega_class : public sign_coms {
-//
-//private:                //initialise private fields
-//
-//
-//
-//    int last_sent_code =-1;
-//    String Current_string = "Default class string1";
-//    String Last_string = "Default class string2";
-//    int cursor_x=-1;
-//    int cursor_y =-1;
-//    int offset_x=0;
-//    int offset_y=0;
-//    int Brightness =1;
-//    int delay = 0;
-//    int last_frame[150] = {0};          //full frame, ready to resend if needed
-//    int nack_pin = -1;
-//    int text_size=2;
-//    int text_colour=-1;
-//
-//public:                 //methods of fractions class
-//    mega_class ();             //constructor
-//    int init_mega();
-//    int init_mega(int address);
-//
-//
-//
-//    //send data -> all methods should return -1 if fail can be identified
-//    int increment(int address, int x, int y); //send code to increment cursor position
-//
-//    int send_string();     // send the "Current_sting" variable
-//    int resend_frame();    // if nack recieved, transmit last frame, confirms checksum
-//
-//    int update_brightness();
-//    int zero_cursor_pos();      //set cursor pos to 0,0 of overall sign (relative position to be calculated on mega)
-//
-//    //int begin();            // method to establish connection is valid, set up mega with new values
-//    int set_delay();            //delay used to syncronie updates of positions on megas, measure delay first
-//    int send_bad_frame();       //generate a bad frame to conirm nack system works (and identify nack pin if needed)
-//
-//    int set_refresh_rate(int rate);  //refresh rate of matrix library ( modify library to access this value)
-//
-//    int set_text_size();
-//    int set_text_colour();
-//
-//    int i2c_scanner();          // find connection pins for megas (ie verify valid address, send bad frame, check for nack line)
-//
-//    int text_min();
-//
-//    int extract_data();      //function to respond to a received frame and set variables based on what type of frame arrived
-//    int extract_pos_data();      //frame for extracting the relevant info for he cursor position
-//    int extract_disp_string(byte numFrames, byte frameNum, byte frameLength); //extract the frame as a string to display
-//    int extract_sensor_data();
-//    int set_hue_colour(byte receivedData, int dataType);
-//
-//
-//};
 
 #endif // COMS_H

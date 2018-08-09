@@ -210,43 +210,43 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
         break;
 
       case PREFIX_TEXT_HUE_MSB_0:
-        text_parameters[0].hue = set_hue_colour(temp_buffer[alpha + 1], 1); //function to set the value of hue based on the msb or lsb received
+        set_hue_colour(temp_buffer[alpha + 1], 0, 1);
         break;
 
       case PREFIX_TEXT_HUE_LSB_0:
-        text_parameters[0].hue = set_hue_colour(temp_buffer[alpha + 1], 2);
+        set_hue_colour(temp_buffer[alpha + 1], 0, 2);
         break;
 
       case PREFIX_TEXT_HUE_MSB_1:
-        text_parameters[1].hue = set_hue_colour(temp_buffer[alpha + 1], 1); //function to set the value of hue based on the msb or lsb received
+        set_hue_colour(temp_buffer[alpha + 1], 1, 1);
         break;
 
       case PREFIX_TEXT_HUE_LSB_1:
-        text_parameters[1].hue = set_hue_colour(temp_buffer[alpha + 1], 2);
+        set_hue_colour(temp_buffer[alpha + 1], 1, 2);
         break;
 
       case PREFIX_TEXT_HUE_MSB_2:
-        text_parameters[2].hue = set_hue_colour(temp_buffer[alpha + 1], 1); //function to set the value of hue based on the msb or lsb received
+        set_hue_colour(temp_buffer[alpha + 1], 2, 1);
         break;
 
       case PREFIX_TEXT_HUE_LSB_2:
-        text_parameters[2].hue = set_hue_colour(temp_buffer[alpha + 1], 2);
+        set_hue_colour(temp_buffer[alpha + 1], 2, 2);
         break;
 
       case PREFIX_TEXT_HUE_MSB_3:
-        text_parameters[3].hue = set_hue_colour(temp_buffer[alpha + 1], 1); //function to set the value of hue based on the msb or lsb received
+        set_hue_colour(temp_buffer[alpha + 1], 3, 1);
         break;
 
       case PREFIX_TEXT_HUE_LSB_3:
-        text_parameters[3].hue = set_hue_colour(temp_buffer[alpha + 1], 2);
+        set_hue_colour(temp_buffer[alpha + 1], 3, 2);
         break;
 
       case PREFIX_TEXT_HUE_MSB_4:
-        text_parameters[4].hue = set_hue_colour(temp_buffer[alpha + 1], 1); //function to set the value of hue based on the msb or lsb received
+        set_hue_colour(temp_buffer[alpha + 1], 4, 1);
         break;
 
       case PREFIX_TEXT_HUE_LSB_4:
-        text_parameters[4].hue = set_hue_colour(temp_buffer[alpha + 1], 2);
+        set_hue_colour(temp_buffer[alpha + 1], 4, 2);
         break;
 
       case PREFIX_TEXT_USE_HUE_0:
@@ -394,11 +394,12 @@ bool Coms::validate_checksum(byte *temp_buffer) {
 #else //simple 8 bit checksum of frame
 
   byte frame_length = temp_buffer[FRAME_LENGTH_LOC];
-  byte sum = 0;
+  uint16_t sum = 0;
   for (byte i = 0; i < frame_length - TRAILER_LENGTH; i++) { //sum elements from checksum
     sum += temp_buffer[i];
   }
-  if (sum == temp_buffer[frame_length - 2])  //outer checksum, only checksum if DO_HEAVY_ERROR_CHECKING not defined
+
+  if (sum == temp_buffer[frame_length - 2])  //outer checksum, or only checksum if DO_HEAVY_ERROR_CHECKING not defined
     return true;
   else
     return false;
@@ -414,34 +415,50 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
   byte obj_num = temp_buffer[3];
   byte data_end_index = text_frame.frame_length - TRAILER_LENGTH;
   byte this_frame = APPLY_THIS_FRAME_MASK(temp_buffer[FRAME_NUMBER_LOC]);
-  
+
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
       memcpy(text_parameters[obj_num].string[this_frame * FRAME_DATA_LENGTH], temp_buffer[HEADER_LENGTH + 1], data_end_index - (HEADER_LENGTH - 1));
       break;
-      
+
     case POS_FRAME_TYPE:
-      cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp_buffer[4],temp_buffer[5]);   // position as recieved in frame
-      cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp_buffer[6],temp_buffer[7]);   
-     
-      cursor_parameters[obj_num].local_x_pos = (screen_parameters.node_address)*(SINGLE_MATRIX_WIDTH) - cursor_parameters[obj_num].global_x_pos;     // relative position for this matrix
+      cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp_buffer[4], temp_buffer[5]);  // position as recieved in frame
+      cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp_buffer[6], temp_buffer[7]);
+
+      cursor_parameters[obj_num].local_x_pos = (screen_parameters.node_address) * (SINGLE_MATRIX_WIDTH) - cursor_parameters[obj_num].global_x_pos;   // relative position for this matrix
       cursor_parameters[obj_num].local_y_pos = cursor_parameters[obj_num].global_y_pos;
-      
+
       cursor_parameters[obj_num].x_dir = GET_TEXT_DIR(temp_buffer[8]);
-      cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);            
+      cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
       break;
-      
+
     case SENSOR_FRAME_TYPE:
-      extract_sensor_data(temp_buffer); //extract data using massive switch 
+      extract_sensor_data(temp_buffer); //extract data using massive switch
       break;
-      
+
     case MENU_FRAME_TYPE:
       menu.set_current_menu(temp_buffer[3]);
-      menu_parameters.encoder_position = GET_ENCODER_POS(temp_buffer[4],temp_buffer[5]);
+      menu_parameters.encoder_position = GET_ENCODER_POS(temp_buffer[4], temp_buffer[5]);
       break;
-      
+
   }
 
 }
+byte set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //return the value of hue
+
+  if (data_loc == 1)//1== msb, 2 = lsb
+    receivedData = receivedData << 8;
+  text_parameters[obj_num].hue = text_parameters[obj_num].hue | receivedData;   //somewhat dangerous, if colour printed to screen before new colour written, 
+                                                                                // not urgent should fix itself on next write, could use temp variable maybe and log when even writes occur?
+
+}
+
+bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length) {} //if frame ok return true
+void Coms::unpack_pos_frame(byte *data) {}
+void Coms::unpack_menu_frame(byte *data) {}
+void Coms::unpack_text_frame(byte *data) {}
+void Coms::unpack_ping_frame(byte *data) {}
+void Coms::unpack_sensor_data_frame(byte *data) {}
+void Coms::remove_byte_parity_bit() {}
 
 #endif // COMS_CPP

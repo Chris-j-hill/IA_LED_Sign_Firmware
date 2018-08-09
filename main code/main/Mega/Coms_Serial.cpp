@@ -106,91 +106,64 @@ void Coms_Serial::read_buffer() {
 
   if (Serial_1.available() > 1) { //only create variables if data arrived, require start and first byte of frame
 
-    //configure allignment, find start byte (\r\n from preceeding println)
-    //    bool start_found = false;
-    //    byte cur_byte = 0;
-    //    byte prev_byte = Serial_1.read();
-    //    while (Serial_1.available() > 0 && start_found == false) {
-    //      cur_byte = Serial_1.read();
-    ////      Serial.print("prev_byte ");
-    ////      Serial.print(prev_byte);
-    ////      Serial.print("\t cur_byte ");
-    ////      Serial.println(cur_byte);
-    //      if (prev_byte == '\r' && cur_byte == '\n')
-    //        start_found = true;
-    //      else
-    //        prev_byte = cur_byte;
-    //    }
-    //    if (start_found == false) {
-    //      Serial.println ("frame not found");
-    //      return;
-    //    }
-    //if (Serial_1.peek() != 10)  //parse until start byte found
-
-    //Serial.println(Serial_1.read());
     if (Serial_1.peek() == 13) {
       Serial_1.read();
       if (Serial_1.peek() == 10) {
         Serial_1.read();
-        delay(1); //wait for some more bytes
+        byte_queued();
+        //delay(1); //wait for some more bytes
 
         if (Serial_1.available() > 0) { //just recieved start byte and data imediately after, probably frame
 
-          byte temp_buffer[MEGA_SERIAL_BUFFER_LENGTH] = {0};
-          Serial_1.readBytesUntil('\r', temp_buffer, HEADER_LENGTH);
-          //          for (byte i = 0; i < HEADER_LENGTH; i++)
-          //            Serial.println(temp_buffer[i]);
+          byte temp_header[HEADER_LENGTH] = {0};
 
-          #ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
-                byte frame_type = error_check_encoded_header(temp_buffer);
-          #else
-                byte frame_type = error_check_unencoded_header(temp_buffer);
-          #endif
+          //          read_frame
+          byte bytes_read = Serial_1.readBytes(temp_header, HEADER_LENGTH);
+          if (bytes_read<HEADER_LENGTH)//if we read less than required amount before timeout this must not be a frame
+          return;
           
+#ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
+          byte frame_type = error_check_encoded_header(temp_header);
+#else
+          byte frame_type = error_check_unencoded_header(temp_header);
+#endif
+
+          //in some cases we know exactly how long the frame will be,in others we must parse until indicated amount is read
+          if (frame_type == TEXT_FRAME_TYPE) {
+
+          }
+
+          else if (frame_type == POS_FRAME_TYPE) {
+            byte data[POS_FRAME_LENGTH] = {0};
+            bytes_read = Serial_1.readBytes(data, POS_FRAME_LENGTH-HEADER_LENGTH);
+            memmove(data+HEADER_LENGTH, data, bytes_read);  //move elements back in frame
+            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
+            
+            if(error_check_frame_body(data, frame_type, pos_frame.frame_length))  //if frame ok, save data
+            unpack_pos_frame(data);
+           
+            else{//do nothing if pos frame recieved in error, new one coming soon
+              
+            }
+            
+            }
+
+          else if (frame_type == SENSOR_FRAME_TYPE) {
+
+          }
+
+          else if (frame_type == MENU_FRAME_TYPE) {
+
+          }
+
+          else if (frame_type == PING_STRING_TYPE) {
+
+          }
+
 
         }
       }
     }
-
-
-    //    else {
-    //      byte temp_buffer[MEGA_SERIAL_BUFFER_LENGTH + 2] = {0};
-    //      Serial.readBytesUntil('\r', temp_buffer, HEADER_LENGTH + 2);
-    //      for (byte i = 0; i < HEADER_LENGTH; i++) {  //get first bytes
-    //        //if (!byte_queued()) return;
-    //        //temp_buffer[i] = Serial_1.read();
-    //        Serial.print((byte)temp_buffer[i]);
-    //        Serial.print("\t");
-    //        Serial.println((char)temp_buffer[i]);
-    //      }
-    //      Serial.println();
-    //#ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded, cant read data directly, decode and sanity check in this funciton
-    //      byte frame_type = error_check_encoded_header(temp_buffer);
-    //#else
-    //      byte frame_type = error_check_unencoded_header(temp_buffer);
-    //#endif
-    //
-    //      if (frame_type == 0) {  //if type error, return
-    //        return;
-    //      }
-    //
-    //      receive_frame(temp_buffer); // read frame
-    //
-    //      if (validate_checksum(temp_buffer)) { //confirm final checksum
-    //        if (frame_type == PING_STRING_TYPE) // if ping, respond
-    //          ping_good();
-    //        else
-    //          frame_cpy(temp_buffer, frame_type); //otherwise save data
-    //      }
-    //      else {  //if bad frame
-    //        if (frame_type == PING_STRING_TYPE) // if ping, respond
-    //          ping_bad();
-    //        else
-    //          request_frame(frame_type);        //otherwise request specific frame
-    //      }
-    //
-    //
-    //    }
   }
 }
 
@@ -222,12 +195,12 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
 
   Serial.print("frame type = ");
   Serial.println(frame_type);
-  
+
   Serial.print("num frame = ");
   Serial.println(num_frames);
 
-    Serial.print("this frame = ");
-    Serial.println(this_frame);
+  Serial.print("this frame = ");
+  Serial.println(this_frame);
 
   Serial.print("obj num = ");
   Serial.println(obj_num);
@@ -235,7 +208,7 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
 
 
   // list of tests of header to check if its reasonable
-  
+
   if (temp_buffer[FRAME_LENGTH_LOC] > MEGA_SERIAL_BUFFER_LENGTH || temp_buffer[FRAME_LENGTH_LOC] < FRAME_OVERHEAD)        goto badframe; //out of bounds frame length
   else if (temp_buffer[FRAME_TYPE_LOC] > NUM_ALLOWED_FRAME_TYPES)                                                         goto badframe; //out of bounds frame type
   else if (num_frames < this_frame)           goto badframe; //check if this frame is greater than num frames
@@ -253,7 +226,7 @@ byte Coms_Serial::error_check_unencoded_header(byte *temp_buffer) {
   else if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                                            goto badframe;  //check the obj num is reasonable
 
   //TESTS PASSED: frame header data plausable, proceed to save data
-  else { 
+  else {
     if (temp_buffer[FRAME_TYPE_LOC] == TEXT_FRAME_TYPE ) {
       text_frame.num_frames = num_frames;
       text_frame.num_frames = this_frame;
@@ -303,13 +276,13 @@ byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
 #endif
 
 #ifdef DO_HEAVY_ERROR_CHECKING
-//  check parity bits of header
-//  if error in more than two lines discard, cant recover
-//  else if error in frame_length, get code to read until endbyte,\r,\n found or MEGA_SERIAL_BUFFER_LENGTH reached
-//  else return frame_type
+  //  check parity bits of header
+  //  if error in more than two lines discard, cant recover
+  //  else if error in frame_length, get code to read until endbyte,\r,\n found or MEGA_SERIAL_BUFFER_LENGTH reached
+  //  else return frame_type
 
-  for( byte i=0;i<HEADER_LENGTH;i++){
-    
+  for ( byte i = 0; i < HEADER_LENGTH; i++) {
+
   }
 
 #endif
