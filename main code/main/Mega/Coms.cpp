@@ -390,7 +390,7 @@ bool Coms::validate_checksum(byte *temp_buffer) {
 
 #ifdef DO_ERROR_CHECKING
 #ifdef DO_HEAVY_ERROR_CHECKING //parity check each byte and 13 bit checksum of entire frame
-//#error ("heavy error checking not implemented")
+  //#error ("heavy error checking not implemented")
 
 #else //simple 8 bit checksum of frame
 
@@ -449,8 +449,8 @@ byte set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //return t
 
   if (data_loc == 1)//1== msb, 2 = lsb
     receivedData = receivedData << 8;
-  text_parameters[obj_num].hue = text_parameters[obj_num].hue | receivedData;   //somewhat dangerous, if colour printed to screen before new colour written, 
-                                                                                // not urgent should fix itself on next write, could use temp variable maybe and log when even writes occur?
+  text_parameters[obj_num].hue = text_parameters[obj_num].hue | receivedData;   //somewhat dangerous, if colour printed to screen before new colour written,
+  // not urgent should fix itself on next write, could use temp variable maybe and log when even writes occur?
 
 }
 
@@ -459,7 +459,73 @@ byte Coms::parity_of(byte value) {
 }
 
 
-bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length) {} //if frame ok return true
+bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length) { //if frame ok return true
+
+  bool byte_parity_error = false;
+  bool vertical_parity_error = false;
+  bool checksum_error = false;
+
+  //test all error detection algorithms
+  if (frame_type == TEXT_FRAME_TYPE)
+    byte_parity_error = check_byte_parity(buf, HEADER_LENGTH, frame_length - TRAILER_LENGTH); //check parity included in data byte
+
+  vertical_parity_error = check_vertical_checksum(buf, frame_length);
+  checksum_error = check_final_checksum(buf, frame_length);
+
+  // fix error ...
+  // test again ...
+
+  //return result
+  return (byte_parity_error | vertical_parity_error | checksum_error);  //if any of these failed
+
+}
+
+
+bool Coms::check_byte_parity(byte *buf , byte start_byte, byte end_byte) { //run through bytes in frame, checking parity of each byte
+
+  byte errors = 0;  //num row with incorrect parity
+  for (byte i = start_byte; i <= end_byte; i++) {
+    if (parity_of(buf[i]))  //if parity odd, error found
+      return true;          //return true
+  }
+  return false;
+}
+
+
+bool Coms::check_vertical_checksum(byte *buf, byte frame_length) {
+
+  byte mask = 0x1;
+  for (byte j = 0; j < 8; j++) {
+    byte sum = 0;
+    for (byte i = 0; i <= frame_length - TRAILER_LENGTH; i++) {
+      sum += ((buf[i] >> j)&mask);
+    }
+    if (sum & mask) return true; //error found, sum of bits is odd
+  }
+  return false;
+}
+bool Coms::check_final_checksum(byte *buf, byte frame_length) {
+
+  uint16_t checksum = buf[frame_length - 2] & (APPLY_CHECKSUM_THREE_BIT_MASK(buf[4]) << 7);
+
+  uint16_t sum = 0;
+  sum = sum_header(buf[0], buf[1], buf[2], buf[3]);
+
+  for (byte i = HEADER_LENGTH; i < frame_length - 2; i++) {
+    sum += buf[i];
+  }
+
+  if (sum != checksum) return true;
+  else return false;
+}
+
+
+inline uint16_t Coms::sum_header(byte a, byte b, byte c, byte d) {
+
+   return (a + b + c + (d & 0b11110001));
+
+}
+
 void Coms::unpack_pos_frame(byte *data) {}
 void Coms::unpack_menu_frame(byte *data) {}
 void Coms::unpack_text_frame(byte *data) {}

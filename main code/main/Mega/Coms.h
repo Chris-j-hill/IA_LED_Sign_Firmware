@@ -65,6 +65,7 @@
 #define APPLY_THIS_FRAME_PARITY_MASK(a)   (a & 0b00000001)
 #define APPLY_FRAME_NUM_PARITY_MASK(a)    ((a >> 4)&0b00000001)
 #define APPLY_OBJ_NUM_PARITY_MASK(a)      (a & 0b00000001)
+#define APPLY_CHECKSUM_THREE_BIT_MASK(a)  (a & 0b00001110)
 
 
 #define GET_GLOBAL_POS(a, b) (a<<8 & b)
@@ -109,7 +110,12 @@ class Coms {
     inline int calc_pos(byte MSB, byte LSB);
     inline int calc_local_pos(byte MSB, byte LSB);
 
+    //error checking functions, return true for error found
+    bool check_byte_parity(byte *buf, byte start_byte, byte end_byte);
+    bool check_vertical_checksum(byte *buf, byte frame_length);
+    bool check_final_checksum(byte *buf, byte frame_length);
 
+    inline uint16_t sum_header(byte a,byte b,byte c,byte d);
   protected:
     byte parity_of(byte data);
     
