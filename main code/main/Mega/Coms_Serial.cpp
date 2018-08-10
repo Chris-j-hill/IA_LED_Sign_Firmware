@@ -88,7 +88,7 @@ void serial_recieved_ISR() {
 }
 
 void Coms_Serial::init_serial() {
-  Serial_1.begin(COMS_SPEED);
+  Serial_1.begin(COMS_SPEED,COMS_CONGIF);
 }
 
 
@@ -285,6 +285,8 @@ byte Coms_Serial::error_check_unencoded_header(byte * temp_buffer) {
 
   Serial.print(F("frame type = "));
   Serial.println(frame_type);
+
+  Serial.println(temp_buffer[FRAME_TYPE_LOC],BIN);
 
   Serial.print(F("num frame = "));
   Serial.println(num_frames);

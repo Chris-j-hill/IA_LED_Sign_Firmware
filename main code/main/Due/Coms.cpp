@@ -186,6 +186,29 @@ void Coms::init_frames() {
 
   //ping frame
   ping_frame.frame_length = PING_FRAME_LENGTH;
+  ping_frame.frame_type = PING_STRING_TYPE;
+  ping_frame.frame_buffer[0] = ping_frame.frame_length;
+  ping_frame.frame_buffer[1] = ping_frame.frame_type;
+  ping_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
+
+
+  //if we will do parity checking, set parity here for constants
+#ifdef DO_HEAVY_ERROR_CHECKING
+  sensor_data_frame.frame_buffer[1] = (sensor_data_frame.frame_buffer[1] << 1) | (parity_of(sensor_data_frame.frame_buffer[1]));
+  sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(sensor_data_frame.frame_buffer[2])) << 4));
+  sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA(sensor_data_frame.frame_buffer[2] ))));
+
+  menu_frame.frame_buffer[1] = (menu_frame.frame_buffer[1] << 1) | (parity_of(menu_frame.frame_buffer[1]));
+  menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(menu_frame.frame_buffer[2])) << 4));
+  menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( menu_frame.frame_buffer[2] ))));
+
+  ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
+  ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
+  ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
+
+
+#endif
+
 }
 
 
@@ -319,25 +342,25 @@ void Coms::set_header_parity(byte frame_type) {
 
     case SENSOR_FRAME_TYPE:
       sensor_data_frame.frame_buffer[0] = (sensor_data_frame.frame_buffer[0] << 1) | (parity_of(sensor_data_frame.frame_buffer[0]));
-      sensor_data_frame.frame_buffer[1] = (sensor_data_frame.frame_buffer[1] << 1) | (parity_of(sensor_data_frame.frame_buffer[1]));
-      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(sensor_data_frame.frame_buffer[2])) << 4));
-      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA(sensor_data_frame.frame_buffer[2] ))));
-      //sensor_data_frame.frame_buffer[3] = (sensor_data_frame.frame_buffer[3]       | (parity_of(sensor_data_frame.frame_buffer[3])));
+      //      sensor_data_frame.frame_buffer[1] = (sensor_data_frame.frame_buffer[1] << 1) | (parity_of(sensor_data_frame.frame_buffer[1]));
+      //      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(sensor_data_frame.frame_buffer[2])) << 4));
+      //      sensor_data_frame.frame_buffer[2] = (sensor_data_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA(sensor_data_frame.frame_buffer[2] ))));
+      //      sensor_data_frame.frame_buffer[3] = (sensor_data_frame.frame_buffer[3]       | (parity_of(sensor_data_frame.frame_buffer[3]))); //<- this is irrelevant, no obj num on sensor frame
       break;
 
     case MENU_FRAME_TYPE:
       menu_frame.frame_buffer[0] = (menu_frame.frame_buffer[0] << 1) | (parity_of(menu_frame.frame_buffer[0]));
-      menu_frame.frame_buffer[1] = (menu_frame.frame_buffer[1] << 1) | (parity_of(menu_frame.frame_buffer[1]));
-      menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(menu_frame.frame_buffer[2])) << 4));
-      menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( menu_frame.frame_buffer[2] ))));
+      //      menu_frame.frame_buffer[1] = (menu_frame.frame_buffer[1] << 1) | (parity_of(menu_frame.frame_buffer[1]));
+      //      menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(menu_frame.frame_buffer[2])) << 4));
+      //      menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( menu_frame.frame_buffer[2] ))));
       menu_frame.frame_buffer[3] = (menu_frame.frame_buffer[3]       | (parity_of(menu_frame.frame_buffer[3])));
       break;
 
     case PING_STRING_TYPE:
       ping_frame.frame_buffer[0] = (ping_frame.frame_buffer[0] << 1) | (parity_of(ping_frame.frame_buffer[0]));
-      ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
-      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
-      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
+      //      ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
+      //      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
+      //      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
       ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3]       | (parity_of(ping_frame.frame_buffer[3])));
       break;
 

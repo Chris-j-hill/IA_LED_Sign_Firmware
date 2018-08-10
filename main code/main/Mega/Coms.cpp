@@ -504,6 +504,7 @@ bool Coms::check_vertical_checksum(byte *buf, byte frame_length) {
   }
   return false;
 }
+
 bool Coms::check_final_checksum(byte *buf, byte frame_length) {
 
   uint16_t checksum = buf[frame_length - 2] & (APPLY_CHECKSUM_THREE_BIT_MASK(buf[4]) << 7);

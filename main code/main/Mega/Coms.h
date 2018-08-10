@@ -7,7 +7,7 @@
 #include "Arduino.h"
 
 #define COMS_SPEED 19200         //speed of coms between due and megas when using serial
-
+#define COMS_CONGIF SERIAL_8N1
 
 
 

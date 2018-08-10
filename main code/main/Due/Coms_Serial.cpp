@@ -155,11 +155,11 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::TWO_STOP_BITS
+    soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
   NVIC_SetPriority (SERIAL_1_TIMER, SOFT_SERIAL_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
 #else
-  Serial_1.begin(COMS_SPEED, SERIAL_8E2);
+  Serial_1.begin(COMS_SPEED, HARD_COMS_CONFIG);
 #endif
 
 
@@ -170,12 +170,12 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::TWO_STOP_BITS
+    soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
 
   NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_2.begin(COMS_SPEED, SERIAL_8E2);
+  Serial_2.begin(COMS_SPEED, HARD_COMS_CONFIG);
 #endif
 
 
@@ -186,12 +186,12 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::TWO_STOP_BITS
+    soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
 
   NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_3.begin(COMS_SPEED, SERIAL_8E2);
+  Serial_3.begin(COMS_SPEED, HARD_COMS_CONFIG);
 #endif
 
 
@@ -202,12 +202,12 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     SOFT_COMS_SPEED,
     soft_uart::data_bit_codes::EIGHT_BITS,
     soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::TWO_STOP_BITS
+    soft_uart::stop_bit_codes::ONE_STOP_BIT
   );
 
   NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_4.begin(COMS_SPEED, SERIAL_8E2);
+  Serial_4.begin(COMS_SPEED, HARD_COMS_CONFIG);
 #endif
 
 
@@ -472,9 +472,18 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
       Serial_1.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
-        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   while(1){}break; 
+        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   while (1) {} break;
         case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
-        case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
+        case SENSOR_FRAME_TYPE:
+          Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
+
+          for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
+            Serial.print(sensor_data_frame.frame_buffer[i]);
+            Serial.print("\t");
+            Serial.println(sensor_data_frame.frame_buffer[i], BIN);
+          }
+          Serial.println();
+          break;
         case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
       }
       Serial_3.write(return_carraige, 2);
