@@ -77,6 +77,9 @@
 #define CHECKSUM_3_BIT_LOC 3
 #define CHECKSUM_3_BIT_MASK 0b00001110
 
+#define BYTE_PARITY_LOC 7
+
+
 //#define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 //const byte hamming_H_matrix[] PROGMEM = { 0x4259F1BA, //hamming matrix used to generate syndrome for error checking header
@@ -134,14 +137,9 @@ class Coms {
 
     bool validate_checksum(byte *temp_buffer);
     void frame_cpy(byte *temp_buffer, byte frame_type);
-    byte set_hue_colour(byte receivedData, byte obj_num ,byte data_loc);//set the value of hue
+    void set_hue_colour(byte receivedData, byte obj_num ,byte data_loc);//set the value of hue
     bool error_check_frame_body(byte *buf, byte frame_type, byte frame_length);  //if frame ok return true
-    void unpack_pos_frame(byte *data);
-    void unpack_menu_frame(byte *data);
-    void unpack_text_frame(byte *data);
-    void unpack_ping_frame(byte *data);
-    void unpack_sensor_data_frame(byte *data);
-    void remove_byte_parity_bit();  //strip data of parity bit
+    void remove_byte_parity_bit(byte *buf,byte parity_loc, byte end_address, byte start_address =0);  //strip data of parity bit
     
     
 };

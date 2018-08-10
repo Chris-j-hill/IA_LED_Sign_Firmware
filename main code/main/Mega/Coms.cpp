@@ -445,7 +445,7 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
   }
 
 }
-byte set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //return the value of hue
+void  Coms::set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //return the value of hue
 
   if (data_loc == 1)//1== msb, 2 = lsb
     receivedData = receivedData << 8;
@@ -476,12 +476,12 @@ bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length)
   // test again ...
 
   //return result
-//  Serial.print("byte_parity_error = ");
-//  Serial.println(byte_parity_error);
-//  Serial.print("vertical_parity_error = ");
-//  Serial.println(vertical_parity_error);
-//  Serial.print("checksum_error = ");
-//  Serial.println(checksum_error);
+  //  Serial.print("byte_parity_error = ");
+  //  Serial.println(byte_parity_error);
+  //  Serial.print("vertical_parity_error = ");
+  //  Serial.println(vertical_parity_error);
+  //  Serial.print("checksum_error = ");
+  //  Serial.println(checksum_error);
 
   return (byte_parity_error | vertical_parity_error | checksum_error);  //if any of these failed
 
@@ -541,12 +541,42 @@ inline uint16_t Coms::sum_header(byte a, byte b, byte c, byte d) {
 
 }
 
-void Coms::unpack_pos_frame(byte *data) {}
-void Coms::unpack_menu_frame(byte *data) {}
-void Coms::unpack_text_frame(byte *data) {}
-void Coms::unpack_ping_frame(byte *data) {}
-void Coms::unpack_sensor_data_frame(byte *data) {}
-void Coms::remove_byte_parity_bit() {}
+void Coms::remove_byte_parity_bit(byte *buf, byte parity_loc,  byte end_address, byte start_address) {
+
+  byte retain_mask = 0;
+  switch (parity_loc) {
+    case 0:
+      retain_mask = 0x7F;
+      break;
+    case 1:
+      retain_mask = 0x3F;
+      break;
+    case 2:
+      retain_mask = 0x1F;
+      break;
+    case 3:
+      retain_mask = 0xF;
+      break;
+    case 4:
+      retain_mask = 0x7;
+      break;
+    case 5:
+      retain_mask = 0x3;
+      break;
+    case 6:
+      retain_mask = 0x1;
+      break;
+    case 7:
+      retain_mask = 0x0;
+      break;
+  }
+
+
+  for (byte i = start_address; i < end_address; i++) {
+    buf[i] = ((buf[i] >> 1) & ~retain_mask) & (buf[i] & retain_mask);
+  }
+
+}
 
 
 

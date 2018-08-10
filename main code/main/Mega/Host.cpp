@@ -166,129 +166,120 @@ void Host::print_messages() {
 }
 
 
+void Host::print_text(String command) {
 
+  String obj_num_as_char = command.substring(command.length()-1);
+  byte obj_num = obj_num_as_char.toInt();
+  if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)
+    obj_num = 0;
 
+  if (header_print_counter == 0) {
+    Serial.println();
+    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   "));//\tStart points   \tEnd Points \tLimits X- X+ Y- Y+"));
+  }
+  if (text_parameters[obj_num].object_used)
+    yes();
+  else{
+    no();space();
+  }
+  tab(); tab();
 
+  Serial.print(text_parameters[obj_num].text_size);
+  tab();
 
+  Serial.print(text_parameters[obj_num].colour_r);
+  if (text_parameters[obj_num].colour_r < 10) space();
+  if (text_parameters[obj_num].colour_r < 100) space();
+  space();
 
+  Serial.print(text_parameters[obj_num].colour_g);
+  if (text_parameters[obj_num].colour_g < 10) space();
+  if (text_parameters[obj_num].colour_g < 100) space();
+  space();
 
+  Serial.print(text_parameters[obj_num].colour_b);
+  if (text_parameters[obj_num].colour_b < 10) space();
+  if (text_parameters[obj_num].colour_b < 100) space();
+  space();
 
+  Serial.print(text_parameters[obj_num].hue);
+  if (abs(text_parameters[obj_num].hue < 10)) space();
+  if (abs(text_parameters[obj_num].hue < 100)) space();
+  if (abs(text_parameters[obj_num].hue < 1000)) space();
+  if (text_parameters[obj_num].hue >= 0) space();
+  tab();
 
+  if (text_parameters[obj_num].use_hue)
+    yes();
+  else{
+    no();space();
+  }
+  tab(); tab();
 
-//void Host::print_text(String command) {
-//
-//  String obj_num_as_char = command.substring(command.length()-1);
-//  byte obj_num = obj_num_as_char.toInt();
-//  if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)
-//    obj_num = 0;
-//
-//  if (header_print_counter == 0) {
-//    Serial.println();
-//    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   \tStart points   \tEnd Points \tLimits X- X+ Y- Y+"));
-//  }
-//  if (text_cursor[obj_num].object_used)
-//    yes();
-//  else{
-//    no();space();
-//  }
-//  tab(); tab();
-//
-//  Serial.print(text_parameters[obj_num].text_size);
-//  tab();
-//
-//  Serial.print(text_parameters[obj_num].red);
-//  if (text_parameters[obj_num].red < 10) space();
-//  if (text_parameters[obj_num].red < 100) space();
+  Serial.print(cursor_parameters[obj_num].local_x_pos);
+  if (abs(cursor_parameters[obj_num].local_x_pos < 10)) space();
+  if (abs(cursor_parameters[obj_num].local_x_pos < 100)) space();
+  if (cursor_parameters[obj_num].local_x_pos >= 0) space();
+  space();
+
+  Serial.print(cursor_parameters[obj_num].local_y_pos);
+  if (abs(cursor_parameters[obj_num].local_y_pos < 10)) space();
+  if (abs(cursor_parameters[obj_num].local_y_pos < 100)) space();
+  if (cursor_parameters[obj_num].local_y_pos >= 0) space();
+  tab(); tab();
+
+  Serial.print(cursor_parameters[obj_num].x_dir - 128);
+  if (abs(cursor_parameters[obj_num].x_dir - 128 < 10)) space();
+  if (abs(cursor_parameters[obj_num].x_dir - 128 < 100)) space();
+  if (cursor_parameters[obj_num].x_dir - 128 >= 0) space();
+  space();
+
+  Serial.print(cursor_parameters[obj_num].y_dir - 128);
+  if (abs(cursor_parameters[obj_num].y_dir - 128 < 10)) space();
+  if (abs(cursor_parameters[obj_num].y_dir - 128 < 100)) space();
+  if (cursor_parameters[obj_num].y_dir - 128 >= 0) space();
+  space();
+  tab();tab();
+
+//  Serial.print(cursor_parameters[obj_num].x_start);
+//  if (abs(cursor_parameters[obj_num].x_start < 10)) space();
+//  if (abs(cursor_parameters[obj_num].x_start < 100)) space();
+//  if (cursor_parameters[obj_num].x_start >= 0) space();
 //  space();
 //
-//  Serial.print(text_parameters[obj_num].green);
-//  if (text_parameters[obj_num].green < 10) space();
-//  if (text_parameters[obj_num].green < 100) space();
-//  space();
-//
-//  Serial.print(text_parameters[obj_num].blue);
-//  if (text_parameters[obj_num].blue < 10) space();
-//  if (text_parameters[obj_num].blue < 100) space();
-//  space();
-//
-//  Serial.print(text_parameters[obj_num].hue);
-//  if (abs(text_parameters[obj_num].hue < 10)) space();
-//  if (abs(text_parameters[obj_num].hue < 100)) space();
-//  if (abs(text_parameters[obj_num].hue < 1000)) space();
-//  if (text_parameters[obj_num].hue >= 0) space();
-//  tab();
-//
-//  if (text_parameters[obj_num].use_hue)
-//    yes();
-//  else{
-//    no();space();
-//  }
-//  tab(); tab();
-//
-//  Serial.print(text_cursor[obj_num].x);
-//  if (abs(text_cursor[obj_num].x < 10)) space();
-//  if (abs(text_cursor[obj_num].x < 100)) space();
-//  if (text_cursor[obj_num].x >= 0) space();
-//  space();
-//
-//  Serial.print(text_cursor[obj_num].y);
-//  if (abs(text_cursor[obj_num].y < 10)) space();
-//  if (abs(text_cursor[obj_num].y < 100)) space();
-//  if (text_cursor[obj_num].y >= 0) space();
-//  tab(); tab();
-//
-//  Serial.print(text_cursor[obj_num].x_pos_dir - 128);
-//  if (abs(text_cursor[obj_num].x_pos_dir - 128 < 10)) space();
-//  if (abs(text_cursor[obj_num].x_pos_dir - 128 < 100)) space();
-//  if (text_cursor[obj_num].x_pos_dir - 128 >= 0) space();
-//  space();
-//
-//  Serial.print(text_cursor[obj_num].y_pos_dir - 128);
-//  if (abs(text_cursor[obj_num].y_pos_dir - 128 < 10)) space();
-//  if (abs(text_cursor[obj_num].y_pos_dir - 128 < 100)) space();
-//  if (text_cursor[obj_num].y_pos_dir - 128 >= 0) space();
-//  space();
-//  tab();tab();
-//
-//  Serial.print(text_cursor[obj_num].x_start);
-//  if (abs(text_cursor[obj_num].x_start < 10)) space();
-//  if (abs(text_cursor[obj_num].x_start < 100)) space();
-//  if (text_cursor[obj_num].x_start >= 0) space();
-//  space();
-//
-//  Serial.print(text_cursor[obj_num].y_start);
-//  if (abs(text_cursor[obj_num].y_start < 10)) space();
-//  if (abs(text_cursor[obj_num].y_start < 100)) space();
-//  if (text_cursor[obj_num].y_start >= 0) space();
+//  Serial.print(cursor_parameters[obj_num].y_start);
+//  if (abs(cursor_parameters[obj_num].y_start < 10)) space();
+//  if (abs(cursor_parameters[obj_num].y_start < 100)) space();
+//  if (cursor_parameters[obj_num].y_start >= 0) space();
 //  space();
 //
 //  tab();tab();
-//  Serial.print(text_cursor[obj_num].x_end);
-//  if (abs(text_cursor[obj_num].x_end < 10)) space();
-//  if (abs(text_cursor[obj_num].x_end < 100)) space();
-//  if (text_cursor[obj_num].x_end >= 0) space();
+//  Serial.print(cursor_parameters[obj_num].x_end);
+//  if (abs(cursor_parameters[obj_num].x_end < 10)) space();
+//  if (abs(cursor_parameters[obj_num].x_end < 100)) space();
+//  if (cursor_parameters[obj_num].x_end >= 0) space();
 //  space();
 //
-//  Serial.print(text_cursor[obj_num].y_end);
-//  if (abs(text_cursor[obj_num].y_end < 10)) space();
-//  if (abs(text_cursor[obj_num].y_end < 100)) space();
-//  if (text_cursor[obj_num].y_end >= 0) space();
+//  Serial.print(cursor_parameters[obj_num].y_end);
+//  if (abs(cursor_parameters[obj_num].y_end < 10)) space();
+//  if (abs(cursor_parameters[obj_num].y_end < 100)) space();
+//  if (cursor_parameters[obj_num].y_end >= 0) space();
 //  space();
 //
 //  tab();tab();
 //
-//  Serial.print(text_cursor[obj_num].x_limit_min);
+//  Serial.print(cursor_parameters[obj_num].x_limit_min);
 //  space();
-//  Serial.print(text_cursor[obj_num].x_limit_max);
+//  Serial.print(cursor_parameters[obj_num].x_limit_max);
 //  space();
-//  Serial.print(text_cursor[obj_num].y_limit_min);
+//  Serial.print(cursor_parameters[obj_num].y_limit_min);
 //  space();
-//  Serial.print(text_cursor[obj_num].y_limit_max);
-//
-//
-//  Serial.println();
-//
-//}
+//  Serial.print(cursor_parameters[obj_num].y_limit_max);
+
+
+  Serial.println();
+
+}
 
 
 void Host::print_menu_tree() {
@@ -585,7 +576,7 @@ void Host::position_to_menu_value() {
 
     case TEXT_COLOUR_HUE:
       Serial.print(text_parameters[0].hue);
-      Serial.print(" -> range: ");
+      Serial.print(F(" -> range: "));
       Serial.print(menu.current_menu_limit_min);
       Serial.print(divide_string);
       Serial.print(menu.current_menu_limit_max);
@@ -593,7 +584,7 @@ void Host::position_to_menu_value() {
 
     case SCROLL_SPEED_MENU_X:
       Serial.print(cursor_parameters[0].x_dir - 128);
-      Serial.print(" -> range: -");
+      Serial.print(F(" -> range: -"));
       Serial.print(menu.current_menu_limit_min - 129);
       Serial.print(divide_string);
       Serial.print(menu.current_menu_limit_max - 128);
@@ -601,7 +592,7 @@ void Host::position_to_menu_value() {
 
     case SCROLL_SPEED_MENU_Y:
       Serial.print(cursor_parameters[0].y_dir - 128);
-      Serial.print(" -> range: -");
+      Serial.print(F(" -> range: -"));
       Serial.print(menu.current_menu_limit_min - 129);
       Serial.print(divide_string);
       Serial.print(menu.current_menu_limit_max - 128);

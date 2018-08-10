@@ -26,7 +26,7 @@ struct Text_Struct{
   byte colour_r = DEFAULT_TEXT_RED_BRIGHTNESS;
   byte colour_g = DEFAULT_TEXT_GREEN_BRIGHTNESS;
   byte colour_b = DEFAULT_TEXT_BLUE_BRIGHTNESS;
-  byte hue = 0;
+  int hue = 0;
   bool use_hue = false;
   
   byte x_min =0; //region to allow text to be displayed

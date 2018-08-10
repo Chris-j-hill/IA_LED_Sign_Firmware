@@ -157,11 +157,13 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-//            for (byte i = 0; i < sizeof(data); i++)
-//              Serial.println(data[i]);
+            //            for (byte i = 0; i < sizeof(data); i++)
+            //              Serial.println(data[i]);
 
-            if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) //if frame ok, returns false(no errors), save data
-              unpack_pos_frame(data);
+            if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
+              remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH);
+              frame_cpy(data, TEXT_FRAME_TYPE);
+            }
 
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -177,11 +179,11 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-//            for (byte i = 0; i < sizeof(data); i++)
-//              Serial.println(data[i]);
+            //            for (byte i = 0; i < sizeof(data); i++)
+            //              Serial.println(data[i]);
 
             if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)) //if frame ok, save data
-              unpack_pos_frame(data);
+              frame_cpy(data, POS_FRAME_TYPE);
 
             else { //do nothing if pos frame recieved in error, new one coming soon
             }
@@ -194,14 +196,14 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-//            for (byte i = 0; i < sizeof(data); i++) {
-//              Serial.print(data[i]);
-//              Serial.print("\t");
-//              host.println_bits(data[i],8, BIN);
-//            }
+            //            for (byte i = 0; i < sizeof(data); i++) {
+            //              Serial.print(data[i]);
+            //              Serial.print("\t");
+            //              host.println_bits(data[i],8, BIN);
+            //            }
 
             if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) //if frame ok, save data
-              unpack_sensor_data_frame(data);
+              frame_cpy(data, SENSOR_FRAME_TYPE);
 
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -218,11 +220,11 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-//            for (byte i = 0; i < sizeof(data); i++)
-//              Serial.println(data[i]);
+            //            for (byte i = 0; i < sizeof(data); i++)
+            //              Serial.println(data[i]);
 
             if (!error_check_frame_body(data, frame_type, menu_frame.frame_length)) //if frame ok, save data
-              unpack_menu_frame(data);
+              frame_cpy(data, MENU_FRAME_TYPE);
 
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -238,8 +240,8 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-//            for (byte i = 0; i < sizeof(data); i++)
-//              Serial.println(data[i]);
+            //            for (byte i = 0; i < sizeof(data); i++)
+            //              Serial.println(data[i]);
 
             if (!error_check_frame_body(data, frame_type, ping_frame.frame_length)) { //if frame ok, save data
               ping_good();
