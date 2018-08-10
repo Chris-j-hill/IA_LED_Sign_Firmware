@@ -7,7 +7,7 @@
 #include "Arduino.h"
 
 #define COMS_SPEED 19200         //speed of coms between due and megas when using serial
-#define COMS_CONGIF SERIAL_8N1
+#define COMS_CONGIF SERIAL_8N2
 
 
 
@@ -32,6 +32,7 @@
 #define FRAME_NUMBER_LOC  2 //encoding these into same byte
 #define NUM_OF_FRAMES_LOC 2
 #define OBJ_NUM_LOC       3
+
 
 #define TEXT_FRAME_TYPE     1
 #define POS_FRAME_TYPE      2
@@ -73,6 +74,8 @@
 #define GET_ENCODER_POS(a, b) GET_GLOBAL_POS(a, b)
 
 
+#define CHECKSUM_3_BIT_LOC 3
+#define CHECKSUM_3_BIT_MASK 0b00001110
 
 //#define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 

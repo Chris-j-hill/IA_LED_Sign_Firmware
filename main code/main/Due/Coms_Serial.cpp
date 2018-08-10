@@ -153,9 +153,9 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     RX_PIN_1,
     TX_PIN_1,
     SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
   );
   NVIC_SetPriority (SERIAL_1_TIMER, SOFT_SERIAL_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
 #else
@@ -168,9 +168,9 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     RX_PIN_2,
     TX_PIN_2,
     SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
   );
 
   NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY);
@@ -184,9 +184,9 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     RX_PIN_3,
     TX_PIN_3,
     SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
   );
 
   NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
@@ -200,9 +200,9 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     RX_PIN_4,
     TX_PIN_4,
     SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::EIGHT_BITS,
-    soft_uart::parity_codes::NO_PARITY,
-    soft_uart::stop_bit_codes::ONE_STOP_BIT
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
   );
 
   NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);

@@ -476,6 +476,13 @@ bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length)
   // test again ...
 
   //return result
+//  Serial.print("byte_parity_error = ");
+//  Serial.println(byte_parity_error);
+//  Serial.print("vertical_parity_error = ");
+//  Serial.println(vertical_parity_error);
+//  Serial.print("checksum_error = ");
+//  Serial.println(checksum_error);
+
   return (byte_parity_error | vertical_parity_error | checksum_error);  //if any of these failed
 
 }
@@ -497,24 +504,30 @@ bool Coms::check_vertical_checksum(byte *buf, byte frame_length) {
   byte mask = 0x1;
   for (byte j = 0; j < 8; j++) {
     byte sum = 0;
-    for (byte i = 0; i <= frame_length - TRAILER_LENGTH; i++) {
-      sum += ((buf[i] >> j)&mask);
+    for (byte i = 0; i < frame_length - TRAILER_LENGTH; i++) {
+      if (i != CHECKSUM_3_BIT_LOC)
+        sum += ((buf[i] >> j)&mask);
+      else
+        sum += (((buf[i] & (~CHECKSUM_3_BIT_MASK)) >> j) & mask); //suppress any 3 bit checksum values when calculating parity
     }
-    if (sum & mask) return true; //error found, sum of bits is odd
+    if ((sum & mask) != ((buf[frame_length - TRAILER_LENGTH] >> j)&mask)) return true; //error found, sum of bits is odd
   }
   return false;
 }
 
 bool Coms::check_final_checksum(byte *buf, byte frame_length) {
 
-  uint16_t checksum = buf[frame_length - 2] & (APPLY_CHECKSUM_THREE_BIT_MASK(buf[4]) << 7);
+  uint16_t lower_8 = buf[frame_length - 2];
+  uint16_t upper_3 = APPLY_CHECKSUM_THREE_BIT_MASK(buf[3]);
+  uint16_t checksum = (upper_3 << 7) | lower_8; //expected value
+  uint16_t sum = 0;                             //read value
 
-  uint16_t sum = 0;
-  sum = sum_header(buf[0], buf[1], buf[2], buf[3]);
+  sum = sum_header(buf[0], buf[1], buf[2], buf[3]); //sum header ignoring bits involved in expected checksum
 
   for (byte i = HEADER_LENGTH; i < frame_length - 2; i++) {
     sum += buf[i];
   }
+  sum = sum & 0x7FF; //mod 2^11
 
   if (sum != checksum) return true;
   else return false;
@@ -523,7 +536,8 @@ bool Coms::check_final_checksum(byte *buf, byte frame_length) {
 
 inline uint16_t Coms::sum_header(byte a, byte b, byte c, byte d) {
 
-   return (a + b + c + (d & 0b11110001));
+  uint16_t total = (a + b + c + (d & 0b11110001));
+  return total;
 
 }
 

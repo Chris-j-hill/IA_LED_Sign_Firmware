@@ -228,7 +228,7 @@ void Coms::build_menu_data_frame(byte menu_number) {   //function to build the f
 
 uint16_t Coms::generate_checksum(byte frame_type, uint16_t modulo_mask) {
 
-  byte *frame_index_zero;  //pointer to address of first element of given array
+  byte *frame_index_zero;  //pointer to address of first element of whichever array
   byte frame_length;
 
 
@@ -240,7 +240,7 @@ uint16_t Coms::generate_checksum(byte frame_type, uint16_t modulo_mask) {
       break;
     case POS_FRAME_TYPE:
       frame_length = pos_frame.frame_length;
-      frame_index_zero = pos_frame.frame_buffer;
+      frame_index_zero = pos_frame.frame_buffer;    // pointer to this defferent buffer
       break;
     case SENSOR_FRAME_TYPE:
       frame_length = sensor_data_frame.frame_length;
@@ -262,10 +262,16 @@ uint16_t Coms::generate_checksum(byte frame_type, uint16_t modulo_mask) {
   //calculate checksum
   uint16_t checksum = 0;  //set checksum as 16 bit number and modulo to fit
   for (byte i = 0; i < frame_length - 2; i++) {
-    checksum += *(frame_index_zero + i);          //sum all elements
+    if ( i != CHECKSUM_3_BIT_LOC) //dont include any prior value in this loc
+      checksum += *(frame_index_zero + i);          //sum all elements
+    else
+      checksum += (*(frame_index_zero + i)) & 0b11110001; //mask out any previous checksum value in this location
   }
-
-  checksum = checksum & modulo_mask;
+  //  Serial.print("Checksum = ");
+  //  Serial.println(checksum);
+  //  Serial.println(checksum, BIN);
+  //  checksum = checksum & modulo_mask;
+  //  Serial.println(checksum, BIN);
   return checksum;
 
 }
@@ -293,28 +299,36 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 
 #ifdef DO_HEAVY_ERROR_CHECKING
   if (frame_type == TEXT_FRAME_TYPE) {
-
+    CLEAR_HEADER_CHECKSUM(text_frame.frame_buffer[3]);  //clear these bits from prior frame
     set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH + 1);
     set_verical_parity_byte(text_frame.frame_buffer , text_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type); //macro to generate 11 bit checksum
   }
 
-  else if (frame_type == POS_FRAME_TYPE) {  //set parity bits for
+  else if (frame_type == POS_FRAME_TYPE) { 
+    
+    CLEAR_HEADER_CHECKSUM(pos_frame.frame_buffer[3]);
     set_verical_parity_byte(pos_frame.frame_buffer , pos_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == SENSOR_FRAME_TYPE) {
+    
+    CLEAR_HEADER_CHECKSUM(sensor_data_frame.frame_buffer[3]);
     set_verical_parity_byte(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == MENU_FRAME_TYPE) {
+    
+    CLEAR_HEADER_CHECKSUM(menu_frame.frame_buffer[3]);
     set_verical_parity_byte(menu_frame.frame_buffer , menu_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == PING_STRING_TYPE) {
+    
+    CLEAR_HEADER_CHECKSUM(ping_frame.frame_buffer[3]);
     set_verical_parity_byte(ping_frame.frame_buffer , ping_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
@@ -432,8 +446,11 @@ void Coms::set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte) 
 
     byte count = 0; //total set bits for this column
     for (int i = start_byte; i < checksum_loc; i++) {
-      count += ((buf[i] >> j) & mask);
-    }
+      if (i != CHECKSUM_3_BIT_LOC)
+        count += ((buf[i] >> j) & mask);
+      else
+        count += (((buf[i]& (~CHECKSUM_3_BIT_MASK)) >> j) & mask);  //suppress and prior value in 3 bit checksum location
+      }
     buf[checksum_loc] = buf[checksum_loc] | ((count & mask) << j);
   }
 }

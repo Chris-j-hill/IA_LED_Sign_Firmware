@@ -40,6 +40,10 @@ class Host {
     void check_serial();    //to read incomming data
     void print_messages();
 
+        void print_bits(uint32_t var, byte digits, byte units, bool carriage_return = false);
+    inline void println_bits(uint32_t var, byte digits, byte units){
+      print_bits(var, digits, units, true);
+    }
 };
 
 #endif //Host_H

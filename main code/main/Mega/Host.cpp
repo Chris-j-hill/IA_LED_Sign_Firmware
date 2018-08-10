@@ -609,4 +609,29 @@ void Host::position_to_menu_value() {
   }                     
 }
 
+
+
+void Host::print_bits(uint32_t var, byte digits, byte units, bool carriage_return) {
+  uint32_t test;
+  if (units == BIN)
+    test = (1 << (digits - 1));
+  else
+    test = (0xF << (digits - 1));
+
+  for (test; test; ) {
+    if (units == BIN) {
+      Serial.write(var  & test ? '1' : '0');
+      test >>= 1;
+    }
+    else if (units == HEX) {
+      Serial.print(var & test, HEX);
+      test >>= 4;
+    }
+
+  }
+  if (carriage_return)
+    Serial.println();
+}
+
+
 #endif // Host_CPP
