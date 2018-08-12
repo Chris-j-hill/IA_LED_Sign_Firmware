@@ -23,8 +23,8 @@
 #define FRAME_LENGTH_BYTE     0  //location of...
 
 
-#define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
-#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH-FRAME_OVERHEAD
+#define FRAME_OVERHEAD (HEADER_LENGTH+TRAILER_LENGTH)        //number of overhead bytes -> frame length, frame type, num frames,obj num, checksum(s), endbyte
+#define FRAME_DATA_LENGTH (MEGA_SERIAL_BUFFER_LENGTH-FRAME_OVERHEAD)
 
 //locations in frame header of data
 #define FRAME_LENGTH_LOC  0
@@ -139,7 +139,7 @@ class Coms {
     void frame_cpy(byte *temp_buffer, byte frame_type);
     void set_hue_colour(byte receivedData, byte obj_num ,byte data_loc);//set the value of hue
     bool error_check_frame_body(byte *buf, byte frame_type, byte frame_length);  //if frame ok return true
-    void remove_byte_parity_bit(byte *buf,byte parity_loc, byte end_address, byte start_address =0);  //strip data of parity bit
+    void remove_byte_parity_bit(byte *buf,byte parity_loc, byte end_address, byte start_address = 0);  //strip data of parity bit
     
     
 };

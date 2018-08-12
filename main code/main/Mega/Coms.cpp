@@ -57,7 +57,16 @@ extern Menu menu;
 
 void Coms::extract_sensor_data(byte *temp_buffer) {
 
-  for (byte alpha = HEADER_LENGTH; alpha < temp_buffer[0] - TRAILER_LENGTH - 2; alpha += 2) { //step through frame, identify prefix and extract following data byte
+  byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_buffer[0]);
+
+  for (byte i = 0; i < frame_length; i++) {
+    Serial.println(temp_buffer[i]);
+  }
+
+
+
+
+  for (byte alpha = HEADER_LENGTH; alpha < frame_length - TRAILER_LENGTH - 2; alpha += 2) { //step through frame, identify prefix and extract following data byte
 
     //set the value of a variable based on what the prefix is
     switch (temp_buffer[alpha]) {
@@ -413,13 +422,23 @@ bool Coms::validate_checksum(byte *temp_buffer) {
 
 void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
-  byte obj_num = temp_buffer[3];
-  byte data_end_index = text_frame.frame_length - TRAILER_LENGTH;
+  byte obj_num = APPLY_OBJ_NUM_MASK(temp_buffer[OBJ_NUM_LOC]);
+  byte num_frames = APPLY_FRAME_NUM_MASK(temp_buffer[NUM_OF_FRAMES_LOC]);
   byte this_frame = APPLY_THIS_FRAME_MASK(temp_buffer[FRAME_NUMBER_LOC]);
+  byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_buffer[FRAME_LENGTH_LOC]);
+  uint16_t disp_string_offset = FRAME_DATA_LENGTH * (this_frame - 1);
+
+  byte num_bytes_to_cpy = frame_length - FRAME_OVERHEAD;
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
-      memcpy(text_parameters[obj_num].string[this_frame * FRAME_DATA_LENGTH], temp_buffer[HEADER_LENGTH + 1], data_end_index - (HEADER_LENGTH - 1));
+
+      memcpy(text_parameters[obj_num].string + disp_string_offset, temp_buffer + HEADER_LENGTH, num_bytes_to_cpy);
+
+      if (num_frames == this_frame) { //if this is the last frame, overwrite any remaining string elements with nulls, ensure the previous strings dont persist
+        for (byte i = disp_string_offset + num_bytes_to_cpy; i < MAX_TWEET_SIZE; i++)
+          text_parameters[obj_num].string[i] = 0;
+      }
       break;
 
     case POS_FRAME_TYPE:
@@ -431,10 +450,24 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       cursor_parameters[obj_num].x_dir = GET_TEXT_DIR(temp_buffer[8]);
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
+      Serial.print("global x : ");
+      Serial.println(cursor_parameters[obj_num].global_x_pos);
+      Serial.print("global y : ");
+      Serial.println(cursor_parameters[obj_num].global_y_pos);
+      Serial.print("x dir : ");
+      Serial.println(cursor_parameters[obj_num].x_dir);
+      Serial.print("y dir : ");
+      Serial.println(cursor_parameters[obj_num].y_dir);
       break;
 
     case SENSOR_FRAME_TYPE:
       extract_sensor_data(temp_buffer); //extract data using massive switch
+      //      for (byte i = 0; i < 5; i++) {
+      //        Serial.print("text size obj ");
+      //        Serial.print (i);
+      //        Serial.print (" : ");
+      //        Serial.println(text_parameters[i].text_size);
+      //      }
       break;
 
     case MENU_FRAME_TYPE:
@@ -543,39 +576,43 @@ inline uint16_t Coms::sum_header(byte a, byte b, byte c, byte d) {
 
 void Coms::remove_byte_parity_bit(byte *buf, byte parity_loc,  byte end_address, byte start_address) {
 
-  byte retain_mask = 0;
-  switch (parity_loc) {
-    case 0:
-      retain_mask = 0x7F;
-      break;
-    case 1:
-      retain_mask = 0x3F;
-      break;
-    case 2:
-      retain_mask = 0x1F;
-      break;
-    case 3:
-      retain_mask = 0xF;
-      break;
-    case 4:
-      retain_mask = 0x7;
-      break;
-    case 5:
-      retain_mask = 0x3;
-      break;
-    case 6:
-      retain_mask = 0x1;
-      break;
-    case 7:
-      retain_mask = 0x0;
-      break;
-  }
+  //need to generalise this to any parity bit location
 
+  //  byte retain_mask = 0;
+  //  switch (parity_loc) {
+  //    case 0:
+  //      retain_mask = 0x7F;
+  //      break;
+  //    case 1:
+  //      retain_mask = 0x3F;
+  //      break;
+  //    case 2:
+  //      retain_mask = 0x1F;
+  //      break;
+  //    case 3:
+  //      retain_mask = 0xF;
+  //      break;
+  //    case 4:
+  //      retain_mask = 0x7;
+  //      break;
+  //    case 5:
+  //      retain_mask = 0x3;
+  //      break;
+  //    case 6:
+  //      retain_mask = 0x1;
+  //      break;
+  //    case 7:
+  //      retain_mask = 0x0;
+  //      break;
+  //  }
+  //
 
+  //  for (byte i = start_address; i < end_address; i++) {
+  //    buf[i] = ((buf[i] >> 1) & ~retain_mask) & (buf[i] & retain_mask);
+  //  }
   for (byte i = start_address; i < end_address; i++) {
-    buf[i] = ((buf[i] >> 1) & ~retain_mask) & (buf[i] & retain_mask);
+    buf[i] = buf[i] >> 1;
   }
-
 }
 
 

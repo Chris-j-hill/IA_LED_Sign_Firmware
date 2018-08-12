@@ -109,14 +109,13 @@ void Coms_Serial::read_buffer() {
   if (Serial_1.available() > 1) { //only create variables if data arrived, require start and first byte of frame
 
     if (Serial_1.read() == 13) {
-      //Serial_1.read();
       if (Serial_1.peek() == 10) {
         Serial_1.read();
         delayMicroseconds(1000); //wait for some more bytes
         if (Serial_1.available() == 0) return;
         else {
-          if (Serial_1.peek() == 13) return;
-          while (Serial_1.available() < 4) {}
+          if (Serial_1.peek() == 13) return;  //if next byte is 13 then shouldnt be a frame lengh byte due to btye length being encoded
+          while (Serial_1.available() < 4) {} //
           delay(1);
         }
         Serial.println();
@@ -132,14 +131,6 @@ void Coms_Serial::read_buffer() {
 
           if (temp_header[0] == 13 && temp_header[1] == 10)
             return;
-
-          //          //          read_frame
-          //          byte bytes_read = Serial_1.readBytes(temp_header, HEADER_LENGTH);
-
-          //          Serial.println("header values = ");
-          //          for (byte i = 0; i < 4; i++)
-          //            Serial.println(temp_header[i]);
-          //          Serial.println();
 
 
 #ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded using hamming matrix, cant read data directly, decode first and update header values
@@ -161,7 +152,7 @@ void Coms_Serial::read_buffer() {
             //              Serial.println(data[i]);
 
             if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
-              remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH);
+              remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
               frame_cpy(data, TEXT_FRAME_TYPE);
             }
 
@@ -253,11 +244,6 @@ void Coms_Serial::read_buffer() {
             }
           }
 
-          //          if (Serial_1.peek() == 13) {  //clear out remaining println
-          //            Serial_1.read();
-          //            if (Serial_1.peek() == 10)
-          //              Serial_1.read();
-          //          }
         }
       }
     }
@@ -399,32 +385,16 @@ byte Coms_Serial::error_check_encoded_header(byte * temp_buffer) {
 
 #endif
 
-
 }
 
 
 
-//
-////due to high chance of a frame arriving soon deal with the contents of these inside the isr
-//void Coms_Serial::received_text_frame(byte *temp_buffer) {
-//  byte obj_num = temp_buffer[4];//text obj number located at address 4
-//  //copy short temp buffer into correct location in text_parameters buffer
-//  memcpy(text_parameters[obj_num].string + (FRAME_DATA_LENGTH * (temp_buffer[FRAME_NUMBER_LOC] - 1)), temp_buffer + HEADER_LENGTH, temp_buffer[FRAME_LENGTH_LOC] - FRAME_OVERHEAD);
-//}
-//
-//void Coms_Serial::received_sensor_frame(byte *temp_buffer) {
-//  //  memcpy(sensor_data_frame.frame_buffer, temp_buffer+HEADER_LENGTH, temp_buffer[FRAME_LENGTH_LOC]-FRAME_OVERHEAD);
-//  coms_serial.extract_sensor_data(&temp_buffer[0]);   //deal with this now
-//}
-//
-//// These are resonably infrequenct. copy these into a temporary buffer and deal with data contents outside isr
-//void Coms_Serial::received_pos_frame(byte *temp_buffer) {
-//  memcpy(pos_frame.frame_buffer, temp_buffer + HEADER_LENGTH, temp_buffer[FRAME_LENGTH_LOC] - FRAME_OVERHEAD);
-//}
-//
-//void Coms_Serial::received_menu_frame(byte *temp_buffer) {
-//  memcpy(menu_frame.frame_buffer, temp_buffer + HEADER_LENGTH, temp_buffer[FRAME_LENGTH_LOC] - FRAME_OVERHEAD);
-//}
+void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num) {
 
+}
+
+void Coms_Serial::request_frame_retransmission() {
+
+}
 
 #endif // COMS_SERIAL_CPP

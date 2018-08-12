@@ -81,8 +81,9 @@ const char expected_ping_rx = 'p';
 
 #define CHECKSUM_3_BIT_LOC 3
 #define CHECKSUM_3_BIT_MASK 0b00001110
-
 #define CLEAR_HEADER_CHECKSUM(a) (a & ~CHECKSUM_3_BIT_MASK)
+
+#define BYTE_PARITY_LOC 7
 
 #define MEGA_RX_FRAME_LENGTH 4
 /*

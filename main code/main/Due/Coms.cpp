@@ -300,7 +300,7 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 #ifdef DO_HEAVY_ERROR_CHECKING
   if (frame_type == TEXT_FRAME_TYPE) {
     CLEAR_HEADER_CHECKSUM(text_frame.frame_buffer[3]);  //clear these bits from prior frame
-    set_buffer_parity_bits(text_frame.frame_buffer, 7 , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH + 1);
+    set_buffer_parity_bits(text_frame.frame_buffer, BYTE_PARITY_LOC , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
     set_verical_parity_byte(text_frame.frame_buffer , text_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type); //macro to generate 11 bit checksum
   }

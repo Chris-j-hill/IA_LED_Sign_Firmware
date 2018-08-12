@@ -47,17 +47,12 @@ class Coms_Serial: public Coms {
     byte error_check_encoded_header(byte *temp_buffer);   //function to run decoding on header if its encoded
     byte error_check_unencoded_header(byte *temp_buffer); //pass pointers to temp buffer becasue memory issues
 
-//    void received_text_frame(byte *temp_buffer);
-//    void received_pos_frame(byte *temp_buffer);
-//    void received_menu_frame(byte *temp_buffer);
-//    void received_sensor_frame(byte *temp_buffer);
-//    void received_ping_frame(byte *temp_buffer);
-      void receive_frame(byte *temp_buffer);
+    void receive_frame(byte *temp_buffer);
 
-    void request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num){}  //
-    void request_frame_retransmission(){}
+    void request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num);  //request specific data
+    void request_frame_retransmission(); //not sure what data we missed
 
-    
+
     inline void ping_good() { //respond indicating good connection
       Serial_1.println("ping_g");
     };
@@ -70,7 +65,7 @@ class Coms_Serial: public Coms {
     void init_serial();
     void read_buffer();
 
-    void request_frame(byte frame_type, int8_t this_frame = 0, int8_t obj_num = -1){} //request frame
+    void request_frame(byte frame_type, int8_t this_frame = 0, int8_t obj_num = -1) {} //request frame
     void attach_interrupt() {};
 
 };
