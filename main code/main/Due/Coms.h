@@ -47,8 +47,8 @@ using namespace arduino_due;
 #define ENDBYTE_CHARACTER 255 // can scan through serial until this is reached on mega end if error detected 
 
 #define MEGA_SERIAL_BUFFER_LENGTH 64 // must match or be less than SERIAL_RX_BUFFER_SIZE in hardware->arduino->avr->cores->arduino->HardwareSerial.h
-#define FRAME_OVERHEAD HEADER_LENGTH+TRAILER_LENGTH        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
-#define FRAME_DATA_LENGTH MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD
+#define FRAME_OVERHEAD (HEADER_LENGTH + TRAILER_LENGTH)        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
+#define FRAME_DATA_LENGTH (MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD)
 
 
 #define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
@@ -66,9 +66,9 @@ using namespace arduino_due;
 const char ping_string[] = "ping";
 const char expected_ping_rx = 'p';
 
-#define POS_FRAME_LENGTH FRAME_OVERHEAD + 7
-#define MENU_FRAME_LENGTH FRAME_OVERHEAD + 3
-#define PING_FRAME_LENGTH FRAME_OVERHEAD + sizeof(ping_string)
+#define POS_FRAME_LENGTH (FRAME_OVERHEAD + 7)
+#define MENU_FRAME_LENGTH (FRAME_OVERHEAD + 3)
+#define PING_FRAME_LENGTH (FRAME_OVERHEAD + sizeof(ping_string))
 
 #define PACK_FRAME_NUM_DATA(a, b) (((a<<5) | (b<<1)) & 0b11101110) //ensure parity bits are zero in case not used
 #define PACK_OBJ_NUM_DATA(a) (a<<4)

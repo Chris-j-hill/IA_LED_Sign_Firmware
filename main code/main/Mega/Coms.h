@@ -69,9 +69,9 @@
 #define APPLY_CHECKSUM_THREE_BIT_MASK(a)  (a & 0b00001110)
 
 
-#define GET_GLOBAL_POS(a, b) (a<<8 & b)
+#define GET_GLOBAL_POS(a, b) ((a<<8) | b)
 #define GET_TEXT_DIR(a) a-128
-#define GET_ENCODER_POS(a, b) GET_GLOBAL_POS(a, b)
+#define GET_ENCODER_POS(a, b) GET_GLOBAL_POS(a, b)  //same encoding scheme
 
 
 #define CHECKSUM_3_BIT_LOC 3

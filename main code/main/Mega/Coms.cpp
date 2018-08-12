@@ -450,24 +450,10 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       cursor_parameters[obj_num].x_dir = GET_TEXT_DIR(temp_buffer[8]);
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
-      Serial.print("global x : ");
-      Serial.println(cursor_parameters[obj_num].global_x_pos);
-      Serial.print("global y : ");
-      Serial.println(cursor_parameters[obj_num].global_y_pos);
-      Serial.print("x dir : ");
-      Serial.println(cursor_parameters[obj_num].x_dir);
-      Serial.print("y dir : ");
-      Serial.println(cursor_parameters[obj_num].y_dir);
       break;
 
     case SENSOR_FRAME_TYPE:
       extract_sensor_data(temp_buffer); //extract data using massive switch
-      //      for (byte i = 0; i < 5; i++) {
-      //        Serial.print("text size obj ");
-      //        Serial.print (i);
-      //        Serial.print (" : ");
-      //        Serial.println(text_parameters[i].text_size);
-      //      }
       break;
 
     case MENU_FRAME_TYPE:

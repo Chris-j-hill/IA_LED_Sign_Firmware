@@ -122,6 +122,7 @@ class Graphics {
 
   private:
     bool transmission_enabled = true; //disable transmission within pos update isr (used to allow complete text string to be transmitted uninterrupted)
+    inline uint16_t find_string_length(byte obj_num);
   public:
     Graphics() {}
     void update_brightness();

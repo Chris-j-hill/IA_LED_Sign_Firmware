@@ -39,6 +39,9 @@ extern struct Frame sensor_data_frame;
 extern Frame menu_frame;
 extern Frame pos_frame;
 
+extern struct Text text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
+extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
+
 
 void due_setup() {
 #ifndef DUE_ENABLED    //stop code imidiately if due disabled
@@ -65,6 +68,11 @@ void due_setup() {
   graphics.push_string_data();
   encoder.set_encoder_position(1000);
   coms_serial.send_menu_frame(12);
+  graphics.reset_position(3);
+  Serial.print("x loc");
+  Serial.println(text_cursor[3].x);
+  Serial.print("y loc");
+  Serial.println(text_cursor[3].y);
   coms_serial.send_pos_frame(3);
 
   for (byte i = 0; i < text_frame.frame_length; i++) {

@@ -225,6 +225,7 @@ void Graphics::get_next_string_config_profile() {
 
 void Graphics::configure_limits(byte obj_num) {
 
+//  X limits
   if (text_cursor[obj_num].x_start_set && text_cursor[obj_num].x_end_set) { //limit configured from profile
     if (text_cursor[obj_num].x_end > text_cursor[obj_num].x_start) {
       text_cursor[obj_num].x_limit_max = text_cursor[obj_num].x_end;
@@ -239,10 +240,13 @@ void Graphics::configure_limits(byte obj_num) {
   }
 
   else {   //limit auto configured
+    text_parameters[obj_num].text_str_length = (byte)find_string_length(obj_num);//value might not be set, so reconfirm here
     text_cursor[obj_num].x_limit_min = -1 * (text_parameters[obj_num].text_size * text_parameters[obj_num].text_width * text_parameters[obj_num].text_str_length);
     text_cursor[obj_num].x_limit_max = TOTAL_WIDTH;
   }
 
+
+//  Y limits
   if (text_cursor[obj_num].y_start_set && text_cursor[obj_num].y_end_set) {
     if (text_cursor[obj_num].y_end > text_cursor[obj_num].y_start) {
       text_cursor[obj_num].y_limit_max = text_cursor[obj_num].y_end;
@@ -257,7 +261,7 @@ void Graphics::configure_limits(byte obj_num) {
 
   }
   else {
-    text_cursor[obj_num].y_limit_min = -1 * (text_parameters[obj_num].text_size * text_parameters[obj_num].text_height);
+    text_cursor[obj_num].y_limit_min = -1 * (text_parameters[obj_num].text_size * text_parameters[obj_num].text_height); //<- is this right
     text_cursor[obj_num].y_limit_max = SINGLE_MATRIX_HEIGHT;
   }
 
@@ -269,7 +273,7 @@ void Graphics::reset_position(byte obj_num) {
   if (text_cursor[obj_num].x_start_set && text_cursor[obj_num].x_end_set)
     text_cursor[obj_num].x = text_cursor[obj_num].x_start;
   else {
-    if (text_cursor[obj_num].x_pos_dir >= 0)
+    if (text_cursor[obj_num].x_pos_dir >= 128)
       text_cursor[obj_num].x = text_cursor[obj_num].x_limit_min;
     else
       text_cursor[obj_num].x = text_cursor[obj_num].x_limit_max;
@@ -278,7 +282,7 @@ void Graphics::reset_position(byte obj_num) {
   if (text_cursor[obj_num].y_start_set && text_cursor[obj_num].y_end_set)
     text_cursor[obj_num].y = text_cursor[obj_num].y_start;
   else {
-    if (text_cursor[obj_num].y_pos_dir >= 0)
+    if (text_cursor[obj_num].y_pos_dir >= 128)
       text_cursor[obj_num].y = text_cursor[obj_num].y_limit_min;
     else
       text_cursor[obj_num].y = text_cursor[obj_num].y_limit_max;
@@ -326,8 +330,16 @@ void Graphics::push_string_data() {
   num_text_transmissions++;
 #endif
 
+}
 
-
+inline uint16_t Graphics::find_string_length(byte obj_num){
+  uint16_t i=0;
+  char content;
+  do{
+    content = text_str[obj_num][i]; 
+    i++;   
+  }while (content!='\0' && i<=MAX_TWEET_SIZE);
+  return (i-1);//return length of string
 }
 
 
