@@ -421,7 +421,7 @@ void Coms_Serial::write_text_frame(byte address) {
   else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
 }
 
-void Coms_Serial::write_frame(byte address, byte frame_type) {
+void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte frame_length) {
 
   switch (address) {
     case 0:
@@ -438,6 +438,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
         case MENU_FRAME_TYPE:     Serial_1.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_1.write(ping_string, sizeof(ping_string));                                 break;
+        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
       }
       Serial_1.write(return_carraige, 2); //used for end of frame detection
 
@@ -457,6 +458,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
         case MENU_FRAME_TYPE:     Serial_2.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_2.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_2.write(ping_string, sizeof(ping_string));                                 break;
+        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
       }
       Serial_2.write(return_carraige, 2);
 
@@ -485,6 +487,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
           Serial.println();
           break;
         case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
+        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
       }
       Serial_3.write(return_carraige, 2);
 
@@ -504,6 +507,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type) {
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_4.write(ping_string, sizeof(ping_string));                                 break;
+        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
       }
       Serial_4.write(return_carraige, 2);
 
@@ -1041,25 +1045,151 @@ void Coms_Serial::decode_serial_rx(String rx, byte address) {
     check_sum = char_array[i];
   }
 
-  if (!(check_sum == char_array[MEGA_RX_FRAME_LENGTH - 1])) //probably not a request, mega will request again after timout if it was corrupted
-    return;
+  if (!(check_sum == char_array[MEGA_RX_FRAME_LENGTH - 1])) //might be corrupted request, retransmit last N frames?
+    write_all_frame_history(address);
   else {
-    byte frame_num = char_array[0];
-    byte obj_num = char_array[1];
+    byte frame_type = char_array[0];
+    byte frame_num = char_array[1];
+    byte obj_num = char_array[2];
 
-    if (error_sanity_check(frame_num, obj_num)) { //case where mega knows what data is missing, send exact data required
-      send_partial_text_frame(address, obj_num, frame_num);
+    if (error_sanity_check(frame_type, frame_num, obj_num)) { //case where mega knows what data is missing, and frame not corrupted, send exact data required
+
+      byte history_loc = find_in_frame_history(address, frame_type, frame_num, obj_num);  //identify location
+      if (history_loc != FRAME_HISTORY_MEMORY_DEPTH)                                      //if frame in frame history buffer
+        write_frame_history(address, frame_type, history_loc);                            //write the frame at this location
+      else
+        write_all_frame_history(address);                     // assume something went wrong, frame forgotten or mega mistaken, send a bunch of frames and hope for the best
     }
-    else { // resend all objects to this mega, hard to be sure what went wrong
-      for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-        if (text_cursor[obj_num].object_used) {
-          send_text_frame(i, address);
-        }
-      }
+    else {
+      write_all_frame_history(address);                       //error in request, send a bunch of frames
     }
   }
 }
 
+
+void Coms_Serial::write_frame_history(byte address, byte frame_type, byte loc) { //write specific frame
+
+
+  switch (frame_type) {
+    case TEXT_FRAME_TYPE:
+      write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][1]));
+      break;
+
+    case POS_FRAME_TYPE:
+      write_frame(address, FRAME_RETRANSMIT, pos_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(pos_frame_history[address].frame_content[loc][1]));
+      break;
+
+    case SENSOR_FRAME_TYPE:
+      write_frame(address, FRAME_RETRANSMIT, sensor_data_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(sensor_data_frame_history[address].frame_content[loc][1]));
+      break;
+
+    case MENU_FRAME_TYPE:
+      write_frame(address, FRAME_RETRANSMIT, menu_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(menu_frame_history[address].frame_content[loc][1]));
+      break;
+  }
+}
+
+
+void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of frames to this address, hopefully one is right
+
+
+  byte start_loc = menu_frame_history[address].history_index;
+  byte num_sent_frames = 0;
+  for (byte frame_type = 1; frame_type <= 4; frame_type++) { //loop through frame types
+
+    switch (frame_type) {
+      case TEXT_FRAME_TYPE:
+
+        start_loc = text_frame_history[address].history_index;
+        num_sent_frames = 0;
+
+        for (int loc = start_loc; loc != start_loc + 1; loc--) {
+          if (loc < 0)
+            loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
+
+          write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][1]));
+          num_sent_frames++;
+
+          if (num_sent_frames == MAX_NUM_TEXT_FRAME_RETRASMIT|| num_sent_frames == text_frame_history[address].num_populated_buffers)
+            break; //once max sent, finish inner loop
+        }
+
+        break;
+
+      case POS_FRAME_TYPE:
+        start_loc = pos_frame_history[address].history_index;
+        num_sent_frames = 0;
+
+        for (int loc = start_loc; loc != start_loc + 1; loc--) {
+          if (loc < 0)
+            loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
+
+          write_frame(address, FRAME_RETRANSMIT, pos_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(pos_frame_history[address].frame_content[loc][1]));
+          num_sent_frames++;
+
+          if (num_sent_frames == MAX_NUM_POS_FRAME_RETRASMIT|| num_sent_frames == pos_frame_history[address].num_populated_buffers)
+            break; //once max sent, finish inner loop
+        }
+
+        break;
+
+      case SENSOR_FRAME_TYPE:
+        start_loc = sensor_data_frame_history[address].history_index;
+        num_sent_frames = 0;
+
+        for (int loc = start_loc; loc != start_loc + 1; loc--) {
+          if (loc < 0)
+            loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
+
+          write_frame(address, FRAME_RETRANSMIT, sensor_data_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(sensor_data_frame_history[address].frame_content[loc][1]));
+          num_sent_frames++;
+
+          if (num_sent_frames == MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT|| num_sent_frames == sensor_data_frame_history[address].num_populated_buffers)
+            break; //once max sent, finish inner loop
+        }
+        break;
+
+      case MENU_FRAME_TYPE:
+        start_loc = menu_frame_history[address].history_index;
+        num_sent_frames = 0;
+
+        for (int loc = start_loc; loc != start_loc + 1; loc--) {
+          if (loc < 0)
+            loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
+
+          write_frame(address, FRAME_RETRANSMIT, menu_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(menu_frame_history[address].frame_content[loc][1]));
+          num_sent_frames++;
+
+          if (num_sent_frames == MAX_NUM_MENU_FRAME_RETRASMIT || num_sent_frames == menu_frame_history[address].num_populated_buffers)
+            break; //once max sent, finish inner loop
+        }
+        break;
+    }
+  }
+}
+
+bool Coms_Serial::error_sanity_check(byte frame_type, byte frame_num, byte obj_num) { //sanity check returned frame to make sure retransmit request is reasonable
+
+  if (frame_type != TEXT_FRAME_TYPE && frame_type != POS_FRAME_TYPE && frame_type != SENSOR_FRAME_TYPE && frame_type != MENU_FRAME_TYPE)    goto bad_frame;
+
+  else if (frame_type == TEXT_FRAME_TYPE && frame_num > EXPECTED_MAX_TEXT_FRAMES)                                                           goto bad_frame;
+  else if (frame_type == POS_FRAME_TYPE && frame_num > 1)                                                                                   goto bad_frame;
+  else if (frame_type == SENSOR_FRAME_TYPE && frame_num > 1)                                                                                goto bad_frame;
+  else if (frame_type == MENU_FRAME_TYPE && frame_num > 1)                                                                                  goto bad_frame;
+
+  else if (frame_type == TEXT_FRAME_TYPE && obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                             goto bad_frame;
+  else if (frame_type == POS_FRAME_TYPE && obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                              goto bad_frame;
+  else if (frame_type == SENSOR_FRAME_TYPE && obj_num >= 1)                                                                                 goto bad_frame;
+  else if (frame_type == MENU_FRAME_TYPE && obj_num > 1)                                                                                    goto bad_frame;
+
+//all tests passed
+  return true;
+
+//  some test failed, return false
+bad_frame:
+  return false;
+
+}
 
 #endif //USE_SERIAL_TO_MEGAS
 #endif //Sign_coms_serial_CPP

@@ -21,7 +21,7 @@
 // variables for initialising soft serial for comms
 using namespace arduino_due;
 #define COMS_SPEED 19200         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
-#define HARD_COMS_CONFIG SERIAL_8N2 
+#define HARD_COMS_CONFIG SERIAL_8N2
 
 #define SOFT_COMS_SPEED 4800      // software serial speed, nb this may get in the way if transmitting large amounts of data very slowly
 #define SOFT_COMS_CONFIG_NUM_BITS     EIGHT_BITS
@@ -62,6 +62,7 @@ using namespace arduino_due;
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
+#define FRAME_RETRANSMIT    6 
 
 const char ping_string[] = "ping";
 const char expected_ping_rx = 'p';
@@ -76,6 +77,11 @@ const char expected_ping_rx = 'p';
 
 #define GET_FRAME_NUM_DATA(a)     (a & 0b11100000)
 #define GET_THIS_FRAME_DATA(a)    (a & 0b00000111)
+
+
+#define EXTRACT_FRAME_LENGTH(a)   ((a>>1) & 0b00111111)
+#define EXTRACT_THIS_FRAME_DATA(a)  ((a>>1)&0b00000111)
+#define EXTRACT_OBJ_NUM_DATA(a)  ((a>>4)&0b00001111)
 
 #define generate_checksum_11(a)   generate_checksum(a, 0x1FFF)
 
@@ -94,6 +100,12 @@ const char expected_ping_rx = 'p';
    Checksum   <- if were recieving garbage this could be necessary
 */
 
+
+#define FRAME_HISTORY_MEMORY_DEPTH 8 // how many frames of each type to each mega can we remember, useful to have large depth for menu system
+
+#define EXPECTED_MAX_TEXT_FRAMES          ceil(MAX_TWEET_SIZE / FRAME_DATA_LENGTH) //max number of frames that could be sent for a text string 
+
+
 struct Frame {            //frame details for the due, seperate one for the mega below
 
   byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH]; // use to pack single frame
@@ -110,7 +122,29 @@ struct Frame {            //frame details for the due, seperate one for the mega
 
 };
 
+//
+//struct Frame_History{
+//
+//   uint32_t transmission_time[FRAME_HISTORY_MEMORY_DEPTH] = {0}; // log time it was transmitted, if a long time ago, try match to another frame maybe? or re transmitt a bunch? or abandon
+//   uint8_t frame_header[FRAME_HISTORY_MEMORY_DEPTH][4] = {{0}};    // type, frame, num obj num etc
+//   byte jump_table[FRAME_HISTORY_MEMORY_DEPTH] = {0};            // value indicating which function to call to configure retransmit
+//   byte num_retransmissions[FRAME_HISTORY_MEMORY_DEPTH] ={0};    // number fo retransmissions of any specific frame
+//   byte history_index = 0;                                       // index were currently at in arrays
+//
+//   byte frame_content[FRAME_HISTORY_MEMORY_DEPTH][MEGA_SERIAL_BUFFER_LENGTH]= {{0}}; //the content of the frame rather than recalculating
+//
+//   int transmission_time_limit = 0; // limits for allowable if it doesnt respond within a certain time
+//   byte num_retransmission_limit = 4;
+//   byte num_frames_to_retransmit = 10;  //if cant identify nack, send a few most recent frames. should be only relavent frames, not pos, not previous menu frames etc
+//};
 
+
+struct Frame_History {
+
+  byte history_index = 0;                                                            // index were currently at in arrays
+  byte frame_content[FRAME_HISTORY_MEMORY_DEPTH][MEGA_SERIAL_BUFFER_LENGTH] = {{0}}; //the content of the frame rather than recalculating
+  byte num_populated_buffers =0;  //cunter for number fo frames sent, dont try re transmit if no frame ever sent
+};
 
 class Coms {
 
@@ -120,9 +154,9 @@ class Coms {
 
     void set_buffer_parity_bits(byte *buf, byte bit_loc, int buf_length, int start_from = 0); // set parity of last bit for all bytes excpet last two(ie the checksums, which is dependant on the value of the bytes)
     void set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte = 0);
-    
+
     inline byte parity_of(byte value);
-    void set_checksum_11(uint16_t checksum,byte frame_type);
+    void set_checksum_11(uint16_t checksum, byte frame_type);
 
   protected:
 
@@ -133,14 +167,26 @@ class Coms {
     bool error_sanity_check(byte frame_num, byte obj_num);  //if obj in use and string could occupy this frame number
     void set_frame_parity_and_checksum(byte frame_type, byte frame_length);    //pack frame with parity bits
     uint16_t generate_checksum(byte frame_type, uint16_t modulo_mask = 0xFF);// generate checksum, default is 8 bit checksum
-    void hamming_encoder(byte frame_type){}
+    void hamming_encoder(byte frame_type) {}
+
+
+    Frame_History text_frame_history[NUM_SCREENS];
+    Frame_History menu_frame_history[NUM_SCREENS];
+    Frame_History sensor_data_frame_history[NUM_SCREENS];
+    Frame_History pos_frame_history[NUM_SCREENS];
+
+
+    void append_frame_history(byte *buf, byte address, byte frame_type); //add this to frame history
+
+    byte find_in_frame_history(byte address, byte frame_type, byte frame_num, byte obj_num);    //got a nack, find last instance of the frame being sent to that obj, confirm reasonable request
+
 
   public:
 
     //should be very little needs to be public in this class, mostly called through coms_serial
 
     Coms() {}
-     
+
     void calc_delay();
     void init_frames();  //set constant elements of frames
     void set_header_parity(byte frame_type);

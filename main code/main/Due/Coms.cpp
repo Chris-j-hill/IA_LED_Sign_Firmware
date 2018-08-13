@@ -305,29 +305,29 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
     set_checksum_11(generate_checksum_11(frame_type), frame_type); //macro to generate 11 bit checksum
   }
 
-  else if (frame_type == POS_FRAME_TYPE) { 
-    
+  else if (frame_type == POS_FRAME_TYPE) {
+
     CLEAR_HEADER_CHECKSUM(pos_frame.frame_buffer[3]);
     set_verical_parity_byte(pos_frame.frame_buffer , pos_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == SENSOR_FRAME_TYPE) {
-    
+
     CLEAR_HEADER_CHECKSUM(sensor_data_frame.frame_buffer[3]);
     set_verical_parity_byte(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == MENU_FRAME_TYPE) {
-    
+
     CLEAR_HEADER_CHECKSUM(menu_frame.frame_buffer[3]);
     set_verical_parity_byte(menu_frame.frame_buffer , menu_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == PING_STRING_TYPE) {
-    
+
     CLEAR_HEADER_CHECKSUM(ping_frame.frame_buffer[3]);
     set_verical_parity_byte(ping_frame.frame_buffer , ping_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
@@ -449,8 +449,8 @@ void Coms::set_verical_parity_byte(byte *buf, int checksum_loc, int start_byte) 
       if (i != CHECKSUM_3_BIT_LOC)
         count += ((buf[i] >> j) & mask);
       else
-        count += (((buf[i]& (~CHECKSUM_3_BIT_MASK)) >> j) & mask);  //suppress and prior value in 3 bit checksum location
-      }
+        count += (((buf[i] & (~CHECKSUM_3_BIT_MASK)) >> j) & mask); //suppress and prior value in 3 bit checksum location
+    }
     buf[checksum_loc] = buf[checksum_loc] | ((count & mask) << j);
   }
 }
@@ -487,5 +487,82 @@ void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
       return;
 
   }
+}
+
+
+void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
+
+
+
+  switch (frame_type) {
+    case TEXT_FRAME_TYPE:
+      text_frame_history[address].history_index = (text_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
+      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], buf, buf[1]);
+
+      break;
+    case POS_FRAME_TYPE:
+      pos_frame_history[address].history_index = (pos_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
+      memcpy(pos_frame_history[address].frame_content[pos_frame_history[address].history_index], buf, buf[1]);
+
+      break;
+    case SENSOR_FRAME_TYPE:
+      sensor_data_frame_history[address].history_index = (sensor_data_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
+      memcpy(sensor_data_frame_history[address].frame_content[sensor_data_frame_history[address].history_index], buf, buf[1]);
+
+      break;
+    case MENU_FRAME_TYPE:
+      menu_frame_history[address].history_index = (menu_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
+      memcpy(menu_frame_history[address].frame_content[menu_frame_history[address].history_index], buf, buf[1]);
+      break;
+  }
+
+}
+
+
+byte Coms::find_in_frame_history(byte address, byte frame_type, byte frame_num, byte obj_num) {
+
+  bool frame_num_found = false;
+  bool obj_num_found = false;
+
+  byte history_index = 0;
+  switch (frame_type) {
+    case TEXT_FRAME_TYPE:   history_index = text_frame_history[address].history_index;          break;
+    case POS_FRAME_TYPE:    history_index = pos_frame_history[address].history_index;           break;
+    case SENSOR_FRAME_TYPE: history_index = sensor_data_frame_history[address].history_index;   break;
+    case MENU_FRAME_TYPE:   history_index = menu_frame_history[address].history_index;          break;
+  }
+
+
+
+  for (int i = history_index; i != history_index + 1; i--) {
+    if (i == -1) i = FRAME_HISTORY_MEMORY_DEPTH - 1; // loop back index
+
+    switch (frame_type) {
+      case TEXT_FRAME_TYPE:
+        if (EXTRACT_THIS_FRAME_DATA(text_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
+        if (EXTRACT_OBJ_NUM_DATA(text_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
+        break;
+      case POS_FRAME_TYPE:
+        if (EXTRACT_THIS_FRAME_DATA(pos_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
+        if (EXTRACT_OBJ_NUM_DATA(pos_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
+        break;
+      case SENSOR_FRAME_TYPE:
+        if (EXTRACT_THIS_FRAME_DATA(sensor_data_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
+        if (EXTRACT_OBJ_NUM_DATA(sensor_data_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
+        break;
+      case MENU_FRAME_TYPE:
+        if (EXTRACT_THIS_FRAME_DATA(menu_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
+        if (EXTRACT_OBJ_NUM_DATA(menu_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
+        break;
+    }
+
+    if (frame_num_found && obj_num_found) return (i);
+
+    frame_num_found = false;
+    obj_num_found = false;
+  }
+
+  return FRAME_HISTORY_MEMORY_DEPTH; //return impossible value if not found
+
 }
 #endif // Coms_CPP
