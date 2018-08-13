@@ -496,23 +496,27 @@ void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
-      text_frame_history[address].history_index = (text_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
-      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], buf, buf[1]);
-
+      text_frame_history[address].history_index = (text_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;     //increment index
+      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], buf, buf[1]);                    //copy frame buffer into ring buffer fro storage
+      text_frame_history[address].num_populated_buffers++;                                                                      //increment number of frames sent
       break;
+      
     case POS_FRAME_TYPE:
       pos_frame_history[address].history_index = (pos_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       memcpy(pos_frame_history[address].frame_content[pos_frame_history[address].history_index], buf, buf[1]);
-
+      pos_frame_history[address].num_populated_buffers++;
       break;
+      
     case SENSOR_FRAME_TYPE:
       sensor_data_frame_history[address].history_index = (sensor_data_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       memcpy(sensor_data_frame_history[address].frame_content[sensor_data_frame_history[address].history_index], buf, buf[1]);
-
+      sensor_data_frame_history[address].num_populated_buffers++;
       break;
+      
     case MENU_FRAME_TYPE:
       menu_frame_history[address].history_index = (menu_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       memcpy(menu_frame_history[address].frame_content[menu_frame_history[address].history_index], buf, buf[1]);
+      menu_frame_history[address].num_populated_buffers++;
       break;
   }
 
@@ -565,4 +569,33 @@ byte Coms::find_in_frame_history(byte address, byte frame_type, byte frame_num, 
   return FRAME_HISTORY_MEMORY_DEPTH; //return impossible value if not found
 
 }
+
+
+bool Coms::request_error_sanity_check(byte frame_type, byte frame_num, byte obj_num) { //sanity check returned frame to make sure retransmit request is reasonable
+
+  if (frame_type == UNKNOWN_RETRANSMIT_TYPE)                                                                                                      goto bad_frame;
+  else if (frame_type != TEXT_FRAME_TYPE && frame_type != POS_FRAME_TYPE && frame_type != SENSOR_FRAME_TYPE && frame_type != MENU_FRAME_TYPE)     goto bad_frame;
+
+  else if (frame_type == TEXT_FRAME_TYPE && frame_num > EXPECTED_MAX_TEXT_FRAMES)                                                                 goto bad_frame;
+  else if (frame_type == POS_FRAME_TYPE && frame_num > 1)                                                                                         goto bad_frame;
+  else if (frame_type == SENSOR_FRAME_TYPE && frame_num > 1)                                                                                      goto bad_frame;
+  else if (frame_type == MENU_FRAME_TYPE && frame_num > 1)                                                                                        goto bad_frame;
+
+  else if (frame_type == TEXT_FRAME_TYPE && obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                                   goto bad_frame;
+  else if (frame_type == POS_FRAME_TYPE && obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                                    goto bad_frame;
+  else if (frame_type == SENSOR_FRAME_TYPE && obj_num >= 1)                                                                                       goto bad_frame;
+  else if (frame_type == MENU_FRAME_TYPE && obj_num > 1)                                                                                          goto bad_frame;
+
+  //all tests passed
+  return true;
+
+  //  some test failed, return false
+bad_frame:
+  return false;
+
+}
+
+
+
+
 #endif // Coms_CPP

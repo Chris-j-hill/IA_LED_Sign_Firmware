@@ -132,15 +132,24 @@ void Coms_Serial::read_buffer() {
           if (temp_header[0] == 13 && temp_header[1] == 10)
             return;
 
-
+          bool encoding_ok = true;
 #ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded using hamming matrix, cant read data directly, decode first and update header values
-          error_check_encoded_header(temp_header);
+          encoding_ok = error_check_encoded_header(temp_header);
+
 #endif
+          byte frame_type = 0;
+
           //now sanity check values
-          byte frame_type = error_check_unencoded_header(temp_header);
+          if (encoding_ok)
+            frame_type = error_check_unencoded_header(temp_header);//<- returns zero if fails sanity checks
+
+          if (frame_type == 0 || !encoding_ok) {  //if either of the above tests failed request retransmission of a bunch of frames, cant trust header data
+            request_frame_retransmission();
+            Serial.println(F("bunch of frames requested"));
+          }
 
           //in some cases we know exactly how long the frame will be,in others we must parse until indicated amount is read
-          if (frame_type == TEXT_FRAME_TYPE) {
+          else if (frame_type == TEXT_FRAME_TYPE) {
             byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_header[FRAME_LENGTH_LOC]);
             byte data[frame_length] = {0};
 
@@ -349,8 +358,6 @@ byte Coms_Serial::error_check_unencoded_header(byte * temp_buffer) {
   //do this when a bad frame if recieved
 badframe:
   Serial.println(F("bad frame recieved"));
-  request_frame_retransmission();
-  Serial.println(F("frame requested"));
   return 0;
 }
 
@@ -378,7 +385,7 @@ byte Coms_Serial::error_check_encoded_header(byte * temp_buffer) {
   for ( byte i = 0; i < HEADER_LENGTH; i++) {
     if (parity_of(temp_buffer[i])) {
       Serial.println("odd parity");
-      return 0;
+      return 0; //error found
     }
   }
   return (frame_type);
@@ -391,9 +398,38 @@ byte Coms_Serial::error_check_encoded_header(byte * temp_buffer) {
 
 void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num) {
 
+  // we know what frame we need send specific details in frame
+
+  byte nack_frame[MEGA_RX_FRAME_LENGTH + 2];  //num data bytes and return carraige for reading
+
+  nack_frame[0] = frame_type;
+  nack_frame[1] = this_frame;
+  nack_frame[2] = obj_num;
+
+  nack_frame[3] = nack_frame[0] + nack_frame[1] + nack_frame[2];
+  nack_frame[4] = '\r';
+  nack_frame[5] = '\n';
+  Serial_1.write(nack_frame, MEGA_RX_FRAME_LENGTH);
+
 }
 
 void Coms_Serial::request_frame_retransmission() {
+
+  //  dont know anything about frame we need
+
+  byte nack_frame[MEGA_RX_FRAME_LENGTH + 2];
+
+  nack_frame[0] = UNKNOWN_RETRANSMIT_TYPE;
+  nack_frame[1] = 0;  //irrelevant
+  nack_frame[2] = 0;
+
+  nack_frame[3] = UNKNOWN_RETRANSMIT_TYPE;
+  nack_frame[4] = '\r';
+  nack_frame[5] = '\n';
+  Serial_1.write(nack_frame, MEGA_RX_FRAME_LENGTH);
+
+
+
 
 }
 

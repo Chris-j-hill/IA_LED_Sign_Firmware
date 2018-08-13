@@ -365,6 +365,7 @@ void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write
   byte menu_width = menu.get_menu_width();
   if (menu_width >= 0 || menu.is_all_system_menu(cur_menu)) {  //not sure why it would be less than zero width but include for completeness
     write_menu_frame(3);  //write frame to address 3
+
   }
 
   if (menu_width > 64 || menu.is_all_system_menu(cur_menu)) {
@@ -389,36 +390,36 @@ void Coms_Serial::send_pos_frame(byte obj_num) {  //build frame and send positio
   }
 }
 
-void Coms_Serial::write_sensor_data_frame(byte address) {
+void Coms_Serial::write_sensor_data_frame(byte address) {   //function to actually send the frame to given address
 
-  if (mega_status(address))       write_frame(address, SENSOR_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, SENSOR_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, SENSOR_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, SENSOR_FRAME_TYPE);
+  if (mega_status(address)) {                                                          //if enabled and detected
+    write_frame(address, SENSOR_FRAME_TYPE);                                           //send frame
+    append_frame_history(sensor_data_frame.frame_buffer, address, SENSOR_FRAME_TYPE);  //save the frame to history buffer
+  }
 }
 
-void Coms_Serial::write_menu_frame(byte address) {   //function to actually send the frame to given address
+void Coms_Serial::write_menu_frame(byte address) {   
 
-  if (mega_status(address))       write_frame(address, MENU_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, MENU_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, MENU_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, MENU_FRAME_TYPE);
+  if (mega_status(address)) {
+    write_frame(address, MENU_FRAME_TYPE);
+    append_frame_history(menu_frame.frame_buffer, address, MENU_FRAME_TYPE);  
+  }
 }
 
 void Coms_Serial::write_pos_frame(byte address) {
 
-  if (mega_status(address))       write_frame(address, POS_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, POS_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, POS_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, POS_FRAME_TYPE);
+  if (mega_status(address)) {
+    write_frame(address, POS_FRAME_TYPE);
+    append_frame_history(pos_frame.frame_buffer, address, POS_FRAME_TYPE);
+  }
 }
 
 void Coms_Serial::write_text_frame(byte address) {
 
-  if (mega_status(address))       write_frame(address, TEXT_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
-  else if (mega_status(address))  write_frame(address, TEXT_FRAME_TYPE);
+  if (mega_status(address)) {
+    write_frame(address, TEXT_FRAME_TYPE);
+    append_frame_history(text_frame.frame_buffer, address, TEXT_FRAME_TYPE);
+  }
 }
 
 void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte frame_length) {
@@ -1052,7 +1053,7 @@ void Coms_Serial::decode_serial_rx(String rx, byte address) {
     byte frame_num = char_array[1];
     byte obj_num = char_array[2];
 
-    if (error_sanity_check(frame_type, frame_num, obj_num)) { //case where mega knows what data is missing, and frame not corrupted, send exact data required
+    if (request_error_sanity_check(frame_type, frame_num, obj_num)) { //case where mega knows what data is missing, and frame not corrupted, send exact data required
 
       byte history_loc = find_in_frame_history(address, frame_type, frame_num, obj_num);  //identify location
       if (history_loc != FRAME_HISTORY_MEMORY_DEPTH)                                      //if frame in frame history buffer
@@ -1110,7 +1111,7 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
           write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][1]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_TEXT_FRAME_RETRASMIT|| num_sent_frames == text_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_TEXT_FRAME_RETRASMIT || num_sent_frames == text_frame_history[address].num_populated_buffers)
             break; //once max sent, finish inner loop
         }
 
@@ -1127,7 +1128,7 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
           write_frame(address, FRAME_RETRANSMIT, pos_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(pos_frame_history[address].frame_content[loc][1]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_POS_FRAME_RETRASMIT|| num_sent_frames == pos_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_POS_FRAME_RETRASMIT || num_sent_frames == pos_frame_history[address].num_populated_buffers)
             break; //once max sent, finish inner loop
         }
 
@@ -1144,7 +1145,7 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
           write_frame(address, FRAME_RETRANSMIT, sensor_data_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(sensor_data_frame_history[address].frame_content[loc][1]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT|| num_sent_frames == sensor_data_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT || num_sent_frames == sensor_data_frame_history[address].num_populated_buffers)
             break; //once max sent, finish inner loop
         }
         break;
@@ -1166,29 +1167,6 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
         break;
     }
   }
-}
-
-bool Coms_Serial::error_sanity_check(byte frame_type, byte frame_num, byte obj_num) { //sanity check returned frame to make sure retransmit request is reasonable
-
-  if (frame_type != TEXT_FRAME_TYPE && frame_type != POS_FRAME_TYPE && frame_type != SENSOR_FRAME_TYPE && frame_type != MENU_FRAME_TYPE)    goto bad_frame;
-
-  else if (frame_type == TEXT_FRAME_TYPE && frame_num > EXPECTED_MAX_TEXT_FRAMES)                                                           goto bad_frame;
-  else if (frame_type == POS_FRAME_TYPE && frame_num > 1)                                                                                   goto bad_frame;
-  else if (frame_type == SENSOR_FRAME_TYPE && frame_num > 1)                                                                                goto bad_frame;
-  else if (frame_type == MENU_FRAME_TYPE && frame_num > 1)                                                                                  goto bad_frame;
-
-  else if (frame_type == TEXT_FRAME_TYPE && obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                             goto bad_frame;
-  else if (frame_type == POS_FRAME_TYPE && obj_num >= MAX_NUM_OF_TEXT_OBJECTS)                                                              goto bad_frame;
-  else if (frame_type == SENSOR_FRAME_TYPE && obj_num >= 1)                                                                                 goto bad_frame;
-  else if (frame_type == MENU_FRAME_TYPE && obj_num > 1)                                                                                    goto bad_frame;
-
-//all tests passed
-  return true;
-
-//  some test failed, return false
-bad_frame:
-  return false;
-
 }
 
 #endif //USE_SERIAL_TO_MEGAS

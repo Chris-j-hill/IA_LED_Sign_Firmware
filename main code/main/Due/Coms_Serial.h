@@ -46,7 +46,6 @@ class Coms_Serial: public Coms {
 
     void write_frame_history(byte address, byte frame_type, byte loc);
     void write_all_frame_history(byte address);  //write a bunch of frames to this address, hopefully one is right
-    bool error_sanity_check(byte frame_type, byte frame_num, byte obj_num);
 
 
   public:

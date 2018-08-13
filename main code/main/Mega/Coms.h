@@ -39,6 +39,8 @@
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
+#define UNKNOWN_RETRANSMIT_TYPE 10// case where mega requests retransmit and doesnt know what the frame was
+
 
 #define POS_FRAME_LENGTH      FRAME_OVERHEAD + 7
 #define MENU_FRAME_LENGTH     FRAME_OVERHEAD + 3
@@ -79,6 +81,8 @@
 
 #define BYTE_PARITY_LOC 7
 
+
+#define MEGA_RX_FRAME_LENGTH 4
 
 //#define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 

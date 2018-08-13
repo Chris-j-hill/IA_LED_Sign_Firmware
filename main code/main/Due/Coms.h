@@ -63,6 +63,7 @@ using namespace arduino_due;
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
 #define FRAME_RETRANSMIT    6 
+#define UNKNOWN_RETRANSMIT_TYPE 10 //in case of mega requesting frame and not knowing what frame it was
 
 const char ping_string[] = "ping";
 const char expected_ping_rx = 'p';
@@ -93,7 +94,8 @@ const char expected_ping_rx = 'p';
 
 #define MEGA_RX_FRAME_LENGTH 4
 /*
-   Nack frame format
+   Nack frame format:
+   
    Frame type
    Frame num
    Obj num
@@ -143,7 +145,7 @@ struct Frame_History {
 
   byte history_index = 0;                                                            // index were currently at in arrays
   byte frame_content[FRAME_HISTORY_MEMORY_DEPTH][MEGA_SERIAL_BUFFER_LENGTH] = {{0}}; //the content of the frame rather than recalculating
-  byte num_populated_buffers =0;  //cunter for number fo frames sent, dont try re transmit if no frame ever sent
+  uint32_t num_populated_buffers =0;  //counter for number fo frames sent, dont try re transmit more frames than have ever sent
 };
 
 class Coms {
@@ -180,7 +182,10 @@ class Coms {
 
     byte find_in_frame_history(byte address, byte frame_type, byte frame_num, byte obj_num);    //got a nack, find last instance of the frame being sent to that obj, confirm reasonable request
 
+    bool request_error_sanity_check(byte frame_type, byte frame_num, byte obj_num);
 
+
+    
   public:
 
     //should be very little needs to be public in this class, mostly called through coms_serial
