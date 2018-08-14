@@ -28,6 +28,7 @@ extern struct Menu_Struct           menu_parameters;
 
 extern Graphics graphics;
 extern RGBmatrixPanel matrix;
+extern Menu menu;
 
 volatile byte x_pos_ISR_counter = 0;
 volatile byte x_pos_isr_counter_overflow = 255;
@@ -39,6 +40,11 @@ volatile bool suppress_x_pos_update = false;
 volatile bool suppress_y_pos_update = false;
 
 extern byte menu_width;
+
+extern bool menu_visible;
+
+
+
 
 
 void pos_update_ISR() {   //ISR for updating the cursor position
@@ -93,6 +99,87 @@ void pos_update_ISR() {   //ISR for updating the cursor position
     pinMode(DELAY_FEEDBACK_Y_PIN, INPUT);
 #endif
 }
+
+
+void Graphics::init_matrix() {
+  matrix.begin();
+  matrix.setTextWrap(false); // Allow text to run off right edge
+
+  set_title_colour();
+  set_menu_colour();
+}
+
+
+void Graphics::update_display() {
+
+  set_display_mode();
+
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+    if (text_parameters[i].object_used) {
+      if (text_parameters[i].use_hue)
+        graphics.set_text_colour(text_parameters[i].hue);
+      else
+        graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
+      graphics.draw_text(i);
+    }
+  }
+
+  //after all objects written, cover with display if needed
+  menu.display_menu();  //update any menu if applicable
+}
+
+inline void Graphics::set_display_mode() {
+  if (screen_parameters.new_mode != screen_parameters.cur_mode) {
+    screen_parameters.cur_mode = screen_parameters.new_mode;
+    matrix.Mode(screen_parameters.new_mode);
+  }
+}
+
+inline void Graphics::set_text_colour(byte new_r, byte new_g, byte new_b) {
+
+  //limit colour range on off chance number is still wrong
+  if (new_r > COLOUR_MAX_LEVEL)
+    new_r = COLOUR_MAX_LEVEL;
+  if (new_g > COLOUR_MAX_LEVEL)
+    new_g = COLOUR_MAX_LEVEL;
+  if (new_b > COLOUR_MAX_LEVEL)
+    new_b = COLOUR_MAX_LEVEL;
+
+  //scale colour value with brightness
+  float multiplier = screen_parameters.brightness / 100;
+  new_r = new_r * multiplier; //scale by this
+  new_g = new_g * multiplier;
+  new_b = new_b * multiplier;
+
+#if defined(USING_COLOUR_SET_888)
+  matrix.setTextColor(matrix.Color888(new_r, new_g, new_b));
+#elif defined(USING_COLOUR_SET_444)
+  matrix.setTextColor(matrix.Color444(new_r, new_g, new_b));
+#else
+  matrix.setTextColor(matrix.Color333(new_r, new_g, new_b));
+#endif
+}
+
+inline void Graphics::set_text_colour(int new_hue) {
+
+  if (new_hue > HUE_MAX_LEVEL)
+    new_hue = HUE_MAX_LEVEL;
+  else if (new_hue < HUE_MIN_LEVEL)
+    new_hue = HUE_MIN_LEVEL;
+
+  byte multiplier = map(screen_parameters.brightness, 0, 100, 0, 255);
+
+  matrix.setTextColor(matrix.ColorHSV(new_hue, 255, multiplier, true));
+}
+
+inline void Graphics::draw_text(byte obj_num) {
+
+  matrix.setTextSize(text_parameters[obj_num].text_size);
+  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+  matrix.print((char)text_parameters[obj_num].string);
+
+}
+
 
 
 void Graphics::attach_pos_ISR() {
@@ -162,8 +249,7 @@ void Graphics::increment_cursor_position(byte axis, byte obj_num) {
   }
 }
 
-
-int Graphics::pos_isr_period() {
+inline uint16_t Graphics::pos_isr_period() {
 
   return (1000 / POS_ISR_FREQUENCY);
 
@@ -199,9 +285,9 @@ void Graphics::draw_ring(byte x_center, byte y_center, uint16_t radius) {
   }
 
 
-#ifdef USING_COLOUR_SET_888
+#if  defined(USING_COLOUR_SET_888)
   matrix.drawCircle(local_x, y_center, radius, matrix.Color888(startup_ring.red, startup_ring.green, startup_ring.blue));
-#elif USING_COLOUR_SET_444
+#elif defined(USING_COLOUR_SET_444)
   matrix.drawCircle(local_x, y_center, radius, matrix.Color444(startup_ring.red, startup_ring.green, startup_ring.blue));
 #else
   matrix.drawCircle(local_x, y_center, radius, matrix.Color333(startup_ring.red, startup_ring.green, startup_ring.blue));
@@ -219,7 +305,6 @@ void Graphics::init_menu_title_colour() {
   title_colour.red = MENU_TITLE_R;
   title_colour.green = MENU_TITLE_G;
   title_colour.blue = MENU_TITLE_B;
-
 }
 
 void Graphics::init_menu_option_colour() {
@@ -232,9 +317,9 @@ void Graphics::init_menu_option_colour() {
 
 void Graphics::set_title_colour() {
 
-#ifdef USING_COLOUR_SET_888
+#if defined(USING_COLOUR_SET_888)
   matrix.setTextColor(matrix.Color888(title_colour.red, title_colour.green, title_colour.blue));
-#elif USING_COLOUR_SET_444
+#elif defined(USING_COLOUR_SET_444)
   matrix.setTextColor(matrix.Color444(title_colour.red, title_colour.green, title_colour.blue));
 #else
   matrix.setTextColor(matrix.Color333(title_colour.red, title_colour.green, title_colour.blue));
@@ -244,9 +329,9 @@ void Graphics::set_title_colour() {
 
 void Graphics::set_menu_colour() {
 
-#ifdef USING_COLOUR_SET_888
+#if defined(USING_COLOUR_SET_888)
   matrix.setTextColor(matrix.Color888(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
-#elif USING_COLOUR_SET_444
+#elif defined(USING_COLOUR_SET_444)
   matrix.setTextColor(matrix.Color444(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
 #else
   matrix.setTextColor(matrix.Color333(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
@@ -282,9 +367,9 @@ void Graphics::clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x,
     matrix.fillScreen(0); //optimised method for filling the screen
   else
 
-#ifdef USING_COLOUR_SET_888
+#if defined(USING_COLOUR_SET_888)
     matrix.fillRect(top_left_x, top_left_y, bottom_right_x, bottom_right_y, matrix.Color888(0, 0, 0));
-#elif USING_COLOUR_SET_444
+#elif defined(USING_COLOUR_SET_444)
     matrix.fillRect(top_left_x, top_left_y, bottom_right_x, bottom_right_y, matrix.Color444(0, 0, 0));
 #else
     matrix.fillRect(top_left_x, top_left_y, bottom_right_x, bottom_right_y, matrix.Color333(0, 0, 0));
@@ -487,7 +572,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
 
 
 
-      
+
 
       case NULL_STRING:                 matrix.println(F2(menu_items.null_string));                 break;
       default:                          matrix.println(F2(menu_items.default_string));              break;

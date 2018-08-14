@@ -39,7 +39,7 @@
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
-#define UNKNOWN_RETRANSMIT_TYPE 10// case where mega requests retransmit and doesnt know what the frame was
+#define UNKNOWN_RETRANSMIT_TYPE 7// case where mega requests retransmit and doesnt know what the frame was
 
 
 #define POS_FRAME_LENGTH      FRAME_OVERHEAD + 7

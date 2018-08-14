@@ -65,57 +65,57 @@ void due_setup() {
   nativeUsb.init_native_usb();
   coms_serial.init_serial();
 
-  graphics.push_string_data();
-  encoder.set_encoder_position(1000);
-  coms_serial.send_menu_frame(12);
-  graphics.reset_position(3);
-  Serial.print("x loc");
-  Serial.println(text_cursor[3].x);
-  Serial.print("y loc");
-  Serial.println(text_cursor[3].y);
-  coms_serial.send_pos_frame(3);
-
-  for (byte i = 0; i < text_frame.frame_length; i++) {
-
-    Serial.print(text_frame.frame_buffer[i]);
-    Serial.print("\t");
-    host.println_bits(text_frame.frame_buffer[i], 8, BIN);
-  }
-Serial.println();
-Serial.println();
-
-  for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
-
-    Serial.print(sensor_data_frame.frame_buffer[i]);
-    Serial.print("\t");
-    host.println_bits(sensor_data_frame.frame_buffer[i], 8, BIN);
-  }
-Serial.println();
-Serial.println();
-
-  for (byte i = 0; i < menu_frame.frame_length; i++) {
-
-    Serial.print(menu_frame.frame_buffer[i]);
-    Serial.print("\t");
-    host.println_bits(menu_frame.frame_buffer[i], 8, BIN);
-  }
-Serial.println();
-Serial.println();
-
-  for (byte i = 0; i < pos_frame.frame_length; i++) {
-
-    Serial.print(pos_frame.frame_buffer[i]);
-    Serial.print("\t");
-    host.println_bits(pos_frame.frame_buffer[i], 8, BIN);
-  }
-Serial.println();
-Serial.println();
-  //  while (1) {
-  //        Serial3.println();
-  //    Serial3.write(text_frame.frame_buffer, text_frame.frame_length);
-  //    Serial3.println();
-  //    delay(500);
-  //  }
+//  graphics.push_string_data();
+//  encoder.set_encoder_position(1000);
+//  coms_serial.send_menu_frame(12);
+//  graphics.reset_position(3);
+//  Serial.print("x loc");
+//  Serial.println(text_cursor[3].x);
+//  Serial.print("y loc");
+//  Serial.println(text_cursor[3].y);
+//  coms_serial.send_pos_frame(3);
+//
+//  for (byte i = 0; i < text_frame.frame_length; i++) {
+//
+//    Serial.print(text_frame.frame_buffer[i]);
+//    Serial.print("\t");
+//    host.println_bits(text_frame.frame_buffer[i], 8, BIN);
+//  }
+//Serial.println();
+//Serial.println();
+//
+//  for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
+//
+//    Serial.print(sensor_data_frame.frame_buffer[i]);
+//    Serial.print("\t");
+//    host.println_bits(sensor_data_frame.frame_buffer[i], 8, BIN);
+//  }
+//Serial.println();
+//Serial.println();
+//
+//  for (byte i = 0; i < menu_frame.frame_length; i++) {
+//
+//    Serial.print(menu_frame.frame_buffer[i]);
+//    Serial.print("\t");
+//    host.println_bits(menu_frame.frame_buffer[i], 8, BIN);
+//  }
+//Serial.println();
+//Serial.println();
+//
+//  for (byte i = 0; i < pos_frame.frame_length; i++) {
+//
+//    Serial.print(pos_frame.frame_buffer[i]);
+//    Serial.print("\t");
+//    host.println_bits(pos_frame.frame_buffer[i], 8, BIN);
+//  }
+//Serial.println();
+//Serial.println();
+//    while (1) {
+////          Serial3.println();
+////      Serial3.write(text_frame.frame_buffer, text_frame.frame_length);
+////      Serial3.println();
+//      coms_serial.check_megas();
+//    }
 }
 
 

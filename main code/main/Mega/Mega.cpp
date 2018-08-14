@@ -10,38 +10,39 @@
 extern struct Screen_Struct screen_parameters;
 
 //mega_class mega;
-//RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE1, OE2, false, 64, screen_mode);
-RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE2, false, 64);
+RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE1, OE2, false, 64, DEFAULT_SCREEN_MODE);
+//RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE2, false, 64);
 Menu menu;
 Graphics graphics;
 Coms_Serial coms_serial;
 Host host;
 
-  
-void mega_setup(){
- configure_address();
- host.init_serial();    //enable printing to monitor
- coms_serial.init_serial(); //enable coms port to due
-//  graphics.init_screen();
-  Serial.println("done init"); 
+
+void mega_setup() {
+  configure_address();
+  host.init_serial();    //enable printing to monitor
+  coms_serial.init_serial(); //enable coms port to due
+  graphics.init_matrix();
+  Serial.println("done init");
+
+}
+
+
+void mega_loop() {
+  //coms_serial.request_frame_retransmission(SENSOR_FRAME_TYPE,1,0);
+  while (1) {
+    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
+    graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
   }
-  
-  
-void mega_loop(){
-    while(1){
-   coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
-//   graphics.update_menus();    // specifically display the menus if they are needed
-//   graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
-    }
-  }
+}
 
 
 
-void configure_address(){
-  
+void configure_address() {
+
   bool address_bit1;
   bool address_bit2;
-  
+
   pinMode(HARDWARE_ADDRESS_1, INPUT);
   pinMode(HARDWARE_ADDRESS_2, INPUT);
 
@@ -60,5 +61,5 @@ void configure_address(){
   if (address_bit1 == HIGH && address_bit2 == HIGH)
     screen_parameters.node_address = 3;
 }
- 
- #endif	//MEGA_CPP
+
+#endif	//MEGA_CPP

@@ -57,13 +57,18 @@
 
 #define DEFAULT_TEXT_SIZE 2
 
-#ifdef USING_COLOUR_SET_888
+#if defined(USING_COLOUR_SET_888)
 #define COLOUR_MAX_LEVEL 255
-#elif USING_COLOUR_SET_15
-#define COLOUR_MAX_LEVEL 255
+
+#elif defined(USING_COLOUR_SET_444)
+#define COLOUR_MAX_LEVEL 15
+
 #else
 #define COLOUR_MAX_LEVEL 7
 #endif
+
+#define HUE_MAX_LEVEL 1536
+#define HUE_MIN_LEVEL -1536
 
 #define DEFAULT_TEXT_RED_BRIGHTNESS COLOUR_MAX_LEVEL
 #define DEFAULT_TEXT_GREEN_BRIGHTNESS COLOUR_MAX_LEVEL
@@ -74,6 +79,8 @@
 
 #define DEFAULT_REFRESH_RATE 20   // use this to define the interrupt rate of the matrix library
 
+
+#define DISABLE_REQUEST_RETRANSMISSION //prevent oscillations when debuging
 
 
 #define MAX_NUM_OF_TEXT_OBJECTS 5
@@ -174,7 +181,7 @@
 
 
 #define DEFAULT_MENU_WIDTH 64
-
+#define DEFAULT_SCREEN_MODE 0
 
                           
 #endif //CONFIGURATION_H

@@ -280,7 +280,7 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
         break;
 
       case PREFIX_SCREEN_MODE:
-        screen_parameters.mode = temp_buffer[alpha + 1];
+        screen_parameters.new_mode = temp_buffer[alpha + 1];
         break;
 
       case PREFIX_SD_MOUNTED_1:
@@ -332,15 +332,15 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_0:
-        text_parameters[3].object_used = temp_buffer[alpha + 1];
+        text_parameters[0].object_used = temp_buffer[alpha + 1];
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_1:
-        text_parameters[3].object_used = temp_buffer[alpha + 1];
+        text_parameters[1].object_used = temp_buffer[alpha + 1];
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_2:
-        text_parameters[3].object_used = temp_buffer[alpha + 1];
+        text_parameters[2].object_used = temp_buffer[alpha + 1];
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_3:
@@ -348,7 +348,7 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_4:
-        text_parameters[3].object_used = temp_buffer[alpha + 1];
+        text_parameters[4].object_used = temp_buffer[alpha + 1];
         break;
 
       case PREFIX_TEXT_OBJ_SELECTED:

@@ -363,6 +363,7 @@ void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write
 
   build_menu_data_frame(cur_menu);
   byte menu_width = menu.get_menu_width();
+  
   if (menu_width >= 0 || menu.is_all_system_menu(cur_menu)) {  //not sure why it would be less than zero width but include for completeness
     write_menu_frame(3);  //write frame to address 3
 
@@ -398,11 +399,11 @@ void Coms_Serial::write_sensor_data_frame(byte address) {   //function to actual
   }
 }
 
-void Coms_Serial::write_menu_frame(byte address) {   
+void Coms_Serial::write_menu_frame(byte address) {
 
   if (mega_status(address)) {
     write_frame(address, MENU_FRAME_TYPE);
-    append_frame_history(menu_frame.frame_buffer, address, MENU_FRAME_TYPE);  
+    append_frame_history(menu_frame.frame_buffer, address, MENU_FRAME_TYPE);
   }
 }
 
@@ -475,18 +476,9 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
       Serial_1.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
-        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   while (1) {} break;
+        case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
-        case SENSOR_FRAME_TYPE:
-          Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
-
-          for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
-            Serial.print(sensor_data_frame.frame_buffer[i]);
-            Serial.print("\t");
-            Serial.println(sensor_data_frame.frame_buffer[i], BIN);
-          }
-          Serial.println();
-          break;
+        case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
         case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
       }
@@ -1011,43 +1003,75 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
 
 void Coms_Serial::check_megas() {
 
-  if (Serial_1.available() > 0 && mega_parameters.detected1) {
-    String rx = Serial_1.readString(); //read until '\0' recieved
-    decode_serial_rx(rx, 0);
+  if (Serial_1.available() > 1  && mega_parameters.detected1) {
+    //read until start of println found, should be immediate unless lost
+    if (Serial_1.read() == '\r') {
+      if (Serial_1.peek() == '\n') {
+        Serial_1.read();
+
+        byte rx[MEGA_RX_FRAME_LENGTH];
+        Serial_1.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+        decode_serial_rx(rx, 0);
+      }
+    }
   }
 
-  if (Serial_2.available() > 0 && mega_parameters.detected2) {
-    String rx = Serial_2.readString();
-    decode_serial_rx(rx, 1);
+  if (Serial_2.available() > 1  && mega_parameters.detected1) {
+    //read until start of println found, should be immediate unless lost
+    if (Serial_2.read() == '\r') {
+      if (Serial_2.peek() == '\n') {
+        Serial_2.read();
+
+        byte rx[MEGA_RX_FRAME_LENGTH];
+        Serial_2.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+        decode_serial_rx(rx, 1);
+      }
+    }
   }
 
-  if (Serial_3.available() > 0 && mega_parameters.detected3) {
-    String rx = Serial_3.readString();
-    decode_serial_rx(rx, 2);
+
+  if (Serial_3.available() > 1  && mega_parameters.detected1) {
+    //read until start of println found, should be immediate unless lost
+    if (Serial_3.read() == '\r') {
+      if (Serial_3.peek() == '\n') {
+        Serial_3.read();
+
+        byte rx[MEGA_RX_FRAME_LENGTH];
+        Serial_3.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+        decode_serial_rx(rx, 2);
+      }
+    }
   }
 
-  if (Serial_4.available() > 0 && mega_parameters.detected4) {
-    String rx = Serial_4.readString();
-    decode_serial_rx(rx, 3);
+
+  if (Serial_4.available() > 1  && mega_parameters.detected1) {
+    //read until start of println found, should be immediate unless lost
+    if (Serial_4.read() == '\r') {
+      if (Serial_4.peek() == '\n') {
+        Serial_4.read();
+
+        byte rx[MEGA_RX_FRAME_LENGTH];
+        Serial_4.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+        decode_serial_rx(rx, 3);
+      }
+    }
   }
 }
 
-void Coms_Serial::decode_serial_rx(String rx, byte address) {
+void Coms_Serial::decode_serial_rx(byte *char_array, byte address) {
 
-  if (rx.length() > MEGA_RX_FRAME_LENGTH + 1) // if more than expected content + null char
-    rx = rx.substring(rx.length() - MEGA_RX_FRAME_LENGTH);  //get substring
-
-  char char_array[MEGA_RX_FRAME_LENGTH] = {'\0'};
-  strcpy(char_array, rx.c_str());
-
-  //verify checksum
+  //calc checksum
   byte check_sum = 0;
   for (byte i = 0; i < MEGA_RX_FRAME_LENGTH - 1; i++) {
-    check_sum = char_array[i];
+    check_sum += char_array[i];
   }
 
-  if (!(check_sum == char_array[MEGA_RX_FRAME_LENGTH - 1])) //might be corrupted request, retransmit last N frames?
+  if (check_sum != char_array[MEGA_RX_FRAME_LENGTH - 1]) // might be corrupted request, retransmit last N frames?
     write_all_frame_history(address);
+    
+  else if (char_array[0] == UNKNOWN_RETRANSMIT_TYPE)      // case where mega knows header was corrupted
+    write_all_frame_history(address);
+    
   else {
     byte frame_type = char_array[0];
     byte frame_num = char_array[1];
@@ -1094,8 +1118,19 @@ void Coms_Serial::write_frame_history(byte address, byte frame_type, byte loc) {
 void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of frames to this address, hopefully one is right
 
 
-  byte start_loc = menu_frame_history[address].history_index;
+  byte start_loc = 0;
   byte num_sent_frames = 0;
+
+  Serial.print("Num text frames : ");
+  Serial.println(text_frame_history[address].num_populated_buffers);
+  Serial.print("Num sensor frames : ");
+  Serial.println(sensor_data_frame_history[address].num_populated_buffers);
+  Serial.print("Num menu frames : ");
+  Serial.println(menu_frame_history[address].num_populated_buffers);
+  Serial.print("Num pos frames : ");
+  Serial.println(pos_frame_history[address].num_populated_buffers);
+
+
   for (byte frame_type = 1; frame_type <= 4; frame_type++) { //loop through frame types
 
     switch (frame_type) {
@@ -1107,11 +1142,13 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
         for (int loc = start_loc; loc != start_loc + 1; loc--) {
           if (loc < 0)
             loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
+          if (num_sent_frames == text_frame_history[address].num_populated_buffers)
+            break;
 
-          write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][1]));
+          write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][0]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_TEXT_FRAME_RETRASMIT || num_sent_frames == text_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_TEXT_FRAME_RETRASMIT)
             break; //once max sent, finish inner loop
         }
 
@@ -1125,10 +1162,13 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
           if (loc < 0)
             loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
 
-          write_frame(address, FRAME_RETRANSMIT, pos_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(pos_frame_history[address].frame_content[loc][1]));
+          if (num_sent_frames == pos_frame_history[address].num_populated_buffers)
+            break;
+
+          write_frame(address, FRAME_RETRANSMIT, pos_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(pos_frame_history[address].frame_content[loc][0]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_POS_FRAME_RETRASMIT || num_sent_frames == pos_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_POS_FRAME_RETRASMIT)
             break; //once max sent, finish inner loop
         }
 
@@ -1139,13 +1179,17 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
         num_sent_frames = 0;
 
         for (int loc = start_loc; loc != start_loc + 1; loc--) {
+
           if (loc < 0)
             loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
 
-          write_frame(address, FRAME_RETRANSMIT, sensor_data_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(sensor_data_frame_history[address].frame_content[loc][1]));
+          if (num_sent_frames == sensor_data_frame_history[address].num_populated_buffers)
+            break;
+
+          write_frame(address, FRAME_RETRANSMIT, sensor_data_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(sensor_data_frame_history[address].frame_content[loc][0]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT || num_sent_frames == sensor_data_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT)
             break; //once max sent, finish inner loop
         }
         break;
@@ -1157,11 +1201,13 @@ void Coms_Serial::write_all_frame_history(byte address) { //write a bunch of fra
         for (int loc = start_loc; loc != start_loc + 1; loc--) {
           if (loc < 0)
             loc = FRAME_HISTORY_MEMORY_DEPTH - 1; //loop back index
+          if (num_sent_frames == menu_frame_history[address].num_populated_buffers)
+            break;
 
-          write_frame(address, FRAME_RETRANSMIT, menu_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(menu_frame_history[address].frame_content[loc][1]));
+          write_frame(address, FRAME_RETRANSMIT, menu_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(menu_frame_history[address].frame_content[loc][0]));
           num_sent_frames++;
 
-          if (num_sent_frames == MAX_NUM_MENU_FRAME_RETRASMIT || num_sent_frames == menu_frame_history[address].num_populated_buffers)
+          if (num_sent_frames == MAX_NUM_MENU_FRAME_RETRASMIT )
             break; //once max sent, finish inner loop
         }
         break;

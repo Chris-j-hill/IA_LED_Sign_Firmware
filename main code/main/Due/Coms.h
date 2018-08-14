@@ -63,7 +63,7 @@ using namespace arduino_due;
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
 #define FRAME_RETRANSMIT    6 
-#define UNKNOWN_RETRANSMIT_TYPE 10 //in case of mega requesting frame and not knowing what frame it was
+#define UNKNOWN_RETRANSMIT_TYPE 7 //in case of mega requesting frame and not knowing what frame it was
 
 const char ping_string[] = "ping";
 const char expected_ping_rx = 'p';

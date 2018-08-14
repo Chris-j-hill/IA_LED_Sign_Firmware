@@ -49,8 +49,6 @@ class Coms_Serial: public Coms {
 
     void receive_frame(byte *temp_buffer);
 
-    void request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num);  //request specific data
-    void request_frame_retransmission(); //not sure what data we missed
 
 
     inline void ping_good() { //respond indicating good connection
@@ -67,6 +65,8 @@ class Coms_Serial: public Coms {
 
     void request_frame(byte frame_type, int8_t this_frame = 0, int8_t obj_num = -1) {} //request frame
     void attach_interrupt() {};
+    void request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num);  //request specific data
+    void request_frame_retransmission(); //not sure what data we missed
 
 };
 #endif // COMS_SERIAL_H

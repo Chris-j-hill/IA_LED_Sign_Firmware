@@ -282,7 +282,7 @@ class Menu {
 
     //level 3
     void display_text_settings_menu();
-    void display_sd_folder_menu();
+    void display_sd_folder_menu(){}
 
     //level 4
     void display_text_colour_menu();

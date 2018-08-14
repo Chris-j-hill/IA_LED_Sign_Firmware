@@ -23,7 +23,7 @@ byte menu_width = DEFAULT_MENU_WIDTH;
 uint16_t time_since_menu_last_changed = 0;
 uint16_t startup_menu_timer = 0;
 uint16_t startup_counter = 0;
-bool menu_visable = false;
+bool menu_visible = false;
 //byte encoder_position = 0;
 
 int Menu::init_menu_tree() {
@@ -40,12 +40,12 @@ void Menu::display_menu() {
 
 
   switch (current_menu) {
-    case STARTUP:                     display_startup_sequence(); menu_visable = false; break;
-    case DEFAULT_MENU:                default_display(); menu_visable = false; break;
-    default:                          graphics.draw_background(); menu_visable = true; // menu visable, display any partially visable objects on unused parts of the screen
+    case STARTUP:                     display_startup_sequence(); menu_visible = false; break;
+    case DEFAULT_MENU:                default_display(); menu_visible = false; break;
+    default:                          graphics.draw_background(); menu_visible = true; // menu visable, display any partially visable objects on unused parts of the screen
   }
-  if (menu_visable) {
-    clear_background_text(); // check if menu covers whole area, if not display partial background
+  if (menu_visible) {
+    //clear_background_text(); // check if menu covers whole area, if not display partial background
     switch (current_menu) {
       case MAIN_MENU:                   display_main_menu();                                  break;
       case SCREEN_MODE_MENU:            display_screen_mode_menu();                           break;
@@ -98,17 +98,11 @@ void Menu::display_startup_sequence() { // startup is to draw a circle expnding 
 }
 
 void Menu::default_display() {
-
+//not much to do here
   if (current_menu != previous_menu) {
     previous_menu = current_menu;
     startup_ring.enabled = false;   // likely came from startup animation, force annimation off
   }
-
-  graphics.set_object_colour(STARTUP_R, STARTUP_G, STARTUP_B);  //draw a set of all enabled objects
-  graphics.draw_objects();
-  graphics.set_text_colour(STARTUP_R, STARTUP_G, STARTUP_B);
-  graphics.draw_text();
-
 }
 
 void Menu::display_main_menu() {
@@ -267,7 +261,7 @@ void Menu::display_SD_cards_menu() {
 }
 
 
-inline void display_adjustment_menu(byte menu) {
+inline void Menu::display_adjustment_menu(byte menu) {
   graphics.write_title(menu);
   graphics.write_adjustment_menu(menu);
 }

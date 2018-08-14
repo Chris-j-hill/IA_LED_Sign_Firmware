@@ -63,7 +63,7 @@ class Coms_Serial: public Coms {
 
     void check_megas(); //check if megas sent anything
 
-    void decode_serial_rx(String rx, byte address);
+    void decode_serial_rx(byte *char_array, byte address);
     void send_partial_text_frame(byte address, byte obj_num, byte frame_num);
     //void send_all_calibration_data(byte address);      legacy function, impractical to send all parameters, and unnecessary
 
