@@ -59,12 +59,12 @@
 
 #define APPLY_FRAME_LENGTH_MASK(a) ((a >> 1) & 0b00111111)  //isolate data
 #define APPLY_FRAME_TYPE_MASK(a)   ((a >> 1) & 0b00000111)
-#define APPLY_THIS_FRAME_MASK(a)   ((a >> 1) & 0b00000111)  
+#define APPLY_THIS_FRAME_MASK(a)   ((a >> 1) & 0b00000111)
 #define APPLY_FRAME_NUM_MASK(a)    ((a >> 5) & 0b00000111)
 #define APPLY_OBJ_NUM_MASK(a)      ((a >> 4) & 0b00001111)
 
 #define APPLY_FRAME_LENGTH_PARITY_MASK(a) (a & 0b00000001)  //isolate parity bit in header byte
-#define APPLY_FRAME_TYPE_PARITY_MASK(a)   (a & 0b00000001) 
+#define APPLY_FRAME_TYPE_PARITY_MASK(a)   (a & 0b00000001)
 #define APPLY_THIS_FRAME_PARITY_MASK(a)   (a & 0b00000001)
 #define APPLY_FRAME_NUM_PARITY_MASK(a)    ((a >> 4)&0b00000001)
 #define APPLY_OBJ_NUM_PARITY_MASK(a)      (a & 0b00000001)
@@ -125,27 +125,22 @@ class Coms {
     bool check_vertical_checksum(byte *buf, byte frame_length);
     bool check_final_checksum(byte *buf, byte frame_length);
 
-    inline uint16_t sum_header(byte a,byte b,byte c,byte d);
+    inline uint16_t sum_header(byte a, byte b, byte c, byte d);
   protected:
     byte parity_of(byte data);
-    
+
+    void extract_sensor_data(byte *temp_buffer);
+
   public:
     Coms() {}
 
-    //    int init_software_serial_to_usb_port();            // init the serial at 115200 baud rate
-    //    int init_software_serial_to_usb_port(int speed);   // init the serial at a custom speed
-
-    void extract_pos_frame(byte obj_num);
-    void extract_menu_frame();
-    void extract_sensor_data(byte *temp_buffer);
-
     bool validate_checksum(byte *temp_buffer);
     void frame_cpy(byte *temp_buffer, byte frame_type);
-    void set_hue_colour(byte receivedData, byte obj_num ,byte data_loc);//set the value of hue
+    void set_hue_colour(byte receivedData, byte obj_num , byte data_loc); //set the value of hue
     bool error_check_frame_body(byte *buf, byte frame_type, byte frame_length);  //if frame ok return true
-    void remove_byte_parity_bit(byte *buf,byte parity_loc, byte end_address, byte start_address = 0);  //strip data of parity bit
-    
-    
+    void remove_byte_parity_bit(byte *buf, byte parity_loc, byte end_address, byte start_address = 0); //strip data of parity bit
+
+
 };
 
 

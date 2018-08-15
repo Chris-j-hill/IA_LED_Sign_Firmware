@@ -56,6 +56,7 @@ struct Screen_Struct {
   byte new_mode = DEFAULT_SCREEN_MODE;
   byte cur_mode = 255;  //force set on startup
   byte node_address = 0;
+  bool updated = false;
 };
 
 struct Object_Struct_Polygons {  //colours of thing that isnt text

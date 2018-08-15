@@ -22,73 +22,6 @@ extern struct Frame ping_frame;
 extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 
 
-void serial_recieved_ISR() {
-
-
-  if (Serial_1.available() > 0) { //if something arrived
-
-    coms_serial.read_buffer();  //loop through buffer and put it in temp_buffer
-    //
-    //#ifdef DO_ERROR_CHECKING
-    //    coms_serial.validate_checksum();
-    //#endif
-    //
-    //    //put the frame into correct location
-    //    switch (temp_buffer[FRAME_TYPE_LOC]) {
-    //      case TEXT_FRAME:
-    //        coms_serial.received_text_frame();
-    //        break;
-    //      case POS_FRAME:
-    //        coms_serial.received_pos_frame();
-    //        break;
-    //      case SENSOR_FRAME:
-    //        coms_serial.received_sensor_frame();
-    //        break;
-    //      case MENU_FRAME:
-    //        coms_serial.received_menu_frame();
-    //        break;
-    //      default: break;
-    //    }
-
-    //  char alpha;
-    //  frame.error = 0;      //set error variable to zero for new frame
-    //
-    //
-    //  frame.frame_length = Serial_1.read(); // receive byte as a character
-    //
-    //  frame.frame_type = Serial_1.read();
-    //
-    //  frame.num_frames = Serial_1.read();
-    //
-    //  frame.frame_num = Serial_1.read();
-    //  frame.offset = (frame.frame_num - 1) * 32;
-    //
-    //
-    //  frame.frame_str[frame.offset + 0] = (char)frame.frame_length;
-    //  frame.frame_str[frame.offset + 1] = (char)frame.frame_type;
-    //  frame.frame_str[frame.offset + 2] = (char)frame.num_frames;
-    //  frame.frame_str[frame.offset + 3] = (char)frame.frame_num;
-    //
-    //  //calc checksum of first four elements read
-    //  frame.error = frame.frame_str[frame.offset + 0] + frame.frame_str[frame.offset + 1] + frame.frame_str[frame.offset + 2] + frame.frame_str[frame.offset + 3];
-    //
-    //  frame.frame_len = frame.frame_len + 4;
-    //  for (int i = 4; i < frame.frame_length; i++) { //loop through remaining data
-    //    alpha = Serial_1.read();
-    //    frame.frame_len++;
-    //    frame.frame_str[frame.offset + i] = (char)alpha;
-    //    frame.error = frame.error + alpha;
-    //
-    //
-    //  }   //if this is the last frame to be received in this batch, set this true, then other functions will be run
-    //  if (frame.frame_str[frame.offset + 2] == frame.frame_str[frame.offset + 3]) {   //if frame_num==num_frames exit
-    //    frame.frame_end = true;
-    //  }
-    //  Serial_1.flush();
-
-  }
-}
-
 void Coms_Serial::init_serial() {
   Serial_1.begin(COMS_SPEED, COMS_CONGIF);
 }
@@ -165,7 +98,8 @@ void Coms_Serial::read_buffer() {
             if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
               remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
               frame_cpy(data, TEXT_FRAME_TYPE);
-            }
+              }
+            
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -185,8 +119,10 @@ void Coms_Serial::read_buffer() {
             //            for (byte i = 0; i < sizeof(data); i++)
             //              Serial.println(data[i]);
 
-            if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)) //if frame ok, save data
+            if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)){ //if frame ok, save data
               frame_cpy(data, POS_FRAME_TYPE);
+            }
+              
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //do nothing if pos frame recieved in error, new one coming soon
             }
@@ -206,8 +142,10 @@ void Coms_Serial::read_buffer() {
             //              host.println_bits(data[i],8, BIN);
             //            }
 
-            if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) //if frame ok, save data
+            if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)){ //if frame ok, save data
               frame_cpy(data, SENSOR_FRAME_TYPE);
+              
+            }
 
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again

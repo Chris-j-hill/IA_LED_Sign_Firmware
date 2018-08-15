@@ -21,50 +21,11 @@ extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 
 
 extern Menu menu;
-//
-//int Coms::init_software_serial_to_usb_port() {          // init the serial at 115200 baud rate
-//
-//  Serial.begin(COMS_SPEED);
-//  int alpha = millis();
-//  while (!Serial) {
-//    if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-//      //      debug = false;
-//      return -1;
-//    }
-//  }
-//
-//  return 0;
-//}
-//
-//int Coms::init_software_serial_to_usb_port(int speed) { // init the serial at a custom speed
-//
-//  if (speed != 300 && speed != 600 && speed != 1200 && speed != 2400 && speed != 4800 && speed != 14400 && speed != 9600 && speed != 14400 && speed != 19200 && speed != 28800 && speed != 38400 && speed != 57600 && speed != 115200)
-//    return (-2);
-//
-//  Serial.begin(speed);
-//  int alpha = millis();
-//  while (!Serial) {
-//    if (millis() > alpha + WAIT_TIME_FOR_USB_PORT_CONNECTION) {  //after 5 seconds elapsed, assume serial failed to initialise
-//      //      debug = false;
-//      return -1;
-//    }
-//  }
-//
-//  return 0;
-//}
-
 
 
 void Coms::extract_sensor_data(byte *temp_buffer) {
 
   byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_buffer[0]);
-
-  for (byte i = 0; i < frame_length; i++) {
-    Serial.println(temp_buffer[i]);
-  }
-
-
-
 
   for (byte alpha = HEADER_LENGTH; alpha < frame_length - TRAILER_LENGTH - 2; alpha += 2) { //step through frame, identify prefix and extract following data byte
 
@@ -137,150 +98,187 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
       case PREFIX_SCREEN_BRIGHTNESS:
         screen_parameters.brightness = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;  
         break;
 
       case PREFIX_TEXT_SIZE_0:
         text_parameters[0].text_size = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SIZE_1:
         text_parameters[1].text_size = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SIZE_2:
         text_parameters[2].text_size = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SIZE_3:
         text_parameters[3].text_size = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SIZE_4:
         text_parameters[4].text_size = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_R_0:
         text_parameters[0].colour_r = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_R_1:
         text_parameters[1].colour_r = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_R_2:
         text_parameters[2].colour_r = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_R_3:
         text_parameters[3].colour_r = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_R_4:
         text_parameters[4].colour_r = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_G_0:
         text_parameters[0].colour_g = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_G_1:
         text_parameters[1].colour_g = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_G_2:
         text_parameters[2].colour_g = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_G_3:
         text_parameters[3].colour_g = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_G_4:
         text_parameters[4].colour_g = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_B_0:
         text_parameters[0].colour_b = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_B_1:
         text_parameters[1].colour_b = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_B_2:
         text_parameters[2].colour_b = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_B_3:
         text_parameters[3].colour_b = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_COLOUR_B_4:
         text_parameters[4].colour_b = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_MSB_0:
         set_hue_colour(temp_buffer[alpha + 1], 0, 1);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_LSB_0:
         set_hue_colour(temp_buffer[alpha + 1], 0, 2);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_MSB_1:
         set_hue_colour(temp_buffer[alpha + 1], 1, 1);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_LSB_1:
         set_hue_colour(temp_buffer[alpha + 1], 1, 2);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_MSB_2:
         set_hue_colour(temp_buffer[alpha + 1], 2, 1);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_LSB_2:
         set_hue_colour(temp_buffer[alpha + 1], 2, 2);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_MSB_3:
         set_hue_colour(temp_buffer[alpha + 1], 3, 1);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_LSB_3:
         set_hue_colour(temp_buffer[alpha + 1], 3, 2);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_MSB_4:
         set_hue_colour(temp_buffer[alpha + 1], 4, 1);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_HUE_LSB_4:
         set_hue_colour(temp_buffer[alpha + 1], 4, 2);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_USE_HUE_0:
         text_parameters[0].use_hue = (temp_buffer[alpha + 1] == 1) ? true : false;
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_USE_HUE_1:
         text_parameters[1].use_hue = (temp_buffer[alpha + 1] == 1) ? true : false;
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_USE_HUE_2:
         text_parameters[2].use_hue = (temp_buffer[alpha + 1] == 1) ? true : false;
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_USE_HUE_3:
         text_parameters[3].use_hue = (temp_buffer[alpha + 1] == 1) ? true : false;
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_USE_HUE_4:
         text_parameters[4].use_hue = (temp_buffer[alpha + 1] == 1) ? true : false;
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_SCREEN_MODE:
         screen_parameters.new_mode = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_SD_MOUNTED_1:
@@ -293,62 +291,77 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
       case PREFIX_TEXT_SCROLL_SPEED_X_0:
         cursor_parameters[0].x_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_Y_0:
         cursor_parameters[0].y_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_X_1:
         cursor_parameters[1].x_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_Y_1:
         cursor_parameters[1].y_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_X_2:
         cursor_parameters[2].x_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_Y_2:
         cursor_parameters[2].y_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_X_3:
         cursor_parameters[3].x_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_Y_3:
         cursor_parameters[3].y_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_X_4:
         cursor_parameters[4].x_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SCROLL_SPEED_Y_4:
         cursor_parameters[4].y_dir = GET_TEXT_DIR(temp_buffer[alpha + 1]);
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_0:
         text_parameters[0].object_used = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_1:
         text_parameters[1].object_used = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_2:
         text_parameters[2].object_used = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_3:
         text_parameters[3].object_used = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_OBJ_ENABLED_4:
         text_parameters[4].object_used = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_OBJ_SELECTED:
@@ -362,24 +375,6 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
     }
   }
-}
-//
-//void Coms::extract_pos_frame(byte obj_num) {
-//  pos_frame.frame_arrived = false;
-//  cursor_parameters[obj_num].global_x_pos = calc_pos(pos_frame.frame_buffer[4], pos_frame.frame_buffer[5]);
-//  cursor_parameters[obj_num].global_y_pos = calc_pos(pos_frame.frame_buffer[6], pos_frame.frame_buffer[7]);
-//
-//
-//  cursor_parameters[obj_num].local_x_pos = calc_local_pos(pos_frame.frame_buffer[4], pos_frame.frame_buffer[5]);
-//  cursor_parameters[obj_num].local_y_pos = calc_local_pos(pos_frame.frame_buffer[6], pos_frame.frame_buffer[7]);
-//  //  calc_local_pos();
-//
-//  cursor_parameters[obj_num].x_dir = pos_frame.frame_buffer[8] - 128;
-//  cursor_parameters[obj_num].y_dir = pos_frame.frame_buffer[9] - 128;
-//}
-
-void Coms::extract_menu_frame() {
-  menu_frame.frame_arrived = false;
 }
 
 
@@ -439,6 +434,9 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
         for (byte i = disp_string_offset + num_bytes_to_cpy; i < MAX_TWEET_SIZE; i++)
           text_parameters[obj_num].string[i] = 0;
       }
+
+      screen_parameters.updated = false;  //part of a string arrived, update displayed buffer, update as each part of string arrives, better than not detecting retransmission
+
       break;
 
     case POS_FRAME_TYPE:
@@ -450,15 +448,21 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       cursor_parameters[obj_num].x_dir = GET_TEXT_DIR(temp_buffer[8]);
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
+
+
+      screen_parameters.updated = false;  //pos frame requires screen update always
+
       break;
 
     case SENSOR_FRAME_TYPE:
-      extract_sensor_data(temp_buffer); //extract data using massive switch
+      extract_sensor_data(temp_buffer); //extract data using massive switch, conditionally update screen depending on specific data
       break;
 
     case MENU_FRAME_TYPE:
       menu.set_current_menu(temp_buffer[3]);
       menu_parameters.encoder_position = GET_ENCODER_POS(temp_buffer[4], temp_buffer[5]);
+
+      screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
       break;
 
   }
@@ -490,17 +494,6 @@ bool Coms::error_check_frame_body(byte *buf, byte frame_type, byte frame_length)
 
   vertical_parity_error = check_vertical_checksum(buf, frame_length);
   checksum_error = check_final_checksum(buf, frame_length);
-
-  // fix error ...
-  // test again ...
-
-  //return result
-  //  Serial.print("byte_parity_error = ");
-  //  Serial.println(byte_parity_error);
-  //  Serial.print("vertical_parity_error = ");
-  //  Serial.println(vertical_parity_error);
-  //  Serial.print("checksum_error = ");
-  //  Serial.println(checksum_error);
 
   return (byte_parity_error | vertical_parity_error | checksum_error);  //if any of these failed
 

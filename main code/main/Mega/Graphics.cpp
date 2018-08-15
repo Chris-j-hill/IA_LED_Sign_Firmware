@@ -114,20 +114,26 @@ void Graphics::init_matrix() {
 
 void Graphics::update_display() {
 
-  set_display_mode();
+// only change buffers if something changed
+// change can be only due to frame arrived
+  if (screen_parameters.updated) {    
+    screen_parameters.updated = true;
+    
+    set_display_mode();
 
-  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-    if (text_parameters[i].object_used) {
-      if (text_parameters[i].use_hue)
-        graphics.set_text_colour(text_parameters[i].hue);
-      else
-        graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
-      graphics.draw_text(i);
+    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+      if (text_parameters[i].object_used) {
+        if (text_parameters[i].use_hue)
+          graphics.set_text_colour(text_parameters[i].hue);
+        else
+          graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
+        graphics.draw_text(i);
+      }
     }
-  }
 
-  //after all objects written, cover with display if needed
-  menu.display_menu();  //update any menu if applicable
+    //after all objects written, cover with display if needed
+    menu.display_menu();  //update any menu if applicable
+  }
 }
 
 inline void Graphics::set_display_mode() {
