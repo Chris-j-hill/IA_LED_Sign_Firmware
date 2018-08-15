@@ -18,6 +18,9 @@
 #define Sprint(a)
 #endif
 
+
+#define USE_CUSTOM_RGB_MATRIX_LIBRARY
+
 #define DO_ERROR_CHECKING //calculate checksum
 
 #ifdef DO_ERROR_CHECKING
@@ -190,6 +193,11 @@ const byte DEFAULT_TEXT_BLUE_BRIGHTNESS = COLOUR_MAX_LEVEL;
 
 #define DEFAULT_MENU_WIDTH 64
 #define DEFAULT_SCREEN_MODE 0
+
+#define POS_UPDATE_ISR_FREQ 2 //hz -> match this with due value or possible unexpected behaviour
+
+#define XY_SPEED_UNITS 0.1    // speed of +1 moves XY_SPEED_UNITS pixels per second
+
 
                           
 #endif //CONFIGURATION_H

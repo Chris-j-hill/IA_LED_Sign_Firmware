@@ -39,10 +39,6 @@
 
 #define SCREEN_BRIGHTNESS_UPDATE_PERIOD 500
 
-#define POS_UPDATE_ISR_FREQ 2//hz
-
-#define XY_SPEED_UNITS 0.1//speed of +1 moves XY_SPEED_UNITS pixels per second
-
 #define RUN_TEXT_CONFIG //define this to populate some text objects with minimal data, forces pos interrupt to send frames
 
 #define POS_TIMER Timer3

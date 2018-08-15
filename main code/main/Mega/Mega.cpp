@@ -19,10 +19,12 @@ Host host;
 
 
 void mega_setup() {
+  
   configure_address();
   host.init_serial();    //enable printing to monitor
   coms_serial.init_serial(); //enable coms port to due
   graphics.init_matrix();
+  graphics.attach_pos_ISR();  //optionally pos isr to interpolate cursor positions between frames
   Serial.println("done init");
 
 }

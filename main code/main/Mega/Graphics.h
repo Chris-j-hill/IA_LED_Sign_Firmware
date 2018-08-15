@@ -14,7 +14,7 @@
 // Note: There may be severe stability issues with this at high speeds if delay
 // correction is used due to overflows and amount the counter is incremented
 
-
+#define MIN_DISPLAY_UPDATE_PERIOD 20  //20ms period = 50hz
 
 // Similar to F(), but for PROGMEM string pointers rather than literals
 #define F2(progmem_ptr) (const __FlashStringHelper *)progmem_ptr
@@ -29,10 +29,10 @@ struct Text_Struct {
   int hue = 0;
   bool use_hue = false;
 
-  byte x_min = 0; //region to allow text to be displayed
-  byte x_max = SINGLE_MATRIX_WIDTH;
-  bool hard_limit = false;    //limit with regards to text diaplayed while menu active
-  bool limit_enabled = false; //is above limit enabled
+//  byte x_min = 0; //region to allow text to be displayed
+//  byte x_max = SINGLE_MATRIX_WIDTH;
+//  bool hard_limit = false;    //limit with regards to text diaplayed while menu active
+//  bool limit_enabled = false; //is above limit enabled
 
   bool object_used = false;
 };
@@ -40,15 +40,15 @@ struct Text_Struct {
 struct Cursor_Struct {
   int global_x_pos = 0;   // position as recieved in frame
   int local_x_pos = 0;    // relative position for this matrix
+  
   int global_y_pos = 0;
   int local_y_pos = 0;
+  
   int8_t x_dir = 0;         // direction and speed of text in x and y direction
   int8_t y_dir = 0;
-  int local_min_x_pos = 0;  //how far the text will scroll off to the left
-  int local_max_x_pos = 0;  //how far the text will start to the right
-  int local_min_y_pos = 0;  //how far the text will scroll up
-  int local_max_y_pos = 0;  //how far the text will start down
 
+  uint32_t isr_last_update_x_time =0;  //time vlaue was last updated at
+  uint32_t isr_last_update_y_time =0;
 };
 
 struct Screen_Struct {
@@ -115,8 +115,7 @@ class Graphics {
     void increment_cursor_position(byte axis, byte obj_num = 0);
     void attach_pos_ISR();
     void delay_pos_ISR(int value, byte counter); // advance or delay the counter based on value from due
-    void set_text_min(byte obj_num);
-    void set_text_max(byte obj_num);
+
 
     // text functions
     void set_object_colour(byte new_r, byte new_g, byte new_b);

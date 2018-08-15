@@ -7,12 +7,12 @@
 #include <Wire.h>
 
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
-#include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
+#include "src/customRGBMatrixPanel/customRGBmatrixPanel.h"
 #else
 #include "RGBmatrixPanel.h"
 #endif
 
-#include "libs/Timer3/TimerThree.h"
+#include "src/Timer3/TimerThree.h"
 
 #include "Coms.h"
 #include "Coms_Serial.h"

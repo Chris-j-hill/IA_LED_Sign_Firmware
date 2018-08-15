@@ -5,13 +5,13 @@
 
 #include "Graphics.h"
 #include "Mega_Pins.h"
-#include "libs/Timer3/TimerThree.h"
+#include "src/Timer3/TimerThree.h"
 #include "Menus.h"
 #include "Local_Config.h"
 
 
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
-#include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
+#include "src/customRGBMatrixPanel/customRGBmatrixPanel.h"
 #else
 #include "RGBmatrixPanel.h"
 #endif
@@ -48,58 +48,95 @@ extern bool menu_visible;
 
 
 
+//
+//void pos_update_ISR() {   //ISR for updating the cursor position
+//  // this ISR runs fast and updates two counters. Once a counter has
+//  // reached an overflow value it is reset, a pulse is sent back to
+//  // the due and the position is incremented. this allows the cursor
+//  // speed to be anywhere between POS_ISR_FREQUENCY pixels/second and
+//  // POS_ISR_FREQUENCY/128 pixels/second
+//
+//
+//  x_pos_ISR_counter++;
+//  y_pos_ISR_counter++;
+//
+//  if (x_pos_ISR_counter == x_pos_isr_counter_overflow && !suppress_x_pos_update) {
+//    x_pos_ISR_counter = 0;
+//
+//#ifdef DELAY_FEEBDACK_PINS
+//    pinMode (DELAY_FEEDBACK_X_PIN, OUTPUT);   //drive line low on position update
+//    digitalWrite(DELAY_FEEDBACK_X_PIN, LOW);  //direct port manipulation?
+//#endif
+//
+//    graphics.increment_cursor_position(1);
+//
+//  }
+//  else if (x_pos_ISR_counter == x_pos_isr_counter_overflow && suppress_x_pos_update)
+//    suppress_x_pos_update = false;
+//
+//
+//
+//  if (y_pos_ISR_counter == y_pos_isr_counter_overflow && !suppress_y_pos_update) {
+//    y_pos_ISR_counter = 0;
+//
+//#ifdef DELAY_FEEBDACK_PINS
+//    pinMode (DELAY_FEEDBACK_X_PIN, OUTPUT);
+//    digitalWrite(DELAY_FEEDBACK_X_PIN, LOW);
+//#endif
+//
+//    graphics.increment_cursor_position(2);
+//
+//
+//  }
+//  else if (y_pos_ISR_counter == y_pos_isr_counter_overflow && suppress_y_pos_update)
+//    suppress_y_pos_update = false;
+//
+//
+//
+//#ifdef DELAY_FEEBDACK_PINS
+//  // set these as inputs to allow due to pull line high after pos update
+//  if (x_pos_ISR_counter == 1)
+//    pinMode(DELAY_FEEDBACK_X_PIN, INPUT);
+//  if (y_pos_ISR_counter == 1)
+//    pinMode(DELAY_FEEDBACK_Y_PIN, INPUT);
+//#endif
+//}
 
-void pos_update_ISR() {   //ISR for updating the cursor position
-  // this ISR runs fast and updates two counters. Once a counter has
-  // reached an overflow value it is reset, a pulse is sent back to
-  // the due and the position is incremented. this allows the cursor
-  // speed to be anywhere between POS_ISR_FREQUENCY pixels/second and
-  // POS_ISR_FREQUENCY/128 pixels/second
 
 
-  x_pos_ISR_counter++;
-  y_pos_ISR_counter++;
+void pos_update_ISR() {
 
-  if (x_pos_ISR_counter == x_pos_isr_counter_overflow && !suppress_x_pos_update) {
-    x_pos_ISR_counter = 0;
+  uint32_t cur_time = millis(); //only need to do this once, millis isnt that fast...
 
-#ifdef DELAY_FEEBDACK_PINS
-    pinMode (DELAY_FEEDBACK_X_PIN, OUTPUT);   //drive line low on position update
-    digitalWrite(DELAY_FEEDBACK_X_PIN, LOW);  //direct port manipulation?
-#endif
+  uint16_t time_between_increments_x = 0;
+  uint16_t time_between_increments_y = 0;
 
-    graphics.increment_cursor_position(1);
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
 
+    time_between_increments_x = (1000 / XY_SPEED_UNITS) / cursor_parameters[i].x_dir; //1000ms/(x_dir*XY_SPEED_UNITS)
+    time_between_increments_y = (1000 / XY_SPEED_UNITS) / cursor_parameters[i].y_dir;
+
+    //check if period elapsed it is time to update
+    if ((cur_time - cursor_parameters[i].isr_last_update_x_time) > time_between_increments_x) {
+      cursor_parameters[i].isr_last_update_x_time = cur_time;
+
+      //increment value, speed now irrelevant, since this interrupt should run the required num times per second, so just increment by one
+
+      if (cursor_parameters[i].x_dir < 0)
+        cursor_parameters[i].local_x_pos--;
+      else if (cursor_parameters[i].x_dir > 0)
+        cursor_parameters[i].local_x_pos++;
+    }
+
+    if ((cur_time - cursor_parameters[i].isr_last_update_y_time) > time_between_increments_y) {
+      cursor_parameters[i].isr_last_update_y_time = cur_time;
+
+      if (cursor_parameters[i].y_dir < 0)
+        cursor_parameters[i].local_y_pos--;
+      else if (cursor_parameters[i].y_dir > 0)
+        cursor_parameters[i].local_y_pos++;
+    }
   }
-  else if (x_pos_ISR_counter == x_pos_isr_counter_overflow && suppress_x_pos_update)
-    suppress_x_pos_update = false;
-
-
-
-  if (y_pos_ISR_counter == y_pos_isr_counter_overflow && !suppress_y_pos_update) {
-    y_pos_ISR_counter = 0;
-
-#ifdef DELAY_FEEBDACK_PINS
-    pinMode (DELAY_FEEDBACK_X_PIN, OUTPUT);
-    digitalWrite(DELAY_FEEDBACK_X_PIN, LOW);
-#endif
-
-    graphics.increment_cursor_position(2);
-
-
-  }
-  else if (y_pos_ISR_counter == y_pos_isr_counter_overflow && suppress_y_pos_update)
-    suppress_y_pos_update = false;
-
-
-
-#ifdef DELAY_FEEBDACK_PINS
-  // set these as inputs to allow due to pull line high after pos update
-  if (x_pos_ISR_counter == 1)
-    pinMode(DELAY_FEEDBACK_X_PIN, INPUT);
-  if (y_pos_ISR_counter == 1)
-    pinMode(DELAY_FEEDBACK_Y_PIN, INPUT);
-#endif
 }
 
 
@@ -114,11 +151,14 @@ void Graphics::init_matrix() {
 
 void Graphics::update_display() {
 
-// only change buffers if something changed
-// change can be only due to frame arrived
-  if (screen_parameters.updated) {    
+  static uint32_t time_since_last_update = millis();
+
+  // only change buffers if something changed (and not too frequently, function can be slow, potientially filling a large buffer)
+  // change can be only due to frame arrived
+
+  if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (screen_parameters.updated)) {
     screen_parameters.updated = true;
-    
+
     set_display_mode();
 
     for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
@@ -133,6 +173,8 @@ void Graphics::update_display() {
 
     //after all objects written, cover with display if needed
     menu.display_menu();  //update any menu if applicable
+
+    matrix.swapBuffers(false);  //push the buffer we just wrote to front
   }
 }
 
@@ -192,8 +234,10 @@ inline void Graphics::draw_text(byte obj_num) {
 
 
 void Graphics::attach_pos_ISR() {
-  int period = pos_isr_period();
-  this -> pos_isr_counter_overflow();
+
+
+  uint16_t period = pos_isr_period();
+  //  pos_isr_counter_overflow();
 
   Timer3.attachInterrupt(pos_update_ISR, period);
   Timer3.start();
@@ -269,16 +313,6 @@ void Graphics::pos_isr_counter_overflow() {
   x_pos_isr_counter_overflow = abs(cursor_parameters[0].x_dir) * 2; // *2 doubles range to increase of overflow to improve achievable scroll speed
   y_pos_isr_counter_overflow = abs(cursor_parameters[0].y_dir) * 2;
 
-}
-
-void Graphics::set_text_min(byte obj_num) {
-  //how far to the left will the text scroll
-  cursor_parameters[obj_num].local_min_x_pos = -1 * (screen_parameters.node_address << SINGLE_MATRIX_WIDTH_AS_POW_2) * (text_parameters[obj_num].text_size * ASCII_CHARACTER_BASIC_WIDTH);
-}
-
-void Graphics::set_text_max(byte obj_num) {
-  //how far to the left will the text scroll
-  cursor_parameters[obj_num].local_max_x_pos = screen_parameters.node_address << SINGLE_MATRIX_WIDTH_AS_POW_2;
 }
 
 
@@ -378,9 +412,9 @@ void Graphics::draw_background() {
 
   if (menu_width - menu_pixels_right_of_node() < SINGLE_MATRIX_WIDTH) { // draw partial background
     this -> clear_area(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), 0, SINGLE_MATRIX_WIDTH, SINGLE_MATRIX_HEIGHT); // clear area for menu
-    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
-    text_parameters[0].hard_limit = false;
-    text_parameters[0].limit_enabled = true;
+//    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
+//    text_parameters[0].hard_limit = false;
+//    text_parameters[0].limit_enabled = true;
   }
 }
 

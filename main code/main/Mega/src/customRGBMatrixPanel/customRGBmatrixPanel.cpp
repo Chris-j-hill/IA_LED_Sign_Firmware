@@ -33,7 +33,7 @@ Adafruit Industries.
 BSD license, all text above must be included in any redistribution.
 */
 
-#include "RGBmatrixPanel.h"
+#include "customRGBmatrixPanel.h"
 #include "gamma.h"
 
 #ifndef _swap_int16_t

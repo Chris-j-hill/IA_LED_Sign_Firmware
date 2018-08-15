@@ -202,5 +202,13 @@
 #define POS_FRAME_PRIORITY    1  // set pos frame as mid priority
 #define LED_STRIP_PRIORITY    2  //set everything else as low priority
 #define FAN_PRIORITY          2
+
+
+#define POS_UPDATE_ISR_FREQ 2//hz
+
+#define XY_SPEED_UNITS 0.1//speed of +1 moves XY_SPEED_UNITS pixels per second
+
+
+
 #endif // Config_Local_h
 #endif // Configuration_H
