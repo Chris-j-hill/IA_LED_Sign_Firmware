@@ -7,6 +7,8 @@
 #include "Mega_Pins.h"
 #include "libs/Timer3/TimerThree.h"
 #include "Menus.h"
+#include "Local_Config.h"
+
 
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
 #include "libs/RGBMatrixPanel/RGBmatrixPanel.h"
@@ -129,6 +131,7 @@ void Graphics::update_display() {
 }
 
 inline void Graphics::set_display_mode() {
+  //only do this if mode was changed. mode method is quick so not much gian, but even so...
   if (screen_parameters.new_mode != screen_parameters.cur_mode) {
     screen_parameters.cur_mode = screen_parameters.new_mode;
     matrix.Mode(screen_parameters.new_mode);
@@ -338,6 +341,20 @@ void Graphics::set_menu_colour() {
 #endif
 }
 
+
+void Graphics::set_menu_colour_highlighted() {
+
+  byte delta = COLOUR_LEVEL_STEP_SIZE; //modify colour by this
+
+#if defined(USING_COLOUR_SET_888)
+  matrix.setTextColor(matrix.Color888(menu_option_colour.red + delta, menu_option_colour.green + delta, menu_option_colour.blue + delta));
+#elif defined(USING_COLOUR_SET_444)
+  matrix.setTextColor(matrix.Color444(menu_option_colour.red + delta, menu_option_colour.green + delta, menu_option_colour.blue + delta));
+#else
+  matrix.setTextColor(matrix.Color333(menu_option_colour.red + delta, menu_option_colour.green + delta, menu_option_colour.blue + delta));
+#endif
+}
+
 byte Graphics::non_linear_startup_function(uint16_t x) {//<- i have no idea how i came up with this
 
   //  float a = 0.000000000000010658 //<- tiny effect, not included to improve speed
@@ -518,7 +535,7 @@ void Graphics::write_title(byte title) {
 
 void Graphics::write_menu_option(byte first, byte second, byte third, byte line_config) {  //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
   byte line_item = 255;
-  for (int i = 1; i < 4; i++) { //loop through three lines
+  for (byte i = 1; i < 4; i++) { //loop through three lines
     if (i == 1) {
       line_item = first;
       matrix.setCursor(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), ASCII_CHARACTER_BASIC_HEIGHT + 1);
@@ -534,6 +551,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
     }
 
     set_menu_colour();
+
     switch (line_item) {
       case RETURN_MENU:                 matrix.println(F2(menu_items.RETURN));                      break;
       case SCREEN_MODE_MENU:            matrix.println(F2(menu_items.screen_mode));                 break;
@@ -544,10 +562,29 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case SD_CARD_MENU:                matrix.println(F2(menu_items.sd_card_settings));            break;
       case LED_STRIP_MENU:              matrix.println(F2(menu_items.led_strip_settings));          break;
 
-      case SCREEN_MODE_0:               matrix.println(F2(menu_items.screen_mode0));                break;
-      case SCREEN_MODE_1:               matrix.println(F2(menu_items.screen_mode1));                break;
-      case SCREEN_MODE_2:               matrix.println(F2(menu_items.screen_mode2));                break;
-      case SCREEN_MODE_3:               matrix.println(F2(menu_items.screen_mode3));                break;
+      case SCREEN_MODE_0:
+        if (screen_parameters.cur_mode == 0) //if the item being displayed is the current mode, change its colour a bit to identify it
+          set_menu_colour_highlighted();
+        matrix.println(F2(menu_items.screen_mode0));
+        break;
+
+      case SCREEN_MODE_1:
+        if (screen_parameters.cur_mode == 1) //if the item being displayed is the current mode, change its colour a bit to identify it
+          set_menu_colour_highlighted();
+        matrix.println(F2(menu_items.screen_mode1));
+        break;
+
+      case SCREEN_MODE_2:
+        if (screen_parameters.cur_mode == 2) //if the item being displayed is the current mode, change its colour a bit to identify it
+          set_menu_colour_highlighted();
+        matrix.println(F2(menu_items.screen_mode2));
+        break;
+
+      case SCREEN_MODE_3:
+        if (screen_parameters.cur_mode == 3) //if the item being displayed is the current mode, change its colour a bit to identify it
+          set_menu_colour_highlighted();
+        matrix.println(F2(menu_items.screen_mode3));
+        break;
 
       case TEXT_SIZE_MENU:              matrix.println(F2(menu_items.text_size_settings));          break;
       case TEXT_COLOUR_MENU:            matrix.println(F2(menu_items.text_colour_settings));        break;

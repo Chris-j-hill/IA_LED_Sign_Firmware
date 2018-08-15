@@ -98,6 +98,7 @@ class Graphics {
 
     void set_title_colour();  //set the colour as the title colour
     void set_menu_colour();
+    void set_menu_colour_highlighted();
     //void update_menus();
     inline void set_text_colour(byte new_r, byte new_g, byte new_b);
     inline void set_text_colour(int new_hue);

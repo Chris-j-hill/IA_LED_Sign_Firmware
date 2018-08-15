@@ -76,15 +76,45 @@
 #define TEXT_OBJ_4                    104
 
 
-#define STARTUP_R 1   //expanding rings startup, blue/purple colour
+#if defined(USING_COLOUR_SET_888)
+
+#define STARTUP_R 35   //expanding rings startup, blue/purple colour
+#define STARTUP_G 0
+#define STARTUP_B 180
+#define MENU_OPTION_R 150 // menu option colour
+#define MENU_OPTION_G 0   // NB highlighted colour for selected menu option is these values + COLOUR_LEVEL_STEP_SIZE, so values shouldnt be too close to colour limit
+#define MENU_OPTION_B 70
+#define MENU_TITLE_R 180
+#define MENU_TITLE_G 180
+#define MENU_TITLE_B 180
+
+#elif defined(USING_COLOUR_SET_444)
+
+#define STARTUP_R 2  
+#define STARTUP_G 0
+#define STARTUP_B 10
+#define MENU_OPTION_R 8 
+#define MENU_OPTION_G 0 
+#define MENU_OPTION_B 4
+#define MENU_TITLE_R 10
+#define MENU_TITLE_G 10
+#define MENU_TITLE_B 10
+
+#else
+
+#define STARTUP_R 1   
 #define STARTUP_G 0
 #define STARTUP_B 5
-#define MENU_OPTION_R 4
-#define MENU_OPTION_G 0
+#define MENU_OPTION_R 4 
+#define MENU_OPTION_G 0 
 #define MENU_OPTION_B 2
 #define MENU_TITLE_R 5
 #define MENU_TITLE_G 5
 #define MENU_TITLE_B 5
+
+#endif
+
+
 
 //triangle pointer co-ordinates
 #define MENU_POINTER_X0 1   //NOTE: x coordinates are relative to left side of menu area
