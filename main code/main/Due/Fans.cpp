@@ -2,10 +2,7 @@
 #define Fans_CPP
 
 #include "Fans.h"
-//#include "Due.h"
-//#include "function_declarations.h"
-#include "DueTimer.h"
-//#include "Due_DHT11.h"
+#include "src/DueTimer/DueTimer.h"
 #include "Due_Libraries.h"
 
 dht11 Temp1;    //objects for using dht library functions

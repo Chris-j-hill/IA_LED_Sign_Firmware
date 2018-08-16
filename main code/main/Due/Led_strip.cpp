@@ -4,9 +4,9 @@
 
 #include "Led_Strip.h"
 #include "Arduino.h"
-#include "DueTimer.h"
+#include "src/DueTimer/DueTimer.h"
 #include "function_declarations.h"
-
+#include "Due_Libraries.h"
 
 Led_Strip_Struct led_strip_parameters;              //create led strip struct
 

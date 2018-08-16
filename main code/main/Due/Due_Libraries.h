@@ -8,23 +8,23 @@
 
  
 
-#include "libs/sdfatlib/SdFat/SdFat.h"
-#include "libs/sdfatlib/SdFat/SdFatUtil.h"
+#include "src/Due_Sd_Cards/SdFat/SdFat.h"
+#include "src/Due_Sd_Cards/SdFat/SdFatUtil.h"
 
 #if !USE_MULTIPLE_CARDS
 #error You must set USE_MULTIPLE_CARDS nonzero in SdFatConfig.h
 #endif
 
 //https://github.com/ivanseidel/DueTimer
-#include "DueTimer.h"       // wrapper library to handle timers 0-4 
+#include "src/DueTimer/DueTimer.h"       // wrapper library to handle timers 0-4 
 
 //https://github.com/antodom/soft_uart
-#include "libs/soft_uart-master/soft_uart.h"
+#include "src/Due_Software_Serial/soft_uart.h"
 
-#include "Due_DHT11.h"
+#include "src/Due_DHT11/Due_DHT11.h"
 
 #include "Coms.h"
-#include "Coms_I2C.h"
+//#include "Coms_I2C.h"
 #include "Coms_Serial.h"
 #include "Encoder.h"
 #include "Fans.h"
@@ -36,6 +36,6 @@
 #include "Current_control.h"
 #include "EEPROM.h"
 #include "Host.h"
-
+//#include "LUTS.h"
 
 #endif //Due_Libraries_H

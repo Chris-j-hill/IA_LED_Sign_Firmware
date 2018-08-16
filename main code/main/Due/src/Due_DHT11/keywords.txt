@@ -1,0 +1,4 @@
+
+scan				KEYWORD2
+get_temperature		KEYWORD2
+get_humidity		KEYWORD2

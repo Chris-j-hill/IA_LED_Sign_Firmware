@@ -10,11 +10,8 @@
 
 #include "Config_Local.h"
 
-//https://github.com/ivanseidel/DueTimer
-#include "DueTimer.h"       // wrapper library to handle timers 0-4 
-
 //https://github.com/antodom/soft_uart
-#include "soft_uart.h"
+#include "src/Due_Software_Serial/soft_uart.h"
 
 
 

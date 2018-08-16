@@ -1,6 +1,8 @@
 #ifndef Coms_serial_CPP
 #define Coms_serial_CPP
 
+
+#include "Due_Libraries.h"
 #include "Coms_Serial.h"
 #include "Coms.h"
 #include "Due_Pins.h"

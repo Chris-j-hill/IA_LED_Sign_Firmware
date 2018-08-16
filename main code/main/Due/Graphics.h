@@ -1,31 +1,33 @@
 #ifndef Graphics_H
 #define Graphics_H
 
+
 #include "Config_Local.h"
 #include "Coms.h"
+#include <Arduino.h>
 
 #define ASCII_CHARACTER_BASIC_WIDTH 6
 #define ASCII_CHARACTER_BASIC_HEIGHT 9
 
 
 #if defined(USING_COLOUR_SET_333)
-#define RED_MAX_VALUE 7
-#define GREEN_MAX_VALUE 7
-#define BLUE_MAX_VALUE 7
+const byte RED_MAX_VALUE = 7;
+const byte GREEN_MAX_VALUE = 7;
+const byte BLUE_MAX_VALUE = 7;
 
 #elif defined(USING_COLOUR_SET_444)
-#define RED_MAX_VALUE 15
-#define GREEN_MAX_VALUE 15
-#define BLUE_MAX_VALUE 15
+const byte RED_MAX_VALUE = 15;
+const byte GREEN_MAX_VALUE = 15;
+const byte BLUE_MAX_VALUE = 15;
 
 #elif defined(USING_COLOUR_SET_888)
-#define RED_MAX_VALUE 255
-#define GREEN_MAX_VALUE 255
-#define BLUE_MAX_VALUE 255
+const byte RED_MAX_VALUE = 255;
+const byte GREEN_MAX_VALUE = 255;
+const byte BLUE_MAX_VALUE = 255;
 #endif
 
-#define HUE_MAX_VALUE 1535
-#define HUE_MIN_VALUE -1535
+const int HUE_MAX_VALUE = 1535;
+const int HUE_MIN_VALUE = -1535;
 #define HUE_ADJUSTMENT_STEP_SIZE 5    // step size in menu when adjusting hue
 
 //how often will the text buffer in the megas be refreshed

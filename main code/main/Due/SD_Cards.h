@@ -6,8 +6,8 @@
 #include "function_declarations.h"    //any functions that need prototypes
 #include "Due_Pins.h"
 
-#include "libs/sdfatlib/SdFat/SdFat.h"
-#include "libs/sdfatlib/SdFat/SdFatUtil.h"
+#include "src/Due_Sd_Cards/SdFat/SdFat.h"
+#include "src/Due_Sd_Cards/SdFat/SdFatUtil.h"
 
 #if !USE_MULTIPLE_CARDS
 #error You must set USE_MULTIPLE_CARDS nonzero in SdFatConfig.h

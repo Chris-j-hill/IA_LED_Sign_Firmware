@@ -1,6 +1,8 @@
 #ifndef Graphics_CPP
 #define Graphics_CPP
 
+
+#include "Due_Libraries.h"
 #include "Graphics.h"
 #include "Arduino.h"
 #include "Config_Local.h"
