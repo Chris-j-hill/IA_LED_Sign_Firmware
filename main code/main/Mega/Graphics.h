@@ -47,8 +47,11 @@ struct Cursor_Struct {
   int8_t x_dir = 0;         // direction and speed of text in x and y direction
   int8_t y_dir = 0;
 
-  uint32_t isr_last_update_x_time =0;  //time vlaue was last updated at
-  uint32_t isr_last_update_y_time =0;
+  uint32_t isr_last_update_x_time = 0;  //time vlaue was last updated at
+  uint32_t isr_last_update_y_time = 0;
+
+  uint16_t time_between_increments_x = 0;
+  uint16_t time_between_increments_y = 0;
 };
 
 struct Screen_Struct {
@@ -115,7 +118,7 @@ class Graphics {
     void increment_cursor_position(byte axis, byte obj_num = 0);
     void attach_pos_ISR();
     void delay_pos_ISR(int value, byte counter); // advance or delay the counter based on value from due
-
+    void interpolate_pos();
 
     // text functions
     void set_object_colour(byte new_r, byte new_g, byte new_b);

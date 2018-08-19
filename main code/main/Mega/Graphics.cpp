@@ -45,98 +45,10 @@ extern byte menu_width;
 
 extern bool menu_visible;
 
-
-
-
-//
-//void pos_update_ISR() {   //ISR for updating the cursor position
-//  // this ISR runs fast and updates two counters. Once a counter has
-//  // reached an overflow value it is reset, a pulse is sent back to
-//  // the due and the position is incremented. this allows the cursor
-//  // speed to be anywhere between POS_ISR_FREQUENCY pixels/second and
-//  // POS_ISR_FREQUENCY/128 pixels/second
-//
-//
-//  x_pos_ISR_counter++;
-//  y_pos_ISR_counter++;
-//
-//  if (x_pos_ISR_counter == x_pos_isr_counter_overflow && !suppress_x_pos_update) {
-//    x_pos_ISR_counter = 0;
-//
-//#ifdef DELAY_FEEBDACK_PINS
-//    pinMode (DELAY_FEEDBACK_X_PIN, OUTPUT);   //drive line low on position update
-//    digitalWrite(DELAY_FEEDBACK_X_PIN, LOW);  //direct port manipulation?
-//#endif
-//
-//    graphics.increment_cursor_position(1);
-//
-//  }
-//  else if (x_pos_ISR_counter == x_pos_isr_counter_overflow && suppress_x_pos_update)
-//    suppress_x_pos_update = false;
-//
-//
-//
-//  if (y_pos_ISR_counter == y_pos_isr_counter_overflow && !suppress_y_pos_update) {
-//    y_pos_ISR_counter = 0;
-//
-//#ifdef DELAY_FEEBDACK_PINS
-//    pinMode (DELAY_FEEDBACK_X_PIN, OUTPUT);
-//    digitalWrite(DELAY_FEEDBACK_X_PIN, LOW);
-//#endif
-//
-//    graphics.increment_cursor_position(2);
-//
-//
-//  }
-//  else if (y_pos_ISR_counter == y_pos_isr_counter_overflow && suppress_y_pos_update)
-//    suppress_y_pos_update = false;
-//
-//
-//
-//#ifdef DELAY_FEEBDACK_PINS
-//  // set these as inputs to allow due to pull line high after pos update
-//  if (x_pos_ISR_counter == 1)
-//    pinMode(DELAY_FEEDBACK_X_PIN, INPUT);
-//  if (y_pos_ISR_counter == 1)
-//    pinMode(DELAY_FEEDBACK_Y_PIN, INPUT);
-//#endif
-//}
-
-
+volatile bool interpolate_pos_flag = false;
 
 void pos_update_ISR() {
-
-  uint32_t cur_time = millis(); //only need to do this once, millis isnt that fast...
-
-  uint16_t time_between_increments_x = 0;
-  uint16_t time_between_increments_y = 0;
-
-  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-
-    time_between_increments_x = (1000 / XY_SPEED_UNITS) / cursor_parameters[i].x_dir; //1000ms/(x_dir*XY_SPEED_UNITS)
-    time_between_increments_y = (1000 / XY_SPEED_UNITS) / cursor_parameters[i].y_dir;
-
-    //check if period elapsed it is time to update
-    if ((cur_time - cursor_parameters[i].isr_last_update_x_time) > time_between_increments_x) {
-      cursor_parameters[i].isr_last_update_x_time = cur_time;
-
-      //increment value, speed now irrelevant, since this interrupt should run the required num times per second, so just increment by one
-
-      if (cursor_parameters[i].x_dir < 0)
-        cursor_parameters[i].local_x_pos--;
-      else if (cursor_parameters[i].x_dir > 0)
-        cursor_parameters[i].local_x_pos++;
-    }
-
-    if ((cur_time - cursor_parameters[i].isr_last_update_y_time) > time_between_increments_y) {
-      cursor_parameters[i].isr_last_update_y_time = cur_time;
-
-      if (cursor_parameters[i].y_dir < 0)
-        cursor_parameters[i].local_y_pos--;
-      else if (cursor_parameters[i].y_dir > 0)
-        cursor_parameters[i].local_y_pos++;
-    }
-  }
+  interpolate_pos_flag = true;
 }
 
 
@@ -235,12 +147,47 @@ inline void Graphics::draw_text(byte obj_num) {
 
 void Graphics::attach_pos_ISR() {
 
-
   uint16_t period = pos_isr_period();
   //  pos_isr_counter_overflow();
 
   Timer3.attachInterrupt(pos_update_ISR, period);
   Timer3.start();
+}
+
+void Graphics::interpolate_pos() {
+
+  /* this function executes the required interpolation of the cursor
+     based on the flag set inside the pos_update_isr funtion. this
+     is reasonably slow with many divides so run outside of interrupts
+     whenever processor isnt doing anything else
+  */
+  if (interpolate_pos_flag) {
+    interpolate_pos_flag = false;
+    uint32_t cur_time = millis(); //only need to do this once, millis isnt that fast...
+
+    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+
+      //check if period elapsed it is time to update
+      if ((cur_time - cursor_parameters[i].isr_last_update_x_time) > cursor_parameters[i].time_between_increments_x) {
+        cursor_parameters[i].isr_last_update_x_time = cur_time;
+
+        //increment value, speed now irrelevant, since this interrupt should run the required num times per second, so just increment by one
+        if (cursor_parameters[i].x_dir < 0)
+          cursor_parameters[i].local_x_pos--;
+        else if (cursor_parameters[i].x_dir > 0)
+          cursor_parameters[i].local_x_pos++;
+      }
+
+      if ((cur_time - cursor_parameters[i].isr_last_update_y_time) > cursor_parameters[i].time_between_increments_y) {
+        cursor_parameters[i].isr_last_update_y_time = cur_time;
+
+        if (cursor_parameters[i].y_dir < 0)
+          cursor_parameters[i].local_y_pos--;
+        else if (cursor_parameters[i].y_dir > 0)
+          cursor_parameters[i].local_y_pos++;
+      }
+    }
+  }
 }
 
 void Graphics::delay_pos_ISR(int value, byte counter) {
@@ -304,7 +251,7 @@ void Graphics::increment_cursor_position(byte axis, byte obj_num) {
 
 inline uint16_t Graphics::pos_isr_period() {
 
-  return (1000 / POS_ISR_FREQUENCY);
+  return (1000000 / POS_ISR_FREQUENCY);// number of microseconds between functions calls
 
 }
 
@@ -412,9 +359,9 @@ void Graphics::draw_background() {
 
   if (menu_width - menu_pixels_right_of_node() < SINGLE_MATRIX_WIDTH) { // draw partial background
     this -> clear_area(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), 0, SINGLE_MATRIX_WIDTH, SINGLE_MATRIX_HEIGHT); // clear area for menu
-//    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
-//    text_parameters[0].hard_limit = false;
-//    text_parameters[0].limit_enabled = true;
+    //    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
+    //    text_parameters[0].hard_limit = false;
+    //    text_parameters[0].limit_enabled = true;
   }
 }
 

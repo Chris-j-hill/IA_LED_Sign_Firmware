@@ -47,14 +47,13 @@ void Coms_Serial::read_buffer() {
         delayMicroseconds(1000); //wait for some more bytes
         if (Serial_1.available() == 0) return;
         else {
-          if (Serial_1.peek() == 13) return;  //if next byte is 13 then shouldnt be a frame lengh byte due to btye length being encoded
-          while (Serial_1.available() < 4) {} //
+          if (Serial_1.peek() == 13) return;  // if next byte is 13 then shouldnt be a frame lengh byte due to btye length being encoded
+          while (Serial_1.available() < 4) {} // wait until full header arrived
           delay(1);
         }
-        Serial.println();
+
         if (Serial_1.available() > 0) { //just recieved start byte and data imediately after, probably frame
-          //while(Serial_1.available() < 4){}
-          //delay(3);
+
           byte temp_header[HEADER_LENGTH] = {0};
           byte bytes_read = 0;
           temp_header[0] = Serial_1.read();
@@ -66,6 +65,7 @@ void Coms_Serial::read_buffer() {
             return;
 
           bool encoding_ok = true;
+
 #ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded using hamming matrix, cant read data directly, decode first and update header values
           encoding_ok = error_check_encoded_header(temp_header);
 
@@ -77,6 +77,7 @@ void Coms_Serial::read_buffer() {
             frame_type = error_check_unencoded_header(temp_header);//<- returns zero if fails sanity checks
 
           if (frame_type == 0 || !encoding_ok) {  //if either of the above tests failed request retransmission of a bunch of frames, cant trust header data
+            Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             request_frame_retransmission();
             Serial.println(F("bunch of frames requested"));
@@ -92,14 +93,15 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-            //            for (byte i = 0; i < sizeof(data); i++)
-            //              Serial.println(data[i]);
 
             if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
               remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
               frame_cpy(data, TEXT_FRAME_TYPE);
-              }
-            
+              Serial.println(F("Text frame recieved"));
+            }
+
+            else
+              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -116,13 +118,14 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-            //            for (byte i = 0; i < sizeof(data); i++)
-            //              Serial.println(data[i]);
-
-            if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)){ //if frame ok, save data
+            if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, POS_FRAME_TYPE);
+              Serial.println(F("Pos frame recieved"));
             }
-              
+
+
+            else
+              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //do nothing if pos frame recieved in error, new one coming soon
             }
@@ -136,17 +139,14 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-            //            for (byte i = 0; i < sizeof(data); i++) {
-            //              Serial.print(data[i]);
-            //              Serial.print("\t");
-            //              host.println_bits(data[i],8, BIN);
-            //            }
-
-            if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)){ //if frame ok, save data
+            if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, SENSOR_FRAME_TYPE);
-              
+              Serial.println(F("Sensor data frame recieved"));
             }
 
+
+            else
+              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -164,12 +164,13 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-            //            for (byte i = 0; i < sizeof(data); i++)
-            //              Serial.println(data[i]);
-
-            if (!error_check_frame_body(data, frame_type, menu_frame.frame_length)) //if frame ok, save data
+            if (!error_check_frame_body(data, frame_type, menu_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, MENU_FRAME_TYPE);
+              Serial.println(F("Menu frame recieved"));
+            }
 
+            else
+              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -186,9 +187,7 @@ void Coms_Serial::read_buffer() {
             memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
             memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
 
-            //            for (byte i = 0; i < sizeof(data); i++)
-            //              Serial.println(data[i]);
-
+            Serial.println(F("Ping frame recieved"));
             if (!error_check_frame_body(data, frame_type, ping_frame.frame_length)) { //if frame ok, save data
               ping_good();
               Serial.println(F("ping good sent"));
@@ -293,16 +292,16 @@ byte Coms_Serial::error_check_unencoded_header(byte * temp_buffer) {
       ping_frame.frame_length = frame_length;
     }
     else {  //frame type not accounted for, handle as bad frame
-      Serial.println(F("Frame not recognised assume bad frame"));
+      //      Serial.println(F("Frame not recognised"));
       goto badframe;
     }
-    Serial.println(F("good frame recieved"));
+    //    Serial.println(F("good frame recieved"));
     return frame_type;    //only return non false value if frame header reasonable and frame type is defined
   }
 
   //do this when a bad frame if recieved
 badframe:
-  Serial.println(F("bad frame recieved"));
+  //  Serial.println(F("bad frame recieved"));
   return 0;
 }
 
@@ -355,7 +354,14 @@ void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame,
   nack_frame[4] = obj_num;
 
   nack_frame[5] = nack_frame[2] + nack_frame[3] + nack_frame[4];
-  Serial_1.write(nack_frame, request_frame_length);
+
+  // serial.write stalls processor until sent, serial.print does not
+  // so just add to buffer and move on
+
+  for (byte i = 0; i < request_frame_length; i++) {
+    Serial_1.print(nack_frame[i]);
+  }
+  //  Serial_1.write(nack_frame, request_frame_length);
 
 
 }
@@ -373,7 +379,13 @@ void Coms_Serial::request_frame_retransmission() {
   nack_frame[4] = 0;
 
   nack_frame[5] = UNKNOWN_RETRANSMIT_TYPE;
-  Serial_1.write(nack_frame, request_frame_length);
+
+
+  for (byte i = 0; i < request_frame_length; i++) {
+    Serial_1.print(nack_frame[i]);
+  }
+
+  //  Serial_1.write(nack_frame, request_frame_length);
 
 
 

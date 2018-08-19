@@ -98,7 +98,7 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
       case PREFIX_SCREEN_BRIGHTNESS:
         screen_parameters.brightness = temp_buffer[alpha + 1];
-        screen_parameters.updated = false;  
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_TEXT_SIZE_0:
@@ -448,6 +448,9 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       cursor_parameters[obj_num].x_dir = GET_TEXT_DIR(temp_buffer[8]);
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
+
+      cursor_parameters[obj_num].time_between_increments_x = (1000 / XY_SPEED_UNITS) / cursor_parameters[obj_num].x_dir; //1000ms/(x_dir*XY_SPEED_UNITS)
+      cursor_parameters[obj_num].time_between_increments_y = (1000 / XY_SPEED_UNITS) / cursor_parameters[obj_num].y_dir;
 
 
       screen_parameters.updated = false;  //pos frame requires screen update always

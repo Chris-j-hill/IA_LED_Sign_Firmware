@@ -69,11 +69,6 @@ void dummy_text_config() {    //use this to enable the pos frame and cursor posi
 }
 
 void Graphics::init_cursor() {
-  //    if (enable_cursor)
-  //    this -> enable();
-  //
-  //  else
-  //    this -> disable();
 
   attach_timer_pos_update();
   configure_limits();

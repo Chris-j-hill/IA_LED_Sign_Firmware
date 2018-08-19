@@ -22,19 +22,22 @@ void mega_setup() {
   
   configure_address();
   host.init_serial();    //enable printing to monitor
+  Serial.print(F("address: "));
+  Serial.println(screen_parameters.node_address);
   coms_serial.init_serial(); //enable coms port to due
   graphics.init_matrix();
-  graphics.attach_pos_ISR();  //optionally pos isr to interpolate cursor positions between frames
-  Serial.println("done init");
+  graphics.attach_pos_ISR();  //pos isr to interpolate cursor positions between frames based on timer
+  Serial.println(F("done init"));
 
 }
 
 
 void mega_loop() {
-  //coms_serial.request_frame_retransmission(SENSOR_FRAME_TYPE,1,0);
+  //byte i=0;
   while (1) {
     coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
     graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
+    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
   }
 }
 
