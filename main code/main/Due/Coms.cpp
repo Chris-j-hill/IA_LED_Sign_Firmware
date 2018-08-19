@@ -164,6 +164,7 @@ void Coms::init_frames() {
 
   pos_frame.header_checksum = pos_frame.frame_buffer[0] + pos_frame.frame_buffer[1] + pos_frame.frame_buffer[2];
   pos_frame.checksum_address = pos_frame.frame_length - 2;
+  encode_pos_frame_header();
 
   // sensor_data_frame
   sensor_data_frame.frame_type = SENSOR_FRAME_TYPE;
@@ -347,9 +348,6 @@ void Coms::set_header_parity(byte frame_type) {
       text_frame.frame_buffer[3] = (text_frame.frame_buffer[3]       | (parity_of(text_frame.frame_buffer[3])));
       break;
     case POS_FRAME_TYPE:
-      pos_frame.frame_buffer[0] = (pos_frame.frame_buffer[0] << 1) | (parity_of(pos_frame.frame_buffer[0]));
-      pos_frame.frame_buffer[1] = (pos_frame.frame_buffer[1] << 1) | (parity_of(pos_frame.frame_buffer[1]));
-      pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(pos_frame.frame_buffer[2])) << 4));
       pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( pos_frame.frame_buffer[2] ))));
       pos_frame.frame_buffer[3] = (pos_frame.frame_buffer[3]       | (parity_of(pos_frame.frame_buffer[3])));
       break;
@@ -382,6 +380,14 @@ void Coms::set_header_parity(byte frame_type) {
       Serial.println("header parity calc error");
       return;
   }
+}
+
+inline void Coms::encode_pos_frame_header() {
+
+  pos_frame.frame_buffer[0] = (pos_frame.frame_buffer[0] << 1) | (parity_of(pos_frame.frame_buffer[0]));
+  pos_frame.frame_buffer[1] = (pos_frame.frame_buffer[1] << 1) | (parity_of(pos_frame.frame_buffer[1]));
+  pos_frame.frame_buffer[2] = (pos_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(pos_frame.frame_buffer[2])) << 4));
+
 }
 
 inline byte Coms::parity_of(byte value) {
@@ -573,7 +579,7 @@ bool Coms::request_error_sanity_check(byte frame_type, byte frame_num, byte obj_
 
 
   if (frame_type == UNKNOWN_RETRANSMIT_TYPE)                                                                                                      goto bad_frame;
-  
+
   else if (frame_type != TEXT_FRAME_TYPE && frame_type != POS_FRAME_TYPE && frame_type != SENSOR_FRAME_TYPE && frame_type != MENU_FRAME_TYPE)     goto bad_frame;
 
   else if (frame_type == TEXT_FRAME_TYPE && frame_num > EXPECTED_MAX_TEXT_FRAMES)                                                                 goto bad_frame;

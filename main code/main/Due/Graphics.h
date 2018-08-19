@@ -68,8 +68,8 @@ struct Text {
 struct Text_cursor {        //xy coordinates of cursor position
   int x = 0;
   int y = 0;
-  byte x_pos_dir = 129;   //direction and speed of the cursor, static = 128
-  byte y_pos_dir = 127;
+  byte x_pos_dir = 140;   //direction and speed of the cursor, static = 128
+  byte y_pos_dir = 128;
 
   int x_start = 0;  // limits for pos, also specify direction, overflow values
   int y_start = 0;  // if conflict between direction and speed and start end points, points win take speed magnitude

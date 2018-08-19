@@ -428,12 +428,12 @@ void Coms_Serial::write_text_frame(byte address) {
 void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte frame_length) {
 
   switch (address) {
+    
     case 0:
 #ifdef SERIAL_1_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
       Serial_1.write(return_carraige, 2); //used for start of frame detection
-
       switch (frame_type) {
         // NB: use serial write not print as it forces the processor to stop until sent, avoids chance of mega serial buffer overflow
         // maybe implement acknoledge system in future
@@ -451,38 +451,40 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
 #endif
 
       break;
+
+      
     case 1:
 #ifdef SERIAL_2_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_1.write(return_carraige, 2);
+      Serial_2.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_2.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_2.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_2.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_2.write(ping_string, sizeof(ping_string));                                 break;
-        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
+        case FRAME_RETRANSMIT:    Serial_2.write(buf, frame_length);                                                break;
       }
       Serial_2.write(return_carraige, 2);
 
 #ifdef SERIAL_2_IS_SOFT
       enable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-
       break;
+      
     case 2:
 #ifdef SERIAL_3_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_1.write(return_carraige, 2);
+      Serial_3.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
-        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
+        case FRAME_RETRANSMIT:    Serial_3.write(buf, frame_length);                                                break;
       }
       Serial_3.write(return_carraige, 2);
 
@@ -491,25 +493,26 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
 #endif
 
       break;
+
+      
     case 3:
 #ifdef SERIAL_4_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_1.write(return_carraige, 2);
+      Serial_4.write(return_carraige, 2);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_4.write(ping_string, sizeof(ping_string));                                 break;
-        case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
+        case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }
       Serial_4.write(return_carraige, 2);
 
 #ifdef SERIAL_4_IS_SOFT
       enable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-
       break;
   }
 }

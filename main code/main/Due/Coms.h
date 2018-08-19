@@ -17,10 +17,10 @@
 
 // variables for initialising soft serial for comms
 using namespace arduino_due;
-#define COMS_SPEED 19200         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
+#define COMS_SPEED 9600         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
 #define HARD_COMS_CONFIG SERIAL_8N2
 
-#define SOFT_COMS_SPEED 4800      // software serial speed, nb this may get in the way if transmitting large amounts of data very slowly
+#define SOFT_COMS_SPEED COMS_SPEED      // software serial speed, nb this may get in the way if transmitting large amounts of data very slowly
 #define SOFT_COMS_CONFIG_NUM_BITS     EIGHT_BITS
 #define SOFT_COMS_CONFIG_NUM_PARITY   NO_PARITY     //custom parity implemented
 #define SOFT_COMS_CONFIG_NUM_STOP     TWO_STOP_BITS  //stop bits to help timing
@@ -59,7 +59,7 @@ using namespace arduino_due;
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
-#define FRAME_RETRANSMIT    6 
+#define FRAME_RETRANSMIT    6
 #define UNKNOWN_RETRANSMIT_TYPE 7 //in case of mega requesting frame and not knowing what frame it was
 
 const char ping_string[] = "ping";
@@ -92,7 +92,7 @@ const char expected_ping_rx = 'p';
 #define MEGA_RX_FRAME_LENGTH 4
 /*
    Nack frame format:
-   
+
    Frame type
    Frame num
    Obj num
@@ -142,7 +142,7 @@ struct Frame_History {
 
   byte history_index = 0;                                                            // index were currently at in arrays
   byte frame_content[FRAME_HISTORY_MEMORY_DEPTH][MEGA_SERIAL_BUFFER_LENGTH] = {{0}}; //the content of the frame rather than recalculating
-  uint32_t num_populated_buffers =0;  //counter for number fo frames sent, dont try re transmit more frames than have ever sent
+  uint32_t num_populated_buffers = 0; //counter for number fo frames sent, dont try re transmit more frames than have ever sent
 };
 
 class Coms {
@@ -156,6 +156,8 @@ class Coms {
 
     inline byte parity_of(byte value);
     void set_checksum_11(uint16_t checksum, byte frame_type);
+
+    inline void encode_pos_frame_header();
 
   protected:
 
@@ -182,7 +184,7 @@ class Coms {
     bool request_error_sanity_check(byte frame_type, byte frame_num, byte obj_num);
 
 
-    
+
   public:
 
     //should be very little needs to be public in this class, mostly called through coms_serial

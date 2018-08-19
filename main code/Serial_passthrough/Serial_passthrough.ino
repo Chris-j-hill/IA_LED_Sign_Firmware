@@ -23,7 +23,7 @@
 void setup() {
   // initialize both serial ports:
   Serial.begin(250000);
-  Serial1.begin(19200, SERIAL_8N2);
+  Serial1.begin(9600, SERIAL_8N2);
 
 }
 

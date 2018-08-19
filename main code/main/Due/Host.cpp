@@ -871,7 +871,7 @@ void Host::print_text(String command) {
 
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   \tStart points   \tEnd Points \tLimits X- X+ Y- Y+"));
+    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   \tStart points   \t\tEnd Points \t\tLimits X- X+ Y- Y+"));
   }
   if (text_cursor[obj_num].object_used)
     yes();
