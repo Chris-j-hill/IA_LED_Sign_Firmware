@@ -97,7 +97,7 @@ void Coms_Serial::read_buffer() {
             if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
               remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
               frame_cpy(data, TEXT_FRAME_TYPE);
-              Serial.println(F("Text frame recieved"));
+              //Serial.println(F("Text frame recieved"));
             }
 
             else
@@ -120,7 +120,7 @@ void Coms_Serial::read_buffer() {
 
             if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, POS_FRAME_TYPE);
-              Serial.println(F("Pos frame recieved"));
+              //Serial.println(F("Pos frame recieved"));
             }
 
 
@@ -141,7 +141,7 @@ void Coms_Serial::read_buffer() {
 
             if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, SENSOR_FRAME_TYPE);
-              Serial.println(F("Sensor data frame recieved"));
+              //Serial.println(F("Sensor data frame recieved"));
             }
 
 
@@ -166,7 +166,7 @@ void Coms_Serial::read_buffer() {
 
             if (!error_check_frame_body(data, frame_type, menu_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, MENU_FRAME_TYPE);
-              Serial.println(F("Menu frame recieved"));
+              //Serial.println(F("Menu frame recieved"));
             }
 
             else

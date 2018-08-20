@@ -97,7 +97,7 @@ class Graphics {
   private:
 
     inline uint16_t pos_isr_period();
-    void pos_isr_counter_overflow();
+    //void pos_isr_counter_overflow();
     byte menu_pixels_right_of_node();
 
     void set_title_colour();  //set the colour as the title colour
@@ -117,7 +117,7 @@ class Graphics {
     //cursor functions
     void increment_cursor_position(byte axis, byte obj_num = 0);
     void attach_pos_ISR();
-    void delay_pos_ISR(int value, byte counter); // advance or delay the counter based on value from due
+    //void delay_pos_ISR(int value, byte counter); // advance or delay the counter based on value from due
     void interpolate_pos();
 
     // text functions

@@ -78,8 +78,8 @@ const byte COLOUR_LEVEL_STEP_SIZE = 1;
 
 #endif
 
-const int HUE_MAX_LEVEL = 1536;
-const int HUE_MIN_LEVEL = -1536;
+const int16_t HUE_MAX_LEVEL = 1536;
+const int16_t HUE_MIN_LEVEL = -1536;
 
 const byte DEFAULT_TEXT_RED_BRIGHTNESS  = COLOUR_MAX_LEVEL;
 const byte DEFAULT_TEXT_GREEN_BRIGHTNESS = COLOUR_MAX_LEVEL;

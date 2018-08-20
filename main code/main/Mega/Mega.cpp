@@ -7,6 +7,16 @@
 #include "Host.h"
 #include "Coms_Serial.h"
 
+
+#if SERIAL_RX_BUFFER_SIZE >32 || SERIAL_TX_BUFFER_SIZE >32
+#error "serial buf size error"
+/* serial buffer size is defined under hardware\arduino\avr\cores\arduino\HardwareSerial.h    
+ * there are 2 buffers (rx and tx) allocated in ram per serial port initialised (we use two ports) 
+ * so an excssively large buffer size will be a problem here as were very tight on ram. change 
+ * the value to 32 for rx (size of data frame) and 16 for tx (transmitting less data usually)
+ */
+#endif
+
 extern struct Screen_Struct screen_parameters;
 
 //mega_class mega;
@@ -18,8 +28,10 @@ Coms_Serial coms_serial;
 Host host;
 
 
+extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
+
 void mega_setup() {
-  
+
   configure_address();
   host.init_serial();    //enable printing to monitor
   Serial.print(F("address: "));
@@ -29,17 +41,24 @@ void mega_setup() {
   graphics.attach_pos_ISR();  //pos isr to interpolate cursor positions between frames based on timer
   Serial.println(F("done init"));
 
+
+  text_parameters[0].object_used = true;
+  text_parameters[0].text_size =1;
+  
 }
 
 
 void mega_loop() {
-  //byte i=0;
+ // byte i=0;
   while (1) {
     coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
     graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
     graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
     host.check_serial();
     host.print_messages();
+//    i++;
+//    if (i==0)
+//    Serial.println(F("loop"));
   }
 }
 

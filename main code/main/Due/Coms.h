@@ -17,7 +17,7 @@
 
 // variables for initialising soft serial for comms
 using namespace arduino_due;
-#define COMS_SPEED 19200         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
+#define COMS_SPEED 9600         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
 #define HARD_COMS_CONFIG SERIAL_8N2
 
 #define SOFT_COMS_SPEED COMS_SPEED      // software serial speed, nb this may get in the way if transmitting large amounts of data very slowly

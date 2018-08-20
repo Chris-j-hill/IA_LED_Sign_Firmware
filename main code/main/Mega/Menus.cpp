@@ -17,16 +17,16 @@ extern struct Object_Struct_Circles  startup_ring;
 extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern Graphics  graphics;
 
-byte current_menu = 0;
-byte previous_menu = current_menu + 1; //force startup sequency by initialising pervious_menu!= startup
-byte menu_width = DEFAULT_MENU_WIDTH;
-uint16_t time_since_menu_last_changed = 0;
-uint16_t startup_menu_timer = 0;
-uint16_t startup_counter = 0;
+//byte current_menu = 0;
+//byte previous_menu = current_menu + 1; //force startup sequency by initialising pervious_menu!= startup
+//byte menu_width = DEFAULT_MENU_WIDTH;
+//uint16_t time_since_menu_last_changed = 0;
+//uint16_t startup_menu_timer = 0;
+//uint16_t startup_counter = 0;
 bool menu_visible = false;
 //byte encoder_position = 0;
 
-int Menu::init_menu_tree() {
+void Menu::init_menu_tree() {
 
 #ifdef SKIP_INTITAL_STARTUP_SEQUENCE
   current_menu = DEFUALT_MENU;
@@ -78,23 +78,23 @@ void Menu::display_menu() {
 
 void Menu::display_startup_sequence() { // startup is to draw a circle expnding from the screen global centre
 
-  graphics.set_object_colour(STARTUP_R, STARTUP_G, STARTUP_B);
+//  graphics.set_object_colour(STARTUP_R, STARTUP_G, STARTUP_B);
 
   if (current_menu != previous_menu) {
     previous_menu = current_menu;   //edge detecter
-    startup_counter = 1;
-    startup_menu_timer = millis();
-    startup_ring.enabled = true;
+//    startup_counter = 1;
+//    startup_menu_timer = millis();
+//    startup_ring.enabled = true;
   }
-  if (startup_counter < STARTUP_RING_MAX_RADIUS) {} // do nothing
-
-  //otherwise increment counter at non linear rate (based on 3rd order function)
-  else if ((millis() - startup_menu_timer) > (STARTUP_RING_EXPANSION_RATE - graphics.non_linear_startup_function(startup_counter))) {
-    startup_menu_timer = millis();
-    startup_counter++;
-  }
-  startup_ring.radius = startup_counter;
-  graphics.draw_ring(TOTAL_WIDTH / 2, SINGLE_MATRIX_HEIGHT, startup_ring.radius);
+//  if (startup_counter < STARTUP_RING_MAX_RADIUS) {} // do nothing
+//
+//  //otherwise increment counter at non linear rate (based on 3rd order function)
+//  else if ((millis() - startup_menu_timer) > (STARTUP_RING_EXPANSION_RATE - graphics.non_linear_startup_function(startup_counter))) {
+//    startup_menu_timer = millis();
+//    startup_counter++;
+//  }
+//  startup_ring.radius = startup_counter;
+//  graphics.draw_ring(TOTAL_WIDTH / 2, SINGLE_MATRIX_HEIGHT, startup_ring.radius);
 }
 
 void Menu::default_display() {

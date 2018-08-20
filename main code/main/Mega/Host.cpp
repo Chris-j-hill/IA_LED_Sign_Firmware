@@ -2,11 +2,12 @@
 #ifndef Host_CPP
 #define Host_CPP
 
-
 #include "Host.h"
 #include "Menus.h"
 #include "Graphics.h"
 #include "Local_config.h"
+
+
 
 extern struct Menu_Struct menu_parameters;
 extern struct Menu_tree_items menu_items;
@@ -89,11 +90,11 @@ void Host::check_serial() {   //to read incomming data
 
 
     byte buf[6] = {'\0'};
-    //    Serial.setTimeout(1000);
     Serial.readBytesUntil('\n', buf, sizeof(buf));
-
+  
     //    //set message printing mode
     data_to_report = data_set_LUT(buf);
+    
   }
 }
 
@@ -115,11 +116,14 @@ byte Host::data_set_LUT(byte data_set[6]) {
   memcpy(text_str, data_set, 4);
 
   if ((strncmp(text_str, "text", 4) == 0)) {
-    memcpy(last_command, data_set, 5);
+    memset(last_command, '\0',5); //clear memory
+    memcpy(last_command, data_set, 5);//command to print
     return REPORT_TEXT;
   }
-  else
-    return 255;
+  else {
+    Serial.println(F("Command not recognised"));
+    return STOP_REPORT;
+  }
 
 }
 
@@ -157,9 +161,6 @@ void Host::print_messages() {
       case REPORT_TEXT:
         print_text(last_command);
         break;
-
-        break;
-
       default: break;
     }
   }
@@ -168,11 +169,10 @@ void Host::print_messages() {
 
 void Host::print_text(byte *command) {
 
-  //  String obj_num_as_char = command.substring(command.length() - 1);
   byte obj_num;
   if (command[4] != 0)
-    obj_num = atoi(command[4]);
-  else
+    obj_num = command[4]-48;
+  else   
     obj_num = 0;
 
   if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)
@@ -180,7 +180,7 @@ void Host::print_text(byte *command) {
 
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   \tString"));//\tStart points   \tEnd Points \tLimits X- X+ Y- Y+"));
+    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   \tString"));
   }
   if (text_parameters[obj_num].object_used)
     yes();

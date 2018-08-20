@@ -21,7 +21,7 @@ Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Screen_Struct screen_parameters;
 Cursor_Struct cursor_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Object_Struct_Circles startup_ring;   //general purpose object parameters, so as not to overwrite text parameters when displaying several things at once
-Object_Struct_Polygons menu_select_bar;
+
 extern struct Menu_tree_items menu_items;
 
 extern struct Menu_colour_struct    menu_option_colour;
@@ -32,20 +32,25 @@ extern Graphics graphics;
 extern RGBmatrixPanel matrix;
 extern Menu menu;
 
-volatile byte x_pos_ISR_counter = 0;
-volatile byte x_pos_isr_counter_overflow = 255;
+//volatile byte x_pos_ISR_counter = 0;
+//volatile byte x_pos_isr_counter_overflow = 255;
+//
+//volatile byte y_pos_ISR_counter = 0;
+//volatile byte y_pos_isr_counter_overflow = 255;
 
-volatile byte y_pos_ISR_counter = 0;
-volatile byte y_pos_isr_counter_overflow = 255;
+//volatile bool suppress_x_pos_update = false;
+//volatile bool suppress_y_pos_update = false;
 
-volatile bool suppress_x_pos_update = false;
-volatile bool suppress_y_pos_update = false;
-
-extern byte menu_width;
+//extern byte menu_width;
 
 extern bool menu_visible;
 
 volatile bool interpolate_pos_flag = false;
+
+const char plus_string[] PROGMEM = "+";
+const char minus_string[] PROGMEM = "-";
+
+
 
 void pos_update_ISR() {
   interpolate_pos_flag = true;
@@ -70,13 +75,21 @@ void Graphics::update_display() {
 
   //matrix.drawPixel(10, 10, matrix.Color444(10, 10, 10));
 
-  if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (!screen_parameters.updated)) {
-    screen_parameters.updated = true;
+  //psudo state machine using menu_updated value -> 0 : menus equal, no change recently, 1 : just changed and screen not updated, 2 : screen updated but previous_menu not caught up
+  static byte menu_updated = 0;
+
+  //run these every time to detect change, v small chance of missed detection...
+  if (menu.get_current_menu() != menu.get_previous_menu() && menu_updated == 0)
+    menu_updated = 1;
+  if (menu.get_current_menu() == menu.get_previous_menu() && menu_updated == 2)
+    menu_updated = 0;
+
+  if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (!screen_parameters.updated || (menu_updated == 1))) {
+
 
     set_display_mode();
-    matrix.swapBuffers(false);  //push the buffer we just wrote to front
 
-    if (menu.get_current_menu() != STARTUP) {
+    if (menu.get_current_menu() == DEFAULT_MENU && !screen_parameters.updated) {
 
       for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
         if (text_parameters[i].object_used) {
@@ -85,10 +98,14 @@ void Graphics::update_display() {
           else
             graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
           graphics.draw_text(i);
+          Serial.println("draw");
         }
       }
     }
 
+//    else if((menu.get_current_menu() != DEFAULT_MENU && menu.get_current_menu() != STARTUP_MENU) && !screen_parameters.updated) //<- partial coverage of menu...
+
+    else// draw menu
     //after all objects written, cover with display if needed
     menu.display_menu();  //update any menu if applicable
 
@@ -100,7 +117,17 @@ void Graphics::update_display() {
         matrix.drawPixel(11 + i, 10, matrix.Color444(0, 0, 10));
 
     }
+    matrix.swapBuffers(false);  //push the buffer we just wrote to front
+
+
+    //dealt with screen update
+    screen_parameters.updated = true;
+
+    // dealt with menu update, put into waiting state
+    if (menu_updated == 1)
+      menu_updated = 2;
   }
+
 }
 
 inline void Graphics::set_display_mode() {
@@ -151,9 +178,11 @@ inline void Graphics::set_text_colour(int new_hue) {
 inline void Graphics::draw_text(byte obj_num) {
 
   matrix.setTextSize(text_parameters[obj_num].text_size);
-//  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
-  matrix.setCursor(12,10);
-  matrix.print((char)text_parameters[obj_num].string);
+  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+  for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
+    if (text_parameters[obj_num].string[i] == 0) break;
+    matrix.print((char)text_parameters[obj_num].string[i]);
+  }
 
 }
 
@@ -204,39 +233,39 @@ void Graphics::interpolate_pos() {
   }
 }
 
-void Graphics::delay_pos_ISR(int value, byte counter) {
-
-  if (counter == 1) { // increment x
-    if (x_pos_ISR_counter + value < 0 ) { //decreasing counter and near 0
-      value += x_pos_ISR_counter;
-      x_pos_ISR_counter = x_pos_isr_counter_overflow + value;
-      suppress_x_pos_update = true;
-    }
-    else if (x_pos_ISR_counter + value >= x_pos_isr_counter_overflow) { //account for overflow,also incrment cursor manually
-      value -= (x_pos_isr_counter_overflow - x_pos_ISR_counter);
-      x_pos_ISR_counter = value;
-      this -> increment_cursor_position(1);
-    }
-    else
-      x_pos_ISR_counter += value; // just move the
-  }
-
-  else if (counter == 2) { // increment y
-    if (y_pos_ISR_counter + value < 0 ) { //decreasing counter and near 0
-      value += y_pos_ISR_counter;
-      y_pos_ISR_counter = y_pos_isr_counter_overflow + value;
-      suppress_y_pos_update = true;
-    }
-    else if (y_pos_ISR_counter + value >= y_pos_isr_counter_overflow) { //account for overflow,also increment cursor manually
-      value -= (y_pos_isr_counter_overflow - y_pos_ISR_counter);
-      x_pos_ISR_counter = value;
-      this -> increment_cursor_position(2);
-    }
-    else
-      y_pos_ISR_counter += value; // just move the
-
-  }
-}
+//void Graphics::delay_pos_ISR(int value, byte counter) {
+//
+//  if (counter == 1) { // increment x
+//    if (x_pos_ISR_counter + value < 0 ) { //decreasing counter and near 0
+//      value += x_pos_ISR_counter;
+//      x_pos_ISR_counter = x_pos_isr_counter_overflow + value;
+//      suppress_x_pos_update = true;
+//    }
+//    else if (x_pos_ISR_counter + value >= x_pos_isr_counter_overflow) { //account for overflow,also incrment cursor manually
+//      value -= (x_pos_isr_counter_overflow - x_pos_ISR_counter);
+//      x_pos_ISR_counter = value;
+//      this -> increment_cursor_position(1);
+//    }
+//    else
+//      x_pos_ISR_counter += value; // just move the
+//  }
+//
+//  else if (counter == 2) { // increment y
+//    if (y_pos_ISR_counter + value < 0 ) { //decreasing counter and near 0
+//      value += y_pos_ISR_counter;
+//      y_pos_ISR_counter = y_pos_isr_counter_overflow + value;
+//      suppress_y_pos_update = true;
+//    }
+//    else if (y_pos_ISR_counter + value >= y_pos_isr_counter_overflow) { //account for overflow,also increment cursor manually
+//      value -= (y_pos_isr_counter_overflow - y_pos_ISR_counter);
+//      x_pos_ISR_counter = value;
+//      this -> increment_cursor_position(2);
+//    }
+//    else
+//      y_pos_ISR_counter += value; // just move the
+//
+//  }
+//}
 
 void Graphics::increment_cursor_position(byte axis, byte obj_num) {
 
@@ -269,12 +298,12 @@ inline uint16_t Graphics::pos_isr_period() {
 
 }
 
-void Graphics::pos_isr_counter_overflow() {
-
-  x_pos_isr_counter_overflow = abs(cursor_parameters[0].x_dir) * 2; // *2 doubles range to increase of overflow to improve achievable scroll speed
-  y_pos_isr_counter_overflow = abs(cursor_parameters[0].y_dir) * 2;
-
-}
+//void Graphics::pos_isr_counter_overflow() {
+//
+//  x_pos_isr_counter_overflow = abs(cursor_parameters[0].x_dir) * 2; // *2 doubles range to increase of overflow to improve achievable scroll speed
+//  y_pos_isr_counter_overflow = abs(cursor_parameters[0].y_dir) * 2;
+//
+//}
 
 
 void Graphics::draw_ring(byte x_center, byte y_center, uint16_t radius) {
@@ -371,9 +400,9 @@ void Graphics::draw_background() {
 
   //  byte pixels_right_of_node = ((NUM_SCREENS - 1) - screen_parameters.node_address) * SINGLE_MATRIX_WIDTH; //number of pixels to the right of this screen
 
-  if (menu_width - menu_pixels_right_of_node() < SINGLE_MATRIX_WIDTH) { // draw partial background
-    this -> clear_area(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), 0, SINGLE_MATRIX_WIDTH, SINGLE_MATRIX_HEIGHT); // clear area for menu
-    //    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node());
+  if (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node() < SINGLE_MATRIX_WIDTH) { // draw partial background
+    this -> clear_area(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()), 0, SINGLE_MATRIX_WIDTH, SINGLE_MATRIX_HEIGHT); // clear area for menu
+    //    text_parameters[0].x_max = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node());
     //    text_parameters[0].hard_limit = false;
     //    text_parameters[0].limit_enabled = true;
   }
@@ -396,7 +425,7 @@ void Graphics::clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x,
 }
 
 void Graphics::write_title(byte title) {
-  int center_of_menu = SINGLE_MATRIX_WIDTH - (menu_width / 2 - menu_pixels_right_of_node());
+  int center_of_menu = SINGLE_MATRIX_WIDTH - ((DEFAULT_MENU_WIDTH >> 1) - menu_pixels_right_of_node());
 
   set_title_colour();
   switch (title) {
@@ -539,16 +568,16 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
   for (byte i = 1; i < 4; i++) { //loop through three lines
     if (i == 1) {
       line_item = first;
-      matrix.setCursor(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), ASCII_CHARACTER_BASIC_HEIGHT + 1);
+      matrix.setCursor(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()), ASCII_CHARACTER_BASIC_HEIGHT + 1);
     }
     else if (i == 2) {
       line_item = second;
       matrix.fillTriangle(MENU_POINTER_X0, MENU_POINTER_Y0, MENU_POINTER_X1, MENU_POINTER_Y1, MENU_POINTER_X2, MENU_POINTER_Y2, matrix.Color333(MENU_POINTER_COLOUR_R, MENU_POINTER_COLOUR_G, MENU_POINTER_COLOUR_B));
-      matrix.setCursor(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()) + 6, 2 * ASCII_CHARACTER_BASIC_HEIGHT + 1);
+      matrix.setCursor(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()) + 6, (ASCII_CHARACTER_BASIC_HEIGHT << 1) + 1);
     }
     else if (i == 3) {
       line_item = third;
-      matrix.setCursor(SINGLE_MATRIX_WIDTH - (menu_width - menu_pixels_right_of_node()), 3 * ASCII_CHARACTER_BASIC_HEIGHT + 1);
+      matrix.setCursor(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()), 3 * ASCII_CHARACTER_BASIC_HEIGHT + 1);
     }
 
     set_menu_colour();
@@ -621,7 +650,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
 
 void Graphics::write_adjustment_menu(byte item, byte obj_num) {
 
-  int center_of_menu = SINGLE_MATRIX_WIDTH - (menu_width / 2 - menu_pixels_right_of_node());
+  int center_of_menu = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH >> 1 - menu_pixels_right_of_node());
   char buf[3] = {' '}; //to store converted byte
   byte val;
   switch (item) {
@@ -645,7 +674,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(cursor_parameters[obj_num].x_dir, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -653,7 +682,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(menu_parameters.fan_speed, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -661,7 +690,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(menu_parameters.min_fan_speed, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -669,7 +698,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(menu_parameters.led_strip_brightness, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -677,7 +706,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(text_parameters[obj_num].colour_r, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -685,7 +714,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(text_parameters[obj_num].colour_g, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -693,7 +722,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(text_parameters[obj_num].colour_b, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
 
@@ -701,7 +730,7 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
       {
         itoa(text_parameters[obj_num].hue, buf, 10);
         matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
+        matrix.print(minus_string + (String)buf + plus_string);
         break;
       }
   }
