@@ -180,7 +180,7 @@ void Host::print_text(byte *command) {
 
   if (header_print_counter == 0) {
     Serial.println();
-    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   "));//\tStart points   \tEnd Points \tLimits X- X+ Y- Y+"));
+    Serial.println(F("Configured \tSize \tR   G   B   H    \tUse Hue \tXpos Ypos \t\tScroll Speeds   \tString"));//\tStart points   \tEnd Points \tLimits X- X+ Y- Y+"));
   }
   if (text_parameters[obj_num].object_used)
     yes();
@@ -233,18 +233,26 @@ void Host::print_text(byte *command) {
   if (cursor_parameters[obj_num].local_y_pos >= 0) space();
   tab(); tab();
 
-  Serial.print(cursor_parameters[obj_num].x_dir - 128);
-  if (abs(cursor_parameters[obj_num].x_dir - 128 < 10)) space();
-  if (abs(cursor_parameters[obj_num].x_dir - 128 < 100)) space();
-  if (cursor_parameters[obj_num].x_dir - 128 >= 0) space();
+  Serial.print(cursor_parameters[obj_num].x_dir);
+  if (abs(cursor_parameters[obj_num].x_dir < 10)) space();
+  if (abs(cursor_parameters[obj_num].x_dir < 100)) space();
+  if (cursor_parameters[obj_num].x_dir >= 0) space();
   space();
 
-  Serial.print(cursor_parameters[obj_num].y_dir - 128);
-  if (abs(cursor_parameters[obj_num].y_dir - 128 < 10)) space();
-  if (abs(cursor_parameters[obj_num].y_dir - 128 < 100)) space();
-  if (cursor_parameters[obj_num].y_dir - 128 >= 0) space();
+  Serial.print(cursor_parameters[obj_num].y_dir);
+  if (abs(cursor_parameters[obj_num].y_dir < 10)) space();
+  if (abs(cursor_parameters[obj_num].y_dir < 100)) space();
+  if (cursor_parameters[obj_num].y_dir >= 0) space();
   space();
   tab(); tab();
+
+  for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
+    if ((char)text_parameters[obj_num].string[i] == '\0') break;
+    else
+      Serial.print((char)text_parameters[obj_num].string[i]);
+  }
+
+
 
   //  Serial.print(cursor_parameters[obj_num].x_start);
   //  if (abs(cursor_parameters[obj_num].x_start < 10)) space();

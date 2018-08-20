@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#define HOST_SERIAL_SPEED 19200
+#define HOST_SERIAL_SPEED 250000
 
 // NB numbering here must match index of string in items array in Serial_Sub_Menu struct
 #define STOP_REPORT           0
