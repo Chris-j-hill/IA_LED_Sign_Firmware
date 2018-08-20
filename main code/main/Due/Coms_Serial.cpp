@@ -962,6 +962,32 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].y_pos_dir;
       break;
 
+    case PREFIX_TEXT_OBJ_ENABLED_0:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[0].object_used ? (byte) 1 : (byte) 0;
+      break;
+
+    case PREFIX_TEXT_OBJ_ENABLED_1:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[1].object_used ? (byte) 1 : (byte) 0;
+      break;
+      
+    case PREFIX_TEXT_OBJ_ENABLED_2:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[2].object_used? (byte) 1 : (byte) 0;
+      break;
+      
+    case PREFIX_TEXT_OBJ_ENABLED_3:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[3].object_used? (byte) 1 : (byte) 0;
+      break;
+      
+    case PREFIX_TEXT_OBJ_ENABLED_4:
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].object_used? (byte) 1 : (byte) 0;
+      break;
+      
+
     case PREFIX_TEXT_OBJ_SELECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = menu.get_selected_object();
@@ -996,13 +1022,16 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
     send_specific_calibration_data(PREFIX_TEXT_COLOUR_R_0 + obj_num, i, true, 1);
     send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0 + obj_num, i, true, 2);
     send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0 + obj_num, i, true, 3);
+    send_specific_calibration_data(PREFIX_TEXT_OBJ_ENABLED_0 + obj_num, i, true, 4);
+    
+    //pack differently depending if hue is used
     if (text_parameters[obj_num].use_hue) {
-      send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, true, 4);
-      send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0 + obj_num, i, true, 5);
-      send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_num, i, false, 6);
+      send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, true, 5);
+      send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0 + obj_num, i, true, 6);
+      send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_num, i, false,7);
     }
     else
-      send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, false, 4);
+      send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, false, 5);
   }
 }
 

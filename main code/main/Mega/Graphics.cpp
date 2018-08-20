@@ -68,25 +68,38 @@ void Graphics::update_display() {
   // only change buffers if something changed (and not too frequently, function can be slow, potientially filling a large buffer)
   // change can be only due to frame arrived
 
-  if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (screen_parameters.updated)) {
+  //matrix.drawPixel(10, 10, matrix.Color444(10, 10, 10));
+
+  if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (!screen_parameters.updated)) {
     screen_parameters.updated = true;
 
     set_display_mode();
+    matrix.swapBuffers(false);  //push the buffer we just wrote to front
 
-    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-      if (text_parameters[i].object_used) {
-        if (text_parameters[i].use_hue)
-          graphics.set_text_colour(text_parameters[i].hue);
-        else
-          graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
-        graphics.draw_text(i);
+    if (menu.get_current_menu() != STARTUP) {
+
+      for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+        if (text_parameters[i].object_used) {
+          if (text_parameters[i].use_hue)
+            graphics.set_text_colour(text_parameters[i].hue);
+          else
+            graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
+          graphics.draw_text(i);
+        }
       }
     }
 
     //after all objects written, cover with display if needed
     menu.display_menu();  //update any menu if applicable
 
-    matrix.swapBuffers(false);  //push the buffer we just wrote to front
+    matrix.drawPixel(10, 10, matrix.Color444(10, 0, 0));
+    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+      if (text_parameters[i].object_used)
+        matrix.drawPixel(11 + i, 10, matrix.Color444(10, 10, 10));
+      else
+        matrix.drawPixel(11 + i, 10, matrix.Color444(0, 0, 10));
+
+    }
   }
 }
 
@@ -138,7 +151,8 @@ inline void Graphics::set_text_colour(int new_hue) {
 inline void Graphics::draw_text(byte obj_num) {
 
   matrix.setTextSize(text_parameters[obj_num].text_size);
-  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+//  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+  matrix.setCursor(12,10);
   matrix.print((char)text_parameters[obj_num].string);
 
 }

@@ -98,7 +98,7 @@ void Menu::display_startup_sequence() { // startup is to draw a circle expnding 
 }
 
 void Menu::default_display() {
-//not much to do here
+//not much to do here, just edge detection to set variables
   if (current_menu != previous_menu) {
     previous_menu = current_menu;
     startup_ring.enabled = false;   // likely came from startup animation, force annimation off

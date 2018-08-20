@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#define HOST_SERIAL_SPEED 250000
+#define HOST_SERIAL_SPEED 19200
 
 // NB numbering here must match index of string in items array in Serial_Sub_Menu struct
 #define STOP_REPORT           0
@@ -26,22 +26,22 @@ class Host {
     byte header_print_counter = 0;
 
     void print_menu_tree();
-    void print_text(String command);
+    void print_text(byte *command);
     void print_config();
-    
-    byte data_set_LUT(String data_set);
+
+    byte data_set_LUT(byte data_set[6]);
     void position_to_menu_value();
     void print_menu_tree_options(int cur_menu = -1); //if not argument provided display all sub menus of current menu
-    
-    
+
+
   public:
     Host() {}
     void init_serial();
     void check_serial();    //to read incomming data
     void print_messages();
 
-        void print_bits(uint32_t var, byte digits, byte units, bool carriage_return = false);
-    inline void println_bits(uint32_t var, byte digits, byte units){
+    void print_bits(uint32_t var, byte digits, byte units, bool carriage_return = false);
+    inline void println_bits(uint32_t var, byte digits, byte units) {
       print_bits(var, digits, units, true);
     }
 };

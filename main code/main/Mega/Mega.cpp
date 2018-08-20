@@ -10,7 +10,7 @@
 extern struct Screen_Struct screen_parameters;
 
 //mega_class mega;
-RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE1, OE2, false, 64, DEFAULT_SCREEN_MODE);
+RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE1, OE2, true, 64, DEFAULT_SCREEN_MODE);
 //RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE2, false, 64);
 Menu menu;
 Graphics graphics;
@@ -38,6 +38,8 @@ void mega_loop() {
     coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
     graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
     graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
+    host.check_serial();
+    host.print_messages();
   }
 }
 

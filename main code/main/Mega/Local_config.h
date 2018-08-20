@@ -192,7 +192,7 @@ const byte DEFAULT_TEXT_BLUE_BRIGHTNESS = COLOUR_MAX_LEVEL;
 
 
 #define DEFAULT_MENU_WIDTH 64
-#define DEFAULT_SCREEN_MODE 0
+#define DEFAULT_SCREEN_MODE 2
 
 #define POS_UPDATE_ISR_FREQ 2 //hz -> match this with due value or possible unexpected behaviour
 

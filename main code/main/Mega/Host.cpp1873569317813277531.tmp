@@ -15,57 +15,57 @@ extern struct Screen_Struct screen_parameters;
 extern struct Cursor_Struct cursor_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 extern Menu menu;
 
-byte last_command[5] = "text0";
+String last_command = "text0";
 
 const char pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
 const char string_write_error_msg PROGMEM = "Error: Cannot write string from serial monitor interface";
 
 //some frequenly used strings
-#define space_colon_string " : "
-#define dash_space_string "- "
-#define tab_string  "\t"
-#define space_string  " "
-#define percent_string  "%"
-#define divide_string  "/"
-#define comma_space_string ", "
-#define yes_string  "Yes"
-#define no_string  "No "
-#define y_string "Y"
-#define n_string "N"
+const char space_colon_string PROGMEM = " : ";
+const char dash_space_string PROGMEM = "- ";
+const char tab_string PROGMEM = "\t";
+const char space_string PROGMEM = " ";
+const char percent_string PROGMEM = "%";
+const char divide_string PROGMEM = "/";
+const char comma_space_string PROGMEM = ", ";
+const char yes_string PROGMEM = "Yes";
+const char no_string PROGMEM = "No ";
+const char y_string PROGMEM = "Y";
+const char n_string PROGMEM = "N";
 
 inline void space() {
-  Serial.print(F(space_string));
+  Serial.print(space_string);
 };
 
 inline void tab() {
-  Serial.print(F(tab_string));
+  Serial.print(tab_string);
 };
 
 inline void space_colon() {
-  Serial.print(F(space_colon_string));
+  Serial.print(space_colon_string);
 };
 
 inline void dash_space() {
-  Serial.print(F(dash_space_string));
+  Serial.print(dash_space_string);
 };
 
 inline void comma_space() {
-  Serial.print(F(comma_space_string));
+  Serial.print(comma_space_string);
 }
 
 inline void yes() {
-  Serial.print(F(yes_string));
+  Serial.print(yes_string);
 }
 
 inline void no() {
-  Serial.print(F(no_string));
+  Serial.print(no_string);
 }
 
 inline void y() {
-  Serial.print(F(y_string));
+  Serial.print(y_string);
 }
 inline void n() {
-  Serial.print(F(n_string));
+  Serial.print(n_string);
 }
 
 inline void print_command_name(String command_data) {
@@ -87,40 +87,53 @@ void Host::check_serial() {   //to read incomming data
 
   if (Serial.available() > 0) {
 
-
-    byte buf[6] = {'\0'};
-    //    Serial.setTimeout(1000);
+//    String rx = Serial.readString();
+    //rx.trim();  //trim off return carraige
+    byte buf[10] = {'\0'};
+//    Serial.println(Serial.readBytesUntil());
     Serial.readBytesUntil('\n', buf, sizeof(buf));
 
-    //    //set message printing mode
-    data_to_report = data_set_LUT(buf);
+    String rx = buf;
+    rx.trim();
+//    Serial.println(rx);
+
+    for (byte i = 0; i < rx.length(); i++)
+      Serial.println((byte)buf[i]);
+    Serial.println();
+
+//    
+//    for (byte i = 0; i < rx.length(); i++)
+//      Serial.print((byte)rx[i]);
+//    Serial.println();
+//    //set message printing mode
+//    data_to_report = data_set_LUT(rx);
   }
 }
 
 
 
-byte Host::data_set_LUT(byte data_set[6]) {
+byte Host::data_set_LUT(String data_set) {
 
-  if ((strncmp(data_set, "stop", 4) == 0))
+
+
+  if (data_set == "stop")
     return STOP_REPORT;
 
-  else if ((strncmp(data_set, "menu", 4) == 0))
+  else if (data_set == "menu")
     return REPORT_MENU;
 
-  else if ((strncmp(data_set, "config", 6) == 0))
+  else if (data_set == "config")
     return REPORT_CONFIG;
 
-  //check substring for text keyword
-  byte text_str[4];
-  memcpy(text_str, data_set, 4);
 
-  if ((strncmp(text_str, "text", 4) == 0)) {
-    memcpy(last_command, data_set, 5);
+  //check substring for text
+  String sub_string_data_set = data_set.substring(0, data_set.length() - 1);
+  if (sub_string_data_set == "text") {
+    last_command = data_set;
     return REPORT_TEXT;
   }
   else
     return 255;
-
 }
 
 
@@ -135,6 +148,7 @@ void Host::print_messages() {
 
     last_message_print_time = millis();
 
+
     // increment counter for printing header info message
     if (previously_reporting != data_to_report)
       header_print_counter = 0;
@@ -142,6 +156,7 @@ void Host::print_messages() {
       header_print_counter += HEADER_PRINT_INCREMENT;
 
     previously_reporting = data_to_report;
+//    Serial.println(data_to_report);
     switch (data_to_report) {
       case STOP_REPORT:
         break;
@@ -166,15 +181,10 @@ void Host::print_messages() {
 }
 
 
-void Host::print_text(byte *command) {
+void Host::print_text(String command) {
 
-  //  String obj_num_as_char = command.substring(command.length() - 1);
-  byte obj_num;
-  if (command[4] != 0)
-    obj_num = atoi(command[4]);
-  else
-    obj_num = 0;
-
+  String obj_num_as_char = command.substring(command.length() - 1);
+  byte obj_num = obj_num_as_char.toInt();
   if (obj_num >= MAX_NUM_OF_TEXT_OBJECTS)
     obj_num = 0;
 
