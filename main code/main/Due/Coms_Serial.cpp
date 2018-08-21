@@ -219,6 +219,23 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
   Serial_3.flush();
   Serial_4.flush();
 
+  //for(byte i=0;i<64;i++){ //clear the incoming buffer before any bytes could arrive
+  while (Serial_1.available() > 0)
+    Serial_1.read();
+  while (Serial_2.available() > 0)
+    Serial_2.read();
+  while (Serial_3.available() > 0)
+    Serial_3.read();
+  while (Serial_4.available() > 0)
+    Serial_4.read();
+  //}
+
+  int timeout = ceil((10000 << 2) / COMS_SPEED); //wait for up to four bytes periods before timeout
+  Serial_1.setTimeout(timeout);
+  Serial_2.setTimeout(timeout);
+  Serial_3.setTimeout(timeout);
+  Serial_4.setTimeout(timeout);
+
   Serial_1.println("Hello 1");
   Serial_2.println("Hello 2");
   Serial_3.println("Hello 3");
@@ -365,7 +382,7 @@ void Coms_Serial::send_menu_frame(byte cur_menu) { // build frame and call write
 
   build_menu_data_frame(cur_menu);
   byte menu_width = menu.get_menu_width();
-  
+
   if (menu_width >= 0 || menu.is_all_system_menu(cur_menu)) {  //not sure why it would be less than zero width but include for completeness
     write_menu_frame(3);  //write frame to address 3
 
@@ -428,7 +445,7 @@ void Coms_Serial::write_text_frame(byte address) {
 void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte frame_length) {
 
   switch (address) {
-    
+
     case 0:
 #ifdef SERIAL_1_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
@@ -452,7 +469,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
 
       break;
 
-      
+
     case 1:
 #ifdef SERIAL_2_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
@@ -472,7 +489,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
       enable_timer_interrupts(); //stop all processes that could cause issues
 #endif
       break;
-      
+
     case 2:
 #ifdef SERIAL_3_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
@@ -494,7 +511,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
 
       break;
 
-      
+
     case 3:
 #ifdef SERIAL_4_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
@@ -971,22 +988,22 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
       sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
       sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[1].object_used ? (byte) 1 : (byte) 0;
       break;
-      
+
     case PREFIX_TEXT_OBJ_ENABLED_2:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[2].object_used? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[2].object_used ? (byte) 1 : (byte) 0;
       break;
-      
+
     case PREFIX_TEXT_OBJ_ENABLED_3:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[3].object_used? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[3].object_used ? (byte) 1 : (byte) 0;
       break;
-      
+
     case PREFIX_TEXT_OBJ_ENABLED_4:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].object_used? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].object_used ? (byte) 1 : (byte) 0;
       break;
-      
+
 
     case PREFIX_TEXT_OBJ_SELECTED:
       sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
@@ -1023,12 +1040,12 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
     send_specific_calibration_data(PREFIX_TEXT_COLOUR_G_0 + obj_num, i, true, 2);
     send_specific_calibration_data(PREFIX_TEXT_COLOUR_B_0 + obj_num, i, true, 3);
     send_specific_calibration_data(PREFIX_TEXT_OBJ_ENABLED_0 + obj_num, i, true, 4);
-    
+
     //pack differently depending if hue is used
     if (text_parameters[obj_num].use_hue) {
       send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, true, 5);
       send_specific_calibration_data(PREFIX_TEXT_HUE_MSB_0 + obj_num, i, true, 6);
-      send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_num, i, false,7);
+      send_specific_calibration_data(PREFIX_TEXT_HUE_LSB_0 + obj_num, i, false, 7);
     }
     else
       send_specific_calibration_data(PREFIX_TEXT_USE_HUE_0 + obj_num, i, false, 5);
@@ -1036,76 +1053,495 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
 }
 
 void Coms_Serial::check_megas() {
-
-  if (Serial_1.available() > 1  && mega_parameters.detected1) {
-    //read until start of println found, should be immediate unless lost
-    if (Serial_1.read() == '\r') {
-      if (Serial_1.peek() == '\n') {
-        Serial_1.read();
-
-        byte rx[MEGA_RX_FRAME_LENGTH];
-        Serial_1.readBytes(rx, MEGA_RX_FRAME_LENGTH);
-        decode_serial_rx(rx, 0);
-      }
-    }
+  static bool first_run = true;
+  byte rx[MEGA_RX_FRAME_LENGTH];
+  if (first_run) {
+    while (Serial_1.available() > 0)
+      Serial_1.read();
+    while (Serial_2.available() > 0)
+      Serial_2.read();
+    while (Serial_3.available() > 0)
+      Serial_3.read();
+    while (Serial_4.available() > 0)
+      Serial_4.read();
+    first_run = false;
   }
 
-  if (Serial_2.available() > 1  && mega_parameters.detected1) {
-    //read until start of println found, should be immediate unless lost
-    if (Serial_2.read() == '\r') {
-      if (Serial_2.peek() == '\n') {
-        Serial_2.read();
+    check_mega_1();  //functions to actually check ports for request from mega
+    check_mega_2();
+    check_mega_3();
+    check_mega_4();
 
-        byte rx[MEGA_RX_FRAME_LENGTH];
-        Serial_2.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+    
+  //  if (Serial_1.available() > 1  && mega_parameters.detected1) {
+  //    Serial.println(Serial_1.read());
+  //    //read until start of println found, should be immediate unless lost
+  //    if (Serial_1.read() == 250) {
+  //      if (Serial_1.peek() == 251) {
+  //        Serial_1.read();
+  //
+  //        Serial.println("Retransmit request from 1");
+  //        //byte rx[MEGA_RX_FRAME_LENGTH];
+  //        Serial_1.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+  //        decode_serial_rx(rx, 0);
+  //        if (Serial_1.peek() == 252 || Serial_1.peek() == 25)  //get rid of one char to give one char buffer before next frame if dropped a byte when reading frame
+  //          Serial_1.read();
+  //        if (Serial_1.peek() == 253)
+  //          Serial_1.read();
+  //
+  //      }
+  //    }
+  //  }
+  //
+  //  if (Serial_2.available() > 1  && mega_parameters.detected2) {
+  //    Serial.println(Serial_2.read());
+  //    //read until start of println found, should be immediate unless lost
+  //    if (Serial_2.read() == 250) {
+  //      if (Serial_2.peek() == 251) {
+  //        Serial_2.read();
+  //
+  //        Serial.println("Retransmit request from 2");
+  //        //byte rx[MEGA_RX_FRAME_LENGTH];
+  //        Serial_2.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+  //        decode_serial_rx(rx, 1);
+  //
+  //        if (Serial_2.peek() == 252 || Serial_2.peek() == 253)  //get rid of one char to give one char buffer before next frame if dropped a byte when reading frame
+  //          Serial_2.read();
+  //        if (Serial_2.peek() == 253)
+  //          Serial_2.read();
+  //
+  //      }
+  //    }
+  //  }
+  //
+
+  //  if (Serial_3.available() > 1  && mega_parameters.detected3) {
+  //    //read until start of println found, should be immediate unless lost
+  //    //Serial.println(Serial_3.read());
+  //see_byte_1:
+  //    if (Serial_3.peek() == 250) {
+  //      Serial_3.read();
+  //see_byte_2:
+  //      if (Serial_3.peek() == 251) {
+  //        Serial_3.read();
+  //
+  //        Serial.println("Retransmit request from 3");
+  //
+  //        Serial_3.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+  //        decode_serial_rx(rx, 2);
+  //        Serial.println(Serial_3.peek());
+  //      }
+  //      if (Serial_3.peek() == 251) goto see_byte_2;
+  //    }
+  //    if (Serial_3.peek() == 252 || Serial_3.peek() == 253) //get rid of one char to give one char buffer before next frame if dropped a byte when reading frame
+  //      Serial_3.read();
+  //    if (Serial_3.peek() == 253)
+  //      Serial_3.read();
+  //
+  //    if (Serial_3.peek() == 250) goto see_byte_1;  //unexpected value, realignment...
+  //    else
+  //      Serial_3.read();
+  //  }
+
+  //
+  //  if (Serial_4.available() > 1  && mega_parameters.detected4) {
+  //    //read until start of println found, should be immediate unless lost
+  //    Serial.println(Serial_4.read());
+  //    if (Serial_4.read() == 250) {
+  //      if (Serial_4.peek() == 251) {
+  //        Serial_4.read();
+  //
+  //        Serial.println("Retransmit request from 4");
+  //        //byte rx[MEGA_RX_FRAME_LENGTH];
+  //        Serial_4.readBytes(rx, MEGA_RX_FRAME_LENGTH);
+  //        decode_serial_rx(rx, 3);
+  //
+  //        if (Serial_4.peek() == 252 || Serial_4.peek() == 253)  //get rid of one char to give one char buffer before next frame if dropped a byte when reading frame
+  //          Serial_4.read();
+  //        if (Serial_4.peek() == 253)
+  //          Serial_4.read();
+  //
+  //      }
+  //    }
+  //  }
+}
+
+void Coms_Serial::check_mega_1() {
+
+  if (Serial_1.available() > 6  && mega_parameters.detected1) {
+
+    bool seen_byte_1 = false;
+    bool seen_byte_2 = false;
+    byte break_condition = 0;
+    byte rx[MEGA_RX_FRAME_LENGTH];
+
+    if (Serial_1.peek() == 250) {
+      Serial_1.read();
+      seen_byte_1 = true;
+    }
+
+seen_byte_1:
+    if (Serial_1.peek() == 251) {
+      Serial_1.read();
+      seen_byte_2 = true;
+    }
+
+seen_byte_2:
+    byte i = 0;
+    if (!seen_byte_1 && !seen_byte_2) { //byte here but no idea what it is
+
+      if ((Serial_1.peek() >> 4) == 1) {  //if this is first data byte in frame, skip first iteration of while loop
+        rx[0] = Serial_1.read() & 0xF;
+        i = 1;
+        seen_byte_2 = true;
+      }
+
+      else if ((Serial_1.peek() == 252 || Serial_1.peek() == 253))  //if this is an endbyte character
+        //        Serial.println(Serial_1.read());
+        Serial_1.read();
+      else {
+        //        Serial.print("lost :");
+        //        Serial.println(Serial_1.read());
+        Serial_1.read();
+      }
+    }
+
+    if (seen_byte_2) { //in this funciton pass we have found both bytes 1 and 2
+
+      byte temp = 0;
+      seen_byte_1 = false;
+      seen_byte_2 = false;
+      break_condition = 0;
+      uint32_t start_time = millis();
+      while (i < MEGA_RX_FRAME_LENGTH && millis() < start_time + 50) {
+
+        temp = Serial_1.read();
+
+        if (temp == 250) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 1;
+          seen_byte_1 = true;
+          break;
+        }
+        else if (temp == 251) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 2;
+          seen_byte_1 = true;
+          seen_byte_2 = true;
+          break;
+        }
+
+        else if (temp == 252) {
+          break_condition = 3;
+          break;
+        }
+        else if (temp == 253) {
+          break_condition = 4;
+          break;
+        }
+        rx[i] = temp & 0xF; //mask out byte number
+        i++;
+      }
+      if (break_condition == 0 && millis() < start_time + 50) { //read frame without issue, decode
         decode_serial_rx(rx, 1);
       }
     }
-  }
 
-
-  if (Serial_3.available() > 1  && mega_parameters.detected1) {
-    //read until start of println found, should be immediate unless lost
-    if (Serial_3.read() == '\r') {
-      if (Serial_3.peek() == '\n') {
-        Serial_3.read();
-
-        byte rx[MEGA_RX_FRAME_LENGTH];
-        Serial_3.readBytes(rx, MEGA_RX_FRAME_LENGTH);
-        decode_serial_rx(rx, 2);
+    if (break_condition != 0) { //some error occured, jump to correct location, assume dropped byte
+      switch (break_condition) {
+        case 1: goto seen_byte_1; break;
+        case 2: goto seen_byte_2; break;
       }
     }
   }
+}
+void Coms_Serial::check_mega_2() {
 
+  if (Serial_2.available() > 6  && mega_parameters.detected2) {
 
-  if (Serial_4.available() > 1  && mega_parameters.detected1) {
-    //read until start of println found, should be immediate unless lost
-    if (Serial_4.read() == '\r') {
-      if (Serial_4.peek() == '\n') {
-        Serial_4.read();
+    bool seen_byte_1 = false;
+    bool seen_byte_2 = false;
+    byte break_condition = 0;
+    byte rx[MEGA_RX_FRAME_LENGTH];
 
-        byte rx[MEGA_RX_FRAME_LENGTH];
-        Serial_4.readBytes(rx, MEGA_RX_FRAME_LENGTH);
-        decode_serial_rx(rx, 3);
+    if (Serial_2.peek() == 250) {
+      Serial_2.read();
+      seen_byte_1 = true;
+    }
+
+seen_byte_1:
+    if (Serial_2.peek() == 251) {
+      Serial_2.read();
+      seen_byte_2 = true;
+    }
+
+seen_byte_2:
+    byte i = 0;
+    if (!seen_byte_1 && !seen_byte_2) { //byte here but no idea what it is
+
+      if ((Serial_2.peek() >> 4) == 1) {
+        rx[0] = Serial_2.read() & 0xF;
+        i = 1;
+        seen_byte_2 = true;
+      }
+
+      else if ((Serial_2.peek() == 252 || Serial_2.peek() == 253))
+        //        Serial.println(Serial_2.read());
+        Serial_2.read();
+      else {
+        //        Serial.print("lost :");
+        //        Serial.println(Serial_2.read());
+        Serial_2.read();
+      }
+    }
+
+    if (seen_byte_2) { //in this funciton pass we have found both bytes 1 and 2
+
+      byte temp = 0;
+      seen_byte_1 = false;
+      seen_byte_2 = false;
+      break_condition = 0;
+      uint32_t start_time = millis();
+      while (i < MEGA_RX_FRAME_LENGTH && millis() < start_time + 50) {
+
+        temp = Serial_2.read();
+
+        if (temp == 250) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 1;
+          seen_byte_1 = true;
+          break;
+        }
+        else if (temp == 251) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 2;
+          seen_byte_1 = true;
+          seen_byte_2 = true;
+          break;
+        }
+
+        else if (temp == 252) {
+          break_condition = 3;
+          break;
+        }
+        else if (temp == 253) {
+          break_condition = 4;
+          break;
+        }
+        rx[i] = temp & 0xF; //mask out byte number
+        i++;
+      }
+      if (break_condition == 0 && millis() < start_time + 50) { //read frame without issue, decode
+        decode_serial_rx(rx, 2);
+      }
+    }
+
+    if (break_condition != 0) { //some error occured, jump to correct location, assume dropped byte
+      switch (break_condition) {
+        case 1: goto seen_byte_1; break;
+        case 2: goto seen_byte_2; break;
       }
     }
   }
 }
 
-void Coms_Serial::decode_serial_rx(byte *char_array, byte address) {
+void Coms_Serial::check_mega_3() {
+
+  if (Serial_3.available() > 6  && mega_parameters.detected3) {
+
+    bool seen_byte_1 = false;
+    bool seen_byte_2 = false;
+    byte break_condition = 0;
+    byte rx[MEGA_RX_FRAME_LENGTH];
+
+
+    if (Serial_3.peek() == 250) {
+      Serial_3.read();
+      seen_byte_1 = true;
+    }
+
+seen_byte_1:
+    if (Serial_3.peek() == 251) {
+      Serial_3.read();
+      seen_byte_2 = true;
+    }
+
+seen_byte_2:
+    byte i = 0;
+    if (!seen_byte_1 && !seen_byte_2) { //byte here but no idea what it is
+
+      if ((Serial_3.peek() >> 4) == 1) {
+        rx[0] = Serial_3.read() & 0xF;
+        i = 1;
+        seen_byte_2 = true;
+      }
+
+
+      else if ((Serial_3.peek() == 252 || Serial_3.peek() == 253))
+        //        Serial.println(Serial_3.read());
+        Serial_3.read();
+      else {
+        //        Serial.print("lost :");
+        //        Serial.println(Serial_3.read());
+        Serial_3.read();
+      }
+
+    }
+
+    if (seen_byte_2) { //in this funciton pass we have found both bytes 1 and 2
+
+      byte temp = 0;
+      seen_byte_1 = false;
+      seen_byte_2 = false;
+      break_condition = 0;
+      uint32_t start_time = millis();
+      while (i < MEGA_RX_FRAME_LENGTH && millis() < start_time + 50) {
+
+        temp = Serial_3.read();
+
+        if (temp == 250) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 1;
+          seen_byte_1 = true;
+          break;
+        }
+        else if (temp == 251) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 2;
+          seen_byte_1 = true;
+          seen_byte_2 = true;
+          break;
+        }
+
+        else if (temp == 252) {
+          break_condition = 3;
+          break;
+        }
+        else if (temp == 253) {
+          break_condition = 4;
+          break;
+        }
+        rx[i] = temp & 0xF;
+        i++;
+      }
+      if (break_condition == 0 && millis() < start_time + 50) { //read frame without issue, decode
+        decode_serial_rx(rx, 3);
+      }
+    }
+
+    if (break_condition != 0) { //some error occured, jump to correct location, assume dropped byte
+      switch (break_condition) {
+        case 1: goto seen_byte_1; break;
+        case 2: goto seen_byte_2; break;
+      }
+    }
+  }
+}
+
+
+void Coms_Serial::check_mega_4() {
+
+  if (Serial_4.available() > 6  && mega_parameters.detected4) {
+
+    bool seen_byte_1 = false;
+    bool seen_byte_2 = false;
+    byte break_condition = 0;
+    byte rx[MEGA_RX_FRAME_LENGTH];
+
+    if (Serial_4.peek() == 250) {
+      Serial_4.read();
+      seen_byte_1 = true;
+    }
+
+seen_byte_1:
+    if (Serial_4.peek() == 251) {
+      Serial_4.read();
+      seen_byte_2 = true;
+    }
+
+seen_byte_2:
+    byte i = 0;
+    if (!seen_byte_1 && !seen_byte_2) { //byte here but no idea what it is
+
+      if ((Serial_4.peek() >> 4) == 1) {
+        rx[0] = Serial_4.read() & 0xF;
+        i = 1;
+        seen_byte_2 = true;
+      }
+
+      else if ((Serial_4.peek() == 252 || Serial_4.peek() == 253))
+        //        Serial.println(Serial_4.read());
+        Serial_4.read();
+      else {
+        //        Serial.print("lost :");
+        //        Serial.println(Serial_4.read());
+        Serial_4.read();
+      }
+    }
+
+    if (seen_byte_2) { //in this funciton pass we have found both bytes 1 and 2
+
+      byte temp = 0;
+      seen_byte_1 = false;
+      seen_byte_2 = false;
+      break_condition = 0;
+      uint32_t start_time = millis();
+      while (i < MEGA_RX_FRAME_LENGTH && millis() < start_time + 50) {
+
+        temp = Serial_4.read();
+
+        if (temp == 250) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 1;
+          seen_byte_1 = true;
+          break;
+        }
+        else if (temp == 251) { //just read a start byte when we shouldnt, stop reading, jump back to check for next byte
+          break_condition = 2;
+          seen_byte_1 = true;
+          seen_byte_2 = true;
+          break;
+        }
+
+        else if (temp == 252) {
+          break_condition = 3;
+          break;
+        }
+        else if (temp == 253) {
+          break_condition = 4;
+          break;
+        }
+        rx[i] = temp & 0xF; //mask out byte number
+        i++;
+      }
+      if (break_condition == 0 && millis() < start_time + 50) { //read frame without issue, decode
+        decode_serial_rx(rx, 4);
+      }
+    }
+
+    if (break_condition != 0) { //some error occured, jump to correct location, assume dropped byte
+      switch (break_condition) {
+        case 1: goto seen_byte_1; break;
+        case 2: goto seen_byte_2; break;
+      }
+    }
+  }
+}
+
+
+
+void Coms_Serial::decode_serial_rx(byte * char_array, byte address) {
 
   //calc checksum
   byte check_sum = 0;
   for (byte i = 0; i < MEGA_RX_FRAME_LENGTH - 1; i++) {
     check_sum += char_array[i];
+    Serial.print(char_array[i]);
+    Serial.print(" ");
+  }
+  Serial.println(char_array[MEGA_RX_FRAME_LENGTH - 1]);
+  if (check_sum != char_array[MEGA_RX_FRAME_LENGTH - 1]) { // might be corrupted request, retransmit last N frames?
+    write_all_frame_history(address);
+    Serial.println("checksum fail");
+  }
+  else if (char_array[0] == UNKNOWN_RETRANSMIT_TYPE) {     // case where mega knows header was corrupted
+    write_all_frame_history(address);
+    Serial.println("request unknown frame");
   }
 
-  if (check_sum != char_array[MEGA_RX_FRAME_LENGTH - 1]) // might be corrupted request, retransmit last N frames?
-    write_all_frame_history(address);
-    
-  else if (char_array[0] == UNKNOWN_RETRANSMIT_TYPE)      // case where mega knows header was corrupted
-    write_all_frame_history(address);
-    
   else {
     byte frame_type = char_array[0];
     byte frame_num = char_array[1];
@@ -1114,13 +1550,19 @@ void Coms_Serial::decode_serial_rx(byte *char_array, byte address) {
     if (request_error_sanity_check(frame_type, frame_num, obj_num)) { //case where mega knows what data is missing, and frame not corrupted, send exact data required
 
       byte history_loc = find_in_frame_history(address, frame_type, frame_num, obj_num);  //identify location
-      if (history_loc != FRAME_HISTORY_MEMORY_DEPTH)                                      //if frame in frame history buffer
+      if (history_loc != FRAME_HISTORY_MEMORY_DEPTH) {                                     //if frame in frame history buffer
         write_frame_history(address, frame_type, history_loc);                            //write the frame at this location
-      else
+        Serial.println("send specific frame");
+      }
+      else {
         write_all_frame_history(address);                     // assume something went wrong, frame forgotten or mega mistaken, send a bunch of frames and hope for the best
+        Serial.println("specific frame doesnt exist");
+      }
     }
     else {
       write_all_frame_history(address);                       //error in request, send a bunch of frames
+      Serial.println("insane request");
+
     }
   }
 }

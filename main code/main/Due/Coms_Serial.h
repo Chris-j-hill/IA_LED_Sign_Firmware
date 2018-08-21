@@ -47,6 +47,10 @@ class Coms_Serial: public Coms {
     void write_frame_history(byte address, byte frame_type, byte loc);
     void write_all_frame_history(byte address);  //write a bunch of frames to this address, hopefully one is right
 
+    void check_mega_1();  //functions to actually check ports for request from mega
+    void check_mega_2();
+    void check_mega_3();
+    void check_mega_4();
 
   public:
 

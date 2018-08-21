@@ -10,11 +10,11 @@
 
 #if SERIAL_RX_BUFFER_SIZE >32 || SERIAL_TX_BUFFER_SIZE >32
 #error "serial buf size error"
-/* serial buffer size is defined under hardware\arduino\avr\cores\arduino\HardwareSerial.h    
- * there are 2 buffers (rx and tx) allocated in ram per serial port initialised (we use two ports) 
- * so an excssively large buffer size will be a problem here as were very tight on ram. change 
- * the value to 32 for rx (size of data frame) and 16 for tx (transmitting less data usually)
- */
+/* serial buffer size is defined under hardware\arduino\avr\cores\arduino\HardwareSerial.h
+   there are 2 buffers (rx and tx) allocated in ram per serial port initialised (we use two ports)
+   so an excssively large buffer size will be a problem here as were very tight on ram. change
+   the value to 32 for rx (size of data frame) and 16 for tx (transmitting less data usually)
+*/
 #endif
 
 extern struct Screen_Struct screen_parameters;
@@ -43,22 +43,29 @@ void mega_setup() {
 
 
   text_parameters[0].object_used = true;
-  text_parameters[0].text_size =1;
-  
+  text_parameters[0].text_size = 1;
+
 }
 
 
 void mega_loop() {
- // byte i=0;
+  // byte i=0;
+  uint32_t start_time = millis();
+  uint32_t delay_time = 500;
   while (1) {
-    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
-    graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
-    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
+    if (millis() > delay_time + start_time){
+      coms_serial.request_frame_retransmission(TEXT_FRAME_TYPE, 1, 0);
+      Serial.println("request");
+      start_time = millis();
+    }
+    //    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
+    //    graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
+    //    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
     host.check_serial();
     host.print_messages();
-//    i++;
-//    if (i==0)
-//    Serial.println(F("loop"));
+    //    i++;
+    //    if (i==0)
+    //    Serial.println(F("loop"));
   }
 }
 

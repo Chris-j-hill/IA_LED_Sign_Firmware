@@ -109,14 +109,14 @@ void Graphics::update_display() {
     //after all objects written, cover with display if needed
     menu.display_menu();  //update any menu if applicable
 
-    matrix.drawPixel(10, 10, matrix.Color444(10, 0, 0));
-    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
-      if (text_parameters[i].object_used)
-        matrix.drawPixel(11 + i, 10, matrix.Color444(10, 10, 10));
-      else
-        matrix.drawPixel(11 + i, 10, matrix.Color444(0, 0, 10));
-
-    }
+//    matrix.drawPixel(10, 10, matrix.Color444(10, 0, 0));
+//    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+//      if (text_parameters[i].object_used)
+//        matrix.drawPixel(11 + i, 10, matrix.Color444(10, 10, 10));
+//      else
+//        matrix.drawPixel(11 + i, 10, matrix.Color444(0, 0, 10));
+//
+//    }
     matrix.swapBuffers(false);  //push the buffer we just wrote to front
 
 
@@ -178,7 +178,9 @@ inline void Graphics::set_text_colour(int new_hue) {
 inline void Graphics::draw_text(byte obj_num) {
 
   matrix.setTextSize(text_parameters[obj_num].text_size);
-  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+//  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+  matrix.setCursor(12,1);
+  
   for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
     if (text_parameters[obj_num].string[i] == 0) break;
     matrix.print((char)text_parameters[obj_num].string[i]);

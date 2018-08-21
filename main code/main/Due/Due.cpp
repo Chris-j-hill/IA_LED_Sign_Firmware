@@ -123,38 +123,41 @@ void due_loop() {
   while (1) {
 
     //push string and related data if new data retrieved
-    graphics.push_string_data();
+//graphics.push_string_data();
 
 
     //check for requests from megas (eg transmission errors)
-    //coms_serial.check_megas();
+    coms_serial.check_megas();
 
-    // update screen brightness based on ldr and current meter readings
-    current_meter.get_readings();
-    light_sensor.get_readings();
-    graphics.update_brightness();
+//    // update screen brightness based on ldr and current meter readings
+//    current_meter.get_readings();
+//    light_sensor.get_readings();
+//    graphics.update_brightness();
+//
+//    // get temperature readings and update fan speeds
+//    fans.update_temperatures();
+//    fans.set_fan_speed();
+//
+//    // update led strip brightness frequency of interrupt
+//    led_strip.led_strip_set_freq();
+//
+//    // check the encoder
+//    encoder.handle_interupts();
+//
+//    // push menu updates to screens
+//    menu.display_menu();
+//
+//    //check for user seria  l input and print requested data
+//    host.check_serial();
+//    host.print_messages();
+//
+//    // check if sd card mounted and log data if possible
+//
+//    card.check_for_sd_card();
+//    //card.update_data_log();
 
-    // get temperature readings and update fan speeds
-    fans.update_temperatures();
-    fans.set_fan_speed();
 
-    // update led strip brightness frequency of interrupt
-    led_strip.led_strip_set_freq();
 
-    // check the encoder
-    encoder.handle_interupts();
-
-    // push menu updates to screens
-    menu.display_menu();
-
-    //check for user seria  l input and print requested data
-    host.check_serial();
-    host.print_messages();
-
-    // check if sd card mounted and log data if possible
-
-    card.check_for_sd_card();
-    //card.update_data_log();
 
 
     //TO DO:

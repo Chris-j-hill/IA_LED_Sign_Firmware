@@ -332,7 +332,9 @@ void Graphics::push_string_data() {
     {
       disable_pos_isr();  // disable pos isr while we push the string
       coms_serial.send_text_frame(i);
+      delay(10);//small buffer on mega so delay to ensure frame processed before next send
       coms_serial.send_text_calibration_data(i); //send all related text data
+      delay(10);
       text_parameters[i].megas_up_to_date = true; //confirm text up to date
       enable_pos_isr();   //enable pos isr again
     }

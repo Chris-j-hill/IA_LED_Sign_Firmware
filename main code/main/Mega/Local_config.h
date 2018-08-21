@@ -91,7 +91,7 @@ const byte DEFAULT_TEXT_BLUE_BRIGHTNESS = COLOUR_MAX_LEVEL;
 #define DEFAULT_REFRESH_RATE 20   // use this to define the interrupt rate of the matrix library
 
 
-#define DISABLE_REQUEST_RETRANSMISSION //prevent oscillations when debuging
+//#define DISABLE_REQUEST_RETRANSMISSION //prevent oscillations when debuging
 
 
 #define MAX_NUM_OF_TEXT_OBJECTS 5

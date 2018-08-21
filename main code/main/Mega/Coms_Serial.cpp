@@ -39,6 +39,8 @@ inline bool Coms_Serial::byte_queued() {  // function to delay the processor a l
 
 void Coms_Serial::read_buffer() {
 
+  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
+  
   if (Serial_1.available() > 1) { //only create variables if data arrived, require start and first byte of frame
 
     if (Serial_1.read() == 13) {
@@ -77,7 +79,7 @@ void Coms_Serial::read_buffer() {
             frame_type = error_check_unencoded_header(temp_header);//<- returns zero if fails sanity checks
 
           if (frame_type == 0 || !encoding_ok) {  //if either of the above tests failed request retransmission of a bunch of frames, cant trust header data
-            Serial.println(F("frame error"));
+            Serial.println(F("frame header error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             request_frame_retransmission();
             Serial.println(F("bunch of frames requested"));
@@ -97,11 +99,9 @@ void Coms_Serial::read_buffer() {
             if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
               remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
               frame_cpy(data, TEXT_FRAME_TYPE);
-              //Serial.println(F("Text frame recieved"));
+              Serial.println(F("Text frame recieved"));
             }
 
-            else
-              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -109,6 +109,9 @@ void Coms_Serial::read_buffer() {
               request_frame_retransmission(TEXT_FRAME_TYPE, this_frame, obj_num);
               Serial.println(F("specific frame requested"));
             }
+#else
+            else
+              Serial.println(F("text frame error"));
 #endif
           }
 
@@ -120,15 +123,16 @@ void Coms_Serial::read_buffer() {
 
             if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, POS_FRAME_TYPE);
-              //Serial.println(F("Pos frame recieved"));
+              Serial.println(F("Pos frame recieved"));
             }
 
 
-            else
-              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //do nothing if pos frame recieved in error, new one coming soon
             }
+#else
+            else
+              Serial.println(F("pos frame error"));
 #endif
           }
 
@@ -141,12 +145,10 @@ void Coms_Serial::read_buffer() {
 
             if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, SENSOR_FRAME_TYPE);
-              //Serial.println(F("Sensor data frame recieved"));
+              Serial.println(F("Sensor data frame recieved"));
             }
 
 
-            else
-              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -154,6 +156,9 @@ void Coms_Serial::read_buffer() {
               request_frame_retransmission(SENSOR_FRAME_TYPE, this_frame, obj_num);
               Serial.println(F("specific frame requested"));
             }
+#else
+            else
+              Serial.println(F("sensor frame error"));
 #endif
           }
 
@@ -166,11 +171,9 @@ void Coms_Serial::read_buffer() {
 
             if (!error_check_frame_body(data, frame_type, menu_frame.frame_length)) { //if frame ok, save data
               frame_cpy(data, MENU_FRAME_TYPE);
-              //Serial.println(F("Menu frame recieved"));
+              Serial.println(F("Menu frame recieved"));
             }
 
-            else
-              Serial.println(F("frame error"));
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
               byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
@@ -178,6 +181,10 @@ void Coms_Serial::read_buffer() {
               request_frame_retransmission(MENU_FRAME_TYPE, this_frame, obj_num);
               Serial.println(F("specific frame requested"));
             }
+
+#else
+            else
+              Serial.println(F("menu frame error"));
 #endif
           }
 
@@ -201,6 +208,8 @@ void Coms_Serial::read_buffer() {
       }
     }
   }
+  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+
 }
 
 void Coms_Serial::receive_frame(byte * temp_buffer) { //header read, checks done, now read remaining bytes
@@ -343,11 +352,11 @@ byte Coms_Serial::error_check_encoded_header(byte * temp_buffer) {
 void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num) {
 
   // we know what frame we need send specific details in frame
-  byte request_frame_length = MEGA_RX_FRAME_LENGTH + 2;
+  byte request_frame_length = MEGA_RX_FRAME_LENGTH + 4;
   byte nack_frame[request_frame_length];  //num data bytes and return carraige for reading
 
-  nack_frame[0] = '\r';
-  nack_frame[1] = '\n';
+  nack_frame[0] = 250;
+  nack_frame[1] = 251;
 
   nack_frame[2] = frame_type;
   nack_frame[3] = this_frame;
@@ -355,13 +364,20 @@ void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame,
 
   nack_frame[5] = nack_frame[2] + nack_frame[3] + nack_frame[4];
 
+  nack_frame[2] |= (0x10);
+  nack_frame[3] |= (0x20);
+  nack_frame[4] |= (0x30);
+  nack_frame[5] |= (0x40); 
+
+  nack_frame[6] = 252;
+  nack_frame[7] = 253;
   // serial.write stalls processor until sent, serial.print does not
   // so just add to buffer and move on
 
-  for (byte i = 0; i < request_frame_length; i++) {
-    Serial_1.print(nack_frame[i]);
-  }
-  //  Serial_1.write(nack_frame, request_frame_length);
+//  for (byte i = 0; i < request_frame_length; i++) {
+//    Serial_1.print(nack_frame[i]);
+//  }
+    Serial_1.write(nack_frame, request_frame_length);
 
 
 }
@@ -369,23 +385,25 @@ void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame,
 void Coms_Serial::request_frame_retransmission() {
 
   //  dont know anything about frame we need
-  byte request_frame_length = MEGA_RX_FRAME_LENGTH + 2;
+  byte request_frame_length = MEGA_RX_FRAME_LENGTH + 4;
   byte nack_frame[request_frame_length];
 
-  nack_frame[0] = '\r';
-  nack_frame[1] = '\n';
+  nack_frame[0] = 250;
+  nack_frame[1] = 251;
   nack_frame[2] = UNKNOWN_RETRANSMIT_TYPE;
   nack_frame[3] = 0;  //irrelevant
   nack_frame[4] = 0;
 
   nack_frame[5] = UNKNOWN_RETRANSMIT_TYPE;
 
+  nack_frame[6] = 252;
+  nack_frame[7] = 253;
+  
+//  for (byte i = 0; i < request_frame_length; i++) {
+//    Serial_1.print(nack_frame[i]);
+//  }
 
-  for (byte i = 0; i < request_frame_length; i++) {
-    Serial_1.print(nack_frame[i]);
-  }
-
-  //  Serial_1.write(nack_frame, request_frame_length);
+    Serial_1.write(nack_frame, request_frame_length);
 
 
 
