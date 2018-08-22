@@ -46,6 +46,8 @@ const int HUE_MIN_VALUE = -1535;
 #define POS_TIMER Timer3
 #define POS_TIMER_INTERRUPT TC2_IRQn
 
+#define POS_TRANSMIT_DELAY 20
+
 
 struct Text {
   byte text_width = ASCII_CHARACTER_BASIC_WIDTH;
@@ -135,6 +137,9 @@ class Graphics {
     void reset_position();
     void get_next_string_config_profile();
     void push_string_data();
+
+
+    
     inline void disable_pos_isr(){
       transmission_enabled = false;
     }

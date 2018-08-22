@@ -201,8 +201,13 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
         }
       }
 #ifndef DISABLE_POS_TRANSMISSION
-      if (graphics.check_transmission_enabled()) //update positions but prevent text transmission if also using serial for something else
+
+      if (graphics.check_transmission_enabled()) { //update positions but prevent text transmission if also using serial for something else
         coms_serial.send_pos_frame(i);
+        for (byte i = 0; i < 10; i++) //short delay, cant us delay as in interrupt
+          delayMicroseconds(500);
+
+      }
 #endif
     }
   }
@@ -325,21 +330,22 @@ void Graphics::push_string_data() {
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
 
 #ifdef FORCE_TEXT_FRAME_TRANSMISSION// different condition for testing purposes, ignore if they were updated, just push set number of times
-    if (num_text_transmissions < NUM_TEXT_TRANSMISSIONS)
+    if (num_text_transmissions < NUM_TEXT_TRANSMISSIONS || !text_parameters[i].megas_up_to_date)
 #else
     if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date)  //if the object is enabled and has been changed by something
 #endif
     {
       disable_pos_isr();  // disable pos isr while we push the string
       coms_serial.send_text_frame(i);
-      delay(10);//small buffer on mega so delay to ensure frame processed before next send
+      delay(25);//small buffer on mega and quite a lot of processing, so delay to ensure last frame processed before next frame sent
       coms_serial.send_text_calibration_data(i); //send all related text data
-      delay(10);
+      delay(25);
       text_parameters[i].megas_up_to_date = true; //confirm text up to date
       enable_pos_isr();   //enable pos isr again
     }
   }
-#ifdef FORCE_TEXT_FRAME_TRANSMISSION  //if testing code, increment push count
+
+#ifdef FORCE_TEXT_FRAME_TRANSMISSION  //if testing code, increment push counter
   num_text_transmissions++;
 #endif
 

@@ -436,7 +436,9 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       }
 
       screen_parameters.updated = false;  //part of a string arrived, update displayed buffer, update as each part of string arrives, better than not detecting retransmission
-
+      Serial.print(F("Stored string "));
+      Serial.print(obj_num);
+      Serial.print(F(" = "));
       for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
         Serial.print((char)text_parameters[obj_num].string[i]);
       }
