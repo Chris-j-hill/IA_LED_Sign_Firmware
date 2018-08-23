@@ -261,13 +261,14 @@ seen_byte_2:
       // byte avialable and neither above conditions caught it
       // could be endbyte, or middle of frame, either way, just discard char
 
-      Serial.println(Serial_1.read());
+      Serial.print(Serial_1.read());
+      Serial.print(" ");
     }
 
     if (seen_byte_1 && seen_byte_2) {
       //in this funciton pass we have found both bytes 1 and 2
       //almost certainly a frame start
-
+      Serial.println();
       byte header[HEADER_LENGTH];
       seen_byte_1 = false;
       seen_byte_2 = false;
@@ -319,10 +320,20 @@ seen_byte_2:
 
         if (frame_type == 0 || !encoding_ok) {
           Serial.println(F("frame header error"));
+//          Serial.print(F("frame_type : "));
+//          Serial.println(frame_type);
+//          Serial.print(F("encoding ok : "));
+//          Serial.println(encoding_ok);
+
 #ifndef DISABLE_REQUEST_RETRANSMISSION
           request_frame_retransmission();
           Serial.println(F("bunch of frames requested"));
 #endif
+
+          for (byte i = 0; i < HEADER_LENGTH; i++) {
+            Serial.print(header[i]);
+            Serial.print(" ");
+          }
         }
 
         else { //header ok read frame
@@ -584,15 +595,36 @@ byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
 
   //Serial.println("check for errors");
   for ( byte i = 0; i < HEADER_LENGTH; i++) {
-    if (parity_of(temp_buffer[i])) {
-      //Serial.println("odd parity");
-      return 0; //error found
+
+    switch (i) {
+      case OBJ_NUM_LOC:
+        if (parity_of(APPLY_THREE_BIT_CHECKSUM_SUPPRESSION(temp_buffer[i]))) {
+          return 0; //found error in obj_num byte
+        }
+        break;
+
+      case NUM_OF_FRAMES_LOC:
+        if (parity_of(APPLY_FRAME_NUM_PARITY_CHECKING_MASK(temp_buffer[i]))) {
+          return 0;
+        }
+        if (parity_of(APPLY_THIS_FRAME_PARITY_CHECKING_MASK(temp_buffer[i]))) {
+          return 0;
+        }
+        break;
+
+      default:
+        if (parity_of(temp_buffer[i])) {
+          return 0; //error found
+        }
+        break;
     }
   }
   return (frame_type);
 
 #endif
 
+
+  return temp_buffer[FRAME_TYPE_LOC]; //case of no parity encoding, can read directly, return frame type, sanity check later
 }
 
 
