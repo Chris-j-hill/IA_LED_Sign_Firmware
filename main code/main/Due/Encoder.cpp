@@ -78,27 +78,25 @@ void update_button_ISR() {
 }
 
 
-byte Encoder::get_text_encoder_position(byte byte_number) {  //function to return the MSB or LSB of the current hue value to send
+byte Encoder::get_text_encoder_position(byte byte_number) {
+  
+  // function to return the MSB or LSB of the current encoder value to send
+  // see Coms::pack_xy_coordinates for explanation of packing and int16_t as two bytes
+  // less of an issue here but still take precautions, fix is light weight
 
   if (byte_number == 1) { //looking for MSB
 
-    return ((encoder_parameters.position >> 8) & 0xFF);
+    if (encoder_parameters.position < 0) {
+      byte neg_val = abs(encoder_parameters.position >> 8);
+      neg_val |= 0b10000000;
+      return neg_val;
+    }
+    else
+      return ((encoder_parameters.position >> 8) & 0x7F);
 
-    //    if (encoder_parameters.position < 0)
-    //      return (abs(encoder_parameters.position) / 256);    //get quotient of absolute value and 256 rounded down
-    //
-    //    else
-    //      return (abs(encoder_parameters.position) / 256 + 128); //add 128 to indicate positve number
   }
   else if (byte_number == 2) { //LSB
-
     return (encoder_parameters.position & 0xFF);
-
-    //return (abs(encoder_parameters.position) % 256);    //get modulo of value and 256;
-  }
-  else {
-    Sprintln("Error, cant get MSB/LSB, invalid byte number presented");
-    return (0);
   }
 }
 
@@ -186,7 +184,7 @@ void Encoder::handle_interupts() {   // function to repond to an ISR.
 void Encoder::recenter_encoder() {
 
   encoder_parameters.position = encoder_parameters.center;
-  encoder_parameters.PosCount = (encoder_parameters.center << 1)*encoder_parameters.sensitivity;
+  encoder_parameters.PosCount = (encoder_parameters.center << 1) * encoder_parameters.sensitivity;
 
 }
 
@@ -194,7 +192,7 @@ void Encoder::recenter_encoder() {
 void Encoder::set_encoder_position(int val)      // take value input and set the encoder current position to this
 {
   encoder_parameters.position = val;
-  encoder_parameters.PosCount = (val <<1)*encoder_parameters.sensitivity;
+  encoder_parameters.PosCount = (val << 1) * encoder_parameters.sensitivity;
 }
 
 inline void Encoder::below_zero_limit() {

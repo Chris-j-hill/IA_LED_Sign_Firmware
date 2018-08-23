@@ -424,6 +424,8 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
   uint16_t disp_string_offset = FRAME_DATA_LENGTH * (this_frame - 1);
 
   byte num_bytes_to_cpy = frame_length - FRAME_OVERHEAD;
+  byte temp1 = 0;
+  byte temp2 = 0;
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
@@ -447,8 +449,27 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       break;
 
     case POS_FRAME_TYPE:
-      cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp_buffer[4], temp_buffer[5]);  // position as recieved in frame
-      cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp_buffer[6], temp_buffer[7]);
+
+      // see Coms::pack_xy_coordinates in due code for description of pos value packing
+
+      // decode negative values
+      if (temp_buffer[4] < 0) {
+        temp1 = temp_buffer[4] & 0x7F;
+        temp1 = -temp1;
+      }
+      else
+        temp1 = temp_buffer[4];
+
+      if (temp_buffer[6] < 0) {
+        temp2 = temp_buffer[6] & 0x7F;
+        temp2 = -temp2;
+      }
+      else
+        temp2 = temp_buffer[6];
+
+
+      cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp1, temp_buffer[5]);  // position as recieved in frame
+      cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp2, temp_buffer[7]);
 
       cursor_parameters[obj_num].local_x_pos = (screen_parameters.node_address) * (SINGLE_MATRIX_WIDTH) - cursor_parameters[obj_num].global_x_pos;   // relative position for this matrix
       cursor_parameters[obj_num].local_y_pos = cursor_parameters[obj_num].global_y_pos;
@@ -470,7 +491,16 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
     case MENU_FRAME_TYPE:
       menu.set_current_menu(temp_buffer[3]);
-      menu_parameters.encoder_position = GET_ENCODER_POS(temp_buffer[4], temp_buffer[5]);
+
+      // decode negative values
+      if (temp_buffer[4] < 0) {
+        temp1 = temp_buffer[4] & 0x7F;
+        temp1 = -temp1;
+      }
+      else
+        temp1 = temp_buffer[4];
+
+      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[5]);
 
       screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
       break;

@@ -120,10 +120,46 @@ void Coms::build_pos_frame(byte obj_num) {
 }
 
 inline void Coms::pack_xy_coordinates(byte obj_num) {
-  //function to pack the 4 bytes to send the x and y positions of the text cursor
-  pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0xFF);   //write new values to frame
+  // function to pack the 4 bytes to send the x and y positions of the text cursor
+
+  /*  due to the start and end bytes being 251-254, we want to avoid the possibility of incorrecty identifying
+      two bytes as a start or end of frame. using a 16 bit sign value this will be broken up into 2 unsigned bytes
+      a position in either axis of -1028 results in the bytes 251 and 252 being packed in the frame. Likewise
+      -514 results in 253 and 254 will be packed. To avoid this we cant pack as simple 2s complement values.
+      2's complement effectively takes the top half of the number line and moves it to the bottom:
+
+      000 001 010 011 100 101 110 111  becomes  100 101 110 111 000 001 010 011
+
+      what we want is to take the top half of the number line mirror it then add it to the bottom half of the number line
+
+      000 001 010 011 100 101 110 111  becomes  111 110 101 100 000 001 010 011
+
+      this must be done manually as its not a standard operation. if the value is negative this requires first taking the abs
+      value then adding a 1 as the most significant bit .this will move the danger zone of pos value to the very
+      negative values which is fine, its well away from where we'll be operating and the max pos can be reasonably restricted
+      to be withing these values. restricted range becomes -31743 to 32767
+  */
+
+
+  if (text_cursor[obj_num].x < 0) {
+    byte neg_val = abs(text_cursor[obj_num].x >> 8);
+    neg_val |= 0b10000000;
+    pos_frame.frame_buffer[4] = neg_val;
+  }
+  else {
+    pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0x7F);   //write new values to frame
+  }
   pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
-  pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0xFF);
+
+
+  if (text_cursor[obj_num].y < 0) {
+    byte neg_val = abs(text_cursor[obj_num].y >> 8);
+    neg_val |= 0b10000000;
+    pos_frame.frame_buffer[6] = neg_val;
+  }
+  else {
+    pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0x7F);
+  }
   pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);
 
 }

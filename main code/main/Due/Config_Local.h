@@ -188,6 +188,10 @@
 #define PREFIX_TEXT_OBJ_ENABLED_4         224
 
 #define PREFIX_TEXT_OBJ_SELECTED          230
+
+// NB: do not use prefix value of 251-254, these are frame start and end bytes
+
+
 //#define SKIP_INTITAL_STARTUP_SEQUENCE
 
 #define DEFAULT_MENU_WIDTH 64

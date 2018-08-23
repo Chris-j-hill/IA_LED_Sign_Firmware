@@ -184,6 +184,9 @@ const byte DEFAULT_TEXT_BLUE_BRIGHTNESS = COLOUR_MAX_LEVEL;
 
 #define PREFIX_TEXT_OBJ_SELECTED          230
 
+// NB: do not use prefix value of 251-254, these are frame start and end bytes
+
+
 #define MEGA_SERIAL_BUFFER_LENGTH 32
 #define MAX_TWEET_SIZE 100
 #define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
