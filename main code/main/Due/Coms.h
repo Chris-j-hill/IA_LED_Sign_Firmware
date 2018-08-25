@@ -46,7 +46,7 @@ using namespace arduino_due;
 
 #define ENDBYTE_CHARACTER 255 // can scan through serial until this is reached on mega end if error detected 
 
-#define MEGA_SERIAL_BUFFER_LENGTH 64 // must match or be less than SERIAL_RX_BUFFER_SIZE in hardware->arduino->avr->cores->arduino->HardwareSerial.h
+#define MEGA_SERIAL_BUFFER_LENGTH 32 // must match or be less than SERIAL_RX_BUFFER_SIZE in hardware->arduino->avr->cores->arduino->HardwareSerial.h
 #define FRAME_OVERHEAD (HEADER_LENGTH + TRAILER_LENGTH)        //number of overhead bytes -> frame length, frame type, num frames, frame num, checksum
 #define FRAME_DATA_LENGTH (MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD)
 

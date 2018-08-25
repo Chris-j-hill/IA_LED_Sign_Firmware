@@ -14,10 +14,6 @@
 #endif
 
 
-// print error msg, any SD error codes, and halt.
-// store messages in flash
-//#define errorExit(msg) errorHalt_P(PSTR(msg))
-//#define initError(msg) initErrorHalt_P(PSTR(msg))
 
 #define set_as_active() chvol()
 
@@ -166,18 +162,6 @@ struct SD_Card {
 class Card {
 
   private:
-
-    //    int copy_sd_data(const char *ext_file, const char *int_file, const char *ext_dir, const char *int_dir);
-    //    int extract_network_data();
-    //    int buffer_in_header();         // return 1 if the colon is in the header, otherwise 0
-    //    int buffer_is_network();         // check if network stored in buffer
-    //    int buffer_is_password();        // check if password stored in buffer
-    //    int buffer_is_default();        // check if default string stored in buffer
-    //    int string_length();      // calculate the length of the relevent string in file
-    //    int remove_card_1();
-    //    int log_temp_to_sd();               // log data to the sd card data related to temps over time
-
-
 
     void check_for_files(byte check_card);
     void copy_file(String from_string, String to_string, byte from_device, byte to_device); //copy file to multiple places so as to retain backups of data

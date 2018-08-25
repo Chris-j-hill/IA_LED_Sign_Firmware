@@ -77,7 +77,7 @@ void Coms::pack_disp_string_frame(uint16_t frame_num, byte obj_num) {   //functi
 
   // function to pack a frame based on a given offset (ie this frames_num)
 
-  uint16_t frame_offset = ((frame_num - 1) * (FRAME_DATA_LENGTH - 1)); //if this frame is 1 offset in data set is 0, if 2 offset 26, etc
+  uint16_t frame_offset = ((frame_num - 1) * (FRAME_DATA_LENGTH)); //if this frame is 1 offset in data set is 0, if 2 offset 26, etc
 
   for (int i = 0; i < strlen(text_str[obj_num]) - frame_offset; i++) { //loop through string until end or break
     text_frame.frame_buffer[i + HEADER_LENGTH] = (byte)text_str[obj_num][frame_offset + i]; //HEADER_LENGTH+1 for text obj_num

@@ -138,6 +138,7 @@ void Coms_Serial::init_serial() {
 
   init_software_serial_to_megas();
   Serial.println("Setup done");
+
 #ifndef MEGA_SERIAL_CONNECTION_TESTING  //ignore ping if testing with serial passthrough code on mega
   ping();
 #else
@@ -159,7 +160,7 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
   configure_serial_4(COMS_SPEED);
 
 
-#ifdef MEGA_SERIAL_CONNECTION_TESTING   // simple code to allow used to see start of transmission
+  // clear bufers and set timeouts
 
   Serial_1.flush();
   Serial_2.flush();
@@ -180,12 +181,12 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
   Serial_2.setTimeout(timeout);
   Serial_3.setTimeout(timeout);
   Serial_4.setTimeout(timeout);
+  //
+  //  Serial_1.println("Hello 1");
+  //  Serial_2.println("Hello 2");
+  //  Serial_3.println("Hello 3");
+  //  Serial_4.println("Hello 4");
 
-  Serial_1.println("Hello 1");
-  Serial_2.println("Hello 2");
-  Serial_3.println("Hello 3");
-  Serial_4.println("Hello 4");
-#endif
 }
 
 
@@ -652,10 +653,19 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
   // generates a frame header and fills up to 25 bytes of the string and calculates the checksum
   // it also calls the write_text_frame function to send it on to the specified address when frame populated
 
-  byte space_available_in_frame = FRAME_DATA_LENGTH - 1; // going to transmit obj num and data in same frame, so one byte less for string
+   
 
-  text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / space_available_in_frame); //send this many frames
+Serial.print("length ");
+Serial.println(text_parameters[obj_num].text_str_length);
+
+  text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length-1) / FRAME_DATA_LENGTH); //send this many frames
   text_frame.this_frame = 1;
+
+Serial.print("num frames ");
+Serial.println(text_frame.num_frames);
+
+Serial.print("FRAME_DATA_LENGTH");
+Serial.println(FRAME_DATA_LENGTH);
 
   do {    //loop to send multiple frames if string is long
 
@@ -663,7 +673,7 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
       text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
     else
-      text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD); //remaining frame is (string length - text offset)+ (6 bytes overhead)
+      text_frame.frame_length = text_parameters[obj_num].text_str_length - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (FRAME_OVERHEAD); //remaining frame is (string length - text offset)+ (6 bytes overhead)
 
     text_frame.frame_buffer[0] = text_frame.frame_length;
     text_frame.frame_buffer[1] = text_frame.frame_type;
@@ -672,6 +682,17 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
 
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
 
+    for (byte i = 0; i < text_frame.frame_length; i++) {
+
+      Serial.print(text_frame.frame_buffer[i]);
+      Serial.print("\t");
+
+      if (i >= HEADER_LENGTH && i < text_frame.frame_length - TRAILER_LENGTH)
+        Serial.println((char)(text_frame.frame_buffer[i] >> 1));
+      else
+        Serial.println();
+    }
+    Serial.println();
     if (address == -1)
       write_text_frame();  //send to all megas
     else
@@ -685,16 +706,15 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
 
 void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame_num) {
 
-  byte space_available_in_frame = FRAME_DATA_LENGTH - 1; // going to transmit obj num and data in same frame, so one byte less for string
 
-  text_frame.num_frames = 1 + (strlen(text_str[obj_num]) / space_available_in_frame); //send this many frames
+  text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length-1) / FRAME_DATA_LENGTH); //send this many frames
   text_frame.this_frame = frame_num;
 
   if (text_frame.num_frames != text_frame.this_frame)
     text_frame.frame_length = MEGA_SERIAL_BUFFER_LENGTH;  //if there are more than one frame left to send, this frame is max size
 
   else
-    text_frame.frame_length = strlen(text_str[obj_num]) - ((text_frame.num_frames - 1) * (space_available_in_frame)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
+    text_frame.frame_length = text_parameters[obj_num].text_str_length - ((text_frame.num_frames - 1) * (FRAME_DATA_LENGTH)) + (FRAME_OVERHEAD) + 1; //remaining frame is (string length - text offset)+ (6 bytes overhead) +1 for obj_num
 
   text_frame.frame_buffer[0] = text_frame.frame_length;
   text_frame.frame_buffer[1] = text_frame.frame_type;
