@@ -86,7 +86,7 @@ using namespace arduino_due;
 
 #define CHECKSUM_3_BIT_LOC 3
 #define CHECKSUM_3_BIT_MASK 0b00001110
-#define CLEAR_HEADER_CHECKSUM(a) (a & ~CHECKSUM_3_BIT_MASK)
+#define CLEAR_HEADER_CHECKSUM(a) (a & 0b11110001)
 
 #define BYTE_PARITY_LOC 7
 

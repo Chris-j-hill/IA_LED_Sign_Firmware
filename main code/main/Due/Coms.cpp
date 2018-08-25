@@ -282,8 +282,6 @@ uint16_t Coms::generate_checksum(byte frame_type, uint16_t modulo_mask) {
   byte *frame_index_zero;  //pointer to address of first element of whichever array
   byte frame_length;
 
-
-
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
       frame_length = text_frame.frame_length;
@@ -350,38 +348,40 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
 
 #ifdef DO_HEAVY_ERROR_CHECKING
   if (frame_type == TEXT_FRAME_TYPE) {
-    CLEAR_HEADER_CHECKSUM(text_frame.frame_buffer[3]);  //clear these bits from prior frame
+    CLEAR_HEADER_CHECKSUM(text_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);  //clear these bits from prior frame
     set_buffer_parity_bits(text_frame.frame_buffer, BYTE_PARITY_LOC , text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
-    set_verical_parity_byte(text_frame.frame_buffer , text_frame.frame_length - 3);
+    set_verical_parity_byte(text_frame.frame_buffer , text_frame.frame_length - TRAILER_LENGTH);
     set_checksum_11(generate_checksum_11(frame_type), frame_type); //macro to generate 11 bit checksum
   }
 
   else if (frame_type == POS_FRAME_TYPE) {
 
-    CLEAR_HEADER_CHECKSUM(pos_frame.frame_buffer[3]);
-    set_verical_parity_byte(pos_frame.frame_buffer , pos_frame.frame_length - 3);
+    CLEAR_HEADER_CHECKSUM(pos_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
+    set_verical_parity_byte(pos_frame.frame_buffer , pos_frame.frame_length - TRAILER_LENGTH);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == SENSOR_FRAME_TYPE) {
+    
+//    CLEAR_HEADER_CHECKSUM(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);// this isnt clearing it...
+    sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]=0;                       // but obj_num always zero for sensor data frame
 
-    CLEAR_HEADER_CHECKSUM(sensor_data_frame.frame_buffer[3]);
-    set_verical_parity_byte(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length - 3);
+    set_verical_parity_byte(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length - TRAILER_LENGTH);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == MENU_FRAME_TYPE) {
 
-    CLEAR_HEADER_CHECKSUM(menu_frame.frame_buffer[3]);
-    set_verical_parity_byte(menu_frame.frame_buffer , menu_frame.frame_length - 3);
+    CLEAR_HEADER_CHECKSUM(menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
+    set_verical_parity_byte(menu_frame.frame_buffer , menu_frame.frame_length - TRAILER_LENGTH);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
 
   else if (frame_type == PING_STRING_TYPE) {
 
-    CLEAR_HEADER_CHECKSUM(ping_frame.frame_buffer[3]);
+    CLEAR_HEADER_CHECKSUM(ping_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
     set_buffer_parity_bits(ping_frame.frame_buffer, BYTE_PARITY_LOC, pos_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
-    set_verical_parity_byte(ping_frame.frame_buffer , ping_frame.frame_length - 3);
+    set_verical_parity_byte(ping_frame.frame_buffer , ping_frame.frame_length - TRAILER_LENGTH);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
   else return;
@@ -509,23 +509,27 @@ void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
 
   byte three_bit = ((checksum >> 7) & 0b00001110);  //shift by 7 and ignore lowest bit
   byte eight_bit = (checksum & 0xFF);
-  byte disp_from_frame_end = 2;
+  byte dist_from_frame_end = 2;
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
       text_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (text_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
-      text_frame.frame_buffer[text_frame.frame_length - disp_from_frame_end] = eight_bit;
+      text_frame.frame_buffer[text_frame.frame_length - dist_from_frame_end] = eight_bit;
       break;
     case POS_FRAME_TYPE:
       pos_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (pos_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
-      pos_frame.frame_buffer[pos_frame.frame_length - disp_from_frame_end] = eight_bit;
+      pos_frame.frame_buffer[pos_frame.frame_length - dist_from_frame_end] = eight_bit;
       break;
     case SENSOR_FRAME_TYPE:
+      Serial.print("checksum 3 bit ");
+      Serial.println(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
       sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
-      sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - disp_from_frame_end] = eight_bit;
+      sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - dist_from_frame_end] = eight_bit;
+      Serial.print("checksum 3 bit ");
+      Serial.println(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
       break;
     case MENU_FRAME_TYPE:
       menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
-      menu_frame.frame_buffer[menu_frame.frame_length - disp_from_frame_end] = eight_bit;
+      menu_frame.frame_buffer[menu_frame.frame_length - dist_from_frame_end] = eight_bit;
       break;
     case PING_STRING_TYPE:
       ping_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (ping_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));

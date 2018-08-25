@@ -14,7 +14,7 @@
 #include "Led_Strip.h"
 #include "Encoder.h"
 #include "Menu_Tree.h"
-
+#include "Host.h"
 
 //give access to these structs
 extern struct Led_Strip_Struct led_strip_parameters;
@@ -41,7 +41,7 @@ extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
 
 //menu object
 extern Menu menu;
-
+extern Host host;
 // used when sending all calibration data, is this ever done?
 //const byte to_mega_prefix_array[] = {10, 11, 20, 21, 22, 30, 31, 40, 50, 60, 61, 70, 80, 90,
 //                                     100, 101, 102, 103, 104,
@@ -653,19 +653,19 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
   // generates a frame header and fills up to 25 bytes of the string and calculates the checksum
   // it also calls the write_text_frame function to send it on to the specified address when frame populated
 
-   
 
-Serial.print("length ");
-Serial.println(text_parameters[obj_num].text_str_length);
+//
+//  Serial.print("length ");
+//  Serial.println(text_parameters[obj_num].text_str_length);
 
-  text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length-1) / FRAME_DATA_LENGTH); //send this many frames
+  text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length - 1) / FRAME_DATA_LENGTH); //send this many frames
   text_frame.this_frame = 1;
 
-Serial.print("num frames ");
-Serial.println(text_frame.num_frames);
-
-Serial.print("FRAME_DATA_LENGTH");
-Serial.println(FRAME_DATA_LENGTH);
+//  Serial.print("num frames ");
+//  Serial.println(text_frame.num_frames);
+//
+//  Serial.print("FRAME_DATA_LENGTH");
+//  Serial.println(FRAME_DATA_LENGTH);
 
   do {    //loop to send multiple frames if string is long
 
@@ -682,24 +682,23 @@ Serial.println(FRAME_DATA_LENGTH);
 
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
 
-    for (byte i = 0; i < text_frame.frame_length; i++) {
-
-      Serial.print(text_frame.frame_buffer[i]);
-      Serial.print("\t");
-
-      if (i >= HEADER_LENGTH && i < text_frame.frame_length - TRAILER_LENGTH)
-        Serial.println((char)(text_frame.frame_buffer[i] >> 1));
-      else
-        Serial.println();
-    }
-    Serial.println();
+//    for (byte i = 0; i < text_frame.frame_length; i++) {
+//      Serial.print(text_frame.frame_buffer[i]);
+//      Serial.print("\t");
+//
+//      if (i >= HEADER_LENGTH && i < text_frame.frame_length - TRAILER_LENGTH)
+//        Serial.println((char)(text_frame.frame_buffer[i] >> 1));
+//      else
+//        Serial.println();
+//    }
+//    Serial.println();
     if (address == -1)
       write_text_frame();  //send to all megas
     else
       write_text_frame(address);  //only send specific one mega
 
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
-    //delayMicroseconds(1000);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
+    //    delay(10);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
   } while (text_frame.this_frame <= text_frame.num_frames);
 }
 
@@ -707,7 +706,7 @@ Serial.println(FRAME_DATA_LENGTH);
 void Coms_Serial::send_partial_text_frame(byte address, byte obj_num, byte frame_num) {
 
 
-  text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length-1) / FRAME_DATA_LENGTH); //send this many frames
+  text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length - 1) / FRAME_DATA_LENGTH); //send this many frames
   text_frame.this_frame = frame_num;
 
   if (text_frame.num_frames != text_frame.this_frame)
@@ -798,7 +797,8 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
 #ifdef SERIAL_1_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_1.write(frame_start_bytes, 2); //used for start of frame detection
+      Serial_1.print(frame_start_bytes[0]); //used for start of frame detection, print now write as non blocking
+      Serial_1.print(frame_start_bytes[1]);
       switch (frame_type) {
         // NB: use serial write not print as it forces the processor to stop until sent, avoids chance of mega serial buffer overflow
         // maybe implement acknoledge system in future
@@ -822,7 +822,8 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
 #ifdef SERIAL_2_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_2.write(frame_start_bytes, 2);
+      Serial_2.print(frame_start_bytes[0]);
+      Serial_2.print(frame_start_bytes[1]);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_2.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
@@ -842,7 +843,8 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
 #ifdef SERIAL_3_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_3.write(frame_start_bytes, 2);
+      Serial_3.print(frame_start_bytes[0]);
+      Serial_3.print(frame_start_bytes[1]);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_3.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
@@ -859,18 +861,25 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
 
       break;
 
-
     case 3:
 #ifdef SERIAL_4_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
-      Serial_4.write(frame_start_bytes, 2);
+      Serial_4.print(frame_start_bytes[0]);
+      Serial_4.print(frame_start_bytes[1]);
       switch (frame_type) {
         case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
-        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
-        case PING_STRING_TYPE:    Serial_4.write(ping_frame.frame_buffer, ping_frame.frame_length);                                 break;
+        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   //break;
+          for (byte i = 0; i < sensor_data_frame.frame_length; i++){
+            Serial.print(sensor_data_frame.frame_buffer[i]);
+            Serial.print("\t");
+            host.println_bits(sensor_data_frame.frame_buffer[i],8, BIN);
+          }
+          Serial.println();
+          break;
+        case PING_STRING_TYPE:    Serial_4.write(ping_frame.frame_buffer, ping_frame.frame_length);                 break;
         case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }
       Serial_4.write(frame_end_bytes, 2);
@@ -984,378 +993,378 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   int HEADER_PLUS_ONE = HEADER_LENGTH + 1;
 
   while ((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH) { //if trying to place it in location outside available space
-    offset -= ((MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD) >> 2);     //subtract off full frames and fill from from lowest available index
+    offset -= ((MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD) >> 1);     //subtract off full frames and fill from from lowest available index
   }
 
+  offset = offset<<1; //offset *2 becasue data in pairs
   //switch statement to pack the frame;
   switch (sensor_prefix) {
     case PREFIX_CURRENT_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = current_meter_parameters.reading2;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = current_meter_parameters.reading2;
       break;
 
     case PREFIX_CURRENT_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = current_meter_parameters.reading2;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = current_meter_parameters.reading2;
       break;
 
     case PREFIX_TEMP_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = temp_parameters.temp1;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = temp_parameters.temp1;
       break;
 
     case PREFIX_TEMP_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = temp_parameters.temp2;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = temp_parameters.temp2;
       break;
 
     case PREFIX_TEMP_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = temp_parameters.temp3;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = temp_parameters.temp3;
       break;
 
     case PREFIX_LDR_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = light_sensor_parameters.reading1;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = light_sensor_parameters.reading1;
       break;
 
     case PREFIX_LDR_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = light_sensor_parameters.reading2;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = light_sensor_parameters.reading2;
       break;
 
     case PREFIX_FAN_SPEED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = fan_parameters.target_speed;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = fan_parameters.target_speed;
       break;
 
     case PREFIX_FAN_MINIMUM_SPEED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = fan_parameters.fan_minimum;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = fan_parameters.fan_minimum;
       break;
 
     case PREFIX_FAN_ENABLED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = fan_parameters.enabled;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = fan_parameters.enabled;
       break;
 
 
     case PREFIX_LED_STRIP_BRIGHTNESS:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = led_strip_parameters.target_brightness;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = led_strip_parameters.target_brightness;
       break;
 
     case PREFIX_LED_STRIP_ENABLED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = led_strip_parameters.enabled;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = led_strip_parameters.enabled;
       break;
-
 
 
     case PREFIX_SD1_DETECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = card1.detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = card1.detected ? (byte) 1 : (byte) 0;   //convert boolean to byte
       break;
 
     case PREFIX_SD2_DETECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = card2.detected ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = card2.detected ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_EHTERNET_CONNECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = ethernet_connected ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = ethernet_connected ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_WIFI_CONNECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = wifi_connected ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = wifi_connected ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_SCREEN_BRIGHTNESS:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = screen_brightness = 100;
-      else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = screen_brightness;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      if (screen_brightness > 100) sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = screen_brightness = 100;
+      else sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = screen_brightness;
       break;
 
     case PREFIX_TEXT_SIZE_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[0].text_size;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[0].text_size;
       break;
 
     case PREFIX_TEXT_SIZE_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[1].text_size;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[1].text_size;
       break;
 
     case PREFIX_TEXT_SIZE_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[2].text_size;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[2].text_size;
       break;
 
     case PREFIX_TEXT_SIZE_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[3].text_size;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[3].text_size;
       break;
 
     case PREFIX_TEXT_SIZE_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[4].text_size;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[4].text_size;
       break;
 
     case PREFIX_TEXT_COLOUR_R_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[0].red;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[0].red;
       break;
 
     case PREFIX_TEXT_COLOUR_R_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[1].red;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[1].red;
       break;
 
     case PREFIX_TEXT_COLOUR_R_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[2].red;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[2].red;
       break;
 
     case PREFIX_TEXT_COLOUR_R_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[3].red;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[3].red;
       break;
 
     case PREFIX_TEXT_COLOUR_R_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[4].red;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[4].red;
       break;
 
     case PREFIX_TEXT_COLOUR_G_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[0].green;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[0].green;
       break;
 
     case PREFIX_TEXT_COLOUR_G_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[1].green;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[1].green;
       break;
 
     case PREFIX_TEXT_COLOUR_G_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[2].green;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[2].green;
       break;
 
     case PREFIX_TEXT_COLOUR_G_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[3].green;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[3].green;
       break;
 
     case PREFIX_TEXT_COLOUR_G_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[4].green;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[4].green;
       break;
 
     case PREFIX_TEXT_COLOUR_B_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[0].blue;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[0].blue;
       break;
 
     case PREFIX_TEXT_COLOUR_B_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[1].blue;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[1].blue;
       break;
 
     case PREFIX_TEXT_COLOUR_B_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[2].blue;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[2].blue;
       break;
 
     case PREFIX_TEXT_COLOUR_B_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[3].blue;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[3].blue;
       break;
 
     case PREFIX_TEXT_COLOUR_B_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[4].blue;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[4].blue;
       break;
 
     case PREFIX_TEXT_HUE_MSB_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(1, 0);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(1, 0);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
     case PREFIX_TEXT_HUE_LSB_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(2, 0);
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(2, 0);
       break;
 
     case PREFIX_TEXT_HUE_MSB_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(1, 1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(1, 1);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
     case PREFIX_TEXT_HUE_LSB_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(2, 1);
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(2, 1);
       break;
 
     case PREFIX_TEXT_HUE_MSB_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(1, 2);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(1, 2);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
     case PREFIX_TEXT_HUE_LSB_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(2, 2);
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(2, 2);
       break;
 
     case PREFIX_TEXT_HUE_MSB_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(1, 3);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(1, 3);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
     case PREFIX_TEXT_HUE_LSB_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(2, 3);
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(2, 3);
       break;
 
     case PREFIX_TEXT_HUE_MSB_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(1, 4);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(1, 4);   //function to geT the MS byte or LS byte, 1 returns MSB, 2 returns LSB
       break;
 
     case PREFIX_TEXT_HUE_LSB_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte)get_text_colour_hue(2, 4);
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte)get_text_colour_hue(2, 4);
       break;
 
     case PREFIX_TEXT_USE_HUE_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[0].use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[0].use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_USE_HUE_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[1].use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[1].use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_USE_HUE_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[2].use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[2].use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_USE_HUE_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[3].use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[3].use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_USE_HUE_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_parameters[4].use_hue ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_parameters[4].use_hue ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_DEBUG_STATE:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
 #ifdef DEBUG
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte) 1;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte) 1;
 #else
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = (byte) 0;
 #endif
       break;
 
     case PREFIX_SCREEN_MODE:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = screen_mode;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = screen_mode;
       break;
 
     case PREFIX_SD_MOUNTED_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = card1.enabled;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = card1.enabled;
       break;
 
     case PREFIX_SD_MOUNTED_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = card2.enabled;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = card2.enabled;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_X_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[0].x_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[0].x_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_Y_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[0].y_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[0].y_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_X_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[1].x_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[1].x_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_Y_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[1].y_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[1].y_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_X_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[2].x_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[2].x_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_Y_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[2].y_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[2].y_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_X_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[3].x_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[3].x_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_Y_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[3].y_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[3].y_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_X_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].x_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[4].x_pos_dir;
       break;
 
     case PREFIX_TEXT_SCROLL_SPEED_Y_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].y_pos_dir;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[4].y_pos_dir;
       break;
 
     case PREFIX_TEXT_OBJ_ENABLED_0:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[0].object_used ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[0].object_used ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_OBJ_ENABLED_1:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[1].object_used ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[1].object_used ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_OBJ_ENABLED_2:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[2].object_used ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[2].object_used ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_OBJ_ENABLED_3:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[3].object_used ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[3].object_used ? (byte) 1 : (byte) 0;
       break;
 
     case PREFIX_TEXT_OBJ_ENABLED_4:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = text_cursor[4].object_used ? (byte) 1 : (byte) 0;
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = text_cursor[4].object_used ? (byte) 1 : (byte) 0;
       break;
 
 
     case PREFIX_TEXT_OBJ_SELECTED:
-      sensor_data_frame.frame_buffer[HEADER_LENGTH + (2 * offset)] = sensor_prefix;
-      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + (2 * offset)] = menu.get_selected_object();
+      sensor_data_frame.frame_buffer[HEADER_LENGTH + offset] = sensor_prefix;
+      sensor_data_frame.frame_buffer[HEADER_PLUS_ONE + offset] = menu.get_selected_object();
       break;
 
     default:  Sprint("Error: Prefix not defined. Prefix :");
@@ -1364,9 +1373,9 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
   }
 
 
-  if (!more_bytes || ((FRAME_OVERHEAD + (offset * 2)) > MEGA_SERIAL_BUFFER_LENGTH - 2)) // if more than 30 bytes in frame accounted for, or no byte left to pack then send frame
+  if (!more_bytes || ((FRAME_OVERHEAD + offset) > MEGA_SERIAL_BUFFER_LENGTH - 2)) // if more than 30 bytes in frame accounted for, or no byte left to pack then send frame
   { // otherwise well be able to fit at least one more group of data in frame
-    sensor_data_frame.frame_length = FRAME_OVERHEAD + (offset * 2) + 2; //header+content+new+data+trailer
+    sensor_data_frame.frame_length = FRAME_OVERHEAD + offset + 2; //header+content+new+data+trailer
     sensor_data_frame.frame_buffer[0] = sensor_data_frame.frame_length;
 
     set_frame_parity_and_checksum(SENSOR_FRAME_TYPE, sensor_data_frame.frame_length);

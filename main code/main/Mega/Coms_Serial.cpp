@@ -285,11 +285,21 @@ seen_byte_1:    //jump label if we discover were lost after reading above byte
     //  if (Serial_1.available() == 0)
     //    delayMicroseconds(delay_period);
 
-    if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_2 && seen_byte_1) { //expect to see second start byte, cant recover if missed first byte
+    if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_2 && seen_byte_1) { //expect to see second start byte
       Serial_1.read();
       seen_byte_2 = true;
     }
+    else if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_2) { //see second start byte, expecting frame coming because data arriving, proceed with caution
+      Serial_1.read();
 
+      if (Serial_1.available() == 0)  //if no char available, delay a bit
+        delayMicroseconds(delay_period);
+      // if next value reasonable, and parity correct proceed with header read, high chance of frame header
+      if (Serial_1.available() > 0 && (Serial_1.peek() >> 1) > FRAME_OVERHEAD && (Serial_1.peek() >> 1) <= MEGA_SERIAL_BUFFER_LENGTH && parity_of(Serial_1.peek()) == 0) {
+        seen_byte_1 = true;
+        seen_byte_2 = true;
+      }
+    }
 seen_byte_2:
 
     if (Serial_1.available() > 0 && !seen_byte_1 && !seen_byte_2) {
@@ -438,6 +448,16 @@ seen_byte_2:
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //failed parity checks
               request_frame_retransmission(TEXT_FRAME_TYPE, this_frame, obj_num);
+              for (byte i = 0; i < frame_length; i++) {
+                Serial.print(data[i]);
+                Serial.print("\t");
+                if (i > HEADER_LENGTH && i < frame_length - TRAILER_LENGTH)
+                  Serial.println((char)(data[i] >> 1));
+
+                else
+                  Serial.println();
+              }
+              Serial.println();
               Serial.println(F("specific text frame requested"));
             }
 #else
@@ -804,7 +824,7 @@ uint32_t Coms_Serial::detRate(byte recpin) {
 
   //test function for auto detect baud rate
   //code from here: https://forum.arduino.cc/index.php?topic=38160.0
-  
+
   // function to return valid received baud rate
   // Note that the serial monitor has no 600 baud option and 300 baud
   // doesn't seem to work with version 22 hardware serial library
