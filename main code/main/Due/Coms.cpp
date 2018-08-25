@@ -227,7 +227,8 @@ void Coms::init_frames() {
   ping_frame.frame_buffer[0] = ping_frame.frame_length;
   ping_frame.frame_buffer[1] = ping_frame.frame_type;
   ping_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
-
+  ping_frame.frame_buffer[3] = PACK_OBJ_NUM_DATA(0);
+  ping_frame.frame_buffer[4] = baud_LUT(COMS_SPEED);  //set the baud rate based on LUT values
 
   //if we will do parity checking, set parity here for constants
 #ifdef DO_HEAVY_ERROR_CHECKING
@@ -244,6 +245,9 @@ void Coms::init_frames() {
   ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
   ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
   ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
+  ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3]       | (parity_of(ping_frame.frame_buffer[3])));
+  ping_frame.frame_buffer[4] = (ping_frame.frame_buffer[4] << 1) | (parity_of(ping_frame.frame_buffer[4]));
+
 
   pos_frame.frame_buffer[0] = (pos_frame.frame_buffer[0] << 1) | (parity_of(pos_frame.frame_buffer[0]));
   pos_frame.frame_buffer[1] = (pos_frame.frame_buffer[1] << 1) | (parity_of(pos_frame.frame_buffer[1]));
@@ -252,6 +256,9 @@ void Coms::init_frames() {
 
 
 #endif
+
+
+
 
 }
 
@@ -373,6 +380,7 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
   else if (frame_type == PING_STRING_TYPE) {
 
     CLEAR_HEADER_CHECKSUM(ping_frame.frame_buffer[3]);
+    set_buffer_parity_bits(ping_frame.frame_buffer, BYTE_PARITY_LOC, pos_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
     set_verical_parity_byte(ping_frame.frame_buffer , ping_frame.frame_length - 3);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
   }
@@ -416,7 +424,7 @@ void Coms::set_header_parity(byte frame_type) {
       //      ping_frame.frame_buffer[1] = (ping_frame.frame_buffer[1] << 1) | (parity_of(ping_frame.frame_buffer[1]));
       //      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(ping_frame.frame_buffer[2])) << 4));
       //      ping_frame.frame_buffer[2] = (ping_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( ping_frame.frame_buffer[2] ))));
-      ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3]       | (parity_of(ping_frame.frame_buffer[3])));
+      //      ping_frame.frame_buffer[3] = (ping_frame.frame_buffer[3]       | (parity_of(ping_frame.frame_buffer[3])));
       break;
 
     default:
@@ -640,6 +648,77 @@ bad_frame:
 }
 
 
+bool Coms::sanity_check_ping_rx(byte *buf) {
 
+  /*
+     good ping frame should be
+
+     8  : 00001000
+     6  : 00000110
+     34 : 00100010
+     0  : 00000000  <- obj num is zero
+     1  : 00000001
+     45 : 00101101  <- vertical parity
+     94 : 01011110  <- checksum
+     255: 11111111  <- end byte
+  */
+
+  /*
+     bad ping frame should be
+
+     8  : 00001000
+     6  : 00000110
+     34 : 00100010
+     0  : 00000000
+     0  : 00000000
+     44 : 00101100  <- vertical parity
+     92 : 01011100  <- checksum
+     255: 11111111  <- end byte
+  */
+
+
+  byte frame_length = buf[0];
+  byte frame_type = buf[1];
+  byte num_frames = (buf[2] >> 5) & 0x7;
+  byte this_frame = (buf[2] >> 1) & 7;
+  byte obj_num = buf[3];
+  byte ping_response = buf[4];
+
+  byte vert_parity = buf[5];
+  byte checksum = buf[6];
+  byte endbyte = buf[7];
+
+  if (ping_response != PING_GOOD_RESPONSE) {  //if neither good or bad frame
+    if (ping_response != PING_BAD_RESPONSE)                 goto bad_ping_response;
+  }
+  else if (frame_length != PING_FRAME_RESPONSE_LENGTH)      goto bad_ping_response;
+  else if (frame_type != PING_RESPONSE_TYPE)                goto bad_ping_response;
+  else if (num_frames != 1)                                 goto bad_ping_response;
+  else if (this_frame != 1)                                 goto bad_ping_response;
+  else if (obj_num != 0)                                    goto bad_ping_response;
+  else if (vert_parity != 45)                               goto bad_ping_response;
+  else if (checksum != 94)                                  goto bad_ping_response;
+
+  else {
+    Serial.println("ping received ok");
+    return 0;
+  }
+
+
+
+bad_ping_response:
+  Serial.println("bad ping received");
+  return 1;
+}
+
+byte Coms::baud_LUT(uint32_t coms_speed) {
+
+  byte i = 1; //scan through index's of array until matching speed or end of array
+  while (i < NUM_COMS_SPEEDS) {
+    if (baud_rate_LUT[i] == coms_speed) return i;
+    i++;
+  }
+  if (i < NUM_COMS_SPEEDS) return 0; //index zero is default coms speed, so just stay at that if speed not defined
+}
 
 #endif // Coms_CPP

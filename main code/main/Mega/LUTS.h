@@ -2,7 +2,7 @@
 #define LUTS_H
 
 
-const byte parity[] =  //LUT for parity check, byte value is index, content is 0 if even parity, 1 if odd
+const byte parity[] PROGMEM=  //LUT for parity check, byte value is index, content is 0 if even parity, 1 if odd
 {
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0,
   1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1,
@@ -40,5 +40,7 @@ const byte channel_reliability_test_data[16 * 25] PROGMEM = {179, 94, 163, 176, 
                                                             };
 
 
+#define NUM_COMS_SPEEDS 10
+const uint32_t baud_rate_LUT[NUM_COMS_SPEEDS] PROGMEM= {COMS_SPEED, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600, 115200};
 
 #endif

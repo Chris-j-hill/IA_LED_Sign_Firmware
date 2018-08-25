@@ -69,5 +69,7 @@ const byte channel_reliability_test_data[16 * 25] = {179, 94, 163, 176, 82, 66, 
                                                      192, 148, 203, 58, 191, 72, 7, 158, 30, 104, 203, 101, 10, 177, 163, 33, 104, 91, 110, 149, 219, 5, 121, 21, 59
                                                     };
 
-                                    
+#define NUM_COMS_SPEEDS 10
+const uint32_t baud_rate_LUT[NUM_COMS_SPEEDS] = {COMS_SPEED, 1200, 2400, 4800, 9600, 19200, 28800, 38400, 57600, 115200};
+
 #endif

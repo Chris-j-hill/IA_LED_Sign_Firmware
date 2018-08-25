@@ -29,7 +29,7 @@
 #endif
 
 #define USE_SERIAL_TO_MEGAS
-#define USE_I2C_TO_MEGAS
+#define PING_FOR_COMS_SPEED_CONFIG
 
 
 #define SINGLE_MATRIX_WIDTH 64
@@ -63,27 +63,27 @@
 
 #if defined(USING_COLOUR_SET_888)
 
-const byte COLOUR_MAX_LEVEL = 255;
-const byte COLOUR_LEVEL_STEP_SIZE = 16; // a 256 bit value gets down converted to 4 bit to fit in matrix buffer, least significant 4 bits ignored
+const byte COLOUR_MAX_LEVEL PROGMEM = 255;
+const byte COLOUR_LEVEL_STEP_SIZE PROGMEM= 16; // a 256 bit value gets down converted to 4 bit to fit in matrix buffer, least significant 4 bits ignored
 
 #elif defined(USING_COLOUR_SET_444)
 
-const byte COLOUR_MAX_LEVEL = 15;
-const byte COLOUR_LEVEL_STEP_SIZE = 1;
+const byte COLOUR_MAX_LEVEL PROGMEM = 15;
+const byte COLOUR_LEVEL_STEP_SIZE PROGMEM = 1;
 
 #else
 
-const byte COLOUR_MAX_LEVEL = 7;
-const byte COLOUR_LEVEL_STEP_SIZE = 1;
+const byte COLOUR_MAX_LEVEL PROGMEM = 7;
+const byte COLOUR_LEVEL_STEP_SIZE PROGMEM = 1;
 
 #endif
 
-const int16_t HUE_MAX_LEVEL = 1536;
-const int16_t HUE_MIN_LEVEL = -1536;
+const int16_t HUE_MAX_LEVEL PROGMEM = 1536;
+const int16_t HUE_MIN_LEVEL PROGMEM = -1536;
 
-const byte DEFAULT_TEXT_RED_BRIGHTNESS  = COLOUR_MAX_LEVEL;
-const byte DEFAULT_TEXT_GREEN_BRIGHTNESS = COLOUR_MAX_LEVEL;
-const byte DEFAULT_TEXT_BLUE_BRIGHTNESS = COLOUR_MAX_LEVEL;
+const byte DEFAULT_TEXT_RED_BRIGHTNESS PROGMEM  = COLOUR_MAX_LEVEL;
+const byte DEFAULT_TEXT_GREEN_BRIGHTNESS PROGMEM = COLOUR_MAX_LEVEL;
+const byte DEFAULT_TEXT_BLUE_BRIGHTNESS PROGMEM = COLOUR_MAX_LEVEL;
 
 #define DELAY_FEEBDACK_PINS
 

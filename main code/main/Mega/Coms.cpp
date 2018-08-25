@@ -635,5 +635,4 @@ void Coms::remove_byte_parity_bit(byte *buf, byte parity_loc,  byte end_address,
 }
 
 
-
 #endif // COMS_CPP

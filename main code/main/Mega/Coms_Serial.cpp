@@ -7,6 +7,7 @@
 #include "Coms.h"
 #include "Graphics.h"
 #include "Host.h"
+#include "LUTS.h"
 //volatile bool frame_arrived;   // flag from ISR to methods
 
 
@@ -25,6 +26,40 @@ extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 #define START_BYTE_2 252
 #define END_BYTE_1 253
 #define END_BYTE_2 254
+
+#define PING_GOOD_RESPONSE 1
+#define PING_BAD_RESPONSE 0
+
+//tight on space so store these in progmem, must manually hardcode frame content, data shown below
+const byte ping_frame_good[PING_FRAME_RESPONSE_LENGTH] PROGMEM = {PING_FRAME_RESPONSE_LENGTH, PING_RESPONSE_TYPE, PACK_FRAME_NUM_DATA(1, 1), 0, PING_GOOD_RESPONSE, 45, 94, 255};
+/*
+   good ping frame should be
+
+   8  : 00001000
+   6  : 00000110
+   34 : 00100010
+   0  : 00000000  <- obj num is zero
+   1  : 00000001
+   45 : 00101101  <- vertical parity
+   94 : 01011110  <- checksum
+   255: 11111111  <- end byte
+*/
+
+
+const byte ping_frame_bad[PING_FRAME_RESPONSE_LENGTH] PROGMEM = {PING_FRAME_RESPONSE_LENGTH, PING_RESPONSE_TYPE, PACK_FRAME_NUM_DATA(1, 1), 0, PING_BAD_RESPONSE, 44, 92, 255};
+/*
+   bad ping frame should be
+
+   8  : 00001000
+   6  : 00000110
+   34 : 00100010
+   0  : 00000000
+   0  : 00000000
+   44 : 00101100  <- vertical parity
+   92 : 01011100  <- checksum
+   255: 11111111  <- end byte
+*/
+
 
 
 
@@ -320,10 +355,10 @@ seen_byte_2:
 
         if (frame_type == 0 || !encoding_ok) {
           Serial.println(F("frame header error"));
-//          Serial.print(F("frame_type : "));
-//          Serial.println(frame_type);
-//          Serial.print(F("encoding ok : "));
-//          Serial.println(encoding_ok);
+          //          Serial.print(F("frame_type : "));
+          //          Serial.println(frame_type);
+          //          Serial.print(F("encoding ok : "));
+          //          Serial.println(encoding_ok);
 
 #ifndef DISABLE_REQUEST_RETRANSMISSION
           request_frame_retransmission();
@@ -386,6 +421,12 @@ seen_byte_2:
             else if (break_condition == 3) return;      // byte didnt arrive
           }
 
+
+
+          //######################################
+          //    proceedure for text frame received
+          //######################################
+
           else if (frame_type == TEXT_FRAME_TYPE) { //frame read fully and is text frame
             memcpy(data, header, HEADER_LENGTH);       //copy header to beginning of frame
 
@@ -405,6 +446,11 @@ seen_byte_2:
 #endif
           }
 
+
+          //######################################
+          //    proceedure for pos frame received
+          //######################################
+
           else if (frame_type == POS_FRAME_TYPE) {
             memcpy(data, header, HEADER_LENGTH);
 
@@ -422,6 +468,11 @@ seen_byte_2:
               Serial.println(F("pos frame error"));
 #endif
           }
+
+          //######################################
+          //    proceedure for sensor frame received
+          //######################################
+
 
           else if (frame_type == SENSOR_FRAME_TYPE) { //frame read fully and is text frame
             memcpy(data, header, HEADER_LENGTH);       //copy header to beginning of frame
@@ -442,7 +493,9 @@ seen_byte_2:
           }
 
 
-
+          //######################################
+          //    proceedure for menu frame received
+          //######################################
 
           else if (frame_type == MENU_FRAME_TYPE) { //frame read fully and is text frame
             memcpy(data, header, HEADER_LENGTH);       //copy header to beginning of frame
@@ -462,21 +515,53 @@ seen_byte_2:
 #endif
           }
 
+
+          //######################################
+          //    proceedure for ping frame received
+          //######################################
+
+#ifndef DISABLE_REQUEST_RETRANSMISSION
           else if (frame_type == PING_STRING_TYPE) { //frame read fully and is text frame
             memcpy(data, header, HEADER_LENGTH);       //copy header to beginning of frame
 
             if (!error_check_frame_body(data, PING_STRING_TYPE, frame_length)) { //if frame ok, returns false(no errors), save data
               ping_good();
               Serial.println(F("ping good sent"));
+
+#ifdef PING_FOR_COMS_SPEED_CONFIG
+              /*  if configuring com speed through pings, mega should change com speed to defined value from received ping frame,
+                  send ping good frame again at new speed, due should then send test chars for a while so we can check
+                  manually what speed the chars are arriving at, confirm due coms speed, then ping good again if as expected
+                  if detected speed not as expected, switch to that com speed and send ping bad, then finally switch
+                  back to default com speed
+
+              */
+              uint32_t requested_rate = baud_rate_LUT[data[4]];
+              Serial_1.begin(requested_rate);
+              delay(25); //short delay to ensure due has decoded the last frame and set its baud rate
+              ping_good();  //send frame again at new rate
+
+              uint32_t detected_rate = detRate(SERIAL1_RX_PIN);
+
+              if (detected_rate == requested_rate) { //if detected rate ok, ping good and exit
+                ping_good();
+              }
+              else {                                  //else switch to detected rate, and ping bad, then switch to default rate
+                Serial_1.begin(detected_rate);
+                ping_bad();
+                Serial_1.begin(COMS_SPEED);
+              }
+
+
+
+#endif
+
             }
-#ifndef DISABLE_REQUEST_RETRANSMISSION
+
             else { //failed parity checks
               ping_bad();
               Serial.println(F("ping bad sent"));
             }
-#else
-            else
-              Serial.println(F("ping frame error"));
 #endif
           }
         }
@@ -485,6 +570,21 @@ seen_byte_2:
   }
   TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
 }
+
+
+void Coms_Serial::ping_good() { //respond indicating good connection
+  for (byte i = 0; i < PING_FRAME_RESPONSE_LENGTH; i++) {
+    Serial_1.println(ping_frame_good[i]);
+  }
+}
+
+void Coms_Serial::ping_bad() { //respond indicating bad connection
+  for (byte i = 0; i < PING_FRAME_RESPONSE_LENGTH; i++) {
+    Serial_1.println(ping_frame_bad[i]);
+  }
+}
+
+
 
 
 void Coms_Serial::receive_frame(byte * temp_buffer) { //header read, checks done, now read remaining bytes
@@ -695,5 +795,50 @@ void Coms_Serial::request_frame_retransmission() {
 
 
 }
+
+
+
+
+
+uint32_t Coms_Serial::detRate(byte recpin) {
+
+  //test function for auto detect baud rate
+  //code from here: https://forum.arduino.cc/index.php?topic=38160.0
+  
+  // function to return valid received baud rate
+  // Note that the serial monitor has no 600 baud option and 300 baud
+  // doesn't seem to work with version 22 hardware serial library
+
+  uint32_t baud, rate = 10000, x;
+  for (byte i = 0; i < NUM_BITS_PER_BYTE; i++) {
+    x = pulseIn(recpin, LOW, 50000); //measure the next zero bit width
+    rate = x < rate ? x : rate;// dont take average, take lowest value
+  }
+
+  if (rate < 12)
+    baud = 115200;
+  else if (rate < 20)
+    baud = 57600;
+  else if (rate < 29)
+    baud = 38400;
+  else if (rate < 40)
+    baud = 28800;
+  else if (rate < 60)
+    baud = 19200;
+  else if (rate < 80)
+    baud = 14400;
+  else if (rate < 150)
+    baud = 9600;
+  else if (rate < 300)
+    baud = 4800;
+  else if (rate < 600)
+    baud = 2400;
+  else if (rate < 1200)
+    baud = 1200;
+  else
+    baud = 0;
+  return baud;
+}
+
 
 #endif // COMS_SERIAL_CPP

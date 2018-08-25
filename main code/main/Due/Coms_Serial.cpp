@@ -33,6 +33,7 @@ extern struct Frame text_frame;
 extern struct Frame sensor_data_frame;
 extern struct Frame menu_frame;
 extern struct Frame pos_frame;
+extern struct Frame ping_frame;
 
 
 //arrays for current display strings
@@ -122,8 +123,8 @@ auto& Serial_4 = serial_tc8;
 #endif
 
 //const char return_carraige[2] = {'\r', '\n'};
-const char frame_start_bytes[2] = {251,252};
-const char frame_end_bytes[2] = {253,254};
+const char frame_start_bytes[2] = {251, 252};
+const char frame_end_bytes[2] = {253, 254};
 
 
 Mega_Serial_Parameters mega_parameters;
@@ -151,76 +152,20 @@ void Coms_Serial::init_serial() {
 
 void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at specified speed, must be standardised speed 115200 or below, otherwise error thrown
 
-#ifdef SERIAL_1_IS_SOFT
-  Serial_1.begin(
-    RX_PIN_1,
-    TX_PIN_1,
-    SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
-    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
-    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
-  );
-  NVIC_SetPriority (SERIAL_1_TIMER, SOFT_SERIAL_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
-#else
-  Serial_1.begin(COMS_SPEED, HARD_COMS_CONFIG);
-#endif
 
-
-#ifdef SERIAL_2_IS_SOFT
-  Serial_2.begin(
-    RX_PIN_2,
-    TX_PIN_2,
-    SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
-    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
-    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
-  );
-
-  NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY);
-#else
-  Serial_2.begin(COMS_SPEED, HARD_COMS_CONFIG);
-#endif
-
-
-#ifdef SERIAL_3_IS_SOFT
-  Serial_3.begin(
-    RX_PIN_3,
-    TX_PIN_3,
-    SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
-    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
-    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
-  );
-
-  NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
-#else
-  Serial_3.begin(COMS_SPEED, HARD_COMS_CONFIG);
-#endif
-
-
-#ifdef SERIAL_4_IS_SOFT
-  Serial_4.begin(
-    RX_PIN_4,
-    TX_PIN_4,
-    SOFT_COMS_SPEED,
-    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
-    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
-    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
-  );
-
-  NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);
-#else
-  Serial_4.begin(COMS_SPEED, HARD_COMS_CONFIG);
-#endif
+  configure_serial_1(COMS_SPEED); //configure at defualt coms speed initially
+  configure_serial_2(COMS_SPEED);
+  configure_serial_3(COMS_SPEED);
+  configure_serial_4(COMS_SPEED);
 
 
 #ifdef MEGA_SERIAL_CONNECTION_TESTING   // simple code to allow used to see start of transmission
+
   Serial_1.flush();
   Serial_2.flush();
   Serial_3.flush();
   Serial_4.flush();
 
-  //for(byte i=0;i<64;i++){ //clear the incoming buffer before any bytes could arrive
   while (Serial_1.available() > 0)
     Serial_1.read();
   while (Serial_2.available() > 0)
@@ -229,7 +174,6 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
     Serial_3.read();
   while (Serial_4.available() > 0)
     Serial_4.read();
-  //}
 
   int timeout = ceil((10000 << 2) / COMS_SPEED); //wait for up to four bytes periods before timeout
   Serial_1.setTimeout(timeout);
@@ -244,80 +188,463 @@ void Coms_Serial::init_software_serial_to_megas() {   // initialise serial at sp
 #endif
 }
 
+
+void Coms_Serial::configure_serial_1(uint32_t baud) {
+
+#ifdef SERIAL_1_IS_SOFT
+  Serial_1.begin(
+    RX_PIN_1,
+    TX_PIN_1,
+    baud,
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
+  );
+  NVIC_SetPriority (SERIAL_1_TIMER, SOFT_SERIAL_PRIORITY);  //set priority of interrupt, see priority definitions for details and links
+#else
+  Serial_1.begin(baud, HARD_COMS_CONFIG);
+#endif
+
+}
+void Coms_Serial::configure_serial_2(uint32_t baud) {
+
+#ifdef SERIAL_2_IS_SOFT
+  Serial_2.begin(
+    RX_PIN_2,
+    TX_PIN_2,
+    baud,
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
+  );
+
+  NVIC_SetPriority (SERIAL_2_TIMER, SOFT_SERIAL_PRIORITY);
+#else
+  Serial_2.begin(baud, HARD_COMS_CONFIG);
+#endif
+
+}
+void Coms_Serial::configure_serial_3(uint32_t baud) {
+
+#ifdef SERIAL_3_IS_SOFT
+  Serial_3.begin(
+    RX_PIN_3,
+    TX_PIN_3,
+    baud,
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
+  );
+
+  NVIC_SetPriority (SERIAL_3_TIMER, SOFT_SERIAL_PRIORITY);
+#else
+  Serial_3.begin(baud, HARD_COMS_CONFIG);
+#endif
+
+}
+void Coms_Serial::configure_serial_4(uint32_t baud) {
+
+#ifdef SERIAL_4_IS_SOFT
+  Serial_4.begin(
+    RX_PIN_4,
+    TX_PIN_4,
+    baud,
+    soft_uart::data_bit_codes::SOFT_COMS_CONFIG_NUM_BITS,
+    soft_uart::parity_codes::SOFT_COMS_CONFIG_NUM_PARITY,
+    soft_uart::stop_bit_codes::SOFT_COMS_CONFIG_NUM_STOP
+  );
+
+  NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);
+#else
+  Serial_4.begin(buad, HARD_COMS_CONFIG);
+#endif
+
+}
+
 void Coms_Serial::ping() {
 
   delay(100);
-  //  Serial_1.println(ping_string);
-  //  Serial_2.println(ping_string);
-  //  Serial_3.println(ping_string);
-  //Serial_4.println(ping_string);
 
   uint32_t ping_time = millis();
 
-  if (mega_enabled[0]) {
+  bool ping1_1_ok = false;  //flag for first ping response
+  bool ping2_1_ok = false;
+  bool ping3_1_ok = false;
+  bool ping4_1_ok = false;
+
+  bool ping1_2_ok = false;  // flag for second ping response
+  bool ping2_2_ok = false;
+  bool ping3_2_ok = false;
+  bool ping4_2_ok = false;
+
+  bool ping1_failed = false;  //transmission failed, stop checking for frame arrival
+  bool ping2_failed = false;
+  bool ping3_failed = false;
+  bool ping4_failed = false;
+
+  uint32_t cur_baud_1 = COMS_SPEED;
+  uint32_t cur_baud_2 = COMS_SPEED;
+  uint32_t cur_baud_3 = COMS_SPEED;
+  uint32_t cur_baud_4 = COMS_SPEED;
+
+  if (mega_enabled[0]) {    // initiate ping sequence
     write_frame(0, PING_STRING_TYPE);
-    //Serial_1.write(ping_string, sizeof(ping_string));
-    //Serial_1.write(return_carraige, 2);
   }
   if (mega_enabled[1]) {
     write_frame(1, PING_STRING_TYPE);
-    //Serial_2.write(ping_string, sizeof(ping_string));
-    //Serial_2.write(return_carraige, 2);
   }
   if (mega_enabled[2]) {
     write_frame(2, PING_STRING_TYPE);
-    //Serial_3.write(ping_string, sizeof(ping_string));
-    //Serial_3.write(return_carraige, 2);
   }
   if (mega_enabled[3]) {
     write_frame(3, PING_STRING_TYPE);
-    //Serial_4.write(ping_string, sizeof(ping_string));
-    //Serial_4.write(return_carraige, 2);
   }
+
 
   //wait for response
   while (millis() < ping_time + PING_WAIT_PERIOD) {
-    char ping_rx = '\0';
-    if (mega_enabled[0] && Serial_1.available() != 0) {
-      ping_rx = Serial_1.read();
-      Serial.println(ping_rx);
-      if (ping_rx == expected_ping_rx)
-        mega_parameters.detected1 = true;
-      else
+
+    byte ping_rx[PING_FRAME_RESPONSE_LENGTH] = {'\0'};
+
+
+    //#########################
+    //    proceedure for mega 1
+    //#########################
+
+    if (mega_enabled[0] && !ping1_1_ok && !ping1_failed && Serial_1.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until entire frame arrived, if byte dropped already whill timeout, assume bad connection...
+      Serial_1.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping1_1_ok = true;
+
+#ifdef SERIAL_1_IS_SOFT
+          configure_serial_1(SOFT_COMS_SPEED);
+          cur_baud_1 = SOFT_COMS_SPEED;
+#else
+          configure_serial_1(HARD_COMS_SPEED);
+          cur_baud_1 = HARD_COMS_SPEED;
+#endif
+        }
+        else {   // error in transmitting original frame, if cant transmit at default speed set mega as not detected
+          ping1_failed = true;
+        }
+      }
+      else {
+        ping1_failed = true;
         mega_parameters.detected1 = false;
+      }
+    }
+    if (ping1_1_ok  && !ping1_failed && Serial_1.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until second frame received at new speed
+      Serial_1.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping1_2_ok = true;
+          ping1_1_ok = false;
+        }
+        else {   //why might this happen?
+          ping1_failed = true;
+        }
+      }
+      else {
+        ping1_failed = true;
+        mega_parameters.detected1 = false;
+      }
+    }
+    if (ping1_2_ok && !ping1_failed) {
+      //print chars until new frame arrived
+
+      if (Serial_1.available() < PING_FRAME_RESPONSE_LENGTH) {
+        Serial_1.write("U", 1); //U == 01010101 good char for detecting shorted pulse length at mega end
+        delay(1); //delay to detect edge between chars
+      }
+      else {
+        Serial_1.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+        if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+          if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+            ping1_2_ok = false;
+            ping1_1_ok = false;
+          }
+          else {
+            //bad frame, mismatch between expected speed and measured speed by mega, return to default
+            configure_serial_1(COMS_SPEED);
+            cur_baud_1 = COMS_SPEED;
+          }
+
+          mega_parameters.detected1 = true; //in either case mega has been detected
+        }
+        else {
+          ping1_failed = true;
+          mega_parameters.detected1 = false;
+        }
+      }
     }
 
-    if (mega_enabled[1] && Serial_2.available() != 0) {
-      ping_rx = Serial_2.read();
-      if (ping_rx == expected_ping_rx)
-        mega_parameters.detected2 = true;
-      else
+
+
+    //#########################
+    //    proceedure for mega 2
+    //#########################
+
+
+    if (mega_enabled[1] && !ping2_1_ok && !ping1_failed && Serial_2.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until entire frame arrived, if byte dropped already whill timeout, assume bad connection...
+      Serial_2.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping2_1_ok = true;
+
+#ifdef SERIAL_2_IS_SOFT
+          configure_serial_2(SOFT_COMS_SPEED);
+          cur_baud_2 = SOFT_COMS_SPEED;
+#else
+          configure_serial_2(HARD_COMS_SPEED);
+          cur_baud_2 = HARD_COMS_SPEED;
+#endif
+        }
+        else {   // error in transmitting original frame, if cant transmit at default speed set mega as not detected
+          ping2_failed = true;
+        }
+      }
+      else {
+        ping2_failed = true;
         mega_parameters.detected2 = false;
+      }
+    }
+    if (ping2_1_ok  && !ping2_failed && Serial_2.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until second frame received at new speed
+      Serial_2.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping2_2_ok = true;
+          ping2_1_ok = false;
+        }
+        else {   //why might this happen?
+          ping2_failed = true;
+        }
+      }
+      else {
+        ping2_failed = true;
+        mega_parameters.detected2 = false;
+      }
+    }
+    if (ping2_2_ok && !ping2_failed) {
+      //print chars until new frame arrived
+
+      if (Serial_2.available() < PING_FRAME_RESPONSE_LENGTH) {
+        Serial_2.write("U", 1); //U == 01010101 good char for detecting shorted pulse length at mega end
+        delay(1); //delay to detect edge between chars
+      }
+      else {
+        Serial_2.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+        if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+          if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+            ping2_2_ok = false;
+            ping2_1_ok = false;
+          }
+          else {
+            //ping bad frame, mismatch between expected speed and measured speed by mega, return to default
+            configure_serial_2(COMS_SPEED);
+            cur_baud_2 = COMS_SPEED;
+          }
+          mega_parameters.detected2 = true; //in either case mega has been detected
+        }
+        else {
+          ping2_failed = true;
+          mega_parameters.detected2 = false;
+        }
+      }
     }
 
-    if (mega_enabled[2] && Serial_3.available() != 0) {
-      ping_rx = Serial_3.read();
-      if (ping_rx == expected_ping_rx)
-        mega_parameters.detected3 = true;
-      else
+
+
+
+    //#########################
+    //    proceedure for mega 3
+    //#########################
+
+
+    if (mega_enabled[2] && !ping3_1_ok && !ping3_failed && Serial_3.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until entire frame arrived, if byte dropped already whill timeout, assume bad connection...
+      Serial_1.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping3_1_ok = true;
+
+#ifdef SERIAL_3_IS_SOFT
+          configure_serial_3(SOFT_COMS_SPEED);
+          cur_baud_3 = SOFT_COMS_SPEED;
+#else
+          configure_serial_3(HARD_COMS_SPEED);
+          cur_baud_3 = HARD_COMS_SPEED;
+#endif
+        }
+        else {   // error in transmitting original frame, if cant transmit at default speed set mega as not detected
+          ping3_failed = true;
+        }
+      }
+      else {
+        ping3_failed = true;
         mega_parameters.detected3 = false;
+      }
+    }
+    if (ping3_1_ok  && !ping3_failed && Serial_3.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until second frame received at new speed
+      Serial_1.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping3_2_ok = true;
+          ping3_1_ok = false;
+        }
+        else {   //why might this happen?
+          ping3_failed = true;
+        }
+      }
+      else {
+        ping3_failed = true;
+        mega_parameters.detected3 = false;
+      }
+    }
+    if (ping3_2_ok && !ping3_failed) {
+      //print chars until new frame arrived
+
+      if (Serial_3.available() < PING_FRAME_RESPONSE_LENGTH) {
+        Serial_3.write("U", 1); //U == 01010101 good char for detecting shorted pulse length at mega end
+        delay(1); //delay to detect edge between chars
+      }
+      else {
+        Serial_3.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+        if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+          if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+            ping3_2_ok = false;
+            ping3_1_ok = false;
+          }
+          else {
+            //bad frame, mismatch between expected speed and measured speed by mega, return to default
+            configure_serial_3(COMS_SPEED);
+            cur_baud_3 = COMS_SPEED;
+          }
+
+          mega_parameters.detected3 = true; //in either case mega has been detected
+        }
+        else {
+          ping3_failed = true;
+          mega_parameters.detected3 = false;
+        }
+      }
     }
 
-    if (mega_enabled[3] && Serial_4.available() != 0) {
-      ping_rx = Serial_4.read();
-      if (ping_rx == expected_ping_rx)
-        mega_parameters.detected4 = true;
-      else
+
+
+
+    //#########################
+    //    proceedure for mega 4
+    //#########################
+
+
+    if (mega_enabled[3] && !ping4_1_ok && !ping4_failed && Serial_4.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until entire frame arrived, if byte dropped already whill timeout, assume bad connection...
+      Serial_4.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping4_1_ok = true;
+
+#ifdef SERIAL_4_IS_SOFT
+          configure_serial_4(SOFT_COMS_SPEED);
+          cur_baud_4 = SOFT_COMS_SPEED;
+#else
+          configure_serial_4(HARD_COMS_SPEED);
+          cur_baud_4 = HARD_COMS_SPEED;
+#endif
+        }
+        else {   // error in transmitting original frame, if cant transmit at default speed set mega as not detected
+          ping4_failed = true;
+        }
+      }
+      else {
+        ping4_failed = true;
         mega_parameters.detected4 = false;
+      }
     }
-    if ((mega_enabled[0] ? mega_parameters.detected1 : true) && (mega_enabled[1] ? mega_parameters.detected2 : true) && (mega_enabled[2] ? mega_parameters.detected3 : true) && (mega_enabled[3] ? mega_parameters.detected4 : true)) {
-      Serial.println(F("all megas detected"));
+    if (ping4_1_ok  && !ping4_failed && Serial_4.available() >= PING_FRAME_RESPONSE_LENGTH) { //wait until second frame received at new speed
+      Serial_4.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+      if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+        if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+          ping4_2_ok = true;
+          ping4_1_ok = false;
+        }
+        else {   //why might this happen?
+          ping4_failed = true;
+        }
+      }
+      else {
+        ping4_failed = true;
+        mega_parameters.detected4 = false;
+      }
+    }
+    if (ping4_2_ok && !ping4_failed) {
+      //print chars until new frame arrived
+
+      if (Serial_4.available() < PING_FRAME_RESPONSE_LENGTH) {
+        Serial_4.write("U", 1); //U == 01010101 good char for detecting shorted pulse length at mega end
+        delay(1); //delay to detect edge between chars
+      }
+      else {
+        Serial_4.readBytes(ping_rx, PING_FRAME_RESPONSE_LENGTH);
+        if (sanity_check_ping_rx(ping_rx)) { // return 1 if no errors, genuine response
+
+          if (ping_rx[4] == PING_GOOD_RESPONSE) { // ok to switch to new speed
+            ping4_2_ok = false;
+            ping4_1_ok = false;
+          }
+          else {
+            //bad frame, mismatch between expected speed and measured speed by mega, return to default
+            configure_serial_4(COMS_SPEED);
+            cur_baud_4 = COMS_SPEED;
+          }
+
+          mega_parameters.detected4 = true; //in either case mega has been detected
+        }
+        else {
+          ping4_failed = true;
+          mega_parameters.detected4 = false;
+        }
+      }
+    }
+
+    //once all megas detected, break
+    if (mega_parameters.detected1 && mega_parameters.detected2 && mega_parameters.detected3 && mega_parameters.detected4) {
       break;
     }
+
+
   }
-  if (millis() >= ping_time + PING_WAIT_PERIOD)
-    Serial.println("timeout");
+
+  if (millis() >= ping_time + PING_WAIT_PERIOD) {
+    Serial.println("ping timeout");
+
+    if (cur_baud_1 != COMS_SPEED && !mega_parameters.detected1) //if timeout and this mega not detected but we changed com speed at some point, set it back to default
+      configure_serial_1(COMS_SPEED);
+
+    if (cur_baud_2 != COMS_SPEED && !mega_parameters.detected2)
+      configure_serial_2(COMS_SPEED);
+
+    if (cur_baud_3 != COMS_SPEED && !mega_parameters.detected3)
+      configure_serial_3(COMS_SPEED);
+
+    if (cur_baud_4 != COMS_SPEED && !mega_parameters.detected4)
+      configure_serial_4(COMS_SPEED);
+
+  }
 }
+
+
+
 
 void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function to send strings to display on screen
 
@@ -443,7 +770,7 @@ void Coms_Serial::write_text_frame(byte address) {
   }
 }
 
-void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte frame_length) {
+void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte frame_length) {
 
   switch (address) {
 
@@ -459,7 +786,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
         case POS_FRAME_TYPE:      Serial_1.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_1.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_1.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
-        case PING_STRING_TYPE:    Serial_1.write(ping_string, sizeof(ping_string));                                 break;
+        case PING_STRING_TYPE:    Serial_1.write(ping_frame.frame_buffer, ping_frame.frame_length);                                 break;
         case FRAME_RETRANSMIT:    Serial_1.write(buf, frame_length);                                                break;
       }
       Serial_1.write(frame_end_bytes, 2); //used for end of frame detection
@@ -481,7 +808,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
         case POS_FRAME_TYPE:      Serial_2.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_2.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_2.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
-        case PING_STRING_TYPE:    Serial_2.write(ping_string, sizeof(ping_string));                                 break;
+        case PING_STRING_TYPE:    Serial_2.write(ping_frame.frame_buffer, ping_frame.frame_length);                                 break;
         case FRAME_RETRANSMIT:    Serial_2.write(buf, frame_length);                                                break;
       }
       Serial_2.write(frame_end_bytes, 2);
@@ -501,7 +828,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
         case POS_FRAME_TYPE:      Serial_3.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_3.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_3.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
-        case PING_STRING_TYPE:    Serial_3.write(ping_string, sizeof(ping_string));                                 break;
+        case PING_STRING_TYPE:    Serial_3.write(ping_frame.frame_buffer, ping_frame.frame_length);                                 break;
         case FRAME_RETRANSMIT:    Serial_3.write(buf, frame_length);                                                break;
       }
       Serial_3.write(frame_end_bytes, 2);
@@ -523,7 +850,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte *buf, byte fra
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
         case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
-        case PING_STRING_TYPE:    Serial_4.write(ping_string, sizeof(ping_string));                                 break;
+        case PING_STRING_TYPE:    Serial_4.write(ping_frame.frame_buffer, ping_frame.frame_length);                                 break;
         case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }
       Serial_4.write(frame_end_bytes, 2);
@@ -1054,26 +1381,26 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
 }
 
 void Coms_Serial::check_megas() {
-//  static bool first_run = true;
+  //  static bool first_run = true;
   byte rx[MEGA_RX_FRAME_LENGTH];
-//  if (first_run) {
-//    while (Serial_1.available() > 0)
-//      Serial_1.read();
-//    while (Serial_2.available() > 0)
-//      Serial_2.read();
-//    while (Serial_3.available() > 0)
-//      Serial_3.read();
-//    while (Serial_4.available() > 0)
-//      Serial_4.read();
-//    first_run = false;
-//  }
+  //  if (first_run) {
+  //    while (Serial_1.available() > 0)
+  //      Serial_1.read();
+  //    while (Serial_2.available() > 0)
+  //      Serial_2.read();
+  //    while (Serial_3.available() > 0)
+  //      Serial_3.read();
+  //    while (Serial_4.available() > 0)
+  //      Serial_4.read();
+  //    first_run = false;
+  //  }
 
-    check_mega_1();  //functions to actually check ports for request from mega
-    check_mega_2();
-    check_mega_3();
-    check_mega_4();
+  check_mega_1();  //functions to actually check ports for request from mega
+  check_mega_2();
+  check_mega_3();
+  check_mega_4();
 
-    
+
   //  if (Serial_1.available() > 1  && mega_parameters.detected1) {
   //    Serial.println(Serial_1.read());
   //    //read until start of println found, should be immediate unless lost

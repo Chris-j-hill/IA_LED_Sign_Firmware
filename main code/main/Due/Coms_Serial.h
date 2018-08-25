@@ -40,6 +40,10 @@ class Coms_Serial: public Coms {
 
     void ping();
     void init_software_serial_to_megas();
+    void configure_serial_1(uint32_t baud);
+    void configure_serial_2(uint32_t baud);
+    void configure_serial_3(uint32_t baud);
+    void configure_serial_4(uint32_t baud);
 
     void disable_timer_interrupts();
     void enable_timer_interrupts();

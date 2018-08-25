@@ -17,10 +17,13 @@
 
 // variables for initialising soft serial for comms
 using namespace arduino_due;
+
 #define COMS_SPEED 9600         //speed of coms between due and megas when using hardware serial (available baud rates  1200 9600 19200 38400 57600 115200)
+
+#define HARD_COMS_SPEED COMS_SPEED  //set switch to this speed if using hardware port
 #define HARD_COMS_CONFIG SERIAL_8N2
 
-#define SOFT_COMS_SPEED COMS_SPEED      // software serial speed, nb this may get in the way if transmitting large amounts of data very slowly
+#define SOFT_COMS_SPEED COMS_SPEED      // software serial speed, nb if slow, can cause processor delays if sending large data sets
 #define SOFT_COMS_CONFIG_NUM_BITS     EIGHT_BITS
 #define SOFT_COMS_CONFIG_NUM_PARITY   NO_PARITY     //custom parity implemented
 #define SOFT_COMS_CONFIG_NUM_STOP     TWO_STOP_BITS  //stop bits to help timing
@@ -62,12 +65,10 @@ using namespace arduino_due;
 #define FRAME_RETRANSMIT    6
 #define UNKNOWN_RETRANSMIT_TYPE 7 //in case of mega requesting frame and not knowing what frame it was
 
-const char ping_string[] = "ping";
-const char expected_ping_rx = 'p';
-
 #define POS_FRAME_LENGTH (FRAME_OVERHEAD + 7)
 #define MENU_FRAME_LENGTH (FRAME_OVERHEAD + 3)
-#define PING_FRAME_LENGTH (FRAME_OVERHEAD + sizeof(ping_string))
+#define PING_FRAME_LENGTH (FRAME_OVERHEAD + 1) //<- only need to send the baud rate
+#define PING_FRAME_RESPONSE_LENGTH (FRAME_OVERHEAD +1)
 
 #define PACK_FRAME_NUM_DATA(a, b) (((a<<5) | (b<<1)) & 0b11101110) //ensure parity bits are zero in case not used
 #define PACK_OBJ_NUM_DATA(a) (a<<4)
@@ -105,6 +106,16 @@ const char expected_ping_rx = 'p';
 #define EXPECTED_MAX_TEXT_FRAMES          ceil(MAX_TWEET_SIZE / FRAME_DATA_LENGTH) //max number of frames that could be sent for a text string 
 
 
+
+//stuff for ping resposne
+#define PING_GOOD_RESPONSE 1
+#define PING_BAD_RESPONSE 0
+
+#define PING_RESPONSE_TYPE 6
+
+
+
+
 struct Frame {            //frame details for the due, seperate one for the mega below
 
   byte frame_buffer[MEGA_SERIAL_BUFFER_LENGTH]; // use to pack single frame
@@ -120,22 +131,6 @@ struct Frame {            //frame details for the due, seperate one for the mega
   bool frame_queued = false;    //queue frame this loop to send at the beginning of next
 
 };
-
-//
-//struct Frame_History{
-//
-//   uint32_t transmission_time[FRAME_HISTORY_MEMORY_DEPTH] = {0}; // log time it was transmitted, if a long time ago, try match to another frame maybe? or re transmitt a bunch? or abandon
-//   uint8_t frame_header[FRAME_HISTORY_MEMORY_DEPTH][4] = {{0}};    // type, frame, num obj num etc
-//   byte jump_table[FRAME_HISTORY_MEMORY_DEPTH] = {0};            // value indicating which function to call to configure retransmit
-//   byte num_retransmissions[FRAME_HISTORY_MEMORY_DEPTH] ={0};    // number fo retransmissions of any specific frame
-//   byte history_index = 0;                                       // index were currently at in arrays
-//
-//   byte frame_content[FRAME_HISTORY_MEMORY_DEPTH][MEGA_SERIAL_BUFFER_LENGTH]= {{0}}; //the content of the frame rather than recalculating
-//
-//   int transmission_time_limit = 0; // limits for allowable if it doesnt respond within a certain time
-//   byte num_retransmission_limit = 4;
-//   byte num_frames_to_retransmit = 10;  //if cant identify nack, send a few most recent frames. should be only relavent frames, not pos, not previous menu frames etc
-//};
 
 
 struct Frame_History {
@@ -156,6 +151,7 @@ class Coms {
 
     inline byte parity_of(byte value);
     void set_checksum_11(uint16_t checksum, byte frame_type);
+    byte baud_LUT(uint32_t coms_speed);
 
   protected:
 
@@ -167,7 +163,6 @@ class Coms {
     void set_frame_parity_and_checksum(byte frame_type, byte frame_length);    //pack frame with parity bits
     uint16_t generate_checksum(byte frame_type, uint16_t modulo_mask = 0xFF);// generate checksum, default is 8 bit checksum
     void hamming_encoder(byte frame_type) {}
-
 
     Frame_History text_frame_history[NUM_SCREENS];
     Frame_History menu_frame_history[NUM_SCREENS];
@@ -181,6 +176,7 @@ class Coms {
 
     bool request_error_sanity_check(byte frame_type, byte frame_num, byte obj_num);
 
+    bool sanity_check_ping_rx(byte *buf);
 
 
   public:

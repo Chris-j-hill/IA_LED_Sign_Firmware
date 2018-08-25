@@ -8,7 +8,7 @@
 
 #define COMS_SPEED 9600         //speed of coms between due and megas when using serial
 #define COMS_CONGIF SERIAL_8N2
-
+#define NUM_BITS_PER_BYTE 10 //<- derived from above line, used in measuring com speed manually
 
 
 #define HEADER_LENGTH         4  //length,type,frames num, obj num
@@ -39,6 +39,7 @@
 #define SENSOR_FRAME_TYPE   3
 #define MENU_FRAME_TYPE     4
 #define PING_STRING_TYPE    5
+#define PING_RESPONSE_TYPE  6
 #define UNKNOWN_RETRANSMIT_TYPE 7// case where mega requests retransmit and doesnt know what the frame was
 
 
@@ -78,6 +79,8 @@
 #define GET_TEXT_DIR(a) a-128
 #define GET_ENCODER_POS(a, b) GET_GLOBAL_POS(a, b)  //same encoding scheme
 
+#define PACK_FRAME_NUM_DATA(a, b) (((a<<5) | (b<<1)) & 0b11101110) //ensure parity bits are zero in case not used
+
 
 #define CHECKSUM_3_BIT_LOC 3
 #define CHECKSUM_3_BIT_MASK 0b00001110
@@ -86,7 +89,7 @@
 
 
 #define MEGA_RX_FRAME_LENGTH 4
-
+#define PING_FRAME_RESPONSE_LENGTH (FRAME_OVERHEAD + 1)
 //#define WAIT_TIME_FOR_USB_PORT_CONNECTION 5000
 
 //const byte hamming_H_matrix[] PROGMEM = { 0x4259F1BA, //hamming matrix used to generate syndrome for error checking header

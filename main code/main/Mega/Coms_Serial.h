@@ -11,7 +11,7 @@
 #define WAIT_FOR_BYTE_PERIOD   APPROX_BYTE_TRANSMIT_TIME<<1 //wait twice this long, rounding error above and maybe start and stop bits
 
 #define Serial_1 Serial1
-
+#define SERIAL1_RX_PIN 19
 
 class Coms_Serial: public Coms {
 
@@ -25,12 +25,13 @@ class Coms_Serial: public Coms {
 
 
 
-    inline void ping_good() { //respond indicating good connection
-      Serial_1.println("ping_g");
-    };
-    inline void ping_bad() { //respond indicating bad connection
-      Serial_1.println("ping_b");
-    };
+    void ping_good();  //respond indicating good connection
+
+    void ping_bad();  //respond indicating bad connection
+
+    uint32_t detRate(byte recpin);
+
+
 
   public:
     Coms_Serial() {}
