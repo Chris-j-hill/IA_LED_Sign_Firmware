@@ -15,6 +15,7 @@
 #define MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT 1
 #define MAX_NUM_MENU_FRAME_RETRASMIT 1
 
+#define MULTI_FRAME_DELAY_PERIOD 40   //when sending several frames sequentially, delay so mega can process it, seems to be around 30ms from simples tests, so give a bit overhead
 
 struct   Mega_Serial_Parameters {
 

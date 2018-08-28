@@ -906,7 +906,7 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
   int16_t char_read;
   byte max_i = MAX_NUM_OF_TEXT_OBJECTS;
   
-  ram_stats();
+//  ram_stats();
 
   SD_Card card1_temp = card1; //fix this issue, bodge fix for now
   SD_Card card2_temp = card2; //this functions seems to over write card 1 and 2 struct data
@@ -1166,7 +1166,8 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
   //  Serial.print(card1.pin);
   //  Serial.print("\t");
   //  Serial.println(card2.pin);
-  ram_stats();
+  
+//  ram_stats();
 }
 
 

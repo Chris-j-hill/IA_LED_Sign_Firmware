@@ -654,18 +654,18 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
   // it also calls the write_text_frame function to send it on to the specified address when frame populated
 
 
-//
-//  Serial.print("length ");
-//  Serial.println(text_parameters[obj_num].text_str_length);
+  //
+  //  Serial.print("length ");
+  //  Serial.println(text_parameters[obj_num].text_str_length);
 
   text_frame.num_frames = 1 + ((text_parameters[obj_num].text_str_length - 1) / FRAME_DATA_LENGTH); //send this many frames
   text_frame.this_frame = 1;
 
-//  Serial.print("num frames ");
-//  Serial.println(text_frame.num_frames);
-//
-//  Serial.print("FRAME_DATA_LENGTH");
-//  Serial.println(FRAME_DATA_LENGTH);
+  //  Serial.print("num frames ");
+  //  Serial.println(text_frame.num_frames);
+  //
+  //  Serial.print("FRAME_DATA_LENGTH");
+  //  Serial.println(FRAME_DATA_LENGTH);
 
   do {    //loop to send multiple frames if string is long
 
@@ -682,23 +682,24 @@ void Coms_Serial::send_text_frame(byte obj_num, int8_t address) {   //function t
 
     pack_disp_string_frame(text_frame.this_frame, obj_num);//function to pack the frame with which ever data is relevant
 
-//    for (byte i = 0; i < text_frame.frame_length; i++) {
-//      Serial.print(text_frame.frame_buffer[i]);
-//      Serial.print("\t");
-//
-//      if (i >= HEADER_LENGTH && i < text_frame.frame_length - TRAILER_LENGTH)
-//        Serial.println((char)(text_frame.frame_buffer[i] >> 1));
-//      else
-//        Serial.println();
-//    }
-//    Serial.println();
+    //    for (byte i = 0; i < text_frame.frame_length; i++) {
+    //      Serial.print(text_frame.frame_buffer[i]);
+    //      Serial.print("\t");
+    //
+    //      if (i >= HEADER_LENGTH && i < text_frame.frame_length - TRAILER_LENGTH)
+    //        Serial.println((char)(text_frame.frame_buffer[i] >> 1));
+    //      else
+    //        Serial.println();
+    //    }
+    //    Serial.println();
     if (address == -1)
       write_text_frame();  //send to all megas
     else
       write_text_frame(address);  //only send specific one mega
 
     text_frame.this_frame++;   //increment this_frame after sending, will prepare for next loop or break
-    //    delay(10);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
+    
+    delay(MULTI_FRAME_DELAY_PERIOD);       //small delay, want reciever to read through its buffer, otherwise the buffer may overload when we send next frame
   } while (text_frame.this_frame <= text_frame.num_frames);
 }
 
@@ -868,17 +869,21 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
       Serial_4.print(frame_start_bytes[0]);
       Serial_4.print(frame_start_bytes[1]);
       switch (frame_type) {
-        case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
+        case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 //break;
+          //          delay(10);
+          //          for (byte i = 0; i < text_frame.frame_length; i++) {
+          //            Serial.write(text_frame.frame_buffer[i]);
+          //            Serial.print("\t");
+          //            if (i >= HEADER_LENGTH && i < text_frame.frame_length - TRAILER_LENGTH)
+          //              Serial.write((char)(text_frame.frame_buffer[i] >> 1));
+          //            Serial.println();
+          //            //            host.println_bits(text_frame.frame_buffer[i], 8, BIN);
+          //          }
+          //          Serial.println();
+          break;
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
-        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   //break;
-          for (byte i = 0; i < sensor_data_frame.frame_length; i++){
-            Serial.print(sensor_data_frame.frame_buffer[i]);
-            Serial.print("\t");
-            host.println_bits(sensor_data_frame.frame_buffer[i],8, BIN);
-          }
-          Serial.println();
-          break;
+        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_4.write(ping_frame.frame_buffer, ping_frame.frame_length);                 break;
         case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }
@@ -996,7 +1001,7 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
     offset -= ((MEGA_SERIAL_BUFFER_LENGTH - FRAME_OVERHEAD) >> 1);     //subtract off full frames and fill from from lowest available index
   }
 
-  offset = offset<<1; //offset *2 becasue data in pairs
+  offset = offset << 1; //offset *2 becasue data in pairs
   //switch statement to pack the frame;
   switch (sensor_prefix) {
     case PREFIX_CURRENT_1:
@@ -1382,6 +1387,9 @@ void Coms_Serial::send_specific_calibration_data(byte sensor_prefix, int address
     sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - 1] = ENDBYTE_CHARACTER;
 
     write_sensor_data_frame(address);
+
+    if (more_bytes) //if more bytes to send, delay to allow mega to catch up
+    delay(MULTI_FRAME_DELAY_PERIOD);
   }
   else {} //ehh, do somthing to accommodate frame full condition
 
@@ -1886,10 +1894,11 @@ void Coms_Serial::decode_serial_rx(byte * char_array, byte address) {
   byte check_sum = 0;
   for (byte i = 0; i < MEGA_RX_FRAME_LENGTH - 1; i++) {
     check_sum += char_array[i];
-    Serial.print(char_array[i]);
-    Serial.print(" ");
+    //    Serial.print(char_array[i]);
+    //    Serial.print(" ");
   }
-  Serial.println(char_array[MEGA_RX_FRAME_LENGTH - 1]);
+  //  Serial.println(char_array[MEGA_RX_FRAME_LENGTH - 1]);
+
   if (check_sum != char_array[MEGA_RX_FRAME_LENGTH - 1]) { // might be corrupted request, retransmit last N frames?
     write_all_frame_history(address);
     Serial.println("checksum fail");
@@ -1904,12 +1913,29 @@ void Coms_Serial::decode_serial_rx(byte * char_array, byte address) {
     byte frame_num = char_array[1];
     byte obj_num = char_array[2];
 
+    Serial.print("frame type : ");
+    Serial.println(frame_type);
+    Serial.print("obj num : ");
+    Serial.println(frame_type);
+    Serial.print("frame num : ");
+    Serial.println(frame_type);
+    
+    for (byte i = 0; i < FRAME_HISTORY_MEMORY_DEPTH; i++) {
+      for (byte j = 0; j < MEGA_SERIAL_BUFFER_LENGTH; j++) {
+        Serial.print(text_frame_history[address].frame_content[i][j]);
+        Serial.print(" ");
+      }
+      Serial.println();
+    }
+    Serial.println();
+    
     if (request_error_sanity_check(frame_type, frame_num, obj_num)) { //case where mega knows what data is missing, and frame not corrupted, send exact data required
 
       byte history_loc = find_in_frame_history(address, frame_type, frame_num, obj_num);  //identify location
-      if (history_loc != FRAME_HISTORY_MEMORY_DEPTH) {                                     //if frame in frame history buffer
+      if (history_loc != FRAME_HISTORY_MEMORY_DEPTH) {                                    //if frame in frame history buffer
         write_frame_history(address, frame_type, history_loc);                            //write the frame at this location
-        Serial.println("send specific frame");
+        Serial.print("send specific frame : ");
+        Serial.println(frame_type);
       }
       else {
         write_all_frame_history(address);                     // assume something went wrong, frame forgotten or mega mistaken, send a bunch of frames and hope for the best
@@ -1927,7 +1953,19 @@ void Coms_Serial::decode_serial_rx(byte * char_array, byte address) {
 
 void Coms_Serial::write_frame_history(byte address, byte frame_type, byte loc) { //write specific frame
 
-
+  Serial.print("Address : ");
+  Serial.println(address);
+  Serial.print("loc");
+  Serial.println(loc);
+  Serial.print("frame type");
+  Serial.println(frame_type);
+  for (byte i = 0; i < MEGA_SERIAL_BUFFER_LENGTH; i++) {
+    Serial.print(text_frame_history[address].frame_content[loc][i]);
+    Serial.print(" ");
+  }
+  Serial.println();
+  Serial.print("frame length ");
+  Serial.println(EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][0]));
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
       write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][0]));

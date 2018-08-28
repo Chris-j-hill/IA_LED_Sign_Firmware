@@ -8,7 +8,7 @@
 #include "Coms_Serial.h"
 
 
-#if SERIAL_RX_BUFFER_SIZE >32 || SERIAL_TX_BUFFER_SIZE >16
+#if SERIAL_RX_BUFFER_SIZE >64 || SERIAL_TX_BUFFER_SIZE >16
 #error "serial buf size error"
 /* serial buffer size is defined under hardware\arduino\avr\cores\arduino\HardwareSerial.h
    there are 2 buffers (rx and tx) allocated in ram per serial port initialised (we use two ports)

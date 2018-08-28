@@ -294,7 +294,7 @@ seen_byte_1:    //jump label if we discover were lost after reading above byte
 
       if (Serial_1.available() == 0)  //if no char available, delay a bit
         delayMicroseconds(delay_period);
-      // if next value reasonable, and parity correct proceed with header read, high chance of frame header
+      // if next value reasonable, and parity correct, proceed with header read, high chance of frame header, if not frame header, later header checks should catch it
       if (Serial_1.available() > 0 && (Serial_1.peek() >> 1) > FRAME_OVERHEAD && (Serial_1.peek() >> 1) <= MEGA_SERIAL_BUFFER_LENGTH && parity_of(Serial_1.peek()) == 0) {
         seen_byte_1 = true;
         seen_byte_2 = true;
@@ -451,7 +451,7 @@ seen_byte_2:
               for (byte i = 0; i < frame_length; i++) {
                 Serial.print(data[i]);
                 Serial.print("\t");
-                if (i > HEADER_LENGTH && i < frame_length - TRAILER_LENGTH)
+                if (i >= HEADER_LENGTH && i < frame_length - TRAILER_LENGTH)
                   Serial.println((char)(data[i] >> 1));
 
                 else

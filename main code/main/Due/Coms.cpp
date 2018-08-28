@@ -362,9 +362,9 @@ void Coms::set_frame_parity_and_checksum(byte frame_type, byte frame_length) {
   }
 
   else if (frame_type == SENSOR_FRAME_TYPE) {
-    
-//    CLEAR_HEADER_CHECKSUM(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);// this isnt clearing it...
-    sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]=0;                       // but obj_num always zero for sensor data frame
+
+    //    CLEAR_HEADER_CHECKSUM(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);// this isnt clearing it...
+    sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = 0;                     // but obj_num always zero for sensor data frame
 
     set_verical_parity_byte(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length - TRAILER_LENGTH);
     set_checksum_11(generate_checksum_11(frame_type), frame_type);
@@ -520,12 +520,8 @@ void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
       pos_frame.frame_buffer[pos_frame.frame_length - dist_from_frame_end] = eight_bit;
       break;
     case SENSOR_FRAME_TYPE:
-      Serial.print("checksum 3 bit ");
-      Serial.println(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
       sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
       sensor_data_frame.frame_buffer[sensor_data_frame.frame_length - dist_from_frame_end] = eight_bit;
-      Serial.print("checksum 3 bit ");
-      Serial.println(sensor_data_frame.frame_buffer[CHECKSUM_3_BIT_LOC]);
       break;
     case MENU_FRAME_TYPE:
       menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC] = (menu_frame.frame_buffer[CHECKSUM_3_BIT_LOC] | (three_bit));
@@ -546,29 +542,36 @@ void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
 void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
 
 
+  byte frame_length = EXTRACT_FRAME_LENGTH(buf[0]);
+
+  byte padded_buf[MEGA_SERIAL_BUFFER_LENGTH] = {'\0'};
+  memcpy(padded_buf, buf, frame_length); //make sure frame will overwrite all of previous content, so make length max
+
 
   switch (frame_type) {
+
     case TEXT_FRAME_TYPE:
       text_frame_history[address].history_index = (text_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;     //increment index
-      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], buf, buf[1]);                    //copy frame buffer into ring buffer fro storage
+      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);                    //copy frame buffer into ring buffer for storage
       text_frame_history[address].num_populated_buffers++;                                                                      //increment number of frames sent
+
       break;
 
     case POS_FRAME_TYPE:
       pos_frame_history[address].history_index = (pos_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
-      memcpy(pos_frame_history[address].frame_content[pos_frame_history[address].history_index], buf, buf[1]);
+      memcpy(pos_frame_history[address].frame_content[pos_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);
       pos_frame_history[address].num_populated_buffers++;
       break;
 
     case SENSOR_FRAME_TYPE:
       sensor_data_frame_history[address].history_index = (sensor_data_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
-      memcpy(sensor_data_frame_history[address].frame_content[sensor_data_frame_history[address].history_index], buf, buf[1]);
+      memcpy(sensor_data_frame_history[address].frame_content[sensor_data_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);
       sensor_data_frame_history[address].num_populated_buffers++;
       break;
 
     case MENU_FRAME_TYPE:
       menu_frame_history[address].history_index = (menu_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
-      memcpy(menu_frame_history[address].frame_content[menu_frame_history[address].history_index], buf, buf[1]);
+      memcpy(menu_frame_history[address].frame_content[menu_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);
       menu_frame_history[address].num_populated_buffers++;
       break;
   }
@@ -581,7 +584,7 @@ byte Coms::find_in_frame_history(byte address, byte frame_type, byte frame_num, 
   bool frame_num_found = false;
   bool obj_num_found = false;
 
-  byte history_index = 0;
+  byte history_index = 0; //get starting index as most recently added frame, then scan back through stored frames
   switch (frame_type) {
     case TEXT_FRAME_TYPE:   history_index = text_frame_history[address].history_index;          break;
     case POS_FRAME_TYPE:    history_index = pos_frame_history[address].history_index;           break;
@@ -589,34 +592,52 @@ byte Coms::find_in_frame_history(byte address, byte frame_type, byte frame_num, 
     case MENU_FRAME_TYPE:   history_index = menu_frame_history[address].history_index;          break;
   }
 
+  byte frames_checked = 1;  //exit if num frames checks is more than stored
+  bool break_loop = false;
 
   for (int i = history_index; i != history_index + 1; i--) {
     if (i == -1) i = FRAME_HISTORY_MEMORY_DEPTH - 1; // loop back index
+    //    Serial.print("testing index");
+    //    Serial.println(i);
 
     switch (frame_type) {
+
       case TEXT_FRAME_TYPE:
+        if (frames_checked > text_frame_history[address].num_populated_buffers) break_loop = true;
         if (EXTRACT_THIS_FRAME_DATA(text_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
         if (EXTRACT_OBJ_NUM_DATA(text_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
+
         break;
+
       case POS_FRAME_TYPE:
+        if (frames_checked > pos_frame_history[address].num_populated_buffers) break_loop = true;
         if (EXTRACT_THIS_FRAME_DATA(pos_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
         if (EXTRACT_OBJ_NUM_DATA(pos_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
         break;
+
       case SENSOR_FRAME_TYPE:
+        if (frames_checked > sensor_data_frame_history[address].num_populated_buffers) break_loop = true;
         if (EXTRACT_THIS_FRAME_DATA(sensor_data_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
         if (EXTRACT_OBJ_NUM_DATA(sensor_data_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
         break;
+
       case MENU_FRAME_TYPE:
+        if (frames_checked > menu_frame_history[address].num_populated_buffers) break_loop = true;
         if (EXTRACT_THIS_FRAME_DATA(menu_frame_history[address].frame_content[i][2]) == frame_num) frame_num_found = true;
         if (EXTRACT_OBJ_NUM_DATA(menu_frame_history[address].frame_content[i][3]) == obj_num)      obj_num_found = true;
         break;
     }
 
-    if (frame_num_found && obj_num_found) return (i);
+    if (break_loop) break;
 
-    frame_num_found = false;
+    if (frame_num_found && obj_num_found) {
+      return (i);
+    }
+    frame_num_found = false;  //reset for checking next stored frame
     obj_num_found = false;
+
   }
+
   return FRAME_HISTORY_MEMORY_DEPTH; //return impossible value if not found
 
 }
@@ -724,5 +745,17 @@ byte Coms::baud_LUT(uint32_t coms_speed) {
   }
   if (i < NUM_COMS_SPEEDS) return 0; //index zero is default coms speed, so just stay at that if speed not defined
 }
+
+
+
+//void Coms::fill_frame_row(byte *dest, byte *src, int row, int num_bytes, int start_loc) {
+//
+//  for (byte i = start_loc; i < num_bytes; i++) {
+//
+//    dest[row][i] = src[i];
+//
+//  }
+//
+//}
 
 #endif // Coms_CPP

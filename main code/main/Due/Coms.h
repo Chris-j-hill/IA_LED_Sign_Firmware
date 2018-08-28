@@ -171,7 +171,7 @@ class Coms {
 
 
     void append_frame_history(byte *buf, byte address, byte frame_type); //add this to frame history
-
+//    void fill_frame_row(byte *dest, byte *src, int row, int num_bytes, int start_loc =0);
     byte find_in_frame_history(byte address, byte frame_type, byte frame_num, byte obj_num);    //got a nack, find last instance of the frame being sent to that obj, confirm reasonable request
 
     bool request_error_sanity_check(byte frame_type, byte frame_num, byte obj_num);
