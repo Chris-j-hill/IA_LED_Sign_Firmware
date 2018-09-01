@@ -385,8 +385,11 @@ seen_byte_2:
 
           break_condition = 0;
           byte frame_length = APPLY_FRAME_LENGTH_MASK(header[FRAME_LENGTH_LOC]);
-          byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(header[FRAME_NUMBER_LOC]);
-          byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(header[OBJ_NUM_LOC]);
+          //          byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(header[FRAME_NUMBER_LOC]);
+          //          byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(header[OBJ_NUM_LOC]);
+          byte this_frame = APPLY_THIS_FRAME_MASK(header[FRAME_NUMBER_LOC]);
+          byte obj_num = APPLY_OBJ_NUM_MASK(header[OBJ_NUM_LOC]);
+
           byte data[frame_length] = {0};
           byte byte_read = 0;
 
@@ -446,7 +449,7 @@ seen_byte_2:
               Serial.println(F("Text frame recieved"));
             }
 #ifndef DISABLE_REQUEST_RETRANSMISSION
-            else { //failed parity checks
+            else { //failed parity checks 
               request_frame_retransmission(TEXT_FRAME_TYPE, this_frame, obj_num);
               for (byte i = 0; i < frame_length; i++) {
                 Serial.print(data[i]);

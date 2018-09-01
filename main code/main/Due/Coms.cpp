@@ -25,6 +25,15 @@ struct Frame pos_frame;
 struct Frame sensor_data_frame;
 struct Frame ping_frame;
 
+
+struct Frame_History text_frame_history[NUM_SCREENS];
+struct Frame_History menu_frame_history[NUM_SCREENS];
+struct Frame_History sensor_data_frame_history[NUM_SCREENS];
+struct Frame_History pos_frame_history[NUM_SCREENS];
+
+
+
+
 //give access to these structs
 extern struct Led_Strip_Struct led_strip_parameters;
 extern struct Temp_sensor temp_parameters;
@@ -541,7 +550,18 @@ void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
 
 void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
 
-
+  static bool first_run = true;
+  
+  if (first_run) {
+    first_run = false;
+    for (byte i = 0; i < NUM_SCREENS; i++) {
+      text_frame_history[i].num_populated_buffers = 0;
+      pos_frame_history[i].num_populated_buffers = 0;
+      sensor_data_frame_history[i].num_populated_buffers = 0;
+      menu_frame_history[i].num_populated_buffers = 0;
+    }
+  }
+  
   byte frame_length = EXTRACT_FRAME_LENGTH(buf[0]);
 
   byte padded_buf[MEGA_SERIAL_BUFFER_LENGTH] = {'\0'};
@@ -551,27 +571,27 @@ void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
   switch (frame_type) {
 
     case TEXT_FRAME_TYPE:
-      text_frame_history[address].history_index = (text_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;     //increment index
-      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);                    //copy frame buffer into ring buffer for storage
-      text_frame_history[address].num_populated_buffers++;                                                                      //increment number of frames sent
+      memcpy(text_frame_history[address].frame_content[text_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH); //copy frame buffer into ring buffer for storage
+      text_frame_history[address].history_index = (text_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;            //increment index
+      text_frame_history[address].num_populated_buffers++;                                                                                 //increment number of frames sent
 
       break;
 
     case POS_FRAME_TYPE:
-      pos_frame_history[address].history_index = (pos_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       memcpy(pos_frame_history[address].frame_content[pos_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);
+      pos_frame_history[address].history_index = (pos_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       pos_frame_history[address].num_populated_buffers++;
       break;
 
     case SENSOR_FRAME_TYPE:
-      sensor_data_frame_history[address].history_index = (sensor_data_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       memcpy(sensor_data_frame_history[address].frame_content[sensor_data_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);
+      sensor_data_frame_history[address].history_index = (sensor_data_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       sensor_data_frame_history[address].num_populated_buffers++;
       break;
 
     case MENU_FRAME_TYPE:
-      menu_frame_history[address].history_index = (menu_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       memcpy(menu_frame_history[address].frame_content[menu_frame_history[address].history_index], padded_buf, MEGA_SERIAL_BUFFER_LENGTH);
+      menu_frame_history[address].history_index = (menu_frame_history[address].history_index + 1) % FRAME_HISTORY_MEMORY_DEPTH;
       menu_frame_history[address].num_populated_buffers++;
       break;
   }
@@ -597,8 +617,6 @@ byte Coms::find_in_frame_history(byte address, byte frame_type, byte frame_num, 
 
   for (int i = history_index; i != history_index + 1; i--) {
     if (i == -1) i = FRAME_HISTORY_MEMORY_DEPTH - 1; // loop back index
-    //    Serial.print("testing index");
-    //    Serial.println(i);
 
     switch (frame_type) {
 

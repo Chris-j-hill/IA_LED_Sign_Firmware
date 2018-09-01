@@ -138,6 +138,7 @@ struct Frame_History {
   byte history_index = 0;                                                            // index were currently at in arrays
   byte frame_content[FRAME_HISTORY_MEMORY_DEPTH][MEGA_SERIAL_BUFFER_LENGTH] = {{0}}; //the content of the frame rather than recalculating
   uint32_t num_populated_buffers = 0; //counter for number fo frames sent, dont try re transmit more frames than have ever sent
+
 };
 
 class Coms {
@@ -152,7 +153,9 @@ class Coms {
     inline byte parity_of(byte value);
     void set_checksum_11(uint16_t checksum, byte frame_type);
     byte baud_LUT(uint32_t coms_speed);
+    void set_header_parity(byte frame_type);
 
+    
   protected:
 
     void pack_disp_string_frame(uint16_t frame_num, byte obj_num);        //function to pack a frame of text to display
@@ -163,13 +166,7 @@ class Coms {
     void set_frame_parity_and_checksum(byte frame_type, byte frame_length);    //pack frame with parity bits
     uint16_t generate_checksum(byte frame_type, uint16_t modulo_mask = 0xFF);// generate checksum, default is 8 bit checksum
     void hamming_encoder(byte frame_type) {}
-
-    Frame_History text_frame_history[NUM_SCREENS];
-    Frame_History menu_frame_history[NUM_SCREENS];
-    Frame_History sensor_data_frame_history[NUM_SCREENS];
-    Frame_History pos_frame_history[NUM_SCREENS];
-
-
+    
     void append_frame_history(byte *buf, byte address, byte frame_type); //add this to frame history
 //    void fill_frame_row(byte *dest, byte *src, int row, int num_bytes, int start_loc =0);
     byte find_in_frame_history(byte address, byte frame_type, byte frame_num, byte obj_num);    //got a nack, find last instance of the frame being sent to that obj, confirm reasonable request
@@ -187,7 +184,8 @@ class Coms {
 
     void calc_delay();
     void init_frames();  //set constant elements of frames
-    void set_header_parity(byte frame_type);
+
+
 
     //  todo
     void echo_menu(); //is this needed

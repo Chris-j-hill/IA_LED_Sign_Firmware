@@ -8,8 +8,6 @@
 
 #define PING_WAIT_PERIOD 200
 
-//#define PACK_FRAME_NUM_DATA(a, b) (((a<<5) & (b<<1)) & 0b11101110) //ensure parity bits are zero in case not used
-
 #define MAX_NUM_TEXT_FRAME_RETRASMIT 4
 #define MAX_NUM_POS_FRAME_RETRASMIT 1
 #define MAX_NUM_SENSOR_DATA_FRAME_RETRASMIT 1
@@ -69,12 +67,10 @@ class Coms_Serial: public Coms {
     void send_text_calibration_data(byte obj_num);
     void send_specific_calibration_data(byte sensor_prefix, int address, bool more_bytes, uint16_t offset);  //function to send specific value
 
-
     void check_megas(); //check if megas sent anything
 
     void decode_serial_rx(byte *char_array, byte address);
     void send_partial_text_frame(byte address, byte obj_num, byte frame_num);
-    //void send_all_calibration_data(byte address);      legacy function, impractical to send all parameters, and unnecessary
 
 };
 
