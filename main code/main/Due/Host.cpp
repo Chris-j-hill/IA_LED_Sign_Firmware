@@ -1496,8 +1496,7 @@ bool Host::command_contains_num(byte data_to_report) {
 bool Host::print_frame_hist(byte frame_type, byte screen_num) {
 
   byte cursor_index = 0;
-  byte *pointer_to_array = text_frame_history[screen_num].frame_content[0];
-
+  
   switch (frame_type) {
     case TEXT_FRAME_TYPE:        cursor_index = text_frame_history[screen_num].history_index;        break;
     case POS_FRAME_TYPE:         cursor_index = pos_frame_history[screen_num].history_index;         break;
