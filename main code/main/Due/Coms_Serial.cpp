@@ -1351,10 +1351,16 @@ void Coms_Serial::send_text_calibration_data(byte obj_num) {
   }
 }
 
+void Coms_Serial::send_text_disable(byte obj_num) {
+  for (byte i = 0; i < NUM_SCREENS; i++)
+    send_specific_calibration_data(PREFIX_TEXT_OBJ_ENABLED_0 + obj_num, i, false, 0);
+}
+
+
 void Coms_Serial::check_megas() {
   //  static bool first_run = true;
   byte rx[MEGA_RX_FRAME_LENGTH];
- 
+
   //  if (first_run) {
   //    while (Serial_1.available() > 0)
   //      Serial_1.read();
@@ -1777,21 +1783,21 @@ void Coms_Serial::decode_serial_rx(byte * char_array, byte address) {
 
 void Coms_Serial::write_frame_history(byte address, byte frame_type, byte loc) { //write specific frame
 
-//  Serial.print("Address : ");
-//  Serial.println(address);
-//  Serial.print("loc : ");
-//  Serial.println(loc);
-//  Serial.print("frame type : ");
-//  Serial.println(frame_type);
-//  
-//  for (byte i = 0; i < MEGA_SERIAL_BUFFER_LENGTH; i++) {
-//    Serial.print(text_frame_history[address].frame_content[loc][i]);
-//    Serial.print(" ");
-//  }
-//  Serial.println();
-//  Serial.print("frame length ");
-//  Serial.println(EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][0]));
-//  
+  //  Serial.print("Address : ");
+  //  Serial.println(address);
+  //  Serial.print("loc : ");
+  //  Serial.println(loc);
+  //  Serial.print("frame type : ");
+  //  Serial.println(frame_type);
+  //
+  //  for (byte i = 0; i < MEGA_SERIAL_BUFFER_LENGTH; i++) {
+  //    Serial.print(text_frame_history[address].frame_content[loc][i]);
+  //    Serial.print(" ");
+  //  }
+  //  Serial.println();
+  //  Serial.print("frame length ");
+  //  Serial.println(EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][0]));
+  //
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
       write_frame(address, FRAME_RETRANSMIT, text_frame_history[address].frame_content[loc], EXTRACT_FRAME_LENGTH(text_frame_history[address].frame_content[loc][0]));

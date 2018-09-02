@@ -329,20 +329,29 @@ void Graphics::push_string_data() {
   //loop through objects, push to all megas if enabled and not updated
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
 
-#ifdef FORCE_TEXT_FRAME_TRANSMISSION// different condition for testing purposes, ignore if they were updated, just push set number of times
+#ifdef FORCE_TEXT_FRAME_TRANSMISSION// different condition for testing purposes, initially ignore if they were updated, just push set number of times
     if (num_text_transmissions < NUM_TEXT_TRANSMISSIONS || !text_parameters[i].megas_up_to_date)
 #else
-    if (text_cursor[i].object_used && !text_parameters[i].megas_up_to_date)  //if the object is enabled and has been changed by something
+    if (!text_parameters[i].megas_up_to_date)  //if the object is enabled and has been changed by something
 #endif
     {
       disable_pos_isr();  // disable pos isr while we push the string
-      coms_serial.send_text_frame(i);
-      delay(25);//small buffer on mega and quite a lot of processing, so delay to ensure last frame processed before next frame sent
-      coms_serial.send_text_calibration_data(i); //send all related text data
-      delay(25);
+      
+      if (text_cursor[i].object_used) {
+        coms_serial.send_text_frame(i);
+        delay(25);//small buffer on mega and quite a lot of processing, so delay to ensure last frame processed before next frame sent
+        coms_serial.send_text_calibration_data(i); //send all related text data
+        delay(25);
+
+      }
+      else {
+        coms_serial.send_text_disable(i); //object not used send frame to disable on mega end
+      }
+      
       text_parameters[i].megas_up_to_date = true; //confirm text up to date
       enable_pos_isr();   //enable pos isr again
     }
+
   }
 
 #ifdef FORCE_TEXT_FRAME_TRANSMISSION  //if testing code, increment push counter

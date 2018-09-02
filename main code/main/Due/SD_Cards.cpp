@@ -139,14 +139,14 @@ void Card::check_for_sd_card() {
   static uint32_t external_sd_card_prev_read_time = millis();
   static bool auto_eject_ext_card_now = false;
   if (card1.enabled) {
-    if (millis() > external_sd_card_prev_read_time + (card1.detected ? CHECK_EXTERNAL_SD_CARD_PERIOD<<2 : CHECK_EXTERNAL_SD_CARD_PERIOD)) { //if card detected, reduce polling frequency, only need quick response on insertion
-      
+    if (millis() > external_sd_card_prev_read_time + (card1.detected ? CHECK_EXTERNAL_SD_CARD_PERIOD << 2 : CHECK_EXTERNAL_SD_CARD_PERIOD)) { //if card detected, reduce polling frequency, only need quick response on insertion
+
       external_sd_card_prev_read_time = millis();
-//      noInterrupts();
+      //      noInterrupts();
       bool card_found = external_sd_card.begin(card1.pin);  //this is very slow, ensure only test once
-//      interrupts();
+      //      interrupts();
       if (card_found && !card1.detected) {
-        
+
         card_led.set_card_colour(CARD_LED_READING); //indicate were reading from card
 
         card1.detected = true;
@@ -189,7 +189,7 @@ void Card::check_for_sd_card() {
     }
   }
   if (card2.enabled) {
-    if (millis() > internal_sd_card_prev_read_time + (card2.detected ? CHECK_INTERNAL_SD_CARD_PERIOD<<2 : CHECK_INTERNAL_SD_CARD_PERIOD)) {
+    if (millis() > internal_sd_card_prev_read_time + (card2.detected ? CHECK_INTERNAL_SD_CARD_PERIOD << 2 : CHECK_INTERNAL_SD_CARD_PERIOD)) {
 
       internal_sd_card_prev_read_time = millis();
       bool card_found = internal_sd_card.begin(card2.pin);  //this is very slow, ensure only test once
@@ -197,7 +197,7 @@ void Card::check_for_sd_card() {
       if (card_found && !card2.detected) {
         card2.detected = true;
 
-     
+
         check_for_files(INTERNAL_CARD);  //check if files exist on external card
 
         if (card1.enabled && card1.detected) {
@@ -905,8 +905,8 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
   byte i = 0;
   int16_t char_read;
   byte max_i = MAX_NUM_OF_TEXT_OBJECTS;
-  
-//  ram_stats();
+
+  //  ram_stats();
 
   SD_Card card1_temp = card1; //fix this issue, bodge fix for now
   SD_Card card2_temp = card2; //this functions seems to over write card 1 and 2 struct data
@@ -960,10 +960,6 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
     return;
   }
 
-  //  Serial.print(card1.pin);
-  //  Serial.print("\t");
-  //  Serial.println(card2.pin);
-
 
   bool break_after_one_config_profile = false;  //if meant to look for one specific profile
   bool x_start = false;   //place holders until file read
@@ -975,6 +971,11 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
   bool disp_time_found = false;
   bool next_file_found = false;
   uint16_t reads = 0;
+
+  for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {  //if about to scan for new text objects, disable them all, then no presistance of data
+    text_parameters[i].megas_up_to_date = false;        //were always going to push all text objects after scanning, if only to disable unused objects
+    text_cursor[i].object_used = false;
+  }
   
   while (char_read != -1 && i < max_i && !break_after_one_config_profile) { //scan file for text obj maker ('{')
     char_read = file1.read();
@@ -1032,7 +1033,7 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
 
           while (reads < COMMAND_LENGTH) {
             char_read = file1.read();
-            if ((char)char_read == ':' || (char)char_read == '\r'|| (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
+            if ((char)char_read == ':' || (char)char_read == '\r' || (char)char_read == '\n' || (char)char_read == '}' || char_read == -1 ) break;
             else {
               command[reads] = (char)char_read;
               reads++;
@@ -1056,7 +1057,7 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
             if (strcmp(command, STRING_FILE_COMMAND_STRING) == 0) {
               strncpy(text_str[i], data_found, sizeof(text_str[i]));
               text_parameters[i].text_str_length = reads;
-              text_parameters[i].megas_up_to_date = false;
+              //              text_parameters[i].megas_up_to_date = false;
               text_cursor[i].object_used = true;  // set as true once string found, ignore if data provided but no string
 
             }
@@ -1166,8 +1167,8 @@ void Card::retrieve_string(String filename, byte obj_num, bool get_next_config) 
   //  Serial.print(card1.pin);
   //  Serial.print("\t");
   //  Serial.println(card2.pin);
-  
-//  ram_stats();
+
+  //  ram_stats();
 }
 
 
