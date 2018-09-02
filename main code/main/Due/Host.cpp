@@ -38,6 +38,14 @@ extern struct SD_Card card1;
 extern struct SD_Card card2;
 extern struct SD_Strings SD_string;
 
+extern struct Frame_History text_frame_history[NUM_SCREENS];
+extern struct Frame_History menu_frame_history[NUM_SCREENS];
+extern struct Frame_History sensor_data_frame_history[NUM_SCREENS];
+extern struct Frame_History pos_frame_history[NUM_SCREENS];
+
+
+
+
 extern byte screen_mode;
 extern byte screen_brightness;
 
@@ -45,21 +53,23 @@ extern char text_str[MAX_NUM_OF_TEXT_OBJECTS][MAX_TWEET_SIZE];
 
 String last_command = "text0";
 
-String pin_error_msg PROGMEM = "Error: Cannot change pin value during operation, aborting assignment";
-String string_write_error_msg PROGMEM = "Error: Cannot write string from serial monitor interface";
+String pin_error_msg = "Error: Cannot change pin value during operation, aborting assignment";
+String string_write_error_msg = "Error: Cannot write string from serial monitor interface";
+String frame_hist_error_msg = "Error: Cannot modify frame history buffers or counters";
 
 //some frequenly used strings
-String space_colon_string PROGMEM = " : ";
-String dash_space_string PROGMEM = "- ";
-String tab_string PROGMEM = "\t";
-String space_string PROGMEM = " ";
-String percent_string PROGMEM = "%";
-String divide_string PROGMEM = "/";
-String comma_space_string PROGMEM = ", ";
-String yes_string PROGMEM = "Yes";
-String no_string PROGMEM = "No ";
-String y_string PROGMEM = "Y";
-String n_string PROGMEM = "N";
+String space_colon_string = " : ";
+String dash_space_string = "- ";
+String tab_string = "\t";
+String space_string = " ";
+String percent_string = "%";
+String divide_string = "/";
+String comma_space_string = ", ";
+String yes_string = "Yes";
+String no_string = "No ";
+String y_string = "Y";
+String n_string = "N";
+String pointer_string = "-> ";
 
 inline void space() {
   Serial.print(space_string);
@@ -107,6 +117,10 @@ inline void print_new_command_name(String command_data) {
 };
 
 
+inline void Pointer() {
+  Serial.print(pointer_string);
+}
+
 void Host::init_serial() {
   Serial.begin(HOST_SERIAL_SPEED);
 }
@@ -148,16 +162,6 @@ void Host::serial_sub_menu(String rx) {
 
   int value = command_arg.toInt();  //value as an int
 
-
-  //      Serial.print("data set: ");
-  //      Serial.println(data_set);
-  //
-  //      Serial.print("Value: ");
-  //      Serial.println(value);
-  //      Serial.println(command_mode);
-  //      Serial.println(command_data);
-  //      Serial.println(command_arg);
-
   if (command_mode == "-h") {
     data_to_report = data_set_LUT(data_set);  //convert string to data to display
     print_help_options();
@@ -167,7 +171,13 @@ void Host::serial_sub_menu(String rx) {
   else if (command_mode == "-r") {
     byte temp = data_to_report;
     data_to_report = data_set_LUT(data_set);
-    return_data(command_data);
+    if (command_contains_num(data_to_report)) {
+      String command_num_str = data_set.substring(data_set.length() - 1, data_set.length());//get the num from this string
+      byte command_num = command_num_str.toInt();
+      return_data(command_data, command_num);
+    }
+    else
+      return_data(command_data);
     data_to_report = temp;    //return to whatever we were doing before
   }
 
@@ -208,11 +218,32 @@ byte Host::data_set_LUT(String data_set) {
 
 
 
-  //check substring for text
+  //check substring for text, thest contain object nums
   String sub_string_data_set = data_set.substring(0, data_set.length() - 1);
+
   if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT]) {
     last_command = data_set;
     return REPORT_TEXT;
+  }
+
+  else if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_TEXT_FRAME_HISTORY]) {
+    last_command = data_set;
+    return REPORT_TEXT_FRAME_HISTORY;
+  }
+
+  else if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_MENU_FRAME_HISTORY]) {
+    last_command = data_set;
+    return REPORT_MENU_FRAME_HISTORY;
+  }
+
+  else if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_POS_FRAME_HISTORY]) {
+    last_command = data_set;
+    return REPORT_POS_FRAME_HISTORY;
+  }
+
+  else if (sub_string_data_set == serial_sub_menu_items.data_elements[0][REPORT_SENSOR_FRAME_HISTORY]) {
+    last_command = data_set;
+    return REPORT_SENSOR_FRAME_HISTORY;
   }
   else
     return 255;
@@ -265,12 +296,18 @@ void Host::write_data(String command_data, int value) {
   }
 }
 
-void Host::return_data(String command_data) {
+void Host::return_data(String command_data, byte num) {
 
-  for (int i = 0; i < serial_sub_menu_items.active_elements_by_row[data_to_report]; i++) {
+  for (int i = 0; i < serial_sub_menu_items.active_elements_by_row[data_to_report]; i++) {  //scan through list of valid commands
     if (command_data == serial_sub_menu_items.data_elements[data_to_report][i]) {
-      print_command_name(command_data);
-      read_write_LUT(i, 'r');
+      if (num == -1) {
+        print_command_name(command_data);
+        read_write_LUT(i, 'r');
+      }
+      else {
+        print_command_name(command_data);
+        read_write_LUT(i, 'r', num);  // only case of and obj num or frame num being provided
+      }
       break;
     }
   }
@@ -378,7 +415,38 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
         case 3: (r_w == 'r')  ?  Serial.println(card2.enabled)                                   : card2.enabled = value;                                     break;
         case 5: (r_w == 'r')  ?  Serial.println(SD_string.Network)                               : Serial.println(string_write_error_msg);                    break;
         case 6: (r_w == 'r')  ?  Serial.println(SD_string.Password)                              : Serial.println(string_write_error_msg);                    break;
+      }
+      break;
 
+    case REPORT_TEXT_FRAME_HISTORY:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  print_frame_hist(TEXT_FRAME_TYPE, value)                        : Serial.println(frame_hist_error_msg);                      break;
+        case 1: (r_w == 'r')  ?  Serial.println(text_frame_history[value].history_index)         : Serial.println(frame_hist_error_msg);                      break;
+        case 2: (r_w == 'r')  ?  Serial.println(text_frame_history[value].num_populated_buffers) : Serial.println(frame_hist_error_msg);                      break;
+      }
+      break;
+
+    case REPORT_POS_FRAME_HISTORY:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  print_frame_hist(POS_FRAME_TYPE, value)                         : Serial.println(frame_hist_error_msg);                      break;
+        case 1: (r_w == 'r')  ?  Serial.println(pos_frame_history[value].history_index)          : Serial.println(frame_hist_error_msg);                      break;
+        case 2: (r_w == 'r')  ?  Serial.println(pos_frame_history[value].num_populated_buffers)  : Serial.println(frame_hist_error_msg);                      break;
+      }
+      break;
+
+    case REPORT_MENU_FRAME_HISTORY:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  print_frame_hist(MENU_FRAME_TYPE, value)                        : Serial.println(frame_hist_error_msg);                      break;
+        case 1: (r_w == 'r')  ?  Serial.println(menu_frame_history[value].history_index)         : Serial.println(frame_hist_error_msg);                      break;
+        case 2: (r_w == 'r')  ?  Serial.println(menu_frame_history[value].num_populated_buffers) : Serial.println(frame_hist_error_msg);                      break;
+      }
+      break;
+
+    case REPORT_SENSOR_FRAME_HISTORY:
+      switch (index) {
+        case 0: (r_w == 'r')  ?  print_frame_hist(SENSOR_FRAME_TYPE, value)                             : Serial.println(frame_hist_error_msg);                      break;
+        case 1: (r_w == 'r')  ?  Serial.println(sensor_data_frame_history[value].history_index)          : Serial.println(frame_hist_error_msg);                      break;
+        case 2: (r_w == 'r')  ?  Serial.println(sensor_data_frame_history[value].num_populated_buffers)  : Serial.println(frame_hist_error_msg);                      break;
       }
       break;
 
@@ -1410,6 +1478,59 @@ void Host::print_bits(uint32_t var, byte digits, byte units, bool carriage_retur
   if (carriage_return)
     Serial.println();
 }
+
+
+bool Host::command_contains_num(byte data_to_report) {
+  switch (data_to_report) {
+
+    case REPORT_TEXT:
+    case REPORT_TEXT_FRAME_HISTORY:
+    case REPORT_MENU_FRAME_HISTORY:
+    case REPORT_POS_FRAME_HISTORY:
+    case REPORT_SENSOR_FRAME_HISTORY: return true;  //if any of above expect command contains a number, so return true
+
+    default: return false; //else return false
+  }
+}
+
+bool Host::print_frame_hist(byte frame_type, byte screen_num) {
+
+  byte cursor_index = 0;
+  byte *pointer_to_array = text_frame_history[screen_num].frame_content[0];
+
+  switch (frame_type) {
+    case TEXT_FRAME_TYPE:        cursor_index = text_frame_history[screen_num].history_index;        break;
+    case POS_FRAME_TYPE:         cursor_index = pos_frame_history[screen_num].history_index;         break;
+    case SENSOR_FRAME_TYPE:      cursor_index = sensor_data_frame_history[screen_num].history_index; break;
+    case MENU_FRAME_TYPE:        cursor_index = menu_frame_history[screen_num].history_index;        break;
+    default: return false;
+  }
+
+
+  for (byte i = 0; i < FRAME_HISTORY_MEMORY_DEPTH; i++) {
+
+    if (i == cursor_index)
+      Pointer();
+    else
+      space(); space(); space();
+
+    for (byte j = 0; j < MEGA_SERIAL_BUFFER_LENGTH; j++) {
+
+      switch (frame_type) {
+        case TEXT_FRAME_TYPE:        Serial.print(text_frame_history[screen_num].frame_content[i][j]);        break;
+        case POS_FRAME_TYPE:         Serial.print(pos_frame_history[screen_num].frame_content[i][j]);         break;
+        case SENSOR_FRAME_TYPE:      Serial.print(sensor_data_frame_history[screen_num].frame_content[i][j]); break;
+        case MENU_FRAME_TYPE:        Serial.print(menu_frame_history[screen_num].frame_content[i][j]);        break;
+      }
+      space();
+    }
+    Serial.println();
+  }
+
+  Serial.println();
+  return true;
+}
+
 
 
 

@@ -24,27 +24,31 @@
 #define REPORT_LDR_CONFIG     12
 //#define DUMP_FILE             13
 
+#define REPORT_TEXT_FRAME_HISTORY     14
+#define REPORT_MENU_FRAME_HISTORY     15
+#define REPORT_POS_FRAME_HISTORY      16
+#define REPORT_SENSOR_FRAME_HISTORY   17
 
 
 #define HEADER_PRINT_INCREMENT  8     // make this a power of 2, auto overflow...
 #define MESSAGE_DELAY_PERIOD    300   //delay this many ms between message prints
 //class to manage all functions regarding communication with due host device (probably a pi)
 
-#define MAX_NUM_MENU_OPTIONS 14
-#define NUM_MENU_ITEMS 14
+#define MAX_NUM_MENU_OPTIONS 18
+#define NUM_MENU_ITEMS 18
 
 #define NUM_USB_COMMANDS 8
 #define NATIVE_USB_TIMEOUT_PERIOD 50
 
 struct Serial_Sub_Menu {
   String prepend_commands PROGMEM = "to read a value above, type -r followed by the command, to write a new value type -w and append the value(eg fans -w pin 10)";
-  String top_level_commands PROGMEM = "for live feedback type the command above, append with -h for a list of specific variables to read/modify";
+  String top_level_commands PROGMEM = "for live feedback type the command above, else append a command above with -h for a list of specific variables to read/modify";
 
-  // better to have large 2d arrays with wasted space than large unravelled loops in code
+  // better to have large 2d arrays with wasted space than large unravelled loops in code, got plently of storage
 
   //these are the terminal input commands to type
   String data_elements [NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-    /*0 */   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current", "text", "serial", "card", "ldr_config", "dump"},
+    /*0 */   {"stop", "fans", "temp", "strip", "menu", "ldr", "encoder", "button", "current", "text", "serial", "card", "ldr_config", "dump", "text_history", "menu_history", "pos_history", "sensor_history"},
     /*1 */   {"pin", "manual_speed", "target_speed", "current_speed", "increment", "interval", "minimum", "enabled", "manual"},
     /*2 */   {"pin1", "pin2", "pin3", "enable1", "enable2", "enable3"},
     /*3 */   {"pin", "target_brightness", "current_brightness", "increment", "change_interval", "stable_interval", "minimum", "enabled", "fast_interval_on", "sinusoidal", "freq"},
@@ -53,17 +57,21 @@ struct Serial_Sub_Menu {
     /*6 */   {"pin1", "pin2", "pos", "enabled", "attached"},
     /*7 */   {"pin", "pressed", "interval", "enabled", "attached"},
     /*8 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
-    /*9 */   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
-    /*10*/   {"pin1", "pin2", "enabled1", "enabled2", "max_current"},
+    /*9 */   {},
+    /*10*/   {},
     /*11*/   {"pin1", "pin2", "enabled1", "enabled2", "network", "password"},
     /*12*/   {"max1", "min1", "max2", "min2"},
-    /*13*/   {"max1", "min1", "max2", "min2"}
+    /*13*/   {},  //no commands yet for dump file, maybe add #defined filenames from sd_cards.h
+    /*14*/   {"print", "cur_index", "num_trans"},  // the commands for all frame historys are limited, dont want to change anything, only view
+    /*15*/   {"print", "cur_index", "num_trans"},
+    /*16*/   {"print", "cur_index", "num_trans"},
+    /*17*/   {"print", "cur_index", "num_trans"}
   };
 
 
   //these are the help notes for above commands
   String data_descriptions[NUM_MENU_ITEMS][MAX_NUM_MENU_OPTIONS] PROGMEM = {
-    /*0 */    {"stop printing data", "data related to fans", "data related to temperature sensors", "data related to led strip", "data related to the menu tree", "data related to the LDR's", "data related to the encoder wheel", "data related to encoder's button", "data related to current meters", "current text setting", "serial link settings to megas", "sd card settings", "to configure range of ldr readings", "dump specified file to specified serial"},
+    /*0 */    {"stop printing data", "data related to fans", "data related to temperature sensors", "data related to led strip", "data related to the menu tree", "data related to the LDR's", "data related to the encoder wheel", "data related to encoder's button", "data related to current meters", "current text setting", "serial link settings to megas", "sd card settings", "to configure range of ldr readings", "dump specified file to specified serial", "print text_frame_history", "print menu_frame_history", "print pos_frame_history", "print sensor_frame_history"},
     /*1 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
     /*2 */    {"sensor 1 attached to this digital pin number", "as above...", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "as above..."},
     /*3 */    {"led strip attached to this digital pin number", "the target brightness", "the current brightness", "ISR increment magnitude", "interval period between ISR when changing brightness", "interval period between ISR when stable", "minimum brightness of led strip", "is the led strip enabled", "can the interval period be set to fast", "set the led behaviour to sinusoidal pulsing", "pulse at this freq if in sinusoidal mode"},
@@ -72,14 +80,18 @@ struct Serial_Sub_Menu {
     /*6 */    {"pin 1 attached to this digital pin number, CLK or DT", "as above...", "encoder wheel current position", "set to 1 to enable the encoder, 0 to disable", "set to 1 to attach ISR, 0 to detatch"},
     /*7 */    {"button attached to this digital pin number", "has the button pressed, use to force response from other functions", "interval, in ms, between button presses, used to avoid bounce", "set to 1 to enable button, 0 to disable", "set to 1 to attach ISR, 0 to detatch"},
     /*8 */    {"Current meter 1 attached to this digital pin number", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "max allowable current, due will intervene if current draw higher"},
-    /*9 */    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
-    /*10*/    {"fan attached to this digital pin number", "manually set the speed", "the target fan speed", "the current fan speed", "ISR fan increment magnitude", "interval period between ISR", "minimum rotating speed of the fan", "is the fan enabled", "is the fan accepting manual speed override"},
+    /*9 */    {},
+    /*10*/    {},
     /*11*/    {"SD card attached to this digital pin number", "as above...", "set to 1 to enable this sensor, 0 to disable", "as above...", "Extracted network name", "Extracted network password"},
     /*12*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"},
-    /*13*/    {"ldr 1 max value", "ldr 1 min value", "ldr 2 max value", "ldr 2 min value"}
+    /*13*/    {},  //no commands yet
+    /*14*/    {"print all stored text frames", "get the index of most recently updated frame", "number of transmissions completed"},
+    /*15*/    {"print all stored menu frames", "get the index of most recently updated frame", "number of transmissions completed"},
+    /*16*/    {"print all stored pos frames", "get the index of most recently updated frame", "number of transmissions completed"},
+    /*17*/    {"print all stored sensor frames", "get the index of most recently updated frame", "number of transmissions completed"}
   };
 
-  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS, 9, 6, 11, 0, 5, 5, 5, 5, 0, 0, 6, 4, 0}; //number of columns in each row of the above two arrays
+  byte active_elements_by_row[NUM_MENU_ITEMS] = {NUM_MENU_ITEMS, 9, 6, 11, 0, 5, 5, 5, 5, 0, 0, 6, 4, 0, 3, 3, 3, 3}; //number of columns in each row of the above two arrays
 
 };
 
@@ -108,21 +120,23 @@ class Host {
     void serial_sub_menu(String rx);
     void print_help_options();
     byte data_set_LUT(String data_set);
-    void return_data(String command_data); //prints current value to screen
+    void return_data(String command_data, byte num =-1); //prints current value to screen
     void write_data(String command_data, int value); // updates specific data
     void read_write_LUT(byte index, char r_w, int value = 0);
     void position_to_menu_value();
     void print_menu_tree_options(int cur_menu = -1); //if not argument provided display all sub menus of current menu
 
+    bool command_contains_num(byte data_to_report); //LUT for all commands that expect a num provided with them, printing text and frame hists
+    bool print_frame_hist(byte frame_type,byte screen_num);
     
   public:
     Host() {}
     void init_serial();
     void check_serial();    //to read incomming data
     void print_messages();
-    
+
     void print_bits(uint32_t var, byte digits, byte units, bool carriage_return = false);
-    inline void println_bits(uint32_t var, byte digits, byte units){
+    inline void println_bits(uint32_t var, byte digits, byte units) {
       print_bits(var, digits, units, true);
     }
 };
@@ -146,7 +160,7 @@ class HostNativeUSB {
     void push_serial(int loc, String data);   //push data to pi, possibly login info or for non volatile storage?
     void get_serial();      //two step, first type, due confirms if recognised type, data read into specific location (might be a lot)
     void request_data(byte location);    //due requests
-    void put_data_into_loc(String rx_string, byte loc, byte obj_num=0);
+    void put_data_into_loc(String rx_string, byte loc, byte obj_num = 0);
     void check_connection();
 };
 #endif //Host_H
