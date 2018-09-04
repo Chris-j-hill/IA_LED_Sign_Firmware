@@ -80,7 +80,7 @@ BSD license, all text above must be included in any redistribution.
 #define nPlanes 4
 
 // The fact that the display driver interrupt stuff is tied to the
-// singular Timer1 doe1sn't really take well to object orientation with
+// singular Timer1 doesn't really take well to object orientation with
 // multiple RGBmatrixPanel instances.  The solution at present is to
 // allow instances, but only one is active at any given time, via its
 // begin() method.  The implementation is still incomplete in parts;
@@ -562,7 +562,7 @@ void RGBmatrixPanel::updateDisplay(void) {
     }
   }
 
-  // buffptr, being 'volatile' type, doe1sn't take well to optimization.
+  // buffptr, being 'volatile' type, doesn't take well to optimization.
   // A local register copy can speed some things up:
   ptr = (uint8_t *)buffptr;
 
@@ -603,7 +603,7 @@ void RGBmatrixPanel::updateDisplay(void) {
     // The least 2 bits (used for plane 0 data) are presumed masked out
     // by the port direction bits.
 
-    // A tiny bit of inline assembly is used; compiler doe1sn't pick
+    // A tiny bit of inline assembly is used; compiler doesn't pick
     // up on opportunity for post-increment addressing mode.
     // 5 instruction ticks per 'pew' = 160 ticks total
     #define pew asm volatile(                 \
@@ -635,7 +635,7 @@ void RGBmatrixPanel::updateDisplay(void) {
   } else { // 920 ticks from TCNT1=0 (above) to end of function
 
     // Planes 1-3 (handled above) formatted their data "in place,"
-    // their layout matching that out the output PORT register (where
+    // their layout matching that of the output PORT register (where
     // 6 bits correspond to output data lines), maximizing throughput
     // as no conversion or unpacking is needed.  Plane 0 then takes up
     // the slack, with all its data packed into the 2 least bits not

@@ -49,23 +49,17 @@ void mega_setup() {
 
 
 void mega_loop() {
-  // byte i=0;
-  //  uint32_t start_time = millis();
-  //  uint32_t delay_time = 500;
+  uint16_t i = 0;
   while (1) {
-    //    if (millis() > delay_time + start_time){
-    //      coms_serial.request_frame_retransmission(TEXT_FRAME_TYPE, 1, 0);
-    //      Serial.println("request");
-    //      start_time = millis();
-    //  }
+
     coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
-    //graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
-    //graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
-    //host.check_serial();
-    //host.print_messages();
-    //    i++;
-    //    if (i==0)
-    //    Serial.println(F("loop"));
+    graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
+    //    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
+    //    host.check_serial();
+    //    host.print_messages();
+//    i++;
+//    if (i == 0)
+//      Serial.println(F("loop"));
   }
 }
 

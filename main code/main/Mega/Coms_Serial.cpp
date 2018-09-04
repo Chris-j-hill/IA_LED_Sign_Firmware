@@ -305,15 +305,22 @@ seen_byte_2:
     if (Serial_1.available() > 0 && !seen_byte_1 && !seen_byte_2) {
       // byte avialable and neither above conditions caught it
       // could be endbyte, or middle of frame, either way, just discard char
+      //Serial_1.read();
+      if (Serial_1.peek() == END_BYTE_1) {
+        Serial.print(Serial_1.read());
+        Serial.print(" ");
+      }
+      else
+      {
+        Serial.print(Serial_1.read());
+        Serial.println();
+      }
 
-      Serial.print(Serial_1.read());
-      Serial.print(" ");
     }
 
     if (seen_byte_1 && seen_byte_2) {
       //in this funciton pass we have found both bytes 1 and 2
       //almost certainly a frame start
-      Serial.println();
       byte header[HEADER_LENGTH];
       seen_byte_1 = false;
       seen_byte_2 = false;
@@ -449,7 +456,7 @@ seen_byte_2:
               Serial.println(F("Text frame recieved"));
             }
 #ifndef DISABLE_REQUEST_RETRANSMISSION
-            else { //failed parity checks 
+            else { //failed parity checks
               request_frame_retransmission(TEXT_FRAME_TYPE, this_frame, obj_num);
               for (byte i = 0; i < frame_length; i++) {
                 Serial.print(data[i]);
@@ -479,7 +486,7 @@ seen_byte_2:
 
             if (!error_check_frame_body(data, POS_FRAME_TYPE, frame_length)) {
               frame_cpy(data, POS_FRAME_TYPE);
-              Serial.println(F("Pos frame recieved"));
+              //Serial.println(F("Pos frame recieved"));
             }
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //failed parity checks

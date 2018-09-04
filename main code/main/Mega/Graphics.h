@@ -16,6 +16,12 @@
 
 #define MIN_DISPLAY_UPDATE_PERIOD 20  //20ms period = 50hz
 
+#define SCREEN_UPDATE_BACKOFF_PERIOD 100// after recieving frame requiring a screen update, wait a bit, to see if others are coming 
+
+#if SCREEN_UPDATE_BACKOFF_PERIOD > (1000/POS_UPDATE_ISR_FREQ)
+#error "SCREEN_UPDATE_BACKOFF_PERIOD cannot be larger than period of POS_UPDATE_ISR_FREQ, ensure significantly smaller" 
+#endif
+
 // Similar to F(), but for PROGMEM string pointers rather than literals
 #define F2(progmem_ptr) (const __FlashStringHelper *)progmem_ptr
 
@@ -60,6 +66,7 @@ struct Screen_Struct {
   byte cur_mode = 255;  //force set on startup
   byte node_address = 0;
   bool updated = false;
+  uint32_t time_last_updated = 0; //do not update screen immediately if screen update arrives, usually many frames arriving at once, wait until we suspect all arrived
 };
 
 struct Object_Struct_Polygons {  //colours of thing that isnt text

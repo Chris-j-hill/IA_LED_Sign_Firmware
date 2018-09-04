@@ -444,7 +444,7 @@ void Host::read_write_LUT(byte index, char r_w, int value) {
 
     case REPORT_SENSOR_FRAME_HISTORY:
       switch (index) {
-        case 0: (r_w == 'r')  ?  print_frame_hist(SENSOR_FRAME_TYPE, value)                             : Serial.println(frame_hist_error_msg);                      break;
+        case 0: (r_w == 'r')  ?  print_frame_hist(SENSOR_FRAME_TYPE, value)                              : Serial.println(frame_hist_error_msg);                      break;
         case 1: (r_w == 'r')  ?  Serial.println(sensor_data_frame_history[value].history_index)          : Serial.println(frame_hist_error_msg);                      break;
         case 2: (r_w == 'r')  ?  Serial.println(sensor_data_frame_history[value].num_populated_buffers)  : Serial.println(frame_hist_error_msg);                      break;
       }

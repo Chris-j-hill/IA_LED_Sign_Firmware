@@ -26,6 +26,11 @@ extern Menu menu;
 void Coms::extract_sensor_data(byte *temp_buffer) {
 
   byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_buffer[0]);
+  bool screen_already_not_updated = false;
+  if (screen_parameters.updated == false) { //if the screen is already not updated, check if this loop changes that, if so reset update backoff timer
+    screen_already_not_updated = true;
+    screen_parameters.updated = true;
+  }
 
   for (byte alpha = HEADER_LENGTH; alpha < frame_length - TRAILER_LENGTH - 2; alpha += 2) { //step through frame, identify prefix and extract following data byte
 
@@ -375,7 +380,15 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
     }
   }
-}
+
+  if(!screen_parameters.updated){// this function changed this, reset timer
+    screen_parameters.time_last_updated = millis();
+  }
+
+  else if (screen_already_not_updated)  //function didnt change it but it was already waiting for timer
+    screen_parameters.updated = false;
+
+  }
 
 
 inline int Coms::calc_pos(byte MSB, byte LSB) {
@@ -438,6 +451,8 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       }
 
       screen_parameters.updated = false;  //part of a string arrived, update displayed buffer, update as each part of string arrives, better than not detecting retransmission
+      screen_parameters.time_last_updated = millis(); //set timer, waits for a time out before updating screen to ensure all frames arrived
+      
       Serial.print(F("Stored string "));
       Serial.print(obj_num);
       Serial.print(F(" = "));
@@ -482,7 +497,7 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
 
       screen_parameters.updated = false;  //pos frame requires screen update always
-
+      screen_parameters.time_last_updated = millis();
       break;
 
     case SENSOR_FRAME_TYPE:
@@ -503,6 +518,7 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[5]);
 
       screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
+      screen_parameters.time_last_updated = millis();
       break;
 
   }
