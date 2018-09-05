@@ -136,33 +136,47 @@
 #define SCREEN_MODE_STRING                  "Screen Mode"
 #define SCREEN_BRIGHTNESS_STRING            "Brightness"
 #define TEXT_SETTINGS_STRING                "Text Settings"
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
+
+#define FAN_SETTINGS_STRING                 "Fan Settings"
+#define INTERNET_CONFIG_STRING              "Internet Config"
+#define SD_CARDS_STRING                     "Sd Cards"
+#define LED_STRIP_STRING                    "LED Strip"
+#define MENU_MODE_STRING                    "Mode Menu"
+#define BOTH_ON_STRING                      "Both on"
+#define FRONT_SIDE_STRING                   "Front Side"
+#define BACK_SIDE_STRING                    "Back Side"
+#define BOTH_OFF_STRING                     "Both Off"
+
+#define TEXT_SIZE_STRING                    "Text Size"
+#define TEXT_COLOUR_STRING                  "Text Colour"
+#define SCROLL_SPEED_STRING                 "Scroll Speed"
+#define FLIP_DIR_STRING                     "Flip Direction"
 
 
+#define FAN_SPEED_STRING                    "Fan Speed"
+#define ENABLE_STRING                       "Enable"
+#define DISABLE_STRING                      "Disable"
+#define FAN_MIN_SPEED_STRING                "Minimum speed"
 
-#define SIZEOF_MAIN_MENU_STRING               sizeof(MAIN_MENU_STRING)
-#define SIZEOF_RETURN_STRING                  sizeof(RETURN_STRING)
-#define SIZEOF_SCREEN_MODE_STRING             sizeof(SCREEN_MODE_STRING)
-#define SIZEOF_SCREEN_BRIGHTNESS_STRING       sizeof(SCREEN_BRIGHTNESS_STRING)
-#define SIZEOF_TEXT_SETTINGS_STRING           sizeof(TEXT_SETTINGS_STRING)
+#define READ_FOLDERS_STRING                 "Read Folders"
+
+#define STRIP_BRIGHTNESS_STRING             "Brightness"
+
+#define RED_STRING                          "Red"
+#define GREEN_STRING                        "Green"
+#define BLUE_STRING                         "Blue"
+#define HUE_STRING                          "Hue"
+#define USE_HUE_STRING                      "Use Hue"
+#define USE_RGB_STRING                      "Use RGB"
+
+#define X_DIR_STRING                        "X Direction"
+#define Y_DIR_STRING                        "Y Direction"
 
 
-//
-//  const char screen_mode[]              PROGMEM           = ;
-//  const char brightness[]               PROGMEM           = "Brightness";
-//  const char text_settings[]            PROGMEM           = "Text Settings";
-//  const char fan_settings[]             PROGMEM           = "Fan Settings";
-//  const char internet_settings[]        PROGMEM           = "Internet Config";
-//  const char sd_card_settings[]         PROGMEM           = "Sd Cards";
-//  const char led_strip_settings[]       PROGMEM           = "LED Strip";
+#define EMPTY_STRING                         " "
+#define CONTENT_ERROR_STRING                "Error: no string found"// default in write_menu_option function
+#define TITLE_ERROR_STRING                  "Error: no title found" // default in write_menu_option function
+
 
 
 struct Menu_tree_items {
@@ -173,36 +187,36 @@ struct Menu_tree_items {
   const char screen_mode[]              PROGMEM           = SCREEN_MODE_STRING;
   const char brightness[]               PROGMEM           = SCREEN_BRIGHTNESS_STRING;
   const char text_settings[]            PROGMEM           = TEXT_SETTINGS_STRING;
-  const char fan_settings[]             PROGMEM           = "Fan Settings";
-  const char internet_settings[]        PROGMEM           = "Internet Config";
-  const char sd_card_settings[]         PROGMEM           = "Sd Cards";
-  const char led_strip_settings[]       PROGMEM           = "LED Strip";
+  const char fan_settings[]             PROGMEM           = FAN_SETTINGS_STRING;
+  const char internet_settings[]        PROGMEM           = INTERNET_CONFIG_STRING;
+  const char sd_card_settings[]         PROGMEM           = SD_CARDS_STRING;
+  const char led_strip_settings[]       PROGMEM           = LED_STRIP_STRING;
 
 
   //level 2 menu items
   //change mode folder
-  const char screen_mode_menu[]         PROGMEM           = "Mode Menu";
-  const char screen_mode0[]             PROGMEM           = "Both on";
-  const char screen_mode1[]             PROGMEM           = "Front Side";
-  const char screen_mode3[]             PROGMEM           = "Back Side";
-  const char screen_mode2[]             PROGMEM           = "Both Off";
+  const char screen_mode_menu[]         PROGMEM           = MENU_MODE_STRING;
+  const char screen_mode0[]             PROGMEM           = BOTH_ON_STRING;
+  const char screen_mode1[]             PROGMEM           = FRONT_SIDE_STRING;
+  const char screen_mode3[]             PROGMEM           = BACK_SIDE_STRING;
+  const char screen_mode2[]             PROGMEM           = BOTH_OFF_STRING;
 
   //screen brightness folder
-  const char brightness_menu[]          PROGMEM           = "Brightness";
+  const char brightness_menu[]          PROGMEM           = SCREEN_BRIGHTNESS_STRING;
 
   //text adjustment folder
-  const char text_settings_menu[]       PROGMEM           = "Text Settings";
-  const char text_size_settings[]       PROGMEM           = "Text Size";
-  const char text_colour_settings[]     PROGMEM           = "Text Colour";
-  const char scroll_speed_settings[]    PROGMEM           = "Scroll Speed";
-  const char flip_dir_settings[]        PROGMEM           = "Flip Direction";
+  const char text_settings_menu[]       PROGMEM           = TEXT_SETTINGS_STRING;
+  const char text_size_settings[]       PROGMEM           = TEXT_SIZE_STRING;
+  const char text_colour_settings[]     PROGMEM           = TEXT_COLOUR_STRING;
+  const char scroll_speed_settings[]    PROGMEM           = SCROLL_SPEED_STRING;
+  const char flip_dir_settings[]        PROGMEM           = FLIP_DIR_STRING;
 
   //fan settings folder
-  const char fan_settings_menu[]        PROGMEM           = "Fan Settings";
-  const char fan_speed_settings[]       PROGMEM           = "Fan Speed";
-  const char fan_enable[]               PROGMEM           = "Enable";
-  const char fan_disable[]              PROGMEM           = "Disable";
-  const char minimum_rotating_speed[]   PROGMEM           = "Minimum speed";
+  const char fan_settings_menu[]        PROGMEM           = FAN_SETTINGS_STRING;
+  const char fan_speed_settings[]       PROGMEM           = FAN_SPEED_STRING;
+  const char fan_enable[]               PROGMEM           = ENABLE_STRING;
+  const char fan_disable[]              PROGMEM           = DISABLE_STRING;
+  const char minimum_rotating_speed[]   PROGMEM           = FAN_MIN_SPEED_STRING;
 
   // internet configuration folder
   const char internet_config_menu[]     PROGMEM           = "Internet";
@@ -213,68 +227,114 @@ struct Menu_tree_items {
   const char wifi_disable[]             PROGMEM           = "Disable Wifi";
 
   // SD cards folder
-  const char sd_cards_menu[]            PROGMEM           = "SD Cards";
-  const char enable_ext_card[]          PROGMEM           = "Enable Port";
-  const char disable_ext_card[]         PROGMEM           = "Disable Port";
-  const char sd_card_folders[]          PROGMEM           = "Read Folders";
+  const char sd_cards_menu[]            PROGMEM           = SD_CARDS_STRING;
+  const char enable_ext_card[]          PROGMEM           = ENABLE_STRING;
+  const char disable_ext_card[]         PROGMEM           = ENABLE_STRING;
+  const char sd_card_folders[]          PROGMEM           = READ_FOLDERS_STRING;
 
   // Led Strip folder
-  const char led_strip_menu[]           PROGMEM           = "Led Strip";
-  const char enable_led_strip[]         PROGMEM           = "Enable LED Strip";
-  const char disable_led_strip[]        PROGMEM           = "Disable LED Strip";
-  const char led_strip_brightness[]     PROGMEM           = "Brightness";
+  const char led_strip_menu[]           PROGMEM           = LED_STRIP_STRING;
+  const char enable_led_strip[]         PROGMEM           = ENABLE_STRING;
+  const char disable_led_strip[]        PROGMEM           = ENABLE_STRING;
+  const char led_strip_brightness[]     PROGMEM           = STRIP_BRIGHTNESS_STRING;
 
 
   //level 3 folders
   //text size
-  const char text_size_menu[]           PROGMEM           = "Text Size";
+  const char text_size_menu[]           PROGMEM           = TEXT_SIZE_STRING;
 
   //text colour
-  const char text_colour_menu[]         PROGMEM           = "Text Colour";
-  const char text_colour_red[]          PROGMEM           = "Red";
-  const char text_colour_green[]        PROGMEM           = "Green";
-  const char text_colour_blue[]         PROGMEM           = "Blue";
-  const char text_colour_hue[]          PROGMEM           = "Hue";
-  const char text_colour_use_hue[]      PROGMEM           = "Use Hue";
-  const char text_colour_use_rgb[]      PROGMEM           = "Use RGB";
-
+  const char text_colour_menu[]         PROGMEM           = TEXT_COLOUR_STRING;
+  const char text_colour_red[]          PROGMEM           = RED_STRING;
+  const char text_colour_green[]        PROGMEM           = GREEN_STRING;
+  const char text_colour_blue[]         PROGMEM           = BLUE_STRING;
+  const char text_colour_hue[]          PROGMEM           = HUE_STRING;
+  const char text_colour_use_hue[]      PROGMEM           = USE_HUE_STRING;
+  const char text_colour_use_rgb[]      PROGMEM           = USE_RGB_STRING;
 
   // scroll speed
-  const char scroll_speed_menu[]        PROGMEM           = "Scroll Speed";
-  const char scroll_speed_x[]           PROGMEM           = "X Direction";
-  const char scroll_speed_y[]           PROGMEM           = "Y Direction";
+  const char scroll_speed_menu[]        PROGMEM           = SCROLL_SPEED_STRING;
+  const char scroll_speed_x[]           PROGMEM           = X_DIR_STRING;
+  const char scroll_speed_y[]           PROGMEM           = Y_DIR_STRING;
 
   //set fan speed
-  const char fan_speed_menu[]           PROGMEM           = "Set Fan Speed";
+  const char fan_speed_menu[]           PROGMEM           = FAN_SPEED_STRING;
 
   // fan minimum speed
-  const char minimum_fan_speed_menu[]   PROGMEM           = "Set Min Speed";
+  const char minimum_fan_speed_menu[]   PROGMEM           = FAN_MIN_SPEED_STRING;
 
   // read sd card folders
-  const char SD_card_folders_menu[]     PROGMEM           = "Card Files";
+  const char SD_card_folders_menu[]     PROGMEM           = READ_FOLDERS_STRING;
 
   // led brightness menu
-  const char led_strip_brightness_menu[]   PROGMEM        = "Set Brightness";
+  const char led_strip_brightness_menu[]   PROGMEM        = STRIP_BRIGHTNESS_STRING;
 
   //level 4
   //text_colour_red
-  const char text_colour_red_menu[]     PROGMEM           = "Red";
+  const char text_colour_red_menu[]     PROGMEM           = RED_STRING;
 
   //text_colour_green
-  const char text_colour_green_menu[]     PROGMEM         = "Green";
+  const char text_colour_green_menu[]     PROGMEM         = GREEN_STRING;
 
   //text_colour_blue
-  const char text_colour_blue_menu[]     PROGMEM          = "Blue";
+  const char text_colour_blue_menu[]     PROGMEM          = BLUE_STRING;
 
   //text_colour_hue
-  const char text_colour_hue_menu[]     PROGMEM           = "Hue";
+  const char text_colour_hue_menu[]     PROGMEM           = HUE_STRING;
 
   //dummy string
-  const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder
-  const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function
-  const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function
+  const char null_string[]              PROGMEM           = EMPTY_STRING;
+  const char default_string[]           PROGMEM           = CONTENT_ERROR_STRING; // default in write_menu_option function
+  const char default_title[]            PROGMEM           = TITLE_ERROR_STRING; // default in write_menu_option function
 
 };
+
+
+
+
+#define SIZEOF_MAIN_MENU_STRING               sizeof(MAIN_MENU_STRING)
+#define SIZEOF_RETURN_STRING                  sizeof(RETURN_STRING)
+#define SIZEOF_SCREEN_MODE_STRING             sizeof(SCREEN_MODE_STRING)
+#define SIZEOF_SCREEN_BRIGHTNESS_STRING       sizeof(SCREEN_BRIGHTNESS_STRING)
+#define SIZEOF_TEXT_SETTINGS_STRING           sizeof(TEXT_SETTINGS_STRING)
+
+#define SIZEOF_FAN_SETTINGS_STRING            sizeof(FAN_SETTINGS_STRING)
+#define SIZEOF_INTERNET_CONFIG_STRING         sizeof(INTERNET_CONFIG_STRING)
+#define SIZEOF_SD_CARDS_STRING                sizeof(SD_CARDS_STRING)
+#define SIZEOF_LED_STRIP_STRING               sizeof(LED_STRIP_STRING)
+#define SIZEOF_MENU_MODE_STRING               sizeof(MENU_MODE_STRING)
+#define SIZEOF_BOTH_ON_STRING                 sizeof(BOTH_ON_STRING)
+#define SIZEOF_FRONT_SIDE_STRING              sizeof(FRONT_SIDE_STRING)
+#define SIZEOF_BACK_SIDE_STRING               sizeof(BACK_SIDE_STRING)
+#define SIZEOF_BOTH_OFF_STRING                sizeof(BOTH_OFF_STRING)
+
+#define SIZEOF_TEXT_SIZE_STRING               sizeof(TEXT_SIZE_STRING)
+#define SIZEOF_TEXT_COLOUR_STRING             sizeof(TEXT_COLOUR_STRING)
+#define SIZEOF_SCROLL_SPEED_STRING            sizeof(SCROLL_SPEED_STRING)
+#define SIZEOF_FLIP_DIR_STRING                sizeof(FLIP_DIR_STRING)
+#define SIZEOF_FAN_SPEED_STRING               sizeof(FAN_SPEED_STRING)
+#define SIZEOF_ENABLE_STRING                  sizeof(ENABLE_STRING)
+#define SIZEOF_DISABLE_STRING                 sizeof(DISABLE_STRING)
+#define SIZEOF_FAN_MIN_SPEED_STRING           sizeof(FAN_MIN_SPEED_STRING)
+
+#define SIZEOF_READ_FOLDERS_STRING            sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_STRIP_BRIGHTNESS_STRING        sizeof(FAN_MIN_SPEED_STRING)
+
+#define SIZEOF_RED_STRING                     sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_GREEN_STRING                   sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_BLUE_STRING                    sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_HUE_STRING                     sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_USE_HUE_STRING                 sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_USE_RGB_STRING                 sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_X_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_Y_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
+
+
+
+#define SIZEOF_EMPTY_STRING                   sizeof(EMPTY_STRING)
+#define SIZEOF_CONTENT_ERROR_STRING           sizeof(CONTENT_ERROR_STRING)
+#define SIZEOF_TITLE_ERROR_STRING             sizeof(TITLE_ERROR_STRING)
+
 
 struct Menu_Tree_Item_Lengths {
   byte main_menu                PROGMEM           = SIZEOF_MAIN_MENU_STRING;
@@ -282,8 +342,44 @@ struct Menu_Tree_Item_Lengths {
   byte screen_mode              PROGMEM           = SIZEOF_SCREEN_MODE_STRING;
   byte brightness               PROGMEM           = SIZEOF_SCREEN_BRIGHTNESS_STRING;
   byte text_settings            PROGMEM           = SIZEOF_TEXT_SETTINGS_STRING;
+  byte fan_settings             PROGMEM           = SIZEOF_FAN_SETTINGS_STRING;
+  byte internet_settings        PROGMEM           = SIZEOF_INTERNET_CONFIG_STRING;
+  byte sd_card_settings         PROGMEM           = SIZEOF_SD_CARDS_STRING;
+  byte led_strip_settings       PROGMEM           = SIZEOF_LED_STRIP_STRING;
+  byte screen_mode_menu         PROGMEM           = SIZEOF_MENU_MODE_STRING;
+  byte screen_mode0             PROGMEM           = SIZEOF_BOTH_ON_STRING;
+  byte screen_mode1             PROGMEM           = SIZEOF_FRONT_SIDE_STRING;
+  byte screen_mode3             PROGMEM           = SIZEOF_BACK_SIDE_STRING;
+  byte screen_mode2             PROGMEM           = SIZEOF_BOTH_OFF_STRING;
+  byte text_size_settings       PROGMEM           = SIZEOF_TEXT_SIZE_STRING;
+  byte text_colour_settings     PROGMEM           = SIZEOF_TEXT_COLOUR_STRING;
+  byte scroll_speed_settings    PROGMEM           = SIZEOF_SCROLL_SPEED_STRING;
+  byte flip_dir_settings        PROGMEM           = SIZEOF_FLIP_DIR_STRING;
+  byte fan_speed_settings       PROGMEM           = SIZEOF_FAN_SPEED_STRING;
+  byte fan_enable               PROGMEM           = SIZEOF_ENABLE_STRING;
+  byte fan_disable              PROGMEM           = SIZEOF_DISABLE_STRING;
+  byte minimum_rotating_speed   PROGMEM           = SIZEOF_FAN_MIN_SPEED_STRING;
 
 
+  byte sd_cards_menu            PROGMEM           = SIZEOF_SD_CARDS_STRING;
+  byte enable_ext_card          PROGMEM           = SIZEOF_ENABLE_STRING;
+  byte disable_ext_card         PROGMEM           = SIZEOF_ENABLE_STRING;
+  byte sd_card_folders          PROGMEM           = SIZEOF_READ_FOLDERS_STRING;
+  byte led_strip_menu           PROGMEM           = SIZEOF_LED_STRIP_STRING;
+  byte led_strip_brightness     PROGMEM           = SIZEOF_STRIP_BRIGHTNESS_STRING;
+  byte text_colour_red          PROGMEM           = SIZEOF_RED_STRING;
+  byte text_colour_green        PROGMEM           = SIZEOF_GREEN_STRING;
+  byte text_colour_blue         PROGMEM           = SIZEOF_BLUE_STRING;
+  byte text_colour_hue          PROGMEM           = SIZEOF_HUE_STRING;
+  byte text_colour_use_hue      PROGMEM           = SIZEOF_USE_HUE_STRING;
+  byte text_colour_use_rgb      PROGMEM           = SIZEOF_USE_RGB_STRING;
+  byte scroll_speed_x           PROGMEM           = SIZEOF_X_DIR_STRING;
+  byte scroll_speed_y           PROGMEM           = SIZEOF_Y_DIR_STRING;
+
+
+  byte null_string              PROGMEM           = SIZEOF_EMPTY_STRING;
+  byte default_string           PROGMEM           = SIZEOF_CONTENT_ERROR_STRING; // default in write_menu_option function
+  byte default_title            PROGMEM           = SIZEOF_TITLE_ERROR_STRING; // default in write_menu_option function
 
 
 };
