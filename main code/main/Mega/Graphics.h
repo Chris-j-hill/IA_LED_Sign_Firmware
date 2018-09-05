@@ -14,6 +14,8 @@
 // Note: There may be severe stability issues with this at high speeds if delay
 // correction is used due to overflows and amount the counter is incremented
 
+#define SERIAL_CHECK_FREQ 1000  // check for serial.available() this many times a second, cant allow for buffer overflow due to slower functions...
+
 #define MIN_DISPLAY_UPDATE_PERIOD 20  //20ms period = 50hz
 
 #define SCREEN_UPDATE_BACKOFF_PERIOD 100// after recieving frame requiring a screen update, wait a bit, to see if others are coming 
@@ -98,6 +100,8 @@ void pos_update_ISR();    //ISR for updating the cursor position
 // reached an overflow value it is reset, a pulse is send back to
 // the due and the position is incremented by the value x_dir and y_dir
 
+void serial_check_ISR();
+
 
 class Graphics {
 
@@ -115,10 +119,16 @@ class Graphics {
     inline void set_text_colour(int new_hue);
     inline void draw_text(byte obj_num);
     inline void set_display_mode();
+
+
+    inline uint32_t serial_check_ISR_period(){
+      return 1000000/SERIAL_CHECK_FREQ; //microseconds between check serial
+    }
     
   public:
     Graphics() {};
     void init_matrix();
+    void init_update_display_isr(); //need to check serial very frequently or else buffer overflow will occur
     void update_display();
 
     //cursor functions

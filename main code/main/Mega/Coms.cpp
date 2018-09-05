@@ -505,17 +505,20 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       break;
 
     case MENU_FRAME_TYPE:
-      menu.set_current_menu(temp_buffer[3]);
+
+      //temp_buffer[3] <= selected object, needed for some menus
+    
+      menu.set_current_menu(temp_buffer[4]);
 
       // decode negative values
-      if (temp_buffer[4] < 0) {
-        temp1 = temp_buffer[4] & 0x7F;
+      if (temp_buffer[5] < 0) {
+        temp1 = temp_buffer[5] & 0x7F;
         temp1 = -temp1;
       }
       else
-        temp1 = temp_buffer[4];
+        temp1 = temp_buffer[5];
 
-      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[5]);
+      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[6]);
 
       screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
       screen_parameters.time_last_updated = millis();

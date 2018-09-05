@@ -8,6 +8,7 @@
 #include "Graphics.h"
 #include "Host.h"
 #include "LUTS.h"
+#include "src/Timer3/TimerThree.h"
 //volatile bool frame_arrived;   // flag from ISR to methods
 
 
@@ -258,7 +259,7 @@ inline bool Coms_Serial::byte_queued() {  // function to delay the processor a l
 void Coms_Serial::read_buffer() {
 
   TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-
+  Timer3.stop();
   bool seen_byte_1 = false;
   bool seen_byte_2 = false;
   byte break_condition = 0;
@@ -598,6 +599,7 @@ seen_byte_2:
       }
     }
   }
+  Timer3.start();
   TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
 }
 

@@ -90,11 +90,11 @@
 
 #elif defined(USING_COLOUR_SET_444)
 
-#define STARTUP_R 2  
+#define STARTUP_R 2
 #define STARTUP_G 0
 #define STARTUP_B 10
-#define MENU_OPTION_R 8 
-#define MENU_OPTION_G 0 
+#define MENU_OPTION_R 8
+#define MENU_OPTION_G 0
 #define MENU_OPTION_B 4
 #define MENU_TITLE_R 10
 #define MENU_TITLE_G 10
@@ -102,11 +102,11 @@
 
 #else
 
-#define STARTUP_R 1   
+#define STARTUP_R 1
 #define STARTUP_G 0
 #define STARTUP_B 5
-#define MENU_OPTION_R 4 
-#define MENU_OPTION_G 0 
+#define MENU_OPTION_R 4
+#define MENU_OPTION_G 0
 #define MENU_OPTION_B 2
 #define MENU_TITLE_R 5
 #define MENU_TITLE_G 5
@@ -131,50 +131,48 @@
 #define STARTUP_RING_EXPANSION_RATE 100
 #define STARTUP_RING_MAX_RADIUS 150 // max number of pixels the ring will expand to, save time rendering if its definitely off the screen
 
+#define MAIN_MENU_STRING                    "Main Menu"
+#define RETURN_STRING                       "RETURN"
+#define SCREEN_MODE_STRING                  "Screen Mode"
+#define SCREEN_BRIGHTNESS_STRING            "Brightness"
+#define TEXT_SETTINGS_STRING                "Text Settings"
+//#define
+//#define
+//#define
+//#define
+//#define
+//#define
+//#define
+//#define
+//#define
 
-//struct for menu items that need to be displayable but not directly used by the megas
-struct Menu_Struct {
 
-  byte current1 = 0;
-  byte current2 = 0;
 
-  byte light1 = 0;
-  byte light2 = 0;
+#define SIZEOF_MAIN_MENU_STRING               sizeof(MAIN_MENU_STRING)
+#define SIZEOF_RETURN_STRING                  sizeof(RETURN_STRING)
+#define SIZEOF_SCREEN_MODE_STRING             sizeof(SCREEN_MODE_STRING)
+#define SIZEOF_SCREEN_BRIGHTNESS_STRING       sizeof(SCREEN_BRIGHTNESS_STRING)
+#define SIZEOF_TEXT_SETTINGS_STRING           sizeof(TEXT_SETTINGS_STRING)
 
-  byte temp1 = 0;
-  byte temp2 = 0;
-  byte temp3 = 0;
 
-  byte fan_speed = 0;
-  byte min_fan_speed = 0;
-  bool fan_enabled = false;
-
-  byte led_strip_brightness = 0;
-  bool led_strip_enabled = false;
-
-  bool sd_card1_detected = false;
-  bool sd_card2_detected = false;
-
-  bool ethernet_connected = false;
-  bool wifi_connected = false;
-
-  bool sd_card1_mounted = false;
-  bool sd_card2_mounted = false;
-
-  int encoder_position = 0;
-  byte obj_selected =0;
-
-};
+//
+//  const char screen_mode[]              PROGMEM           = ;
+//  const char brightness[]               PROGMEM           = "Brightness";
+//  const char text_settings[]            PROGMEM           = "Text Settings";
+//  const char fan_settings[]             PROGMEM           = "Fan Settings";
+//  const char internet_settings[]        PROGMEM           = "Internet Config";
+//  const char sd_card_settings[]         PROGMEM           = "Sd Cards";
+//  const char led_strip_settings[]       PROGMEM           = "LED Strip";
 
 
 struct Menu_tree_items {
 
   //level 1 menu items
-  const char main_menu[]                PROGMEM           = "Main Menu";
-  const char RETURN[]                   PROGMEM           = "RETURN";
-  const char screen_mode[]              PROGMEM           = "Screen Mode";
-  const char brightness[]               PROGMEM           = "Brightness";
-  const char text_settings[]            PROGMEM           = "Text Settings";
+  const char main_menu[]                PROGMEM           = MAIN_MENU_STRING;
+  const char RETURN[]                   PROGMEM           = RETURN_STRING;
+  const char screen_mode[]              PROGMEM           = SCREEN_MODE_STRING;
+  const char brightness[]               PROGMEM           = SCREEN_BRIGHTNESS_STRING;
+  const char text_settings[]            PROGMEM           = TEXT_SETTINGS_STRING;
   const char fan_settings[]             PROGMEM           = "Fan Settings";
   const char internet_settings[]        PROGMEM           = "Internet Config";
   const char sd_card_settings[]         PROGMEM           = "Sd Cards";
@@ -263,10 +261,10 @@ struct Menu_tree_items {
   const char text_colour_red_menu[]     PROGMEM           = "Red";
 
   //text_colour_green
-  const char text_colour_green_menu[]     PROGMEM           = "Green";
+  const char text_colour_green_menu[]     PROGMEM         = "Green";
 
   //text_colour_blue
-  const char text_colour_blue_menu[]     PROGMEM           = "Blue";
+  const char text_colour_blue_menu[]     PROGMEM          = "Blue";
 
   //text_colour_hue
   const char text_colour_hue_menu[]     PROGMEM           = "Hue";
@@ -277,6 +275,121 @@ struct Menu_tree_items {
   const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function
 
 };
+
+struct Menu_Tree_Item_Lengths {
+  byte main_menu                PROGMEM           = SIZEOF_MAIN_MENU_STRING;
+  byte RETURN                   PROGMEM           = SIZEOF_RETURN_STRING;
+  byte screen_mode              PROGMEM           = SIZEOF_SCREEN_MODE_STRING;
+  byte brightness               PROGMEM           = SIZEOF_SCREEN_BRIGHTNESS_STRING;
+  byte text_settings            PROGMEM           = SIZEOF_TEXT_SETTINGS_STRING;
+
+
+
+
+};
+
+//const char* const string_table[] PROGMEM = {
+//  main_menu,
+//  RETURN,
+//  screen_mode,
+//  brightness,
+//  text_settings,
+//  fan_settings,
+//  internet_settings,
+//  sd_card_settings,
+//  led_strip_settings,
+//  screen_mode_menu,
+//  screen_mode0,
+//  screen_mode1,
+//  screen_mode3,
+//  screen_mode2,
+//  brightness_menu,
+//  text_settings_menu,
+//  text_size_settings,
+//  text_colour_settings,
+//  scroll_speed_settings,
+//  flip_dir_settings,
+//  fan_settings_menu,
+//  fan_speed_settings,
+//  fan_enable,
+//  fan_disable,
+//  minimum_rotating_speed,
+//  internet_config_menu,
+//  select_network_manually,
+//  ethernet_enable,
+//  ethernet_disable,
+//  wifi_enable,
+//  wifi_disable,
+//  sd_cards_menu,
+//  enable_ext_card,
+//  disable_ext_card,
+//  sd_card_folders,
+//  led_strip_menu,
+//  enable_led_strip,
+//  disable_led_strip,
+//  led_strip_brightness,
+//  text_size_menu,
+//  text_colour_menu,
+//  text_colour_red,
+//  text_colour_green,
+//  text_colour_blue,
+//  text_colour_hue,
+//  text_colour_use_hue,
+//  text_colour_use_rgb,
+//  scroll_speed_menu,
+//  scroll_speed_x,
+//  scroll_speed_y,
+//  fan_speed_menu,
+//  minimum_fan_speed_menu,
+//  SD_card_folders_menu,
+//  led_strip_brightness_menu,
+//  text_colour_red_menu,
+//  text_colour_green_menu,
+//  text_colour_blue_menu,
+//  text_colour_hue_menu,
+//  null_string,
+//  default_string,
+//  default_title
+//};
+
+
+
+
+
+//struct for menu items that need to be displayable but not directly used by the megas
+struct Menu_Struct {
+
+  byte current1 = 0;
+  byte current2 = 0;
+
+  byte light1 = 0;
+  byte light2 = 0;
+
+  byte temp1 = 0;
+  byte temp2 = 0;
+  byte temp3 = 0;
+
+  byte fan_speed = 0;
+  byte min_fan_speed = 0;
+  bool fan_enabled = false;
+
+  byte led_strip_brightness = 0;
+  bool led_strip_enabled = false;
+
+  bool sd_card1_detected = false;
+  bool sd_card2_detected = false;
+
+  bool ethernet_connected = false;
+  bool wifi_connected = false;
+
+  bool sd_card1_mounted = false;
+  bool sd_card2_mounted = false;
+
+  int encoder_position = 0;
+  byte obj_selected = 0;
+
+};
+
 
 struct Menu_colour_struct {
   byte red = DEFAULT_TEXT_RED_BRIGHTNESS;    //default is bright white, set to correct colour on initialisation
@@ -290,7 +403,7 @@ class Menu {
   private:
 
     byte current_menu = DEFAULT_MENU;
-    byte previous_menu = current_menu+1;
+    byte previous_menu = current_menu + 1;
 
     void clear_background_text(); //clear area for menu
 
@@ -312,12 +425,12 @@ class Menu {
 
     //level 3
     void display_text_settings_menu();
-    void display_sd_folder_menu(){}
+    void display_sd_folder_menu() {}
 
     //level 4
     void display_text_colour_menu();
     void display_scroll_speed_menu();
-    
+
 
 
     // takes care of all adjustment menus
@@ -336,11 +449,11 @@ class Menu {
     byte get_current_menu() {
       return current_menu;
     }
-    void set_current_menu(byte cur_menu){
+    void set_current_menu(byte cur_menu) {
       current_menu = cur_menu;
     }
-    byte get_previous_menu(){
-    return previous_menu;
+    byte get_previous_menu() {
+      return previous_menu;
     }
 
 

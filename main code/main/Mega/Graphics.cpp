@@ -6,6 +6,7 @@
 #include "Graphics.h"
 #include "Mega_Pins.h"
 #include "src/Timer3/TimerThree.h"
+#include "src/Timer4/TimerFour.h"
 #include "Menus.h"
 #include "Local_Config.h"
 
@@ -23,7 +24,7 @@ Cursor_Struct cursor_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 Object_Struct_Circles startup_ring;   //general purpose object parameters, so as not to overwrite text parameters when displaying several things at once
 
 extern struct Menu_tree_items menu_items;
-
+extern struct Menu_Tree_Item_Lengths menu_tree_item_lengths;
 extern struct Menu_colour_struct    menu_option_colour;
 extern struct Menu_colour_struct    title_colour;
 extern struct Menu_Struct           menu_parameters;
@@ -52,6 +53,250 @@ const char minus_string[] PROGMEM = "-";
 
 
 
+//
+//
+//const char* const menu_string_table[] PROGMEM = {
+//  menu_items.main_menu,
+//  menu_items.RETURN,
+//  menu_items.screen_mode,
+//  menu_items.brightness,
+//  menu_items.text_settings,
+//  menu_items.fan_settings,
+//  menu_items.internet_settings,
+//  menu_items.sd_card_settings,
+//  menu_items.led_strip_settings,
+//  menu_items.screen_mode_menu,
+//  menu_items.screen_mode0,
+//  menu_items.screen_mode1,
+//  menu_items.screen_mode3,
+//  menu_items.screen_mode2,
+//  menu_items.brightness_menu,
+//  menu_items.text_settings_menu,
+//  menu_items.text_size_settings,
+//  menu_items.text_colour_settings,
+//  menu_items.scroll_speed_settings,
+//  menu_items.flip_dir_settings,
+//  menu_items.fan_settings_menu,
+//  menu_items.fan_speed_settings,
+//  menu_items.fan_enable,
+//  menu_items.fan_disable,
+//  menu_items.minimum_rotating_speed,
+//  menu_items.internet_config_menu,
+//  menu_items.select_network_manually,
+//  menu_items.ethernet_enable,
+//  menu_items.ethernet_disable,
+//  menu_items.wifi_enable,
+//  menu_items.wifi_disable,
+//  menu_items.sd_cards_menu,
+//  menu_items.enable_ext_card,
+//  menu_items.disable_ext_card,
+//  menu_items.sd_card_folders,
+//  menu_items.led_strip_menu,
+//  menu_items.enable_led_strip,
+//  menu_items.disable_led_strip,
+//  menu_items.led_strip_brightness,
+//  menu_items.text_size_menu,
+//  menu_items.text_colour_menu,
+//  menu_items.text_colour_red,
+//  menu_items.text_colour_green,
+//  menu_items.text_colour_blue,
+//  menu_items.text_colour_hue,
+//  menu_items.text_colour_use_hue,
+//  menu_items.text_colour_use_rgb,
+//  menu_items.scroll_speed_menu,
+//  menu_items.scroll_speed_x,
+//  menu_items.scroll_speed_y,
+//  menu_items.fan_speed_menu,
+//  menu_items.minimum_fan_speed_menu,
+//  menu_items.SD_card_folders_menu,
+//  menu_items.led_strip_brightness_menu,
+//  menu_items.text_colour_red_menu,
+//  menu_items.text_colour_green_menu,
+//  menu_items.text_colour_blue_menu,
+//  menu_items.text_colour_hue_menu,
+//  menu_items.null_string,
+//  menu_items.default_string,
+//  menu_items.default_title
+//};
+
+
+  //level 1 menu items
+  const char main_menu[]                PROGMEM           = MAIN_MENU_STRING;
+  const char RETURN[]                   PROGMEM           = RETURN_STRING;
+  const char screen_mode[]              PROGMEM           = SCREEN_MODE_STRING;
+  const char brightness[]               PROGMEM           = SCREEN_BRIGHTNESS_STRING;
+  const char text_settings[]            PROGMEM           = TEXT_SETTINGS_STRING;
+  const char fan_settings[]             PROGMEM           = "Fan Settings";
+  const char internet_settings[]        PROGMEM           = "Internet Config";
+  const char sd_card_settings[]         PROGMEM           = "Sd Cards";
+  const char led_strip_settings[]       PROGMEM           = "LED Strip";
+
+
+  //level 2 menu items
+  //change mode folder
+  const char screen_mode_menu[]         PROGMEM           = "Mode Menu";
+  const char screen_mode0[]             PROGMEM           = "Both on";
+  const char screen_mode1[]             PROGMEM           = "Front Side";
+  const char screen_mode3[]             PROGMEM           = "Back Side";
+  const char screen_mode2[]             PROGMEM           = "Both Off";
+
+  //screen brightness folder
+  const char brightness_menu[]          PROGMEM           = "Brightness";
+
+  //text adjustment folder
+  const char text_settings_menu[]       PROGMEM           = "Text Settings";
+  const char text_size_settings[]       PROGMEM           = "Text Size";
+  const char text_colour_settings[]     PROGMEM           = "Text Colour";
+  const char scroll_speed_settings[]    PROGMEM           = "Scroll Speed";
+  const char flip_dir_settings[]        PROGMEM           = "Flip Direction";
+
+  //fan settings folder
+  const char fan_settings_menu[]        PROGMEM           = "Fan Settings";
+  const char fan_speed_settings[]       PROGMEM           = "Fan Speed";
+  const char fan_enable[]               PROGMEM           = "Enable";
+  const char fan_disable[]              PROGMEM           = "Disable";
+  const char minimum_rotating_speed[]   PROGMEM           = "Minimum speed";
+
+  // internet configuration folder
+  const char internet_config_menu[]     PROGMEM           = "Internet";
+  const char select_network_manually[]  PROGMEM           = "Connect To...";
+  const char ethernet_enable[]          PROGMEM           = "Enable Eth";
+  const char ethernet_disable[]         PROGMEM           = "Disable Eth";
+  const char wifi_enable[]              PROGMEM           = "Enable Wifi";
+  const char wifi_disable[]             PROGMEM           = "Disable Wifi";
+
+  // SD cards folder
+  const char sd_cards_menu[]            PROGMEM           = "SD Cards";
+  const char enable_ext_card[]          PROGMEM           = "Enable Port";
+  const char disable_ext_card[]         PROGMEM           = "Disable Port";
+  const char sd_card_folders[]          PROGMEM           = "Read Folders";
+
+  // Led Strip folder
+  const char led_strip_menu[]           PROGMEM           = "Led Strip";
+  const char enable_led_strip[]         PROGMEM           = "Enable LED Strip";
+  const char disable_led_strip[]        PROGMEM           = "Disable LED Strip";
+  const char led_strip_brightness[]     PROGMEM           = "Brightness";
+
+
+  //level 3 folders
+  //text size
+  const char text_size_menu[]           PROGMEM           = "Text Size";
+
+  //text colour
+  const char text_colour_menu[]         PROGMEM           = "Text Colour";
+  const char text_colour_red[]          PROGMEM           = "Red";
+  const char text_colour_green[]        PROGMEM           = "Green";
+  const char text_colour_blue[]         PROGMEM           = "Blue";
+  const char text_colour_hue[]          PROGMEM           = "Hue";
+  const char text_colour_use_hue[]      PROGMEM           = "Use Hue";
+  const char text_colour_use_rgb[]      PROGMEM           = "Use RGB";
+
+
+  // scroll speed
+  const char scroll_speed_menu[]        PROGMEM           = "Scroll Speed";
+  const char scroll_speed_x[]           PROGMEM           = "X Direction";
+  const char scroll_speed_y[]           PROGMEM           = "Y Direction";
+
+  //set fan speed
+  const char fan_speed_menu[]           PROGMEM           = "Set Fan Speed";
+
+  // fan minimum speed
+  const char minimum_fan_speed_menu[]   PROGMEM           = "Set Min Speed";
+
+  // read sd card folders
+  const char SD_card_folders_menu[]     PROGMEM           = "Card Files";
+
+  // led brightness menu
+  const char led_strip_brightness_menu[]   PROGMEM        = "Set Brightness";
+
+  //level 4
+  //text_colour_red
+  const char text_colour_red_menu[]     PROGMEM           = "Red";
+
+  //text_colour_green
+  const char text_colour_green_menu[]     PROGMEM         = "Green";
+
+  //text_colour_blue
+  const char text_colour_blue_menu[]     PROGMEM          = "Blue";
+
+  //text_colour_hue
+  const char text_colour_hue_menu[]     PROGMEM           = "Hue";
+
+  //dummy string
+  const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder
+  const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function
+  const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function
+
+
+const char* const menu_string_table[] PROGMEM = {
+  main_menu,
+  RETURN,
+  screen_mode,
+  brightness,
+  text_settings,
+  fan_settings,
+  internet_settings,
+  sd_card_settings,
+  led_strip_settings,
+  screen_mode_menu,
+  screen_mode0,
+  screen_mode1,
+  screen_mode3,
+  screen_mode2,
+  brightness_menu,
+  text_settings_menu,
+  text_size_settings,
+  text_colour_settings,
+  scroll_speed_settings,
+  flip_dir_settings,
+  fan_settings_menu,
+  fan_speed_settings,
+  fan_enable,
+  fan_disable,
+  minimum_rotating_speed,
+  internet_config_menu,
+  select_network_manually,
+  ethernet_enable,
+  ethernet_disable,
+  wifi_enable,
+  wifi_disable,
+  sd_cards_menu,
+  enable_ext_card,
+  disable_ext_card,
+  sd_card_folders,
+  led_strip_menu,
+  enable_led_strip,
+  disable_led_strip,
+  led_strip_brightness,
+  text_size_menu,
+  text_colour_menu,
+  text_colour_red,
+  text_colour_green,
+  text_colour_blue,
+  text_colour_hue,
+  text_colour_use_hue,
+  text_colour_use_rgb,
+  scroll_speed_menu,
+  scroll_speed_x,
+  scroll_speed_y,
+  fan_speed_menu,
+  minimum_fan_speed_menu,
+  SD_card_folders_menu,
+  led_strip_brightness_menu,
+  text_colour_red_menu,
+  text_colour_green_menu,
+  text_colour_blue_menu,
+  text_colour_hue_menu,
+  null_string,
+  default_string,
+  default_title
+};
+
+
+
+
+
+
 void pos_update_ISR() {
   interpolate_pos_flag = true;
 }
@@ -66,36 +311,53 @@ void Graphics::init_matrix() {
 }
 
 
+void Graphics::init_update_display_isr() {
+
+  uint32_t period = serial_check_ISR_period();
+
+  Timer4.initialize(period);
+  Timer4.attachInterrupt(serial_check_ISR);
+  Timer4.start();
+}
+
+
+void serial_check_ISR() {
+  //
+  //  if (Serial_1.available() != 0){  //check for serial arrived very often
+  //
+  //    Timer3.stop();  //turn off all active interrupts
+  //    Timer4.stop();
+  //
+  //    //enable interrupts to allow serial and delays to work
+  //    coms_serial.read_buffer();
+  //
+  //    Timer3.start();
+  //    Tiemr4.start();
+  //
+  //  }
+}
+
 void Graphics::update_display() {
 
   static uint32_t time_since_last_update = millis();
 
   if (screen_parameters.time_last_updated == 0)
-    screen_parameters.time_last_updated = millis(); //if it was never set yet, set ti here
+    screen_parameters.time_last_updated = millis(); //if it was never set yet, set it here
 
-
-  // only change buffers if something changed (and not too frequently, function can be slow, potientially filling a large buffer)
-  // change can be only due to frame arrived
-
-  //matrix.drawPixel(10, 10, matrix.Color444(10, 10, 10));
-
-  //  //psudo state machine using menu_updated value -> 0 : menus equal, no change recently, 1 : just changed and screen not updated, 2 : screen updated but previous_menu not caught up
-  //  static byte menu_updated = 0;
-
-  //  //run these every time to detect change, v small chance of missed detection...
-  //  if (menu.get_current_menu() != menu.get_previous_menu() && menu_updated == 0)
-  //    menu_updated = 1;
-  //  if (menu.get_current_menu() == menu.get_previous_menu() && menu_updated == 2)
-  //    menu_updated = 0;
-
-
-  //  if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (!screen_parameters.updated || (menu_updated == 1))) {
   if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (!screen_parameters.updated) && (millis() > screen_parameters.time_last_updated + SCREEN_UPDATE_BACKOFF_PERIOD)) {
 
-
+    Timer3.stop();  //disable this timer to speed things up
     set_display_mode();
+    //    Serial.println();
+    //    Serial.println("update display");
+    //    Serial.println(menu.get_current_menu());
+    //    Serial.println(screen_parameters.updated);
+    //    Serial.println();
 
-    if (menu.get_current_menu() == DEFAULT_MENU && !screen_parameters.updated) {
+    if (menu.get_current_menu() == DEFAULT_MENU) menu.set_current_menu(MAIN_MENU);
+
+
+    if (menu.get_current_menu() == DEFAULT_MENU) {
 
       for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
         if (text_parameters[i].object_used) {
@@ -103,6 +365,7 @@ void Graphics::update_display() {
             graphics.set_text_colour(text_parameters[i].hue);
           else
             graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
+          //delay(100);
           graphics.draw_text(i);
           Serial.println("draw");
         }
@@ -116,16 +379,12 @@ void Graphics::update_display() {
 
     matrix.swapBuffers(false);  //push the buffer we just wrote to front
 
-
+    time_since_last_update = millis();
     //dealt with screen update
     screen_parameters.updated = true;
 
-    //    // dealt with menu update, put into waiting state
-    //    if (menu_updated == 1)
-    //      menu_updated = 2;
+    Timer3.start();
   }
-
-  //  Serial.println(F("Finished update display"));
 }
 
 inline void Graphics::set_display_mode() {
@@ -198,15 +457,16 @@ inline void Graphics::set_text_colour(int new_hue) {
 
 inline void Graphics::draw_text(byte obj_num) {
 
+  static int colour = -1500;
 
   uint32_t temp = millis();
   temp = millis() - temp;
   uint32_t start_time = millis();
 
-  int cursorx = -63;
+  int cursorx = 1;
   int cursory = 1;
-//  byte text_size = text_parameters[obj_num].text_size;
-  byte text_size = 2;
+  //  byte text_size = text_parameters[obj_num].text_size;
+  byte text_size = 1;
   matrix.setTextSize(text_size);
   //  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
 
@@ -238,7 +498,12 @@ inline void Graphics::draw_text(byte obj_num) {
   //  for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
   //if (text_parameters[obj_num].string[i] == 0) break;
   TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-  matrix.print(str);
+  matrix.fillScreen(0);
+  //  matrix.print(str[1]);
+  //  matrix.fillScreen(matrix.ColorHSV(colour, 255, 255, true));
+  //matrix.drawPixel(1,3,matrix.ColorHSV(colour, 255, 255, true));
+  colour += 50;
+  if (colour > 1500) colour = -1500;
   TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
 
   //  }
@@ -487,13 +752,26 @@ void Graphics::clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x,
 
 void Graphics::write_title(byte title) {
   int center_of_menu = SINGLE_MATRIX_WIDTH - ((DEFAULT_MENU_WIDTH >> 1) - menu_pixels_right_of_node());
-
   set_title_colour();
   switch (title) {
     case MAIN_MENU:
       {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.main_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.main_menu));
+        matrix.setCursor((center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1)+ (ASCII_CHARACTER_BASIC_WIDTH>>1)), 1);
+        char item[menu_tree_item_lengths.main_menu];
+        strcpy_P(item, (char*)pgm_read_word(&(menu_string_table[0])));
+        Serial.print(F("cursor x : "));
+        Serial.println(center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1));
+
+        for (byte i = 0; i < menu_tree_item_lengths.main_menu; i++) {
+                    Serial.print(item[i]);
+                    Serial.print(" ");
+                    matrix.print(item[i]);
+//          Serial.print((char)pgm_read_byte_near(menu_items.main_menu + i));
+//          Serial.print(" ");
+//          matrix.print((char)pgm_read_byte_near(menu_items.main_menu + i));
+        }
+        Serial.println();
+        //        matrix.println(F2(menu_items.main_menu));
         break;
       }
 

@@ -12,6 +12,7 @@ Menu_Struct menu_parameters;
 Menu_colour_struct    menu_option_colour;
 Menu_colour_struct    title_colour;
 Menu_tree_items       menu_items;
+Menu_Tree_Item_Lengths menu_tree_item_lengths;
 
 extern struct Object_Struct_Circles  startup_ring;
 extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
