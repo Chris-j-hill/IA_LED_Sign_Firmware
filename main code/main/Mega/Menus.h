@@ -11,7 +11,10 @@
 #define MENU_VISABLITIY_TIMOUT 15000  //15 seconds until menu will disapear/default to standard view
 #define TIME_TO_DISPLAY_STARTUP 5000  // 5 second startup animation
 
-
+/*
+ * menu numbers, these must be the same as on the due,
+ * menus number passed in menu frame, will be matched to these values
+ */
 // LEVEL 1
 #define STARTUP                       0
 #define DEFAULT_MENU                  1
@@ -141,7 +144,7 @@
 #define INTERNET_CONFIG_STRING              "Internet Config"
 #define SD_CARDS_STRING                     "Sd Cards"
 #define LED_STRIP_STRING                    "LED Strip"
-#define MENU_MODE_STRING                    "Mode Menu"
+
 #define BOTH_ON_STRING                      "Both on"
 #define FRONT_SIDE_STRING                   "Front Side"
 #define BACK_SIDE_STRING                    "Back Side"
@@ -195,7 +198,6 @@ struct Menu_tree_items {
 
   //level 2 menu items
   //change mode folder
-  const char screen_mode_menu[]         PROGMEM           = MENU_MODE_STRING;
   const char screen_mode0[]             PROGMEM           = BOTH_ON_STRING;
   const char screen_mode1[]             PROGMEM           = FRONT_SIDE_STRING;
   const char screen_mode3[]             PROGMEM           = BACK_SIDE_STRING;
@@ -229,13 +231,13 @@ struct Menu_tree_items {
   // SD cards folder
   const char sd_cards_menu[]            PROGMEM           = SD_CARDS_STRING;
   const char enable_ext_card[]          PROGMEM           = ENABLE_STRING;
-  const char disable_ext_card[]         PROGMEM           = ENABLE_STRING;
+  const char disable_ext_card[]         PROGMEM           = DISABLE_STRING;
   const char sd_card_folders[]          PROGMEM           = READ_FOLDERS_STRING;
 
   // Led Strip folder
   const char led_strip_menu[]           PROGMEM           = LED_STRIP_STRING;
   const char enable_led_strip[]         PROGMEM           = ENABLE_STRING;
-  const char disable_led_strip[]        PROGMEM           = ENABLE_STRING;
+  const char disable_led_strip[]        PROGMEM           = DISABLE_STRING;
   const char led_strip_brightness[]     PROGMEM           = STRIP_BRIGHTNESS_STRING;
 
 
@@ -302,7 +304,7 @@ struct Menu_tree_items {
 #define SIZEOF_INTERNET_CONFIG_STRING         sizeof(INTERNET_CONFIG_STRING)
 #define SIZEOF_SD_CARDS_STRING                sizeof(SD_CARDS_STRING)
 #define SIZEOF_LED_STRIP_STRING               sizeof(LED_STRIP_STRING)
-#define SIZEOF_MENU_MODE_STRING               sizeof(MENU_MODE_STRING)
+
 #define SIZEOF_BOTH_ON_STRING                 sizeof(BOTH_ON_STRING)
 #define SIZEOF_FRONT_SIDE_STRING              sizeof(FRONT_SIDE_STRING)
 #define SIZEOF_BACK_SIDE_STRING               sizeof(BACK_SIDE_STRING)
@@ -346,7 +348,7 @@ struct Menu_Tree_Item_Lengths {
   byte internet_settings        PROGMEM           = SIZEOF_INTERNET_CONFIG_STRING;
   byte sd_card_settings         PROGMEM           = SIZEOF_SD_CARDS_STRING;
   byte led_strip_settings       PROGMEM           = SIZEOF_LED_STRIP_STRING;
-  byte screen_mode_menu         PROGMEM           = SIZEOF_MENU_MODE_STRING;
+  
   byte screen_mode0             PROGMEM           = SIZEOF_BOTH_ON_STRING;
   byte screen_mode1             PROGMEM           = SIZEOF_FRONT_SIDE_STRING;
   byte screen_mode3             PROGMEM           = SIZEOF_BACK_SIDE_STRING;
@@ -383,70 +385,6 @@ struct Menu_Tree_Item_Lengths {
 
 
 };
-
-//const char* const string_table[] PROGMEM = {
-//  main_menu,
-//  RETURN,
-//  screen_mode,
-//  brightness,
-//  text_settings,
-//  fan_settings,
-//  internet_settings,
-//  sd_card_settings,
-//  led_strip_settings,
-//  screen_mode_menu,
-//  screen_mode0,
-//  screen_mode1,
-//  screen_mode3,
-//  screen_mode2,
-//  brightness_menu,
-//  text_settings_menu,
-//  text_size_settings,
-//  text_colour_settings,
-//  scroll_speed_settings,
-//  flip_dir_settings,
-//  fan_settings_menu,
-//  fan_speed_settings,
-//  fan_enable,
-//  fan_disable,
-//  minimum_rotating_speed,
-//  internet_config_menu,
-//  select_network_manually,
-//  ethernet_enable,
-//  ethernet_disable,
-//  wifi_enable,
-//  wifi_disable,
-//  sd_cards_menu,
-//  enable_ext_card,
-//  disable_ext_card,
-//  sd_card_folders,
-//  led_strip_menu,
-//  enable_led_strip,
-//  disable_led_strip,
-//  led_strip_brightness,
-//  text_size_menu,
-//  text_colour_menu,
-//  text_colour_red,
-//  text_colour_green,
-//  text_colour_blue,
-//  text_colour_hue,
-//  text_colour_use_hue,
-//  text_colour_use_rgb,
-//  scroll_speed_menu,
-//  scroll_speed_x,
-//  scroll_speed_y,
-//  fan_speed_menu,
-//  minimum_fan_speed_menu,
-//  SD_card_folders_menu,
-//  led_strip_brightness_menu,
-//  text_colour_red_menu,
-//  text_colour_green_menu,
-//  text_colour_blue_menu,
-//  text_colour_hue_menu,
-//  null_string,
-//  default_string,
-//  default_title
-//};
 
 
 

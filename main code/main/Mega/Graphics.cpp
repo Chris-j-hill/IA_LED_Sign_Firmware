@@ -51,184 +51,134 @@ volatile bool interpolate_pos_flag = false;
 const char plus_string[] PROGMEM = "+";
 const char minus_string[] PROGMEM = "-";
 
+/*
+ * define locations of data in array below, for
+ * abstraction away from non descript indexing in 
+ * funcions later
+ */
+
+#define MAIN_MENU_LOC           0
+#define RETURN_LOC              1
+#define SCREEN_MODE_LOC         2
+#define TEXT_SETTINGS_LOC       3
+#define FAN_SETTINGS_LOC        4
+#define INTERNET_CONFIG_LOC     5
+#define SD_CARD_LOC             6
+
+#define LED_STRIP_LOC           7
+#define RETURN_LOC              8
+#define BOTH_ON_LOC             9
+#define FRONT_ON_LOC            10
+#define BACK_ON_LOC             11
+#define BOTH_OFF_LOC            12
+
+#define TEXT_SIZE_LOC           13
+#define TEXT_COLOUR_LOC         14
+#define SCROLL_SPEED            15
+#define FLIP_DIR_LOC            16
+
+#define FAN_SPEED_LOC           17
+#define FAN_MIN_SPEED_LOC       18
+
+#define SD_FOLDERS_LOC          19
+
+#define STRIP_BRIGHTNESS_LOC    20
+
+#define RED_LOC                 21
+#define GREED_LOC               22
+#define BLUE_LOC                23
+#define HUE_LOC                 24
+#define USE_HUE_LOC             25
+#define USE_RGB_LOC             26
+
+#define SCROLL_X_LOC            27
+#define SCROLL_Y_LOC            28
+
+#define ENABLE_LOC              29
+#define DISABLE_LOC             30
+#define EMPTY_STRING_LOC        31
+#define DEFAULT_STRING_LOC      32
+#define DEFAULT_TITLE_LOC       33
 
 
-//
-//
-//const char* const menu_string_table[] PROGMEM = {
-//  menu_items.main_menu,
-//  menu_items.RETURN,
-//  menu_items.screen_mode,
-//  menu_items.brightness,
-//  menu_items.text_settings,
-//  menu_items.fan_settings,
-//  menu_items.internet_settings,
-//  menu_items.sd_card_settings,
-//  menu_items.led_strip_settings,
-//  menu_items.screen_mode_menu,
-//  menu_items.screen_mode0,
-//  menu_items.screen_mode1,
-//  menu_items.screen_mode3,
-//  menu_items.screen_mode2,
-//  menu_items.brightness_menu,
-//  menu_items.text_settings_menu,
-//  menu_items.text_size_settings,
-//  menu_items.text_colour_settings,
-//  menu_items.scroll_speed_settings,
-//  menu_items.flip_dir_settings,
-//  menu_items.fan_settings_menu,
-//  menu_items.fan_speed_settings,
-//  menu_items.fan_enable,
-//  menu_items.fan_disable,
-//  menu_items.minimum_rotating_speed,
-//  menu_items.internet_config_menu,
-//  menu_items.select_network_manually,
-//  menu_items.ethernet_enable,
-//  menu_items.ethernet_disable,
-//  menu_items.wifi_enable,
-//  menu_items.wifi_disable,
-//  menu_items.sd_cards_menu,
-//  menu_items.enable_ext_card,
-//  menu_items.disable_ext_card,
-//  menu_items.sd_card_folders,
-//  menu_items.led_strip_menu,
-//  menu_items.enable_led_strip,
-//  menu_items.disable_led_strip,
-//  menu_items.led_strip_brightness,
-//  menu_items.text_size_menu,
-//  menu_items.text_colour_menu,
-//  menu_items.text_colour_red,
-//  menu_items.text_colour_green,
-//  menu_items.text_colour_blue,
-//  menu_items.text_colour_hue,
-//  menu_items.text_colour_use_hue,
-//  menu_items.text_colour_use_rgb,
-//  menu_items.scroll_speed_menu,
-//  menu_items.scroll_speed_x,
-//  menu_items.scroll_speed_y,
-//  menu_items.fan_speed_menu,
-//  menu_items.minimum_fan_speed_menu,
-//  menu_items.SD_card_folders_menu,
-//  menu_items.led_strip_brightness_menu,
-//  menu_items.text_colour_red_menu,
-//  menu_items.text_colour_green_menu,
-//  menu_items.text_colour_blue_menu,
-//  menu_items.text_colour_hue_menu,
-//  menu_items.null_string,
-//  menu_items.default_string,
-//  menu_items.default_title
-//};
+
+/*
+   Need to define these as global variables not in struct as loading bytes from progmem
+   doesnt seem to like struct formatting. no sram used so no big deal to double define,
+   saves rewriting functions containg struct variables. code derived from array of strings
+   examlple here: https://www.arduino.cc/reference/en/language/variables/utilities/progmem/
+*/
 
 
-  //level 1 menu items
-  const char main_menu[]                PROGMEM           = MAIN_MENU_STRING;
-  const char RETURN[]                   PROGMEM           = RETURN_STRING;
-  const char screen_mode[]              PROGMEM           = SCREEN_MODE_STRING;
-  const char brightness[]               PROGMEM           = SCREEN_BRIGHTNESS_STRING;
-  const char text_settings[]            PROGMEM           = TEXT_SETTINGS_STRING;
-  const char fan_settings[]             PROGMEM           = "Fan Settings";
-  const char internet_settings[]        PROGMEM           = "Internet Config";
-  const char sd_card_settings[]         PROGMEM           = "Sd Cards";
-  const char led_strip_settings[]       PROGMEM           = "LED Strip";
+//level 1 menu items
+const char main_menu[]                PROGMEM           = MAIN_MENU_STRING;
+const char RETURN[]                   PROGMEM           = RETURN_STRING;
+const char screen_mode[]              PROGMEM           = SCREEN_MODE_STRING;
+const char brightness[]               PROGMEM           = SCREEN_BRIGHTNESS_STRING;
+const char text_settings[]            PROGMEM           = TEXT_SETTINGS_STRING;
+const char fan_settings[]             PROGMEM           = FAN_SETTINGS_STRING;
+const char internet_settings[]        PROGMEM           = INTERNET_CONFIG_STRING;
+const char sd_card_settings[]         PROGMEM           = SD_CARDS_STRING;
+const char led_strip_settings[]       PROGMEM           = LED_STRIP_STRING;
 
 
-  //level 2 menu items
-  //change mode folder
-  const char screen_mode_menu[]         PROGMEM           = "Mode Menu";
-  const char screen_mode0[]             PROGMEM           = "Both on";
-  const char screen_mode1[]             PROGMEM           = "Front Side";
-  const char screen_mode3[]             PROGMEM           = "Back Side";
-  const char screen_mode2[]             PROGMEM           = "Both Off";
+//level 2 menu items
+//change mode folder
+const char screen_mode0[]             PROGMEM           = BOTH_ON_STRING;
+const char screen_mode1[]             PROGMEM           = FRONT_SIDE_STRING;
+const char screen_mode3[]             PROGMEM           = BACK_SIDE_STRING;
+const char screen_mode2[]             PROGMEM           = BOTH_OFF_STRING;
 
-  //screen brightness folder
-  const char brightness_menu[]          PROGMEM           = "Brightness";
+//text adjustment folder
+const char text_size_settings[]       PROGMEM           = TEXT_SIZE_STRING;
+const char text_colour_settings[]     PROGMEM           = TEXT_COLOUR_STRING;
+const char scroll_speed_settings[]    PROGMEM           = SCROLL_SPEED_STRING;
+const char flip_dir_settings[]        PROGMEM           = FLIP_DIR_STRING;
 
-  //text adjustment folder
-  const char text_settings_menu[]       PROGMEM           = "Text Settings";
-  const char text_size_settings[]       PROGMEM           = "Text Size";
-  const char text_colour_settings[]     PROGMEM           = "Text Colour";
-  const char scroll_speed_settings[]    PROGMEM           = "Scroll Speed";
-  const char flip_dir_settings[]        PROGMEM           = "Flip Direction";
+//fan settings folder
+const char fan_speed_settings[]       PROGMEM           = FAN_SPEED_STRING;
+const char minimum_rotating_speed[]   PROGMEM           = FAN_MIN_SPEED_STRING;
 
-  //fan settings folder
-  const char fan_settings_menu[]        PROGMEM           = "Fan Settings";
-  const char fan_speed_settings[]       PROGMEM           = "Fan Speed";
-  const char fan_enable[]               PROGMEM           = "Enable";
-  const char fan_disable[]              PROGMEM           = "Disable";
-  const char minimum_rotating_speed[]   PROGMEM           = "Minimum speed";
+// internet configuration folder
+const char internet_config_menu[]     PROGMEM           = "Internet";
+const char select_network_manually[]  PROGMEM           = "Connect To...";
+const char ethernet_enable[]          PROGMEM           = "Enable Eth";
+const char ethernet_disable[]         PROGMEM           = "Disable Eth";
+const char wifi_enable[]              PROGMEM           = "Enable Wifi";
+const char wifi_disable[]             PROGMEM           = "Disable Wifi";
 
-  // internet configuration folder
-  const char internet_config_menu[]     PROGMEM           = "Internet";
-  const char select_network_manually[]  PROGMEM           = "Connect To...";
-  const char ethernet_enable[]          PROGMEM           = "Enable Eth";
-  const char ethernet_disable[]         PROGMEM           = "Disable Eth";
-  const char wifi_enable[]              PROGMEM           = "Enable Wifi";
-  const char wifi_disable[]             PROGMEM           = "Disable Wifi";
+// SD cards folder
+const char sd_cards_menu[]            PROGMEM           = SD_CARDS_STRING;
+const char sd_card_folders[]          PROGMEM           = READ_FOLDERS_STRING;
 
-  // SD cards folder
-  const char sd_cards_menu[]            PROGMEM           = "SD Cards";
-  const char enable_ext_card[]          PROGMEM           = "Enable Port";
-  const char disable_ext_card[]         PROGMEM           = "Disable Port";
-  const char sd_card_folders[]          PROGMEM           = "Read Folders";
-
-  // Led Strip folder
-  const char led_strip_menu[]           PROGMEM           = "Led Strip";
-  const char enable_led_strip[]         PROGMEM           = "Enable LED Strip";
-  const char disable_led_strip[]        PROGMEM           = "Disable LED Strip";
-  const char led_strip_brightness[]     PROGMEM           = "Brightness";
+// Led Strip folder
+const char led_strip_menu[]           PROGMEM           = LED_STRIP_STRING;
+const char led_strip_brightness[]     PROGMEM           = STRIP_BRIGHTNESS_STRING;
 
 
-  //level 3 folders
-  //text size
-  const char text_size_menu[]           PROGMEM           = "Text Size";
+//level 3 folders
 
-  //text colour
-  const char text_colour_menu[]         PROGMEM           = "Text Colour";
-  const char text_colour_red[]          PROGMEM           = "Red";
-  const char text_colour_green[]        PROGMEM           = "Green";
-  const char text_colour_blue[]         PROGMEM           = "Blue";
-  const char text_colour_hue[]          PROGMEM           = "Hue";
-  const char text_colour_use_hue[]      PROGMEM           = "Use Hue";
-  const char text_colour_use_rgb[]      PROGMEM           = "Use RGB";
+const char text_colour_red[]          PROGMEM           = RED_STRING;
+const char text_colour_green[]        PROGMEM           = GREEN_STRING;
+const char text_colour_blue[]         PROGMEM           = BLUE_STRING;
+const char text_colour_hue[]          PROGMEM           = HUE_STRING;
+const char text_colour_use_hue[]      PROGMEM           = USE_HUE_STRING;
+const char text_colour_use_rgb[]      PROGMEM           = USE_RGB_STRING;
 
+// scroll speed
+const char scroll_speed_x[]           PROGMEM           = X_DIR_STRING;
+const char scroll_speed_y[]           PROGMEM           = Y_DIR_STRING;
 
-  // scroll speed
-  const char scroll_speed_menu[]        PROGMEM           = "Scroll Speed";
-  const char scroll_speed_x[]           PROGMEM           = "X Direction";
-  const char scroll_speed_y[]           PROGMEM           = "Y Direction";
+const char enable[]                   PROGMEM           = ENABLE_STRING;
+const char disable[]                  PROGMEM           = DISABLE_STRING;
 
-  //set fan speed
-  const char fan_speed_menu[]           PROGMEM           = "Set Fan Speed";
-
-  // fan minimum speed
-  const char minimum_fan_speed_menu[]   PROGMEM           = "Set Min Speed";
-
-  // read sd card folders
-  const char SD_card_folders_menu[]     PROGMEM           = "Card Files";
-
-  // led brightness menu
-  const char led_strip_brightness_menu[]   PROGMEM        = "Set Brightness";
-
-  //level 4
-  //text_colour_red
-  const char text_colour_red_menu[]     PROGMEM           = "Red";
-
-  //text_colour_green
-  const char text_colour_green_menu[]     PROGMEM         = "Green";
-
-  //text_colour_blue
-  const char text_colour_blue_menu[]     PROGMEM          = "Blue";
-
-  //text_colour_hue
-  const char text_colour_hue_menu[]     PROGMEM           = "Hue";
-
-  //dummy string
-  const char null_string[]              PROGMEM           = " ";    //empty string to display in case less than three options in subfolder
-  const char default_string[]           PROGMEM           = "Error: no string found"; // default in write_menu_option function
-  const char default_title[]            PROGMEM           = "Error: no title found"; // default in write_menu_option function
+//dummy string
+const char null_string[]              PROGMEM           = EMPTY_STRING;
+const char default_string[]           PROGMEM           = CONTENT_ERROR_STRING; // default in write_menu_option function
+const char default_title[]            PROGMEM           = TITLE_ERROR_STRING; // default in write_menu_option function
 
 
-const char* const menu_string_table[] PROGMEM = {
+const char* const menu_string_table[] PROGMEM = { //create array of const char arrays rather than struct
   main_menu,
   RETURN,
   screen_mode,
@@ -238,61 +188,48 @@ const char* const menu_string_table[] PROGMEM = {
   internet_settings,
   sd_card_settings,
   led_strip_settings,
-  screen_mode_menu,
+
   screen_mode0,
   screen_mode1,
   screen_mode3,
   screen_mode2,
-  brightness_menu,
-  text_settings_menu,
+
   text_size_settings,
   text_colour_settings,
   scroll_speed_settings,
   flip_dir_settings,
-  fan_settings_menu,
+
   fan_speed_settings,
-  fan_enable,
-  fan_disable,
   minimum_rotating_speed,
+
   internet_config_menu,
   select_network_manually,
   ethernet_enable,
   ethernet_disable,
   wifi_enable,
   wifi_disable,
-  sd_cards_menu,
-  enable_ext_card,
-  disable_ext_card,
+
   sd_card_folders,
-  led_strip_menu,
-  enable_led_strip,
-  disable_led_strip,
+
   led_strip_brightness,
-  text_size_menu,
-  text_colour_menu,
+
   text_colour_red,
   text_colour_green,
   text_colour_blue,
   text_colour_hue,
   text_colour_use_hue,
   text_colour_use_rgb,
-  scroll_speed_menu,
+
   scroll_speed_x,
   scroll_speed_y,
-  fan_speed_menu,
-  minimum_fan_speed_menu,
-  SD_card_folders_menu,
-  led_strip_brightness_menu,
-  text_colour_red_menu,
-  text_colour_green_menu,
-  text_colour_blue_menu,
-  text_colour_hue_menu,
+
+  enable,
+  disable,
+
   null_string,
   default_string,
   default_title
 };
-
-
 
 
 
@@ -756,19 +693,19 @@ void Graphics::write_title(byte title) {
   switch (title) {
     case MAIN_MENU:
       {
-        matrix.setCursor((center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1)+ (ASCII_CHARACTER_BASIC_WIDTH>>1)), 1);
+        matrix.setCursor((center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1) + (ASCII_CHARACTER_BASIC_WIDTH >> 1)), 1);
         char item[menu_tree_item_lengths.main_menu];
         strcpy_P(item, (char*)pgm_read_word(&(menu_string_table[0])));
         Serial.print(F("cursor x : "));
         Serial.println(center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1));
 
         for (byte i = 0; i < menu_tree_item_lengths.main_menu; i++) {
-                    Serial.print(item[i]);
-                    Serial.print(" ");
-                    matrix.print(item[i]);
-//          Serial.print((char)pgm_read_byte_near(menu_items.main_menu + i));
-//          Serial.print(" ");
-//          matrix.print((char)pgm_read_byte_near(menu_items.main_menu + i));
+          Serial.print(item[i]);
+          Serial.print(" ");
+          matrix.print(item[i]);
+          //          Serial.print((char)pgm_read_byte_near(menu_items.main_menu + i));
+          //          Serial.print(" ");
+          //          matrix.print((char)pgm_read_byte_near(menu_items.main_menu + i));
         }
         Serial.println();
         //        matrix.println(F2(menu_items.main_menu));
