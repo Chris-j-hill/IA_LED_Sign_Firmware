@@ -91,6 +91,14 @@
 #define MENU_TITLE_G 180
 #define MENU_TITLE_B 180
 
+#define MENU_POINTER_COLOUR_R 0
+#define MENU_POINTER_COLOUR_G 100
+#define MENU_POINTER_COLOUR_B 100
+
+#define MENU_TITLE_BACKGROUND_R 16
+#define MENU_TITLE_BACKGROUND_G 0
+#define MENU_TITLE_BACKGROUND_B 32
+
 #elif defined(USING_COLOUR_SET_444)
 
 #define STARTUP_R 2
@@ -103,6 +111,13 @@
 #define MENU_TITLE_G 10
 #define MENU_TITLE_B 10
 
+#define MENU_POINTER_COLOUR_R 0
+#define MENU_POINTER_COLOUR_G 8
+#define MENU_POINTER_COLOUR_B 8
+
+#define MENU_TITLE_BACKGROUND_R 2
+#define MENU_TITLE_BACKGROUND_G 0
+#define MENU_TITLE_BACKGROUND_B 4
 #else
 
 #define STARTUP_R 1
@@ -115,21 +130,25 @@
 #define MENU_TITLE_G 5
 #define MENU_TITLE_B 5
 
+#define MENU_POINTER_COLOUR_R 0
+#define MENU_POINTER_COLOUR_G 4
+#define MENU_POINTER_COLOUR_B 4
+
+#define MENU_TITLE_BACKGROUND_R 1
+#define MENU_TITLE_BACKGROUND_G 0
+#define MENU_TITLE_BACKGROUND_B 2
 #endif
 
 
 
 //triangle pointer co-ordinates
-#define MENU_POINTER_X0 1   //NOTE: x coordinates are relative to left side of menu area
-#define MENU_POINTER_Y0 17
-#define MENU_POINTER_X1 1
-#define MENU_POINTER_Y1 17+9
+#define MENU_POINTER_X0 0   //NOTE: x coordinates are relative to left side of menu area
+#define MENU_POINTER_Y0 16
+#define MENU_POINTER_X1 0
+#define MENU_POINTER_Y1 16+6
 #define MENU_POINTER_X2 5
-#define MENU_POINTER_Y2 17+5
+#define MENU_POINTER_Y2 16+3
 
-#define MENU_POINTER_COLOUR_R 5
-#define MENU_POINTER_COLOUR_G 5
-#define MENU_POINTER_COLOUR_B 5
 
 #define STARTUP_RING_EXPANSION_RATE 100
 #define STARTUP_RING_MAX_RADIUS 150 // max number of pixels the ring will expand to, save time rendering if its definitely off the screen

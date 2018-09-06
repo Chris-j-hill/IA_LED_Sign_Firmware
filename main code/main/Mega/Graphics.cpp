@@ -52,21 +52,21 @@ const char plus_string[] PROGMEM = "+";
 const char minus_string[] PROGMEM = "-";
 
 /*
- * define locations of data in array below, for
- * abstraction away from non descript indexing in 
- * funcions later
- */
+   define locations of data in array below, for
+   abstraction away from non descript indexing in
+   funcions later
+*/
 
 #define MAIN_MENU_LOC           0
 #define RETURN_LOC              1
 #define SCREEN_MODE_LOC         2
-#define TEXT_SETTINGS_LOC       3
-#define FAN_SETTINGS_LOC        4
-#define INTERNET_CONFIG_LOC     5
-#define SD_CARD_LOC             6
+#define SCREEN_BRIGHTNESS_LOC   3
+#define TEXT_SETTINGS_LOC       4
+#define FAN_SETTINGS_LOC        5
+#define INTERNET_CONFIG_LOC     6
+#define SD_CARD_LOC             7
 
-#define LED_STRIP_LOC           7
-#define RETURN_LOC              8
+#define LED_STRIP_LOC           8
 #define BOTH_ON_LOC             9
 #define FRONT_ON_LOC            10
 #define BACK_ON_LOC             11
@@ -85,7 +85,7 @@ const char minus_string[] PROGMEM = "-";
 #define STRIP_BRIGHTNESS_LOC    20
 
 #define RED_LOC                 21
-#define GREED_LOC               22
+#define GREEN_LOC               22
 #define BLUE_LOC                23
 #define HUE_LOC                 24
 #define USE_HUE_LOC             25
@@ -687,242 +687,336 @@ void Graphics::clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x,
 
 }
 
-void Graphics::write_title(byte title) {
-  int center_of_menu = SINGLE_MATRIX_WIDTH - ((DEFAULT_MENU_WIDTH >> 1) - menu_pixels_right_of_node());
-  set_title_colour();
-  switch (title) {
-    case MAIN_MENU:
-      {
-        matrix.setCursor((center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1) + (ASCII_CHARACTER_BASIC_WIDTH >> 1)), 1);
-        char item[menu_tree_item_lengths.main_menu];
-        strcpy_P(item, (char*)pgm_read_word(&(menu_string_table[0])));
-        Serial.print(F("cursor x : "));
-        Serial.println(center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1));
 
-        for (byte i = 0; i < menu_tree_item_lengths.main_menu; i++) {
-          Serial.print(item[i]);
-          Serial.print(" ");
-          matrix.print(item[i]);
-          //          Serial.print((char)pgm_read_byte_near(menu_items.main_menu + i));
-          //          Serial.print(" ");
-          //          matrix.print((char)pgm_read_byte_near(menu_items.main_menu + i));
-        }
-        Serial.println();
-        //        matrix.println(F2(menu_items.main_menu));
-        break;
-      }
 
-    case SCREEN_MODE_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.screen_mode_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.screen_mode_menu));
-        break;
-      }
+inline void Graphics::cpy_pgm_string(char *dest, byte src) {
+  strcpy_P(dest, (char*)pgm_read_word(&(menu_string_table[src])));
+}
 
-    case BRIGHTNESS_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.brightness_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.brightness_menu));
-        break;
-      }
+inline void Graphics::print_pgm_title(byte src, byte len, byte center) {
+  char item[len];
+  cpy_pgm_string(item, src);
+  matrix.setCursor((center - ((len * ASCII_CHARACTER_BASIC_WIDTH) >> 1) + (ASCII_CHARACTER_BASIC_WIDTH >> 1)), 0);
 
-    case TEXT_SETTINGS_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_settings_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_settings_menu));
-        break;
-      }
-
-    case FAN_SETTINGS_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.fan_settings_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.fan_settings_menu));
-        break;
-      }
-
-    case INTERNET_CONFIG_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.internet_config_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.internet_config_menu));
-        break;
-      }
-
-    case SD_CARD_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.sd_cards_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.sd_cards_menu));
-        break;
-      }
-
-    case LED_STRIP_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.led_strip_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.led_strip_menu));
-        break;
-      }
-
-    case TEXT_SIZE_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_size_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_size_menu));
-        break;
-      }
-
-    case TEXT_COLOUR_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_colour_menu));
-        break;
-      }
-
-    case TEXT_COLOUR_RED:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_red)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_colour_red));
-        break;
-      }
-
-    case TEXT_COLOUR_GREEN:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_green)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_colour_green));
-        break;
-      }
-
-    case TEXT_COLOUR_BLUE:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_blue)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_colour_blue));
-        break;
-      }
-
-    case TEXT_COLOUR_HUE:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_hue)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.text_colour_hue));
-        break;
-      }
-
-    case SCROLL_SPEED_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.fan_speed_settings)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.fan_speed_settings));
-        break;
-      }
-
-    case MIN_FAN_SPEED_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.minimum_fan_speed_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.minimum_fan_speed_menu));
-        break;
-      }
-
-    case SD_FOLDERS_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.sd_card_folders)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.sd_card_folders));
-        break;
-      }
-
-    case LED_STRIP_BRIGHTNESS_MENU:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.led_strip_brightness)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.led_strip_brightness));
-        break;
-      }
-    default:
-      {
-        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.default_title)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.println(F2(menu_items.default_title));
-        break;
-      }
+  for (byte i = 0; i < len; i++) {
+    //    Serial.print(item[i]);
+    //    Serial.print(" ");
+    matrix.print(item[i]);
   }
 }
 
+inline void Graphics::fill_title_background() {
+
+#if defined(USING_COLOUR_SET_888)
+  uint16_t c = matrix.Color888(MENU_TITLE_BACKGROUND_R, MENU_TITLE_BACKGROUND_G, MENU_TITLE_BACKGROUND_B);
+#elif defined(USING_COLOUR_SET_444)
+  uint16_t c = matrix.Color444(MENU_TITLE_BACKGROUND_R, MENU_TITLE_BACKGROUND_G, MENU_TITLE_BACKGROUND_B);
+#else
+  uint16_t c = matrix.Color333(MENU_TITLE_BACKGROUND_R, MENU_TITLE_BACKGROUND_G, MENU_TITLE_BACKGROUND_B);
+#endif
+
+  matrix.fillRect(0, 0, 64, 8, c);
+}
+
+void Graphics::write_title(byte title) {
+
+  static int center_of_menu = SINGLE_MATRIX_WIDTH - ((DEFAULT_MENU_WIDTH >> 1) - menu_pixels_right_of_node());
+
+  set_title_colour();
+  fill_title_background();
+  switch (title) {
+    case MAIN_MENU:                 print_pgm_title(MAIN_MENU_LOC,          menu_tree_item_lengths.main_menu,               center_of_menu);         break;
+    case SCREEN_MODE_MENU:          print_pgm_title(SCREEN_MODE_LOC,        menu_tree_item_lengths.screen_mode,             center_of_menu);         break;
+    case BRIGHTNESS_MENU:           print_pgm_title(SCREEN_BRIGHTNESS_LOC,  menu_tree_item_lengths.brightness,              center_of_menu);         break;
+    case TEXT_SETTINGS_MENU:        print_pgm_title(TEXT_SETTINGS_LOC,      menu_tree_item_lengths.text_settings,           center_of_menu);         break;
+    case FAN_SETTINGS_MENU:         print_pgm_title(FAN_SETTINGS_LOC,       menu_tree_item_lengths.fan_settings,            center_of_menu);         break;
+    case INTERNET_CONFIG_MENU:      print_pgm_title(INTERNET_CONFIG_LOC,    menu_tree_item_lengths.internet_settings,       center_of_menu);         break;
+    case SD_CARD_MENU:              print_pgm_title(SD_CARD_LOC,            menu_tree_item_lengths.sd_card_settings,        center_of_menu);         break;
+    case LED_STRIP_MENU:            print_pgm_title(LED_STRIP_LOC,          menu_tree_item_lengths.led_strip_settings,      center_of_menu);         break;
+    case TEXT_SIZE_MENU:            print_pgm_title(TEXT_SIZE_LOC,          menu_tree_item_lengths.text_size_settings,      center_of_menu);         break;
+    case TEXT_COLOUR_MENU:          print_pgm_title(TEXT_COLOUR_LOC,        menu_tree_item_lengths.text_colour_settings,    center_of_menu);         break;
+    case TEXT_COLOUR_RED:           print_pgm_title(RED_LOC,                menu_tree_item_lengths.text_colour_red,         center_of_menu);         break;
+    case TEXT_COLOUR_GREEN:         print_pgm_title(GREEN_LOC,              menu_tree_item_lengths.text_colour_green,       center_of_menu);         break;
+    case TEXT_COLOUR_BLUE:          print_pgm_title(BLUE_LOC,               menu_tree_item_lengths.text_colour_blue,        center_of_menu);         break;
+    case TEXT_COLOUR_HUE:           print_pgm_title(HUE_LOC,                menu_tree_item_lengths.text_colour_hue,         center_of_menu);         break;
+    case SCROLL_SPEED_MENU:         print_pgm_title(SCROLL_SPEED,           menu_tree_item_lengths.scroll_speed_settings,   center_of_menu);         break;
+    case MIN_FAN_SPEED_MENU:        print_pgm_title(FAN_MIN_SPEED_LOC,      menu_tree_item_lengths.minimum_rotating_speed,  center_of_menu);         break;
+    case SD_FOLDERS_MENU:           print_pgm_title(SD_FOLDERS_LOC,         menu_tree_item_lengths.sd_card_folders,         center_of_menu);         break;
+    case LED_STRIP_BRIGHTNESS_MENU: print_pgm_title(STRIP_BRIGHTNESS_LOC,   menu_tree_item_lengths.led_strip_brightness,    center_of_menu);         break;
+
+
+    default:                        print_pgm_title(DEFAULT_TITLE_LOC,      menu_tree_item_lengths.default_title,           center_of_menu);         break;
+
+
+  }
+}
+
+
+//void Graphics::write_title(byte title) {
+//
+//  static int center_of_menu = SINGLE_MATRIX_WIDTH - ((DEFAULT_MENU_WIDTH >> 1) - menu_pixels_right_of_node());
+//
+//  set_title_colour();
+//  switch (title) {
+//    case MAIN_MENU:
+//      {
+//        //        matrix.setCursor((center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1) + (ASCII_CHARACTER_BASIC_WIDTH >> 1)), 1);
+//        //        char item[menu_tree_item_lengths.main_menu];
+//        //        //        strcpy_P(item, (char*)pgm_read_word(&(menu_string_table[0])));
+//        //        cpy_pgm_string(item, MAIN_MENU_LOC);
+//        //        Serial.print(F("cursor x : "));
+//        //        Serial.println(center_of_menu - ((menu_tree_item_lengths.main_menu * ASCII_CHARACTER_BASIC_WIDTH) >> 1));
+//        //
+//        //        for (byte i = 0; i < menu_tree_item_lengths.main_menu; i++) {
+//        //          Serial.print(item[i]);
+//        //          Serial.print(" ");
+//        //          matrix.print(item[i]);
+//        //          //          Serial.print((char)pgm_read_byte_near(menu_items.main_menu + i));
+//        //          //          Serial.print(" ");
+//        //          //          matrix.print((char)pgm_read_byte_near(menu_items.main_menu + i));
+//        //        }
+//        //        Serial.println();
+//        //        //        matrix.println(F2(menu_items.main_menu));
+//
+//        print_pgm_title(MAIN_MENU_LOC, menu_tree_item_lengths.main_menu, center_of_menu);
+//        break;
+//      }
+//
+//    case SCREEN_MODE_MENU:
+//      {
+//        //        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.screen_mode_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        //        matrix.println(F2(menu_items.screen_mode_menu));
+//        print_pgm_title(SCREEN_MODE_LOC, menu_tree_item_lengths.screen_mode, center_of_menu);
+//        break;
+//      }
+//
+//    case BRIGHTNESS_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.brightness_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.brightness_menu));
+//        break;
+//      }
+//
+//    case TEXT_SETTINGS_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_settings_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_settings_menu));
+//        break;
+//      }
+//
+//    case FAN_SETTINGS_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.fan_settings_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.fan_settings_menu));
+//        break;
+//      }
+//
+//    case INTERNET_CONFIG_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.internet_config_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.internet_config_menu));
+//        break;
+//      }
+//
+//    case SD_CARD_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.sd_cards_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.sd_cards_menu));
+//        break;
+//      }
+//
+//    case LED_STRIP_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.led_strip_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.led_strip_menu));
+//        break;
+//      }
+//
+//    case TEXT_SIZE_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_size_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_size_menu));
+//        break;
+//      }
+//
+//    case TEXT_COLOUR_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_colour_menu));
+//        break;
+//      }
+//
+//    case TEXT_COLOUR_RED:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_red)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_colour_red));
+//        break;
+//      }
+//
+//    case TEXT_COLOUR_GREEN:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_green)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_colour_green));
+//        break;
+//      }
+//
+//    case TEXT_COLOUR_BLUE:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_blue)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_colour_blue));
+//        break;
+//      }
+//
+//    case TEXT_COLOUR_HUE:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.text_colour_hue)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.text_colour_hue));
+//        break;
+//      }
+//
+//    case SCROLL_SPEED_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.fan_speed_settings)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.fan_speed_settings));
+//        break;
+//      }
+//
+//    case MIN_FAN_SPEED_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.minimum_fan_speed_menu)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.minimum_fan_speed_menu));
+//        break;
+//      }
+//
+//    case SD_FOLDERS_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.sd_card_folders)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.sd_card_folders));
+//        break;
+//      }
+//
+//    case LED_STRIP_BRIGHTNESS_MENU:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.led_strip_brightness)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.led_strip_brightness));
+//        break;
+//      }
+//    default:
+//      {
+//        matrix.setCursor(1, center_of_menu - (sizeof(menu_items.default_title)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+//        matrix.println(F2(menu_items.default_title));
+//        break;
+//      }
+//  }
+//}
+
+inline void Graphics::set_menu_item_cursor(byte row) {
+
+  int x_loc = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node());
+  int y_loc = 0;
+  if (row == 1) {
+    y_loc = ASCII_CHARACTER_BASIC_HEIGHT;
+  }
+  else if (row == 2) {
+
+#if defined(USING_COLOUR_SET_888)
+    uint16_t c = matrix.Color888(MENU_POINTER_COLOUR_R, MENU_POINTER_COLOUR_G, MENU_POINTER_COLOUR_B);
+#elif defined(USING_COLOUR_SET_444)
+    uint16_t c = matrix.Color444(MENU_POINTER_COLOUR_R, MENU_POINTER_COLOUR_G, MENU_POINTER_COLOUR_B);
+#else
+    uint16_t c = matrix.Color333(MENU_POINTER_COLOUR_R, MENU_POINTER_COLOUR_G, MENU_POINTER_COLOUR_B);
+#endif
+
+    matrix.fillTriangle(MENU_POINTER_X0, MENU_POINTER_Y0, MENU_POINTER_X1, MENU_POINTER_Y1, MENU_POINTER_X2, MENU_POINTER_Y2, c);
+    y_loc = 2 * ASCII_CHARACTER_BASIC_HEIGHT;
+    x_loc += 6;
+  }
+  else if (row == 3) {
+    y_loc = 3 * ASCII_CHARACTER_BASIC_HEIGHT;
+  }
+  matrix.setCursor(x_loc, y_loc);
+}
+
+inline void Graphics::print_pgm_menu_item(byte src, byte len, byte row) {
+  char item[len];
+  set_menu_item_cursor(row);
+  cpy_pgm_string(item, src);
+
+  for (byte i = 0; i < len; i++) {
+    //    Serial.print(item[i]);
+    //    Serial.print(" ");
+    matrix.print(item[i]);
+  }
+}
+
+inline void Graphics::print_highlight_pgm_menu_item(byte src, byte len, byte row) {
+
+  if (src == SCREEN_MODE_0 && screen_parameters.cur_mode == 0)     set_menu_colour_highlighted();
+  else if (src == SCREEN_MODE_1 && screen_parameters.cur_mode == 1)     set_menu_colour_highlighted();
+  else if (src == SCREEN_MODE_2 && screen_parameters.cur_mode == 2)     set_menu_colour_highlighted();
+  else if (src == SCREEN_MODE_3 && screen_parameters.cur_mode == 3)     set_menu_colour_highlighted();
+
+
+  print_pgm_menu_item(src, len, row);
+
+}
+
+
+
 void Graphics::write_menu_option(byte first, byte second, byte third, byte line_config) {  //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
+
   byte line_item = 255;
-  for (byte i = 1; i < 4; i++) { //loop through three lines
-    if (i == 1) {
-      line_item = first;
-      matrix.setCursor(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()), ASCII_CHARACTER_BASIC_HEIGHT + 1);
-    }
-    else if (i == 2) {
-      line_item = second;
-      matrix.fillTriangle(MENU_POINTER_X0, MENU_POINTER_Y0, MENU_POINTER_X1, MENU_POINTER_Y1, MENU_POINTER_X2, MENU_POINTER_Y2, matrix.Color333(MENU_POINTER_COLOUR_R, MENU_POINTER_COLOUR_G, MENU_POINTER_COLOUR_B));
-      matrix.setCursor(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()) + 6, (ASCII_CHARACTER_BASIC_HEIGHT << 1) + 1);
-    }
-    else if (i == 3) {
-      line_item = third;
-      matrix.setCursor(SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node()), 3 * ASCII_CHARACTER_BASIC_HEIGHT + 1);
-    }
+
+  for (byte i = 1; i <= 3; i++) { //loop through three lines
 
     set_menu_colour();
 
+    if (i == 1)       line_item = first;  //select which argument were printing this loop
+    else if (i == 2)  line_item = second;
+    else              line_item = third;
+
     switch (line_item) {
-      case RETURN_MENU:                 matrix.println(F2(menu_items.RETURN));                      break;
-      case SCREEN_MODE_MENU:            matrix.println(F2(menu_items.screen_mode));                 break;
-      case BRIGHTNESS_MENU:             matrix.println(F2(menu_items.brightness));                  break;
-      case TEXT_SETTINGS_MENU:          matrix.println(F2(menu_items.text_settings));               break;
-      case FAN_SETTINGS_MENU:           matrix.println(F2(menu_items.fan_settings));                break;
-      case INTERNET_CONFIG_MENU:        matrix.println(F2(menu_items.internet_settings));           break;
-      case SD_CARD_MENU:                matrix.println(F2(menu_items.sd_card_settings));            break;
-      case LED_STRIP_MENU:              matrix.println(F2(menu_items.led_strip_settings));          break;
+      case RETURN_MENU:                 print_pgm_menu_item(RETURN_LOC,             menu_tree_item_lengths.RETURN,                i);    break;
+      case SCREEN_MODE_MENU:            print_pgm_menu_item(SCREEN_MODE_LOC,        menu_tree_item_lengths.screen_mode,           i);    break;
+      case BRIGHTNESS_MENU:             print_pgm_menu_item(SCREEN_BRIGHTNESS_LOC,  menu_tree_item_lengths.brightness,            i);    break;
+      case TEXT_SETTINGS_MENU:          print_pgm_menu_item(TEXT_SETTINGS_LOC,      menu_tree_item_lengths.text_settings,         i);    break;
+      case FAN_SETTINGS_MENU:           print_pgm_menu_item(FAN_SETTINGS_LOC,       menu_tree_item_lengths.fan_settings,          i);    break;
+      case INTERNET_CONFIG_MENU:        print_pgm_menu_item(INTERNET_CONFIG_LOC,    menu_tree_item_lengths.internet_settings,     i);    break;
+      case SD_CARD_MENU:                print_pgm_menu_item(SD_CARD_LOC,            menu_tree_item_lengths.sd_card_settings,      i);    break;
+      case LED_STRIP_MENU:              print_pgm_menu_item(LED_STRIP_LOC,          menu_tree_item_lengths.led_strip_settings,    i);    break;
 
-      case SCREEN_MODE_0:
-        if (screen_parameters.cur_mode == 0) //if the item being displayed is the current mode, change its colour a bit to identify it
-          set_menu_colour_highlighted();
-        matrix.println(F2(menu_items.screen_mode0));
-        break;
-
-      case SCREEN_MODE_1:
-        if (screen_parameters.cur_mode == 1) //if the item being displayed is the current mode, change its colour a bit to identify it
-          set_menu_colour_highlighted();
-        matrix.println(F2(menu_items.screen_mode1));
-        break;
-
-      case SCREEN_MODE_2:
-        if (screen_parameters.cur_mode == 2) //if the item being displayed is the current mode, change its colour a bit to identify it
-          set_menu_colour_highlighted();
-        matrix.println(F2(menu_items.screen_mode2));
-        break;
-
-      case SCREEN_MODE_3:
-        if (screen_parameters.cur_mode == 3) //if the item being displayed is the current mode, change its colour a bit to identify it
-          set_menu_colour_highlighted();
-        matrix.println(F2(menu_items.screen_mode3));
-        break;
-
-      case TEXT_SIZE_MENU:              matrix.println(F2(menu_items.text_size_settings));          break;
-      case TEXT_COLOUR_MENU:            matrix.println(F2(menu_items.text_colour_settings));        break;
-      case SCROLL_SPEED_MENU:           matrix.println(F2(menu_items.scroll_speed_settings));       break;
-
-      case FAN_SPEED_MENU:              matrix.println(F2(menu_items.fan_speed_settings));          break;
-      case ENABLE_FAN:                  matrix.println(F2(menu_items.fan_enable));                  break;
-      case DISABLE_FAN:                 matrix.println(F2(menu_items.fan_disable));                 break;
-      case MIN_FAN_SPEED_MENU:          matrix.println(F2(menu_items.minimum_rotating_speed));      break;
-
-      case SELECT_NETWORK_MANUALLY:     matrix.println(F2(menu_items.select_network_manually));     break;
-
-      case SD_FOLDERS_MENU:             matrix.println(F2(menu_items.sd_card_folders));             break;
-
-      case LED_STRIP_BRIGHTNESS_MENU:   matrix.println(F2(menu_items.led_strip_brightness));        break;
-
-      case TEXT_COLOUR_RED:             matrix.println(F2(menu_items.text_colour_red));             break;
-      case TEXT_COLOUR_GREEN:           matrix.println(F2(menu_items.text_colour_green));           break;
-      case TEXT_COLOUR_BLUE:            matrix.println(F2(menu_items.text_colour_blue));            break;
-      case TEXT_COLOUR_HUE:             matrix.println(F2(menu_items.text_colour_hue));             break;
+      case SCREEN_MODE_0:               print_highlight_pgm_menu_item(BOTH_ON_LOC,  menu_tree_item_lengths.screen_mode0,          i);    break;
+      case SCREEN_MODE_1:               print_highlight_pgm_menu_item(FRONT_ON_LOC, menu_tree_item_lengths.screen_mode1,          i);    break;
+      case SCREEN_MODE_2:               print_highlight_pgm_menu_item(BACK_ON_LOC,  menu_tree_item_lengths.screen_mode2,          i);    break;
+      case SCREEN_MODE_3:               print_highlight_pgm_menu_item(BOTH_OFF_LOC, menu_tree_item_lengths.screen_mode3,          i);    break;
 
 
+      case TEXT_SIZE_MENU:              print_pgm_menu_item(TEXT_SIZE_LOC,          menu_tree_item_lengths.text_size_settings,    i);    break;
+      case TEXT_COLOUR_MENU:            print_pgm_menu_item(TEXT_COLOUR_LOC,        menu_tree_item_lengths.text_colour_settings,  i);    break;
+      case SCROLL_SPEED_MENU:           print_pgm_menu_item(SCROLL_SPEED,           menu_tree_item_lengths.scroll_speed_settings, i);    break;
+      case FAN_SPEED_MENU:              print_pgm_menu_item(FAN_SPEED_LOC,          menu_tree_item_lengths.fan_speed_settings,    i);    break;
+      case ENABLE_FAN:                  print_pgm_menu_item(ENABLE_LOC,             menu_tree_item_lengths.fan_enable,            i);    break;
+      case DISABLE_FAN:                 print_pgm_menu_item(DISABLE_LOC,            menu_tree_item_lengths.fan_disable,           i);    break;
+      case MIN_FAN_SPEED_MENU:          print_pgm_menu_item(FAN_MIN_SPEED_LOC,      menu_tree_item_lengths.minimum_rotating_speed, i);    break;
+
+      //case SELECT_NETWORK_MANUALLY:     print_pgm_menu_item(LED_STRIP_LOC,          menu_tree_item_lengths.led_strip_settings,    i);    break;
+
+      case SD_FOLDERS_MENU:             print_pgm_menu_item(SD_FOLDERS_LOC,          menu_tree_item_lengths.sd_card_folders,      i);    break;
+      case LED_STRIP_BRIGHTNESS_MENU:   print_pgm_menu_item(STRIP_BRIGHTNESS_LOC,    menu_tree_item_lengths.led_strip_brightness, i);    break;
+      case TEXT_COLOUR_RED:             print_pgm_menu_item(RED_LOC,                 menu_tree_item_lengths.text_colour_red,      i);    break;
+      case TEXT_COLOUR_GREEN:           print_pgm_menu_item(GREEN_LOC,               menu_tree_item_lengths.text_colour_green,    i);    break;
+      case TEXT_COLOUR_BLUE:            print_pgm_menu_item(BLUE_LOC,                menu_tree_item_lengths.text_colour_blue,     i);    break;
+      case TEXT_COLOUR_HUE:             print_pgm_menu_item(HUE_LOC,                 menu_tree_item_lengths.text_colour_hue,      i);    break;
 
 
+      case NULL_STRING:                 print_pgm_menu_item(EMPTY_STRING_LOC,        menu_tree_item_lengths.null_string,          i);    break;
+      default:                          print_pgm_menu_item(DEFAULT_STRING_LOC,      menu_tree_item_lengths.default_string,       i);    break;
 
-
-      case NULL_STRING:                 matrix.println(F2(menu_items.null_string));                 break;
-      default:                          matrix.println(F2(menu_items.default_string));              break;
 
     }
   }
 }
+
 
 void Graphics::write_adjustment_menu(byte item, byte obj_num) {
 

@@ -8,7 +8,7 @@
 
 
 #define ASCII_CHARACTER_BASIC_WIDTH 6
-#define ASCII_CHARACTER_BASIC_HEIGHT 9
+#define ASCII_CHARACTER_BASIC_HEIGHT 8
 
 #define POS_ISR_FREQUENCY 100    // 100 gives maximum speed 50 pixels/second, minimum 0.2 pixels/second (100/128)/2
 // Note: There may be severe stability issues with this at high speeds if delay
@@ -21,7 +21,7 @@
 #define SCREEN_UPDATE_BACKOFF_PERIOD 100// after recieving frame requiring a screen update, wait a bit, to see if others are coming 
 
 #if SCREEN_UPDATE_BACKOFF_PERIOD > (1000/POS_UPDATE_ISR_FREQ)
-#error "SCREEN_UPDATE_BACKOFF_PERIOD cannot be larger than period of POS_UPDATE_ISR_FREQ, ensure significantly smaller" 
+#error "SCREEN_UPDATE_BACKOFF_PERIOD cannot be larger than period of POS_UPDATE_ISR_FREQ, ensure significantly smaller"
 #endif
 
 // Similar to F(), but for PROGMEM string pointers rather than literals
@@ -37,10 +37,10 @@ struct Text_Struct {
   int hue = 0;
   bool use_hue = false;
 
-//  byte x_min = 0; //region to allow text to be displayed
-//  byte x_max = SINGLE_MATRIX_WIDTH;
-//  bool hard_limit = false;    //limit with regards to text diaplayed while menu active
-//  bool limit_enabled = false; //is above limit enabled
+  //  byte x_min = 0; //region to allow text to be displayed
+  //  byte x_max = SINGLE_MATRIX_WIDTH;
+  //  bool hard_limit = false;    //limit with regards to text diaplayed while menu active
+  //  bool limit_enabled = false; //is above limit enabled
 
   bool object_used = false;
 };
@@ -48,10 +48,10 @@ struct Text_Struct {
 struct Cursor_Struct {
   int global_x_pos = 0;   // position as recieved in frame
   int local_x_pos = 0;    // relative position for this matrix
-  
+
   int global_y_pos = 0;
   int local_y_pos = 0;
-  
+
   int8_t x_dir = 0;         // direction and speed of text in x and y direction
   int8_t y_dir = 0;
 
@@ -121,10 +121,19 @@ class Graphics {
     inline void set_display_mode();
 
 
-    inline uint32_t serial_check_ISR_period(){
-      return 1000000/SERIAL_CHECK_FREQ; //microseconds between check serial
+    inline uint32_t serial_check_ISR_period() {
+      return 1000000 / SERIAL_CHECK_FREQ; //microseconds between check serial
     }
-    
+
+    inline void cpy_pgm_string(char *dest, byte src);
+    inline void print_pgm_title(byte src, byte len, byte center);
+    inline void print_pgm_menu_item(byte src, byte len, byte row);
+    inline void set_menu_item_cursor(byte row);
+    inline void fill_title_background();
+
+    inline void print_highlight_pgm_menu_item(byte src, byte len, byte row);
+
+
   public:
     Graphics() {};
     void init_matrix();
