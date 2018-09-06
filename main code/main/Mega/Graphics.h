@@ -114,6 +114,7 @@ class Graphics {
     void set_title_colour();  //set the colour as the title colour
     void set_menu_colour();
     void set_menu_colour_highlighted();
+    
     //void update_menus();
     inline void set_text_colour(byte new_r, byte new_g, byte new_b);
     inline void set_text_colour(int new_hue);
@@ -125,10 +126,10 @@ class Graphics {
       return 1000000 / SERIAL_CHECK_FREQ; //microseconds between check serial
     }
 
-    inline void cpy_pgm_string(char *dest, byte src);
-    inline void print_pgm_title(byte src, byte len, byte center);
-    inline void print_pgm_menu_item(byte src, byte len, byte row);
-    inline void set_menu_item_cursor(byte row);
+    void cpy_pgm_string(char *dest, byte src);
+    void print_pgm_title(byte src, byte len, byte center);
+    void print_pgm_menu_item(byte src, byte len, byte row);
+    void set_menu_item_cursor(byte row);
     inline void fill_title_background();
 
     inline void print_highlight_pgm_menu_item(byte src, byte len, byte row);

@@ -80,25 +80,34 @@ const char minus_string[] PROGMEM = "-";
 #define FAN_SPEED_LOC           17
 #define FAN_MIN_SPEED_LOC       18
 
-#define SD_FOLDERS_LOC          19
+//#define internet_config_menu    19
+//#define select_network_manually 20
+//#define ethernet_enable         21
+//#define ethernet_disable        22
+//#define wifi_enable             23
+//#define wifi_disable            24
 
-#define STRIP_BRIGHTNESS_LOC    20
+#define SD_FOLDERS_LOC          25
 
-#define RED_LOC                 21
-#define GREEN_LOC               22
-#define BLUE_LOC                23
-#define HUE_LOC                 24
-#define USE_HUE_LOC             25
-#define USE_RGB_LOC             26
+#define STRIP_BRIGHTNESS_LOC    26
 
-#define SCROLL_X_LOC            27
-#define SCROLL_Y_LOC            28
+#define RED_LOC                 27
+#define GREEN_LOC               28
+#define BLUE_LOC                29
+#define HUE_LOC                 30
+#define USE_HUE_LOC             31
+#define USE_RGB_LOC             32
 
-#define ENABLE_LOC              29
-#define DISABLE_LOC             30
-#define EMPTY_STRING_LOC        31
-#define DEFAULT_STRING_LOC      32
-#define DEFAULT_TITLE_LOC       33
+#define SCROLL_X_LOC            33
+#define SCROLL_Y_LOC            34
+
+#define ENABLE_LOC              35
+#define DISABLE_LOC             36
+
+
+#define EMPTY_STRING_LOC        37
+#define DEFAULT_STRING_LOC      38
+#define DEFAULT_TITLE_LOC       39
 
 
 
@@ -179,56 +188,56 @@ const char default_title[]            PROGMEM           = TITLE_ERROR_STRING; //
 
 
 const char* const menu_string_table[] PROGMEM = { //create array of const char arrays rather than struct
-  main_menu,
-  RETURN,
-  screen_mode,
-  brightness,
-  text_settings,
-  fan_settings,
-  internet_settings,
-  sd_card_settings,
-  led_strip_settings,
+/*0*/  main_menu,
+/*1*/  RETURN,
+/*2*/  screen_mode,
+/*3*/  brightness,
+/*4*/  text_settings,
+/*5*/  fan_settings,
+/*6*/  internet_settings,
+/*7*/  sd_card_settings,
+/*8*/  led_strip_settings,
 
-  screen_mode0,
-  screen_mode1,
-  screen_mode3,
-  screen_mode2,
+/*9*/  screen_mode0,
+/*10*/  screen_mode1,
+/*11*/  screen_mode3,
+/*12*/  screen_mode2,
 
-  text_size_settings,
-  text_colour_settings,
-  scroll_speed_settings,
-  flip_dir_settings,
+/*13*/  text_size_settings,
+/*14*/  text_colour_settings,
+/*15*/  scroll_speed_settings,
+/*16*/  flip_dir_settings,
 
-  fan_speed_settings,
-  minimum_rotating_speed,
+/*17*/  fan_speed_settings,
+/*18*/  minimum_rotating_speed,
 
-  internet_config_menu,
-  select_network_manually,
-  ethernet_enable,
-  ethernet_disable,
-  wifi_enable,
-  wifi_disable,
+/*19*/  internet_config_menu,
+/*20*/  select_network_manually,
+/*21*/  ethernet_enable,
+/*22*/  ethernet_disable,
+/*23*/  wifi_enable,
+/*24*/  wifi_disable,
 
-  sd_card_folders,
+/*25*/  sd_card_folders,
 
-  led_strip_brightness,
+/*26*/  led_strip_brightness,
 
-  text_colour_red,
-  text_colour_green,
-  text_colour_blue,
-  text_colour_hue,
-  text_colour_use_hue,
-  text_colour_use_rgb,
+/*27*/  text_colour_red,
+/*28*/  text_colour_green,
+/*29*/  text_colour_blue,
+/*30*/  text_colour_hue,
+/*31*/  text_colour_use_hue,
+/*32*/  text_colour_use_rgb,
 
-  scroll_speed_x,
-  scroll_speed_y,
+/*33*/  scroll_speed_x,
+/*34*/  scroll_speed_y,
 
-  enable,
-  disable,
+/*35*/  enable,
+/*36*/  disable,
 
-  null_string,
-  default_string,
-  default_title
+/*37*/  null_string,
+/*38*/  default_string,
+/*39*/  default_title
 };
 
 
@@ -688,24 +697,23 @@ void Graphics::clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x,
 }
 
 
-
-inline void Graphics::cpy_pgm_string(char *dest, byte src) {
+void Graphics::cpy_pgm_string(char *dest, byte src) {
   strcpy_P(dest, (char*)pgm_read_word(&(menu_string_table[src])));
 }
 
-inline void Graphics::print_pgm_title(byte src, byte len, byte center) {
+void Graphics::print_pgm_title(byte src, byte len, byte center) {
   char item[len];
   cpy_pgm_string(item, src);
   matrix.setCursor((center - ((len * ASCII_CHARACTER_BASIC_WIDTH) >> 1) + (ASCII_CHARACTER_BASIC_WIDTH >> 1)), 0);
 
   for (byte i = 0; i < len; i++) {
-    //    Serial.print(item[i]);
-    //    Serial.print(" ");
+    Serial.print(item[i]);
+    Serial.print(" ");
     matrix.print(item[i]);
   }
 }
 
-inline void Graphics::fill_title_background() {
+void Graphics::fill_title_background() {
 
 #if defined(USING_COLOUR_SET_888)
   uint16_t c = matrix.Color888(MENU_TITLE_BACKGROUND_R, MENU_TITLE_BACKGROUND_G, MENU_TITLE_BACKGROUND_B);
@@ -715,7 +723,7 @@ inline void Graphics::fill_title_background() {
   uint16_t c = matrix.Color333(MENU_TITLE_BACKGROUND_R, MENU_TITLE_BACKGROUND_G, MENU_TITLE_BACKGROUND_B);
 #endif
 
-  matrix.fillRect(0, 0, 64, 8, c);
+  matrix.fillRect(0, 0, SINGLE_MATRIX_WIDTH, ASCII_CHARACTER_BASIC_HEIGHT, c);
 }
 
 void Graphics::write_title(byte title) {
@@ -724,6 +732,7 @@ void Graphics::write_title(byte title) {
 
   set_title_colour();
   fill_title_background();
+
   switch (title) {
     case MAIN_MENU:                 print_pgm_title(MAIN_MENU_LOC,          menu_tree_item_lengths.main_menu,               center_of_menu);         break;
     case SCREEN_MODE_MENU:          print_pgm_title(SCREEN_MODE_LOC,        menu_tree_item_lengths.screen_mode,             center_of_menu);         break;
@@ -910,7 +919,7 @@ void Graphics::write_title(byte title) {
 //  }
 //}
 
-inline void Graphics::set_menu_item_cursor(byte row) {
+void Graphics::set_menu_item_cursor(byte row) {
 
   int x_loc = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH - menu_pixels_right_of_node());
   int y_loc = 0;
@@ -937,7 +946,7 @@ inline void Graphics::set_menu_item_cursor(byte row) {
   matrix.setCursor(x_loc, y_loc);
 }
 
-inline void Graphics::print_pgm_menu_item(byte src, byte len, byte row) {
+void Graphics::print_pgm_menu_item(byte src, byte len, byte row) {
   char item[len];
   set_menu_item_cursor(row);
   cpy_pgm_string(item, src);
@@ -949,7 +958,7 @@ inline void Graphics::print_pgm_menu_item(byte src, byte len, byte row) {
   }
 }
 
-inline void Graphics::print_highlight_pgm_menu_item(byte src, byte len, byte row) {
+void Graphics::print_highlight_pgm_menu_item(byte src, byte len, byte row) {
 
   if (src == SCREEN_MODE_0 && screen_parameters.cur_mode == 0)     set_menu_colour_highlighted();
   else if (src == SCREEN_MODE_1 && screen_parameters.cur_mode == 1)     set_menu_colour_highlighted();
@@ -974,7 +983,8 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
     if (i == 1)       line_item = first;  //select which argument were printing this loop
     else if (i == 2)  line_item = second;
     else              line_item = third;
-
+    
+    //match menu item passed to index in array, and expected stirng length
     switch (line_item) {
       case RETURN_MENU:                 print_pgm_menu_item(RETURN_LOC,             menu_tree_item_lengths.RETURN,                i);    break;
       case SCREEN_MODE_MENU:            print_pgm_menu_item(SCREEN_MODE_LOC,        menu_tree_item_lengths.screen_mode,           i);    break;
@@ -997,7 +1007,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
       case FAN_SPEED_MENU:              print_pgm_menu_item(FAN_SPEED_LOC,          menu_tree_item_lengths.fan_speed_settings,    i);    break;
       case ENABLE_FAN:                  print_pgm_menu_item(ENABLE_LOC,             menu_tree_item_lengths.fan_enable,            i);    break;
       case DISABLE_FAN:                 print_pgm_menu_item(DISABLE_LOC,            menu_tree_item_lengths.fan_disable,           i);    break;
-      case MIN_FAN_SPEED_MENU:          print_pgm_menu_item(FAN_MIN_SPEED_LOC,      menu_tree_item_lengths.minimum_rotating_speed, i);    break;
+      case MIN_FAN_SPEED_MENU:          print_pgm_menu_item(FAN_MIN_SPEED_LOC,      menu_tree_item_lengths.minimum_rotating_speed, i);   break;
 
       //case SELECT_NETWORK_MANUALLY:     print_pgm_menu_item(LED_STRIP_LOC,          menu_tree_item_lengths.led_strip_settings,    i);    break;
 
@@ -1020,7 +1030,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
 
 void Graphics::write_adjustment_menu(byte item, byte obj_num) {
 
-  int center_of_menu = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH >> 1 - menu_pixels_right_of_node());
+  static int center_of_menu = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH >> 1 - menu_pixels_right_of_node());
   char buf[3] = {' '}; //to store converted byte
   byte val;
   switch (item) {

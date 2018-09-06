@@ -43,7 +43,7 @@ void Menu::display_menu() {
   switch (current_menu) {
     case STARTUP:                     display_startup_sequence(); menu_visible = false; break;
     case DEFAULT_MENU:                default_display(); menu_visible = false; break;
-    default:                          graphics.draw_background(); menu_visible = true; // menu visable, display any partially visable objects on unused parts of the screen
+    default:                          menu_visible = true; // menu visable
   }
   if (menu_visible) {
     //clear_background_text(); // check if menu covers whole area, if not display partial background
@@ -109,7 +109,7 @@ void Menu::default_display() {
 void Menu::display_main_menu() {
 
   graphics.write_title(MAIN_MENU);
-
+  
   switch (menu_parameters.encoder_position) {
     case 0: graphics.write_menu_option(NULL_STRING,           RETURN_MENU,          SCREEN_MODE_MENU,     1);  break;
     case 1: graphics.write_menu_option(RETURN_MENU,           SCREEN_MODE_MENU,     BRIGHTNESS_MENU,      2);  break;
