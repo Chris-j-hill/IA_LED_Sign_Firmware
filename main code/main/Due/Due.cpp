@@ -16,6 +16,13 @@
 #include "Host.h"
 // class constructors
 
+#if SERIAL_BUFFER_SIZE < 256
+#error "serial buf size error"
+/* serial buffer size is defined under AppData\Local\Arduino15\packages\arduino\hardware\sam\1.6.10\cores\arduino\RingBuffer.h
+   need large buffer for native usb port to transmit large amounts of data from pi at high baud rate
+*/
+#endif
+
 Coms_Serial    coms_serial;
 Card           card;
 Menu           menu;
@@ -29,9 +36,11 @@ Graphics       graphics;
 Host           host;
 HostNativeUSB  nativeUsb;
 
+
+
+
+
 struct Timers timers; //timers struct
-
-
 
 extern struct Frame text_frame;
 extern struct Frame sensor_data_frame;
