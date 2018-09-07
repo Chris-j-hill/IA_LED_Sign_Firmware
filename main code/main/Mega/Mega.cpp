@@ -40,7 +40,7 @@ void mega_setup() {
   graphics.init_matrix();
   graphics.attach_pos_ISR();  //pos isr to interpolate cursor positions between frames based on timer
   Serial.println(F("done init"));
-
+  menu.init_menu_tree();
 
   text_parameters[0].object_used = true;
   text_parameters[0].text_size = 1;

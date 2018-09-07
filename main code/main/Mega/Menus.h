@@ -95,9 +95,9 @@
 #define MENU_POINTER_COLOUR_G 100
 #define MENU_POINTER_COLOUR_B 100
 
-#define MENU_TITLE_BACKGROUND_R 16
+#define MENU_TITLE_BACKGROUND_R 8
 #define MENU_TITLE_BACKGROUND_G 0
-#define MENU_TITLE_BACKGROUND_B 32
+#define MENU_TITLE_BACKGROUND_B 16
 
 #elif defined(USING_COLOUR_SET_444)
 
@@ -115,9 +115,9 @@
 #define MENU_POINTER_COLOUR_G 8
 #define MENU_POINTER_COLOUR_B 8
 
-#define MENU_TITLE_BACKGROUND_R 2
+#define MENU_TITLE_BACKGROUND_R 1
 #define MENU_TITLE_BACKGROUND_G 0
-#define MENU_TITLE_BACKGROUND_B 4
+#define MENU_TITLE_BACKGROUND_B 2
 #else
 
 #define STARTUP_R 1
@@ -136,7 +136,7 @@
 
 #define MENU_TITLE_BACKGROUND_R 1
 #define MENU_TITLE_BACKGROUND_G 0
-#define MENU_TITLE_BACKGROUND_B 2
+#define MENU_TITLE_BACKGROUND_B 1
 #endif
 
 
@@ -488,6 +488,8 @@ class Menu {
 
     // takes care of all adjustment menus
     inline void display_adjustment_menu(byte menu);
+
+
 
   public:
 

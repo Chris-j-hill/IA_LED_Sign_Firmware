@@ -191,7 +191,7 @@ const byte DEFAULT_TEXT_BLUE_BRIGHTNESS PROGMEM = COLOUR_MAX_LEVEL;
 #define MAX_TWEET_SIZE 100
 #define MAX_FRAME_SIZE MAX_TWEET_SIZE+((MAX_TWEET_SIZE % MEGA_SERIAL_BUFFER_LENGTH)*FRAME_OVERHEAD)   // max amount of data to be sent in one go by either the text_frame and limit for sensor_data_frame
 
-//#define SKIP_INTITAL_STARTUP_SEQUENCE
+#define SKIP_INTITAL_STARTUP_SEQUENCE
 
 
 #define DEFAULT_MENU_WIDTH 64

@@ -1,5 +1,4 @@
 
-
 #ifndef GRAPHICS_CPP
 #define GRAPHICS_CPP
 
@@ -252,8 +251,8 @@ void Graphics::init_matrix() {
   matrix.begin();
   matrix.setTextWrap(false); // Allow text to run off right edge
 
-  set_title_colour();
-  set_menu_colour();
+  init_menu_title_colour();
+  init_menu_option_colour();
 }
 
 
@@ -634,6 +633,13 @@ void Graphics::set_title_colour() {
 
 void Graphics::set_menu_colour() {
 
+//Serial.print("red :");
+//Serial.println(menu_option_colour.red);
+//Serial.print("greeen :");
+//Serial.println(menu_option_colour.green);
+//Serial.print("blue :");
+//Serial.println(menu_option_colour.blue);
+
 #if defined(USING_COLOUR_SET_888)
   matrix.setTextColor(matrix.Color888(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
 #elif defined(USING_COLOUR_SET_444)
@@ -972,7 +978,7 @@ void Graphics::print_highlight_pgm_menu_item(byte src, byte len, byte row) {
 
 
 
-void Graphics::write_menu_option(byte first, byte second, byte third, byte line_config) {  //NB: line_config = 1 top line blank -> = 2 all filled -> = 3 bottom blank
+void Graphics::write_menu_option(byte first, byte second, byte third) { 
 
   byte line_item = 255;
 
@@ -983,6 +989,8 @@ void Graphics::write_menu_option(byte first, byte second, byte third, byte line_
     if (i == 1)       line_item = first;  //select which argument were printing this loop
     else if (i == 2)  line_item = second;
     else              line_item = third;
+
+//    matrix.setTextColor(matrix.Color333(0,7,7));
     
     //match menu item passed to index in array, and expected stirng length
     switch (line_item) {

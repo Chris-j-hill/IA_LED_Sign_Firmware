@@ -1,5 +1,4 @@
 
-
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
@@ -154,7 +153,7 @@ class Graphics {
     void init_menu_option_colour();
 
     void write_title(byte title);
-    void write_menu_option(byte first, byte second, byte third, byte line_config);   //NB: line_config: 1 = top line blank, 2 = all filled, 3 = bottom blank
+    void write_menu_option(byte first, byte second, byte third);
     void write_adjustment_menu(byte item, byte obj_num = 0);
     void write_enable_menu_item(byte item);   // animation to confirm click on enable/disable menu items
 
