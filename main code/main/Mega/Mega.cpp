@@ -44,7 +44,8 @@ void mega_setup() {
 
   text_parameters[0].object_used = true;
   text_parameters[0].text_size = 1;
-
+  
+  graphics.init_update_display_isr(); //fast running checker for serial input from due, updating the matrix is too slow for polling serial port
 }
 
 
@@ -52,14 +53,14 @@ void mega_loop() {
   uint16_t i = 0;
   while (1) {
 
-    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
+//    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
     graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
     //    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
     //    host.check_serial();
     //    host.print_messages();
-//    i++;
-//    if (i == 0)
-//      Serial.println(F("loop"));
+    //    i++;
+    //    if (i == 0)
+    //      Serial.println(F("loop"));
   }
 }
 

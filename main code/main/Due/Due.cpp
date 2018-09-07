@@ -73,7 +73,8 @@ void due_setup() {
   led_strip.init_led_strip();
   nativeUsb.init_native_usb();
   coms_serial.init_serial();
-
+  pinMode(serial_handshake_4, OUTPUT);
+  digitalWrite(serial_handshake_4, HIGH);
 }
 
 

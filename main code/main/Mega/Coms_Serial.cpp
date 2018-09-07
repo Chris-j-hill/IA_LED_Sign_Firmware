@@ -8,6 +8,7 @@
 #include "Graphics.h"
 #include "Host.h"
 #include "LUTS.h"
+#include "Mega_Pins.h"
 #include "src/Timer3/TimerThree.h"
 //volatile bool frame_arrived;   // flag from ISR to methods
 
@@ -258,8 +259,18 @@ inline bool Coms_Serial::byte_queued() {  // function to delay the processor a l
 
 void Coms_Serial::read_buffer() {
 
-  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-  Timer3.stop();
+  //  if (!digitalRead(serial_handshake_pin)) {
+  //    //    Serial.println("low");
+  //    uint32_t timer_start = millis();
+  //    while (Serial_1.available() == 0 && millis() < timer_start + 1000) {}
+  //
+  //    if (millis() >= timer_start + 1000) {
+  //      Serial.println("timeout");
+  //      return;
+  //    }
+
+  //  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
+  //  Timer3.stop();
   bool seen_byte_1 = false;
   bool seen_byte_2 = false;
   byte break_condition = 0;
@@ -373,6 +384,8 @@ seen_byte_2:
 
         if (frame_type == 0 || !encoding_ok) {
           Serial.println(F("frame header error"));
+          if (!encoding_ok) Serial.println("encoding error");
+          else if (frame_type == 0) Serial.println("frame_type error");
           //          Serial.print(F("frame_type : "));
           //          Serial.println(frame_type);
           //          Serial.print(F("encoding ok : "));
@@ -387,6 +400,7 @@ seen_byte_2:
             Serial.print(header[i]);
             Serial.print(" ");
           }
+          Serial.println();
         }
 
         else { //header ok read frame
@@ -599,8 +613,9 @@ seen_byte_2:
       }
     }
   }
-  Timer3.start();
-  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+  //  Timer3.start();
+  //  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+  //  }
 }
 
 
@@ -704,6 +719,8 @@ badframe:
   return 0;
 }
 
+
+
 byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
 
 #ifdef DO_HEADER_ERROR_CORRECTING
@@ -725,40 +742,19 @@ byte Coms_Serial::error_check_encoded_header(byte *temp_buffer) {
   //  else if error in frame_length, get code to read until endbyte,\r,\n found or MEGA_SERIAL_BUFFER_LENGTH reached
   //  else return frame_type
 
-  //Serial.println("check for errors");
-  for ( byte i = 0; i < HEADER_LENGTH; i++) {
 
-    switch (i) {
-      case OBJ_NUM_LOC:
-        if (parity_of(APPLY_THREE_BIT_CHECKSUM_SUPPRESSION(temp_buffer[i]))) {
-          return 0; //found error in obj_num byte
-        }
-        break;
+  if (parity_of(temp_buffer[FRAME_LENGTH_LOC])) return 0;
+  else if (parity_of(temp_buffer[FRAME_TYPE_LOC])) return 0;
+  else if (parity_of(APPLY_FRAME_NUM_PARITY_CHECKING_MASK(temp_buffer[NUM_OF_FRAMES_LOC]))) return 0;
+  else if (parity_of(APPLY_THIS_FRAME_PARITY_CHECKING_MASK(temp_buffer[FRAME_NUMBER_LOC]))) return 0;
+  else if (parity_of(APPLY_THREE_BIT_CHECKSUM_SUPPRESSION(temp_buffer[OBJ_NUM_LOC]))) return 0;
 
-      case NUM_OF_FRAMES_LOC:
-        if (parity_of(APPLY_FRAME_NUM_PARITY_CHECKING_MASK(temp_buffer[i]))) {
-          return 0;
-        }
-        if (parity_of(APPLY_THIS_FRAME_PARITY_CHECKING_MASK(temp_buffer[i]))) {
-          return 0;
-        }
-        break;
-
-      default:
-        if (parity_of(temp_buffer[i])) {
-          return 0; //error found
-        }
-        break;
-    }
-  }
-  return (frame_type);
+  else return frame_type;
 
 #endif
 
-
   return temp_buffer[FRAME_TYPE_LOC]; //case of no parity encoding, can read directly, return frame type, sanity check later
 }
-
 
 
 void Coms_Serial::request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num) {

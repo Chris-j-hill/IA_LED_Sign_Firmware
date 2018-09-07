@@ -8,7 +8,7 @@
 #include "src/Timer4/TimerFour.h"
 #include "Menus.h"
 #include "Local_Config.h"
-
+#include "Coms_Serial.h"
 
 #ifdef USE_CUSTOM_RGB_MATRIX_LIBRARY
 #include "src/customRGBMatrixPanel/customRGBmatrixPanel.h"
@@ -31,6 +31,7 @@ extern struct Menu_Struct           menu_parameters;
 extern Graphics graphics;
 extern RGBmatrixPanel matrix;
 extern Menu menu;
+extern Coms_Serial coms_serial;
 
 //volatile byte x_pos_ISR_counter = 0;
 //volatile byte x_pos_isr_counter_overflow = 255;
@@ -187,56 +188,56 @@ const char default_title[]            PROGMEM           = TITLE_ERROR_STRING; //
 
 
 const char* const menu_string_table[] PROGMEM = { //create array of const char arrays rather than struct
-/*0*/  main_menu,
-/*1*/  RETURN,
-/*2*/  screen_mode,
-/*3*/  brightness,
-/*4*/  text_settings,
-/*5*/  fan_settings,
-/*6*/  internet_settings,
-/*7*/  sd_card_settings,
-/*8*/  led_strip_settings,
+  /*0*/  main_menu,
+  /*1*/  RETURN,
+  /*2*/  screen_mode,
+  /*3*/  brightness,
+  /*4*/  text_settings,
+  /*5*/  fan_settings,
+  /*6*/  internet_settings,
+  /*7*/  sd_card_settings,
+  /*8*/  led_strip_settings,
 
-/*9*/  screen_mode0,
-/*10*/  screen_mode1,
-/*11*/  screen_mode3,
-/*12*/  screen_mode2,
+  /*9*/  screen_mode0,
+  /*10*/  screen_mode1,
+  /*11*/  screen_mode3,
+  /*12*/  screen_mode2,
 
-/*13*/  text_size_settings,
-/*14*/  text_colour_settings,
-/*15*/  scroll_speed_settings,
-/*16*/  flip_dir_settings,
+  /*13*/  text_size_settings,
+  /*14*/  text_colour_settings,
+  /*15*/  scroll_speed_settings,
+  /*16*/  flip_dir_settings,
 
-/*17*/  fan_speed_settings,
-/*18*/  minimum_rotating_speed,
+  /*17*/  fan_speed_settings,
+  /*18*/  minimum_rotating_speed,
 
-/*19*/  internet_config_menu,
-/*20*/  select_network_manually,
-/*21*/  ethernet_enable,
-/*22*/  ethernet_disable,
-/*23*/  wifi_enable,
-/*24*/  wifi_disable,
+  /*19*/  internet_config_menu,
+  /*20*/  select_network_manually,
+  /*21*/  ethernet_enable,
+  /*22*/  ethernet_disable,
+  /*23*/  wifi_enable,
+  /*24*/  wifi_disable,
 
-/*25*/  sd_card_folders,
+  /*25*/  sd_card_folders,
 
-/*26*/  led_strip_brightness,
+  /*26*/  led_strip_brightness,
 
-/*27*/  text_colour_red,
-/*28*/  text_colour_green,
-/*29*/  text_colour_blue,
-/*30*/  text_colour_hue,
-/*31*/  text_colour_use_hue,
-/*32*/  text_colour_use_rgb,
+  /*27*/  text_colour_red,
+  /*28*/  text_colour_green,
+  /*29*/  text_colour_blue,
+  /*30*/  text_colour_hue,
+  /*31*/  text_colour_use_hue,
+  /*32*/  text_colour_use_rgb,
 
-/*33*/  scroll_speed_x,
-/*34*/  scroll_speed_y,
+  /*33*/  scroll_speed_x,
+  /*34*/  scroll_speed_y,
 
-/*35*/  enable,
-/*36*/  disable,
+  /*35*/  enable,
+  /*36*/  disable,
 
-/*37*/  null_string,
-/*38*/  default_string,
-/*39*/  default_title
+  /*37*/  null_string,
+  /*38*/  default_string,
+  /*39*/  default_title
 };
 
 
@@ -267,19 +268,24 @@ void Graphics::init_update_display_isr() {
 
 
 void serial_check_ISR() {
-  //
-  //  if (Serial_1.available() != 0){  //check for serial arrived very often
-  //
-  //    Timer3.stop();  //turn off all active interrupts
-  //    Timer4.stop();
-  //
-  //    //enable interrupts to allow serial and delays to work
-  //    coms_serial.read_buffer();
-  //
-  //    Timer3.start();
-  //    Tiemr4.start();
-  //
-  //  }
+
+  TIMSK1 &= ~(1 << TOIE1); //turn off all active interrupts
+  Timer3.stop();
+  Timer4.stop();
+  
+  interrupts(); // <- oh boy
+
+  if (Serial_1.available() != 0) { //check for serial arrived very often
+
+    //enable interrupts to allow serial and delays to work
+    coms_serial.read_buffer();
+  }
+
+  noInterrupts(); //stop all interrupts
+
+  Timer3.start(); //enable these, once out of isr interrupts will be enabled, then these can be occur if needed
+  Timer4.start();
+  TIMSK1 |= (1 << TOIE1);
 }
 
 void Graphics::update_display() {
@@ -633,12 +639,12 @@ void Graphics::set_title_colour() {
 
 void Graphics::set_menu_colour() {
 
-//Serial.print("red :");
-//Serial.println(menu_option_colour.red);
-//Serial.print("greeen :");
-//Serial.println(menu_option_colour.green);
-//Serial.print("blue :");
-//Serial.println(menu_option_colour.blue);
+  //Serial.print("red :");
+  //Serial.println(menu_option_colour.red);
+  //Serial.print("greeen :");
+  //Serial.println(menu_option_colour.green);
+  //Serial.print("blue :");
+  //Serial.println(menu_option_colour.blue);
 
 #if defined(USING_COLOUR_SET_888)
   matrix.setTextColor(matrix.Color888(menu_option_colour.red, menu_option_colour.green, menu_option_colour.blue));
@@ -978,7 +984,7 @@ void Graphics::print_highlight_pgm_menu_item(byte src, byte len, byte row) {
 
 
 
-void Graphics::write_menu_option(byte first, byte second, byte third) { 
+void Graphics::write_menu_option(byte first, byte second, byte third) {
 
   byte line_item = 255;
 
@@ -990,8 +996,8 @@ void Graphics::write_menu_option(byte first, byte second, byte third) {
     else if (i == 2)  line_item = second;
     else              line_item = third;
 
-//    matrix.setTextColor(matrix.Color333(0,7,7));
-    
+    //    matrix.setTextColor(matrix.Color333(0,7,7));
+
     //match menu item passed to index in array, and expected stirng length
     switch (line_item) {
       case RETURN_MENU:                 print_pgm_menu_item(RETURN_LOC,             menu_tree_item_lengths.RETURN,                i);    break;

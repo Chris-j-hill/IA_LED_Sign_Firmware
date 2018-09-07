@@ -419,7 +419,7 @@ void Host::print_menu_tree_options(int cur_menu) {
       case STARTUP:                     Serial.print(F("System Starting, Please wait..."));     break;
       case DEFAULT_MENU:                Serial.print(F("Menu Minimised, Press button"));        break;
       case MAIN_MENU:                   Serial.print(menu_items.main_menu);                     break;
-      case SCREEN_MODE_MENU:            Serial.print(menu_items.screen_mode);              break;
+      case SCREEN_MODE_MENU:            Serial.print(menu_items.screen_mode);                   break;
       case TEXT_SETTINGS_MENU:          Serial.print(menu_items.text_settings_menu);            break;
       case FAN_SETTINGS_MENU:           Serial.print(menu_items.fan_settings_menu);             break;
       case INTERNET_CONFIG_MENU:        Serial.print(menu_items.internet_config_menu);          break;

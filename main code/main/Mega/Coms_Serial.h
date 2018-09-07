@@ -13,6 +13,7 @@
 #define Serial_1 Serial1
 #define SERIAL1_RX_PIN 19
 
+
 class Coms_Serial: public Coms {
 
   private:
@@ -39,7 +40,6 @@ class Coms_Serial: public Coms {
     void read_buffer();
 
     void request_frame(byte frame_type, int8_t this_frame = 0, int8_t obj_num = -1) {} //request frame
-    void attach_interrupt() {};
     void request_frame_retransmission(byte frame_type, byte this_frame, byte obj_num);  //request specific data
     void request_frame_retransmission(); //not sure what data we missed
 

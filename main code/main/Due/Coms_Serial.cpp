@@ -785,6 +785,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
 #ifdef SERIAL_1_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
+
       Serial_1.print(frame_start_bytes[0]); //used for start of frame detection, print now write as non blocking
       Serial_1.print(frame_start_bytes[1]);
       switch (frame_type) {
@@ -853,6 +854,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
 #ifdef SERIAL_4_IS_SOFT
       disable_timer_interrupts(); //stop all processes that could cause issues
 #endif
+
       Serial_4.print(frame_start_bytes[0]);
       Serial_4.print(frame_start_bytes[1]);
       switch (frame_type) {
@@ -864,7 +866,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
         case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }
       Serial_4.write(frame_end_bytes, 2);
-
+            
 #ifdef SERIAL_4_IS_SOFT
       enable_timer_interrupts(); //stop all processes that could cause issues
 #endif

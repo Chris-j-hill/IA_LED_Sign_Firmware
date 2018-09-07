@@ -537,7 +537,7 @@ void  Coms::set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //r
 }
 
 byte Coms::parity_of(byte value) {
-  return parity[value];   //LUT of parity given up to 8 bit value
+  return pgm_read_byte_near(parity+value);   //LUT of parity given up to 8 bit value
 }
 
 
