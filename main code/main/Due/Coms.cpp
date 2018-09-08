@@ -16,6 +16,7 @@
 #include "LUTS.h"
 #include "Config_Local.h"
 #include "Menu_Tree.h"
+#include "Host.h"
 // variables
 
 //create these structs
@@ -50,6 +51,7 @@ extern struct Text_cursor text_cursor[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern Encoder encoder;
 extern Menu menu;
+extern Host host;
 
 bool send_text_now = false;
 extern volatile bool send_pos_now;  //variable set in interrupt to trigger send pos function in main loop. (serial doesnt work in interrutps)
@@ -128,10 +130,24 @@ void Coms::build_pos_frame(byte obj_num) {
 
 }
 
+inline void word_packing(byte *dest, int16_t val) {
+
+  if (val < 0) {
+    byte neg_val = abs(val >> 8);
+    neg_val |= 0b10000000;
+    dest[0] = neg_val;
+  }
+  else {
+    dest[0] = ((val >> 8) & 0x7F);   //write new values to frame
+  }
+  dest[1] = (val & 0xFF);
+
+}
+
 inline void Coms::pack_xy_coordinates(byte obj_num) {
   // function to pack the 4 bytes to send the x and y positions of the text cursor
 
-  /*  due to the start and end bytes being 251-254, we want to avoid the possibility of incorrecty identifying
+  /*  due to the frame start and end bytes being 251-254, we want to avoid the possibility of incorrecty identifying
       two bytes as a start or end of frame. using a 16 bit sign value this will be broken up into 2 unsigned bytes
       a position in either axis of -1028 results in the bytes 251 and 252 being packed in the frame. Likewise
       -514 results in 253 and 254 will be packed. To avoid this we cant pack as simple 2s complement values.
@@ -144,32 +160,56 @@ inline void Coms::pack_xy_coordinates(byte obj_num) {
       000 001 010 011 100 101 110 111  becomes  111 110 101 100 000 001 010 011
 
       this must be done manually as its not a standard operation. if the value is negative this requires first taking the abs
-      value then adding a 1 as the most significant bit .this will move the danger zone of pos value to the very
+      value then adding a 1 as the most significant bit .this will move the "danger zone" of pos values to the very
       negative values which is fine, its well away from where we'll be operating and the max pos can be reasonably restricted
-      to be withing these values. restricted range becomes -31743 to 32767
+      to be within these values. restricted range becomes -31743 to 32767
   */
 
+  byte x_vals[2];
+  byte y_vals[2];
 
-  if (text_cursor[obj_num].x < 0) {
-    byte neg_val = abs(text_cursor[obj_num].x >> 8);
-    neg_val |= 0b10000000;
-    pos_frame.frame_buffer[4] = neg_val;
-  }
-  else {
-    pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0x7F);   //write new values to frame
-  }
-  pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
+  word_packing(x_vals, text_cursor[obj_num].x);
+  word_packing(y_vals, text_cursor[obj_num].y);
+
+  pos_frame.frame_buffer[4] = x_vals[0];
+  pos_frame.frame_buffer[5] = x_vals[1];
+
+  pos_frame.frame_buffer[6] = y_vals[0];
+  pos_frame.frame_buffer[7] = y_vals[1];
+
+//  Serial.print("x pos, obj ");
+//  Serial.print(obj_num);
+//  Serial.print(": ");
+//  Serial.println(text_cursor[obj_num].x);
+//  Serial.print("x dir: ");
+//  Serial.println(text_cursor[obj_num].x_pos_dir);
+//  Serial.print("obj_used: ");
+//  Serial.println(text_cursor[obj_num].object_used);
+//  
+//  host.println_bits(text_cursor[obj_num].x, 16, BIN);
+//  host.print_bits(pos_frame.frame_buffer[4], 8, BIN);
+//  host.println_bits(pos_frame.frame_buffer[5], 8, BIN);
 
 
-  if (text_cursor[obj_num].y < 0) {
-    byte neg_val = abs(text_cursor[obj_num].y >> 8);
-    neg_val |= 0b10000000;
-    pos_frame.frame_buffer[6] = neg_val;
-  }
-  else {
-    pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0x7F);
-  }
-  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);
+  //  if (text_cursor[obj_num].x < 0) {
+  //    byte neg_val = abs(text_cursor[obj_num].x >> 8);
+  //    neg_val |= 0b10000000;
+  //    pos_frame.frame_buffer[4] = neg_val;
+  //  }
+  //  else {
+  //    pos_frame.frame_buffer[4] = ((text_cursor[obj_num].x >> 8) & 0x7F);   //write new values to frame
+  //  }
+  //  pos_frame.frame_buffer[5] = (text_cursor[obj_num].x & 0xFF);
+  //
+  //  if (text_cursor[obj_num].y < 0) {
+  //    byte neg_val = abs(text_cursor[obj_num].y >> 8);
+  //    neg_val |= 0b10000000;
+  //    pos_frame.frame_buffer[6] = neg_val;
+  //  }
+  //  else {
+  //    pos_frame.frame_buffer[6] = ((text_cursor[obj_num].y >> 8) & 0x7F);
+  //  }
+  //  pos_frame.frame_buffer[7] = (text_cursor[obj_num].y & 0xFF);
 
 }
 
@@ -548,7 +588,7 @@ void Coms::set_checksum_11(uint16_t checksum, byte frame_type) {
 void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
 
   static bool first_run = true;
-  
+
   if (first_run) {
     first_run = false;
     for (byte i = 0; i < NUM_SCREENS; i++) {
@@ -558,7 +598,7 @@ void Coms::append_frame_history(byte *buf, byte address, byte frame_type) {
       menu_frame_history[i].num_populated_buffers = 0;
     }
   }
-  
+
   byte frame_length = EXTRACT_FRAME_LENGTH(buf[0]);
 
   byte padded_buf[MEGA_SERIAL_BUFFER_LENGTH] = {'\0'};

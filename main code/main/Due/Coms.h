@@ -141,6 +141,9 @@ struct Frame_History {
 
 };
 
+
+inline void word_packing(byte *dest, int16_t val);
+
 class Coms {
 
   private:
@@ -155,7 +158,7 @@ class Coms {
     byte baud_LUT(uint32_t coms_speed);
     void set_header_parity(byte frame_type);
 
-    
+
   protected:
 
     void pack_disp_string_frame(uint16_t frame_num, byte obj_num);        //function to pack a frame of text to display
@@ -166,14 +169,15 @@ class Coms {
     void set_frame_parity_and_checksum(byte frame_type, byte frame_length);    //pack frame with parity bits
     uint16_t generate_checksum(byte frame_type, uint16_t modulo_mask = 0xFF);// generate checksum, default is 8 bit checksum
     void hamming_encoder(byte frame_type) {}
-    
+
     void append_frame_history(byte *buf, byte address, byte frame_type); //add this to frame history
-//    void fill_frame_row(byte *dest, byte *src, int row, int num_bytes, int start_loc =0);
+    //    void fill_frame_row(byte *dest, byte *src, int row, int num_bytes, int start_loc =0);
     byte find_in_frame_history(byte address, byte frame_type, byte frame_num, byte obj_num);    //got a nack, find last instance of the frame being sent to that obj, confirm reasonable request
 
     bool request_error_sanity_check(byte frame_type, byte frame_num, byte obj_num);
 
     bool sanity_check_ping_rx(byte *buf);
+
 
 
   public:
@@ -184,8 +188,6 @@ class Coms {
 
     void calc_delay();
     void init_frames();  //set constant elements of frames
-
-
 
     //  todo
     void echo_menu(); //is this needed

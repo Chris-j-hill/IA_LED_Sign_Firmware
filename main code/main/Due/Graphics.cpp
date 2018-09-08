@@ -112,6 +112,7 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
   static uint16_t loops_since_overflow_y[MAX_NUM_OF_TEXT_OBJECTS] = {0};
 
   for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+
     if (text_cursor[i].object_used) {
       int8_t x_incr = text_cursor[i].x_pos_dir - 128;
       int8_t y_incr = text_cursor[i].y_pos_dir - 128;
@@ -204,7 +205,7 @@ void send_pos_interrupt() {    // interrupt to send pos data to all megas
 
       if (graphics.check_transmission_enabled()) { //update positions but prevent text transmission if also using serial for something else
         coms_serial.send_pos_frame(i);
-        for (byte i = 0; i < 10; i++) //short delay, cant us delay as in interrupt
+        for (byte i = 0; i < 10; i++) //short delay, cant use delay as in interrupt, so use busy loop
           delayMicroseconds(500);
 
       }

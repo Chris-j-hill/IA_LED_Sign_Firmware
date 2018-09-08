@@ -5,6 +5,7 @@
 #include "Encoder.h"
 //#include "Due.h"
 #include "Menu_Tree.h"
+#include "Coms.h"
 
 #ifdef ENABLE_ENCODER
 bool enable_encoder_on_startup = true;
@@ -21,6 +22,7 @@ bool enable_button_on_startup = false;
 
 extern Menu menu;
 extern Menu_tree_menu_limits menu_limits;
+
 
 Encoder_Struct encoder_parameters;     //create encoder struct
 Button_Struct button_parameters;       //create button struct
@@ -84,20 +86,27 @@ byte Encoder::get_text_encoder_position(byte byte_number) {
   // see Coms::pack_xy_coordinates for explanation of packing and int16_t as two bytes
   // less of an issue here but still take precautions, fix is light weight
 
-  if (byte_number == 1) { //looking for MSB
+  byte vals[2];
+  int16_t pos = (int16_t)encoder_parameters.position;
+  word_packing(vals, pos);
 
-    if (encoder_parameters.position < 0) {
-      byte neg_val = abs(encoder_parameters.position >> 8);
-      neg_val |= 0b10000000;
-      return neg_val;
-    }
-    else
-      return ((encoder_parameters.position >> 8) & 0x7F);
+  if (byte_number == 1) return vals[0];
+  else return vals[1];
 
-  }
-  else if (byte_number == 2) { //LSB
-    return (encoder_parameters.position & 0xFF);
-  }
+//  if (byte_number == 1) { //looking for MSB
+//
+//    if (encoder_parameters.position < 0) {
+//      byte neg_val = abs(encoder_parameters.position >> 8);
+//      neg_val |= 0b10000000;
+//      return neg_val;
+//    }
+//    else
+//      return ((encoder_parameters.position >> 8) & 0x7F);
+//
+//  }
+//  else if (byte_number == 2) { //LSB
+//    return (encoder_parameters.position & 0xFF);
+//  }
 }
 
 
