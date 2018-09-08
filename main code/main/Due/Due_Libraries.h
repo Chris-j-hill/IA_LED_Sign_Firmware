@@ -34,7 +34,6 @@
 #include "Menu_tree.h"
 #include "SD_Cards.h"
 #include "Current_control.h"
-#include "EEPROM.h"
 #include "Host.h"
 //#include "LUTS.h"
 

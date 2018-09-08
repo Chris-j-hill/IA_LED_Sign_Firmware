@@ -283,7 +283,7 @@ void serial_check_ISR() {
      reattach all the interrupts we disabled. initial testing seems to indicate all ok
   */
 
-  TIMSK1 &= ~(1 << TOIE1); //turn off all active interrupts
+//  TIMSK1 &= ~(1 << TOIE1); //turn off all active interrupts
   Timer3.stop();
   Timer4.stop();
 
@@ -297,7 +297,7 @@ void serial_check_ISR() {
 
   Timer3.start(); //enable these, once out of isr interrupts will be enabled, then these can be occur if needed
   Timer4.start();
-  TIMSK1 |= (1 << TOIE1);
+//  TIMSK1 |= (1 << TOIE1);
 }
 
 void Graphics::update_display() {
@@ -324,14 +324,14 @@ void Graphics::update_display() {
 
       for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
 
-        Serial.print(F("Printing string "));
-        Serial.print(i);
-        Serial.print(F(" = "));
-        for (byte j = 0; j < MAX_TWEET_SIZE; j++) {
-          Serial.print((char)text_parameters[i].string[j]);
-        }
-
-        Serial.println();
+//        Serial.print(F("Printing string "));
+//        Serial.print(i);
+//        Serial.print(F(" = "));
+//        for (byte j = 0; j < MAX_TWEET_SIZE; j++) {
+//          Serial.print((char)text_parameters[i].string[j]);
+//        }
+//
+//        Serial.println();
 
         if (text_parameters[i].object_used) {
           if (text_parameters[i].use_hue)
@@ -340,7 +340,7 @@ void Graphics::update_display() {
             graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
 
           graphics.draw_text(i);
-          Serial.println("draw");
+//          Serial.println("draw");
         }
       }
     }
@@ -389,12 +389,12 @@ inline void Graphics::set_text_colour(byte new_r, byte new_g, byte new_b) {
   new_g = new_g * multiplier;
   new_b = new_b * multiplier;
 
-Serial.print("red: ");
-Serial.println(new_r);
-Serial.print("green: ");
-Serial.println(new_g);
-Serial.print("blue: ");
-Serial.println(new_b);
+//Serial.print("red: ");
+//Serial.println(new_r);
+//Serial.print("green: ");
+//Serial.println(new_g);
+//Serial.print("blue: ");
+//Serial.println(new_b);
 
 #if defined(USING_COLOUR_SET_888)
   matrix.setTextColor(matrix.Color888(new_r, new_g, new_b));
@@ -412,53 +412,43 @@ inline void Graphics::set_text_colour(int new_hue) {
   else if (new_hue < HUE_MIN_LEVEL)
     new_hue = HUE_MIN_LEVEL;
 
-
-Serial.print("hue: ");
-Serial.println(new_hue);
+//
+//Serial.print("hue: ");
+//Serial.println(new_hue);
 
   byte multiplier = map(screen_parameters.brightness, 0, 100, 0, 255);
 
   matrix.setTextColor(matrix.ColorHSV(new_hue, 255, multiplier, true));
 }
 
-//inline void Graphics::draw_text(byte obj_num) {
-//
-//  matrix.setTextSize(text_parameters[obj_num].text_size);
-//  //  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
-//  matrix.setCursor(1, 1);
-//
-//  uint32_t temp = millis();
-//  temp = millis()-temp;
-//  uint32_t start_time = millis();
-//
-//  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-//  for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
-//    if (text_parameters[obj_num].string[i] == 0) break;
-//    matrix.print((char)text_parameters[obj_num].string[i]);
-//  }
-//  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
-//
-//  Serial.print(F("time taken = "));
-//  Serial.println(millis() - start_time-temp);
-//}
-
-
-
 inline void Graphics::draw_text(byte obj_num) {
 
-
-  uint32_t temp = millis();
-  temp = millis() - temp;
-  uint32_t start_time = millis();
+//
+//  uint32_t temp = millis();
+//  temp = millis() - temp;
+//  uint32_t start_time = millis();
 
   int cursorx = 1;
   int cursory = 1;
   if (obj_num == 1)
-    cursory = 20;
-  //  byte text_size = text_parameters[obj_num].text_size;
+    cursory = 15;
+
+//  int cursorx = cursor_parameters[obj_num].local_x_pos;
+//  int cursory = cursor_parameters[obj_num].local_y_pos;
+
+Serial.print(F("obj num "));
+Serial.print(obj_num);
+Serial.print ("\t");
+Serial.print("X = ");
+Serial.print(cursorx);
+Serial.print ("\t");
+Serial.print("Y = ");
+Serial.println(cursory);
+
+//    byte text_size = text_parameters[obj_num].text_size;
   byte text_size = 1;
   matrix.setTextSize(text_size);
-  //  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
+//  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
 
   //reduce string down to only that which could be displayed
   byte num_chars = SINGLE_MATRIX_WIDTH / (text_size * ASCII_CHARACTER_BASIC_WIDTH) + 2;   // +2 for case of char not aligned with egdes and null char at end
@@ -485,8 +475,8 @@ inline void Graphics::draw_text(byte obj_num) {
 
   //make array into a string
   String str((char*)sub_char_array);
-  Serial.print(F("sub string = "));
-  Serial.println(str);
+//  Serial.print(F("sub string = "));
+//  Serial.println(str);
 
   TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
   for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
@@ -496,8 +486,8 @@ inline void Graphics::draw_text(byte obj_num) {
 
   TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
 
-  Serial.print(F("time taken = "));
-  Serial.println(millis() - start_time - temp);
+//  Serial.print(F("time taken = "));
+//  Serial.println(millis() - start_time - temp);
 }
 
 

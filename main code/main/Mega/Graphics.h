@@ -28,7 +28,7 @@
 
 
 struct Text_Struct {
-  byte string [MAX_TWEET_SIZE] = "Generic display string content";
+  byte string [MAX_TWEET_SIZE] = "No due found";
   byte text_size = DEFAULT_TEXT_SIZE;
   byte colour_r = DEFAULT_TEXT_RED_BRIGHTNESS;
   byte colour_g = DEFAULT_TEXT_GREEN_BRIGHTNESS;
