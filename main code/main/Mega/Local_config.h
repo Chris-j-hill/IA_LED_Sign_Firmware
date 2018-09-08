@@ -53,9 +53,9 @@
 
 
 //select one of these colour scales
-//#define USING_COLOUR_SET_333
+#define USING_COLOUR_SET_333
 //#define USING_COLOUR_SET_444    // highest resolution without loosing data
-#define USING_COLOUR_SET_888      // highest resolution, requires down sampling inputs (actual output colour might not be as expected)
+//#define USING_COLOUR_SET_888      // highest resolution, requires down sampling inputs (actual output colour might not be as expected)
 
 
 

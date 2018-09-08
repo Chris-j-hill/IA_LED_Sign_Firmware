@@ -10,7 +10,6 @@
 #include "LUTS.h"
 #include "Mega_Pins.h"
 #include "src/Timer3/TimerThree.h"
-//volatile bool frame_arrived;   // flag from ISR to methods
 
 
 extern Coms_Serial coms_serial;
@@ -82,192 +81,11 @@ inline bool Coms_Serial::byte_queued() {  // function to delay the processor a l
   return true;
 }
 
-//void Coms_Serial::read_buffer() {
-//
-//  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-//
-//  if (Serial_1.available() > 1) { //only create variables if data arrived, require start and first byte of frame
-//
-//    if (Serial_1.read() == 13) {
-//      if (Serial_1.peek() == 10) {
-//        Serial_1.read();
-//        delayMicroseconds(1000); //wait for some more bytes
-//        if (Serial_1.available() == 0) return;
-//        else {
-//          if (Serial_1.peek() == 13) return;  // if next byte is 13 then shouldnt be a frame lengh byte due to btye length being encoded
-//          while (Serial_1.available() < 4) {} // wait until full header arrived
-//          delay(1);
-//        }
-//
-//        if (Serial_1.available() > 0) { //just recieved start byte and data imediately after, probably frame
-//
-//          byte temp_header[HEADER_LENGTH] = {0};
-//          byte bytes_read = 0;
-//          temp_header[0] = Serial_1.read();
-//          temp_header[1] = Serial_1.read();
-//          temp_header[2] = Serial_1.read();
-//          temp_header[3] = Serial_1.read();
-//
-//          if (temp_header[0] == 13 && temp_header[1] == 10)
-//            return;
-//
-//          bool encoding_ok = true;
-//
-//#ifdef DO_HEADER_ERROR_CORRECTING   //if frame is encoded using hamming matrix, cant read data directly, decode first and update header values
-//          encoding_ok = error_check_encoded_header(temp_header);
-//
-//#endif
-//          byte frame_type = 0;
-//
-//          //now sanity check values
-//          if (encoding_ok)
-//            frame_type = error_check_unencoded_header(temp_header);//<- returns zero if fails sanity checks
-//
-//          if (frame_type == 0 || !encoding_ok) {  //if either of the above tests failed request retransmission of a bunch of frames, cant trust header data
-//            Serial.println(F("frame header error"));
-//#ifndef DISABLE_REQUEST_RETRANSMISSION
-//            request_frame_retransmission();
-//            Serial.println(F("bunch of frames requested"));
-//#endif
-//          }
-//
-//          //in some cases we know exactly how long the frame will be,in others we must parse until indicated amount is read
-//          else if (frame_type == TEXT_FRAME_TYPE) {
-//            byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_header[FRAME_LENGTH_LOC]);
-//            byte data[frame_length] = {0};
-//
-//            bytes_read = Serial_1.readBytes(data, frame_length - HEADER_LENGTH);
-//            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
-//            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
-//
-//
-//            if (!error_check_frame_body(data, frame_type, text_frame.frame_length)) { //if frame ok, returns false(no errors), save data
-//              remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
-//              frame_cpy(data, TEXT_FRAME_TYPE);
-//              Serial.println(F("Text frame recieved"));
-//            }
-//
-//#ifndef DISABLE_REQUEST_RETRANSMISSION
-//            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
-//              byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
-//              byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(temp_header[OBJ_NUM_LOC]);
-//              request_frame_retransmission(TEXT_FRAME_TYPE, this_frame, obj_num);
-//              Serial.println(F("specific frame requested"));
-//            }
-//#else
-//            else
-//              Serial.println(F("text frame error"));
-//#endif
-//          }
-//
-//          else if (frame_type == POS_FRAME_TYPE) {
-//            byte data[POS_FRAME_LENGTH] = {0};
-//            bytes_read = Serial_1.readBytes(data, POS_FRAME_LENGTH - HEADER_LENGTH);
-//            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
-//            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
-//
-//            if (!error_check_frame_body(data, frame_type, pos_frame.frame_length)) { //if frame ok, save data
-//              frame_cpy(data, POS_FRAME_TYPE);
-//              Serial.println(F("Pos frame recieved"));
-//            }
-//
-//
-//#ifndef DISABLE_REQUEST_RETRANSMISSION
-//            else { //do nothing if pos frame recieved in error, new one coming soon
-//            }
-//#else
-//            else
-//              Serial.println(F("pos frame error"));
-//#endif
-//          }
-//
-//          else if (frame_type == SENSOR_FRAME_TYPE) {
-//            byte frame_length = APPLY_FRAME_LENGTH_MASK(temp_header[FRAME_LENGTH_LOC]);
-//            byte data[frame_length] = {0};
-//            bytes_read = Serial_1.readBytes(data, frame_length - HEADER_LENGTH);
-//            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
-//            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
-//
-//            if (!error_check_frame_body(data, frame_type, sensor_data_frame.frame_length)) { //if frame ok, save data
-//              frame_cpy(data, SENSOR_FRAME_TYPE);
-//              Serial.println(F("Sensor data frame recieved"));
-//            }
-//
-//
-//#ifndef DISABLE_REQUEST_RETRANSMISSION
-//            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
-//              byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
-//              byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(temp_header[OBJ_NUM_LOC]);
-//              request_frame_retransmission(SENSOR_FRAME_TYPE, this_frame, obj_num);
-//              Serial.println(F("specific frame requested"));
-//            }
-//#else
-//            else
-//              Serial.println(F("sensor frame error"));
-//#endif
-//          }
-//
-//          else if (frame_type == MENU_FRAME_TYPE) {
-//
-//            byte data[MENU_FRAME_LENGTH] = {0};
-//            bytes_read = Serial_1.readBytes(data, MENU_FRAME_LENGTH - HEADER_LENGTH);
-//            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
-//            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
-//
-//            if (!error_check_frame_body(data, frame_type, menu_frame.frame_length)) { //if frame ok, save data
-//              frame_cpy(data, MENU_FRAME_TYPE);
-//              Serial.println(F("Menu frame recieved"));
-//            }
-//
-//#ifndef DISABLE_REQUEST_RETRANSMISSION
-//            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
-//              byte this_frame = APPLY_THIS_FRAME_PARITY_MASK(temp_header[FRAME_NUMBER_LOC]);
-//              byte obj_num = APPLY_OBJ_NUM_PARITY_MASK(temp_header[OBJ_NUM_LOC]);
-//              request_frame_retransmission(MENU_FRAME_TYPE, this_frame, obj_num);
-//              Serial.println(F("specific frame requested"));
-//            }
-//
-//#else
-//            else
-//              Serial.println(F("menu frame error"));
-//#endif
-//          }
-//
-//          else if (frame_type == PING_STRING_TYPE) {
-//            byte data[PING_STRING_TYPE] = {0};
-//            bytes_read = Serial_1.readBytes(data, MENU_FRAME_LENGTH - HEADER_LENGTH);
-//            memmove(data + HEADER_LENGTH, data, bytes_read); //move elements back in frame
-//            memcpy(data, temp_header, HEADER_LENGTH);       //copy header to beginning
-//
-//            Serial.println(F("Ping frame recieved"));
-//            if (!error_check_frame_body(data, frame_type, ping_frame.frame_length)) { //if frame ok, save data
-//              ping_good();
-//              Serial.println(F("ping good sent"));
-//            }
-//            else {  //else failed to decode frame, but know header is reasonable, request the specific frame again
-//              ping_bad();
-//              Serial.println(F("ping bad sent"));
-//            }
-//          }
-//        }
-//      }
-//    }
-//  }
-//  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
-//
-//}
+
 
 void Coms_Serial::read_buffer() {
 
-  //  if (!digitalRead(serial_handshake_pin)) {
-  //    //    Serial.println("low");
-  //    uint32_t timer_start = millis();
-  //    while (Serial_1.available() == 0 && millis() < timer_start + 1000) {}
-  //
-  //    if (millis() >= timer_start + 1000) {
-  //      Serial.println("timeout");
-  //      return;
-  //    }
+
 
   //  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
   //  Timer3.stop();
@@ -276,15 +94,6 @@ void Coms_Serial::read_buffer() {
   byte break_condition = 0;
   uint16_t delay_period = ceil(40000000 / COMS_SPEED); //wait long enough for 4 bytes to arrive
 
-  //  if (Serial_1.available() > 1) {
-  //    byte val = Serial_1.read();
-  //    Serial.print(val);
-  //    Serial.print(F(" "));
-  //    if (val == 253 && Serial_1.peek() == 254)
-  //      Serial.println(Serial_1.read());
-  //
-  //  }
-  //  return;
 
   if (Serial_1.available() > 1) {
     if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_1) {
@@ -386,10 +195,7 @@ seen_byte_2:
           Serial.println(F("frame header error"));
           if (!encoding_ok) Serial.println("encoding error");
           else if (frame_type == 0) Serial.println("frame_type error");
-          //          Serial.print(F("frame_type : "));
-          //          Serial.println(frame_type);
-          //          Serial.print(F("encoding ok : "));
-          //          Serial.println(encoding_ok);
+
 
 #ifndef DISABLE_REQUEST_RETRANSMISSION
           request_frame_retransmission();
@@ -581,7 +387,7 @@ seen_byte_2:
                   back to default com speed
 
               */
-              uint32_t requested_rate = baud_rate_LUT[data[4]];
+              uint32_t requested_rate = pgm_read_byte_near(baud_rate_LUT + data[4]);
               Serial_1.begin(requested_rate);
               delay(25); //short delay to ensure due has decoded the last frame and set its baud rate
               ping_good();  //send frame again at new rate

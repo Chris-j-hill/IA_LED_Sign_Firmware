@@ -208,7 +208,7 @@
 #define FAN_PRIORITY          2
 
 
-#define POS_UPDATE_ISR_FREQ 2//hz
+#define POS_UPDATE_ISR_FREQ 1//hz
 
 #define XY_SPEED_UNITS 0.1//speed of +1 moves XY_SPEED_UNITS pixels per second
 

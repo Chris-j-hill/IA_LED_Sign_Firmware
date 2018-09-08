@@ -268,18 +268,30 @@ void Graphics::init_update_display_isr() {
 
 
 void serial_check_ISR() {
+  /*
+     fast running isr to check the serial port. a lot of the operations on the led panel require
+     large amounts of data to be set. this is going to be slow, especially if your using a not
+     insignificant part of the screen. on the other hand, we also want the serialport to be operating
+     at as high a frequency as is possible. Thus simply polling the serial port now and again isnt
+     enough, the internal buffers are configured to be small due to space restraints and thus will
+     overflow if not attended to quickly after recieving a byte. thus we need an interrupt for the serial,
+     which will check the serial port for recieved data very frequently to avoid a buffer overflow.
+     However, in an ISR, all interrupts get disabled until we finish the ISR, but serial commands (and delays)
+     require interrupts to work. Hmmm... solution is to detach this interrupt, to prevent it interrupting
+     itself, along with all non critical interrupts, and reinable interrupts withing the ISR. this allows us
+     to use serial functions without processor jamming. at end of function we must then disable interrupts, and
+     reattach all the interrupts we disabled. initial testing seems to indicate all ok
+  */
 
   TIMSK1 &= ~(1 << TOIE1); //turn off all active interrupts
   Timer3.stop();
   Timer4.stop();
-  
-  interrupts(); // <- oh boy
 
-  if (Serial_1.available() != 0) { //check for serial arrived very often
+  interrupts(); // <- aw geez rick, i dont know about this...
 
-    //enable interrupts to allow serial and delays to work
+  if (Serial_1.available() != 0)
     coms_serial.read_buffer();
-  }
+
 
   noInterrupts(); //stop all interrupts
 
@@ -297,30 +309,46 @@ void Graphics::update_display() {
 
   if ((millis() > time_since_last_update + MIN_DISPLAY_UPDATE_PERIOD) && (!screen_parameters.updated) && (millis() > screen_parameters.time_last_updated + SCREEN_UPDATE_BACKOFF_PERIOD)) {
 
-    Timer3.stop();  //disable this timer to speed things up
+    if (!screen_parameters.updated)
+      screen_parameters.updated = true;
+
+    Timer3.stop();  //disable the interpolate pos timer
     set_display_mode();
-    //    Serial.println();
-    //    Serial.println("update display");
-    //    Serial.println(menu.get_current_menu());
-    //    Serial.println(screen_parameters.updated);
-    //    Serial.println();
-
-    if (menu.get_current_menu() == DEFAULT_MENU) menu.set_current_menu(MAIN_MENU);
 
 
+    //if (menu.get_current_menu() == DEFAULT_MENU) menu.set_current_menu(MAIN_MENU);
+
+    matrix.fillScreen(0);
+    
     if (menu.get_current_menu() == DEFAULT_MENU) {
 
       for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
+
+        Serial.print(F("Printing string "));
+        Serial.print(i);
+        Serial.print(F(" = "));
+        for (byte j = 0; j < MAX_TWEET_SIZE; j++) {
+          Serial.print((char)text_parameters[i].string[j]);
+        }
+
+        Serial.println();
+
         if (text_parameters[i].object_used) {
           if (text_parameters[i].use_hue)
             graphics.set_text_colour(text_parameters[i].hue);
           else
             graphics.set_text_colour(text_parameters[i].colour_r, text_parameters[i].colour_g, text_parameters[i].colour_b);
-          //delay(100);
+
           graphics.draw_text(i);
           Serial.println("draw");
         }
       }
+    }
+
+    else if (menu.get_current_menu() == STARTUP) {
+      matrix.setCursor(2, 10);
+      matrix.setTextColor(matrix.Color333(5, 4, 3));
+      matrix.print("starting...");
     }
 
     //    else if((menu.get_current_menu() != DEFAULT_MENU && menu.get_current_menu() != STARTUP_MENU) && !screen_parameters.updated) //<- partial coverage of menu...
@@ -332,7 +360,6 @@ void Graphics::update_display() {
 
     time_since_last_update = millis();
     //dealt with screen update
-    screen_parameters.updated = true;
 
     Timer3.start();
   }
@@ -362,6 +389,13 @@ inline void Graphics::set_text_colour(byte new_r, byte new_g, byte new_b) {
   new_g = new_g * multiplier;
   new_b = new_b * multiplier;
 
+Serial.print("red: ");
+Serial.println(new_r);
+Serial.print("green: ");
+Serial.println(new_g);
+Serial.print("blue: ");
+Serial.println(new_b);
+
 #if defined(USING_COLOUR_SET_888)
   matrix.setTextColor(matrix.Color888(new_r, new_g, new_b));
 #elif defined(USING_COLOUR_SET_444)
@@ -377,6 +411,10 @@ inline void Graphics::set_text_colour(int new_hue) {
     new_hue = HUE_MAX_LEVEL;
   else if (new_hue < HUE_MIN_LEVEL)
     new_hue = HUE_MIN_LEVEL;
+
+
+Serial.print("hue: ");
+Serial.println(new_hue);
 
   byte multiplier = map(screen_parameters.brightness, 0, 100, 0, 255);
 
@@ -408,7 +446,6 @@ inline void Graphics::set_text_colour(int new_hue) {
 
 inline void Graphics::draw_text(byte obj_num) {
 
-  static int colour = -1500;
 
   uint32_t temp = millis();
   temp = millis() - temp;
@@ -416,11 +453,14 @@ inline void Graphics::draw_text(byte obj_num) {
 
   int cursorx = 1;
   int cursory = 1;
+  if (obj_num == 1)
+    cursory = 20;
   //  byte text_size = text_parameters[obj_num].text_size;
   byte text_size = 1;
   matrix.setTextSize(text_size);
   //  matrix.setCursor(cursor_parameters[obj_num].local_x_pos, cursor_parameters[obj_num].local_y_pos);
 
+  //reduce string down to only that which could be displayed
   byte num_chars = SINGLE_MATRIX_WIDTH / (text_size * ASCII_CHARACTER_BASIC_WIDTH) + 2;   // +2 for case of char not aligned with egdes and null char at end
   char sub_char_array[num_chars] = {'\0'};
 
@@ -430,34 +470,31 @@ inline void Graphics::draw_text(byte obj_num) {
     start_loc = abs(cursorx / ASCII_CHARACTER_BASIC_WIDTH);
     matrix.setCursor(cursorx / ASCII_CHARACTER_BASIC_WIDTH, cursory); //move cursor closer to x=0 and ignore earlier characters
   }
-  else if (cursorx >= SINGLE_MATRIX_WIDTH) //dont print if off screen
+  else if (cursorx >= SINGLE_MATRIX_WIDTH) //dont print if fully off screen
     return;
   else
     matrix.setCursor(cursorx, cursory);
 
+  //populate sub char array
   if (start_loc < MAX_TWEET_SIZE) { // only if could possibly be on screen
     for (byte i = 0; i < num_chars; i++) {
       if ((i + start_loc) == MAX_TWEET_SIZE) break;
       sub_char_array[i] = (char)text_parameters[obj_num].string[i + start_loc];
     }
   }
+
+  //make array into a string
   String str((char*)sub_char_array);
   Serial.print(F("sub string = "));
   Serial.println(str);
 
-
-  //  for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
-  //if (text_parameters[obj_num].string[i] == 0) break;
   TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-  matrix.fillScreen(0);
-  //  matrix.print(str[1]);
-  //  matrix.fillScreen(matrix.ColorHSV(colour, 255, 255, true));
-  //matrix.drawPixel(1,3,matrix.ColorHSV(colour, 255, 255, true));
-  colour += 50;
-  if (colour > 1500) colour = -1500;
-  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+  for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
+    if (text_parameters[obj_num].string[i] == 0) break;
+    matrix.print(str[i]);
+  }
 
-  //  }
+  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
 
   Serial.print(F("time taken = "));
   Serial.println(millis() - start_time - temp);

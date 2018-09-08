@@ -31,7 +31,6 @@ const int HUE_MIN_VALUE = -1535;
 #define HUE_ADJUSTMENT_STEP_SIZE 5    // step size in menu when adjusting hue
 
 //how often will the text buffer in the megas be refreshed
-#define TEXT_TRANSMIT_PERIOD 2000
 #define DEFAULT_TEXT_SIZE 2
 
 #define DEFAULT_TEXT_RED_BRIGHTNESS RED_MAX_VALUE
@@ -46,7 +45,6 @@ const int HUE_MIN_VALUE = -1535;
 #define POS_TIMER Timer3
 #define POS_TIMER_INTERRUPT TC2_IRQn
 
-#define POS_TRANSMIT_DELAY 20
 
 
 struct Text {
