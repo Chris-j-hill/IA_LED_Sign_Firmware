@@ -109,7 +109,7 @@ struct Text_cursor {        //xy coordinates of cursor position
 
 void attach_timer_pos_update();
 
-void set_pos_update_frequency(byte freq);
+void set_pos_update_frequency(float freq);
 
 void send_pos_interrupt();     // interrupt to send pos data to all megas
 

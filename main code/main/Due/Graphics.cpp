@@ -93,12 +93,13 @@ void attach_timer_pos_update() {
   }
 }
 
-void set_pos_update_frequency(byte freq) {
+void set_pos_update_frequency(float freq) {
 
   if (!timers.pos_timer_attached) {
     Sprintln(F("From 'set_pos_update_frequency': trying to set frequency but timer not attached"));
   }
   else {  //all good, set freq
+//    uint32_t period = 1000000/freq;
     POS_TIMER.setFrequency(freq);   //set interval
 
   }

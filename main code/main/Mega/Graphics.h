@@ -9,7 +9,7 @@
 #define ASCII_CHARACTER_BASIC_WIDTH 6
 #define ASCII_CHARACTER_BASIC_HEIGHT 8
 
-#define POS_ISR_FREQUENCY 100    // 100 gives maximum speed 50 pixels/second, minimum 0.2 pixels/second (100/128)/2
+#define POS_ISR_FREQUENCY 10    // 100 gives maximum speed 50 pixels/second, minimum 0.2 pixels/second (100/128)/2
 // Note: There may be severe stability issues with this at high speeds if delay
 // correction is used due to overflows and amount the counter is incremented
 
@@ -57,7 +57,7 @@ struct Cursor_Struct {
   uint32_t isr_last_update_x_time = 0;  //time vlaue was last updated at
   uint32_t isr_last_update_y_time = 0;
 
-  uint16_t time_between_increments_x = 0;
+  uint16_t time_between_increments_x = 1000; 
   uint16_t time_between_increments_y = 0;
 };
 

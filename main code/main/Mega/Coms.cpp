@@ -8,6 +8,8 @@
 #include "Local_Config.h"
 #include "Graphics.h"
 #include "LUTS.h"
+#include "Host.h"
+
 
 Frame text_frame;
 Frame menu_frame;
@@ -21,7 +23,7 @@ extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 
 
 extern Menu menu;
-
+extern Host host;
 
 void Coms::extract_sensor_data(byte *temp_buffer) {
 
@@ -381,14 +383,14 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
     }
   }
 
-  if(!screen_parameters.updated){// this function changed this, reset timer
+  if (!screen_parameters.updated) { // this function changed this, reset timer
     screen_parameters.time_last_updated = millis();
   }
 
   else if (screen_already_not_updated)  //function didnt change it but it was already waiting for timer
     screen_parameters.updated = false;
 
-  }
+}
 
 
 inline int Coms::calc_pos(byte MSB, byte LSB) {
@@ -437,8 +439,8 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
   uint16_t disp_string_offset = FRAME_DATA_LENGTH * (this_frame - 1);
 
   byte num_bytes_to_cpy = frame_length - FRAME_OVERHEAD;
-  byte temp1 = 0;
-  byte temp2 = 0;
+  int8_t temp1 = 0;
+  int8_t temp2 = 0;
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
@@ -452,15 +454,15 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       screen_parameters.updated = false;  //part of a string arrived, update displayed buffer, update as each part of string arrives, better than not detecting retransmission
       screen_parameters.time_last_updated = millis(); //set timer, waits for a time out before updating screen to ensure all frames arrived
-      
-      Serial.print(F("Stored string "));
-      Serial.print(obj_num);
-      Serial.print(F(" = "));
-      for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
-        Serial.print((char)text_parameters[obj_num].string[i]);
-      }
-
-      Serial.println();
+      //
+      //      Serial.print(F("Stored string "));
+      //      Serial.print(obj_num);
+      //      Serial.print(F(" = "));
+      //      for (byte i = 0; i < MAX_TWEET_SIZE; i++) {
+      //        Serial.print((char)text_parameters[obj_num].string[i]);
+      //      }
+      //
+      //      Serial.println();
       break;
 
     case POS_FRAME_TYPE:
@@ -468,14 +470,14 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       // see Coms::pack_xy_coordinates in due code for description of pos value packing
 
       // decode negative values
-      if (temp_buffer[4] < 0) {
+      if (temp_buffer[4] > 127) {
         temp1 = temp_buffer[4] & 0x7F;
         temp1 = -temp1;
       }
       else
         temp1 = temp_buffer[4];
 
-      if (temp_buffer[6] < 0) {
+      if (temp_buffer[6] > 127) {
         temp2 = temp_buffer[6] & 0x7F;
         temp2 = -temp2;
       }
@@ -483,21 +485,49 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
         temp2 = temp_buffer[6];
 
 
+      //  host.print_bits(temp_buffer[4], 8, BIN);
+      //  Serial.print(" ");
+      //  host.println_bits(temp_buffer[5], 8, BIN);
+      //
+      //
+      //  host.print_bits(temp1, 8, BIN);
+      //  Serial.print(" ");
+      //  host.println_bits(temp_buffer[5], 8, BIN);
+
+
       cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp1, temp_buffer[5]);  // position as recieved in frame
       cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp2, temp_buffer[7]);
 
-      cursor_parameters[obj_num].local_x_pos = (screen_parameters.node_address) * (SINGLE_MATRIX_WIDTH) - cursor_parameters[obj_num].global_x_pos;   // relative position for this matrix
+      Serial.print("global x = ");
+      Serial.println(cursor_parameters[obj_num].global_x_pos);
+
+      Serial.print("global y = ");
+      Serial.println(cursor_parameters[obj_num].global_y_pos);
+
+      cursor_parameters[obj_num].local_x_pos = cursor_parameters[obj_num].global_x_pos - (screen_parameters.node_address * SINGLE_MATRIX_WIDTH);  // relative position for this matrix
       cursor_parameters[obj_num].local_y_pos = cursor_parameters[obj_num].global_y_pos;
 
       cursor_parameters[obj_num].x_dir = GET_TEXT_DIR(temp_buffer[8]);
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
 
-      cursor_parameters[obj_num].time_between_increments_x = (1000 / XY_SPEED_UNITS) / cursor_parameters[obj_num].x_dir; //1000ms/(x_dir*XY_SPEED_UNITS)
-      cursor_parameters[obj_num].time_between_increments_y = (1000 / XY_SPEED_UNITS) / cursor_parameters[obj_num].y_dir;
+      if (cursor_parameters[obj_num].x_dir != 0)
+        cursor_parameters[obj_num].time_between_increments_x = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].x_dir))*XY_SPEED_UNITS)); //1000ms/(x_dir*XY_SPEED_UNITS)
+      else
+        cursor_parameters[obj_num].time_between_increments_x = 10000; //if not moving, need to give some value, make long interval
+
+      if (cursor_parameters[obj_num].y_dir != 0)
+        cursor_parameters[obj_num].time_between_increments_y = (1000 / XY_SPEED_UNITS) / cursor_parameters[obj_num].y_dir;
+      else
+        cursor_parameters[obj_num].time_between_increments_y = 10000;
+
+      Serial.print("time between increments: ");
+      Serial.print(cursor_parameters[obj_num].time_between_increments_x);
+      Serial.print(", ");
+      Serial.println(cursor_parameters[obj_num].time_between_increments_y);
 
 
       screen_parameters.updated = false;  //pos frame requires screen update always
-      screen_parameters.time_last_updated = millis();
+      screen_parameters.time_last_updated = millis();//for backoff time calculation
       break;
 
     case SENSOR_FRAME_TYPE:
@@ -507,7 +537,7 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
     case MENU_FRAME_TYPE:
 
       //temp_buffer[3] <= selected object, needed for some menus
-    
+
       menu.set_current_menu(temp_buffer[4]);
 
       // decode negative values
@@ -537,7 +567,7 @@ void  Coms::set_hue_colour(byte receivedData, byte obj_num, byte data_loc) { //r
 }
 
 byte Coms::parity_of(byte value) {
-  return pgm_read_byte_near(parity+value);   //LUT of parity given up to 8 bit value
+  return pgm_read_byte_near(parity + value); //LUT of parity given up to 8 bit value
 }
 
 

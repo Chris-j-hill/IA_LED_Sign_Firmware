@@ -84,20 +84,22 @@
 #define STARTUP_R 35   //expanding rings startup, blue/purple colour
 #define STARTUP_G 0
 #define STARTUP_B 180
-#define MENU_OPTION_R 150 // menu option colour
+
+#define MENU_OPTION_R 0 // menu option colour
 #define MENU_OPTION_G 0   // NB highlighted colour for selected menu option is these values + COLOUR_LEVEL_STEP_SIZE, so values shouldnt be too close to colour limit
-#define MENU_OPTION_B 70
-#define MENU_TITLE_R 180
-#define MENU_TITLE_G 180
-#define MENU_TITLE_B 180
+#define MENU_OPTION_B 255
+
+#define MENU_TITLE_R 0
+#define MENU_TITLE_G 0
+#define MENU_TITLE_B 255
 
 #define MENU_POINTER_COLOUR_R 0
-#define MENU_POINTER_COLOUR_G 100
-#define MENU_POINTER_COLOUR_B 100
+#define MENU_POINTER_COLOUR_G 180
+#define MENU_POINTER_COLOUR_B 180
 
 #define MENU_TITLE_BACKGROUND_R 8
 #define MENU_TITLE_BACKGROUND_G 0
-#define MENU_TITLE_BACKGROUND_B 16
+#define MENU_TITLE_BACKGROUND_B 8
 
 #elif defined(USING_COLOUR_SET_444)
 
@@ -123,20 +125,22 @@
 #define STARTUP_R 1
 #define STARTUP_G 0
 #define STARTUP_B 5
+
 #define MENU_OPTION_R 4
-#define MENU_OPTION_G 0
-#define MENU_OPTION_B 2
+#define MENU_OPTION_G 5
+#define MENU_OPTION_B 5
+
 #define MENU_TITLE_R 5
-#define MENU_TITLE_G 5
-#define MENU_TITLE_B 5
+#define MENU_TITLE_G 7
+#define MENU_TITLE_B 7
 
 #define MENU_POINTER_COLOUR_R 0
 #define MENU_POINTER_COLOUR_G 4
 #define MENU_POINTER_COLOUR_B 4
 
-#define MENU_TITLE_BACKGROUND_R 1
+#define MENU_TITLE_BACKGROUND_R 0
 #define MENU_TITLE_BACKGROUND_G 0
-#define MENU_TITLE_BACKGROUND_B 1
+#define MENU_TITLE_BACKGROUND_B 0
 #endif
 
 
@@ -311,8 +315,6 @@ struct Menu_tree_items {
 };
 
 
-
-
 #define SIZEOF_MAIN_MENU_STRING               sizeof(MAIN_MENU_STRING)
 #define SIZEOF_RETURN_STRING                  sizeof(RETURN_STRING)
 #define SIZEOF_SCREEN_MODE_STRING             sizeof(SCREEN_MODE_STRING)
@@ -349,8 +351,6 @@ struct Menu_tree_items {
 #define SIZEOF_USE_RGB_STRING                 sizeof(FAN_MIN_SPEED_STRING)
 #define SIZEOF_X_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
 #define SIZEOF_Y_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
-
-
 
 #define SIZEOF_EMPTY_STRING                   sizeof(EMPTY_STRING)
 #define SIZEOF_CONTENT_ERROR_STRING           sizeof(CONTENT_ERROR_STRING)

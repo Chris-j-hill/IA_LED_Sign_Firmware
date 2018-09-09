@@ -33,19 +33,23 @@ extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 void mega_setup() {
 
   configure_address();
+  graphics.init_matrix();
+  graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
+
+  graphics.init_update_display_isr(); //fast running checker for serial input from due, updating the matrix is too slow for polling serial port
+  graphics.attach_pos_ISR();  //pos isr to interpolate cursor positions between frames based on timer
+
+  coms_serial.init_serial(); //enable coms port to due
+  menu.init_menu_tree();
+
   host.init_serial();    //enable printing to monitor
   Serial.print(F("address: "));
   Serial.println(screen_parameters.node_address);
-  coms_serial.init_serial(); //enable coms port to due
-  graphics.init_matrix();
-  graphics.attach_pos_ISR();  //pos isr to interpolate cursor positions between frames based on timer
   Serial.println(F("done init"));
-  menu.init_menu_tree();
 
   text_parameters[0].object_used = true;
   text_parameters[0].text_size = 1;
-  
-  graphics.init_update_display_isr(); //fast running checker for serial input from due, updating the matrix is too slow for polling serial port
+
 }
 
 
@@ -53,9 +57,9 @@ void mega_loop() {
   uint16_t i = 0;
   while (1) {
 
-//    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
+    //    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
     graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
-    //    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
+    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
     //    host.check_serial();
     //    host.print_messages();
     //    i++;
