@@ -244,7 +244,8 @@ const char* const menu_string_table[] PROGMEM = { //create array of const char a
 
 
 void pos_update_ISR() {
-  interpolate_pos_flag = true;
+//  interpolate_pos_flag = true;
+    graphics.interpolate_pos();
 }
 
 
@@ -295,7 +296,7 @@ void serial_check_ISR() {
 
   noInterrupts(); //stop all interrupts
 
-  Timer3.start(); //enable these, once out of isr interrupts will be enabled, then these can be occur if needed
+    Timer3.start(); //enable these, once out of isr interrupts will be enabled, then these can be occur if needed
   Timer4.start();
   //  TIMSK1 |= (1 << TOIE1);
 }
@@ -436,14 +437,14 @@ inline void Graphics::draw_text(byte obj_num) {
   int cursorx = cursor_parameters[obj_num].local_x_pos;
   int cursory = cursor_parameters[obj_num].local_y_pos;
 
-//  Serial.print(F("obj num "));
-//  Serial.print(obj_num);
-//  Serial.print("\t");
-//  Serial.print("X = ");
-//  Serial.print(cursorx);
-//  Serial.print("\t");
-//  Serial.print("Y = ");
-//  Serial.println(cursory);
+  //  Serial.print(F("obj num "));
+  //  Serial.print(obj_num);
+  //  Serial.print("\t");
+  //  Serial.print("X = ");
+  //  Serial.print(cursorx);
+  //  Serial.print("\t");
+  //  Serial.print("Y = ");
+  //  Serial.println(cursory);
 
   //    byte text_size = text_parameters[obj_num].text_size;
   byte text_size = 1;
@@ -494,52 +495,55 @@ inline void Graphics::draw_text(byte obj_num) {
 
 void Graphics::attach_pos_ISR() {
 
-  uint16_t period = pos_isr_period();
+  uint32_t period = pos_isr_period();
   //  pos_isr_counter_overflow();
 
-  Timer3.attachInterrupt(pos_update_ISR, period);
+  Timer3.initialize(period);
+  Timer3.attachInterrupt(pos_update_ISR);
   Timer3.start();
+}
+
+inline void Graphics::set_pos_isr_period(uint32_t period) {
+  Timer3.setPeriod(1000 * period); //period calculated as millis, function needs micros
+  Serial.print("set_pos_isr : ");
+  Serial.println(period);
+  delay(10);
+  
 }
 
 void Graphics::interpolate_pos() {
 
-  /* this function executes the required interpolation of the cursor
-     based on the flag set inside the pos_update_isr funtion. this
-     is reasonably slow with many divides so run outside of interrupts
-     whenever processor isnt doing anything else
-  */
-  if (interpolate_pos_flag) {
+
+//  if (interpolate_pos_flag) {
 
     interpolate_pos_flag = false;
     uint32_t cur_time = millis(); //only need to do this once, millis isnt that fast...
 
-    for (byte i = 0; i < 1; i++) {
+    screen_parameters.updated = true; //something needs to updated
+    Serial.println(F("Interpolate pos"));
+    for (byte i = 0; i < MAX_NUM_OF_TEXT_OBJECTS; i++) {
 
-      //check if period elapsed, if so it is time to update
-      if (text_parameters[i].object_used && (cur_time - cursor_parameters[i].isr_last_update_x_time) > cursor_parameters[i].time_between_increments_x) {
-        cursor_parameters[i].isr_last_update_x_time = cur_time;
+      if (text_parameters[i].object_used) {
+        //check if period elapsed, if so it is time to update
+        if ((cur_time - screen_parameters.last_updated[2 * i]) > screen_parameters.update_periods[2 * i]) {
+          screen_parameters.last_updated[2 * i] = cur_time;
 
-        //increment value, speed now irrelevant, since this interrupt should run the required num times per second, so just increment by one
-        if (cursor_parameters[i].x_dir < 0)
-          cursor_parameters[i].local_x_pos--;
-        else if (cursor_parameters[i].x_dir > 0)
-          cursor_parameters[i].local_x_pos++;
-        screen_parameters.updated = false;
-        Serial.print("cur time");
-        Serial.println(cur_time);
-      }
+          //increment value, speed now irrelevant, since this interrupt should run the required num times per second, so just increment by one
+          if (cursor_parameters[i].x_dir < 0)       cursor_parameters[i].local_x_pos--;
+          else if (cursor_parameters[i].x_dir > 0)  cursor_parameters[i].local_x_pos++;
 
-      if ((cur_time - cursor_parameters[i].isr_last_update_y_time) > cursor_parameters[i].time_between_increments_y) {
-        cursor_parameters[i].isr_last_update_y_time = cur_time;
+        }
 
-        if (cursor_parameters[i].y_dir < 0)
-          cursor_parameters[i].local_y_pos--;
-        else if (cursor_parameters[i].y_dir > 0)
-          cursor_parameters[i].local_y_pos++;
-        screen_parameters.updated = false;
+        if ((cur_time - screen_parameters.last_updated[(2 * i) + 1]) > screen_parameters.update_periods[(2 * i) + 1]) {
+          screen_parameters.last_updated[(2 * i) + 1] = cur_time;
+
+          if (cursor_parameters[i].y_dir < 0)       cursor_parameters[i].local_y_pos--;
+          else if (cursor_parameters[i].y_dir > 0)  cursor_parameters[i].local_y_pos++;
+
+        }
       }
     }
-  }
+//  }
 }
 
 //void Graphics::delay_pos_ISR(int value, byte counter) {
@@ -601,7 +605,7 @@ void Graphics::increment_cursor_position(byte axis, byte obj_num) {
   }
 }
 
-inline uint16_t Graphics::pos_isr_period() {
+inline uint32_t Graphics::pos_isr_period() {
 
   return (1000000 / POS_ISR_FREQUENCY);// number of microseconds between functions calls
 
@@ -1170,4 +1174,26 @@ byte Graphics::menu_pixels_right_of_node() {
   return ((NUM_SCREENS - 1) - screen_parameters.node_address) * SINGLE_MATRIX_WIDTH; //number of pixels to the right of this screen
 
 }
+
+void Graphics::update_pos_isr_period(byte obj_num, uint32_t new_x_val, uint32_t new_y_val) {
+
+  //save value to array
+  screen_parameters.update_periods[(2 * obj_num)] = new_x_val;
+  screen_parameters.update_periods[(2 * obj_num) + 1] = new_y_val;
+
+  //find smallest value
+  screen_parameters.cur_update_period = screen_parameters.update_periods[0];
+
+  for (byte i = 1 ; i < (2 * MAX_NUM_OF_TEXT_OBJECTS) ; i++ )
+  {
+    if ( screen_parameters.update_periods[i] < screen_parameters.cur_update_period && screen_parameters.update_periods[i]!=0 )
+    {
+      screen_parameters.cur_update_period = screen_parameters.update_periods[i];
+    }
+  }
+
+  set_pos_isr_period(screen_parameters.cur_update_period);
+
+}
+
 #endif //GRAPHICS_CPP

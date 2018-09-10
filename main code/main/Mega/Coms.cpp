@@ -24,6 +24,8 @@ extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 
 extern Menu menu;
 extern Host host;
+extern Graphics graphics;
+
 
 void Coms::extract_sensor_data(byte *temp_buffer) {
 
@@ -441,6 +443,8 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
   byte num_bytes_to_cpy = frame_length - FRAME_OVERHEAD;
   int8_t temp1 = 0;
   int8_t temp2 = 0;
+  uint32_t new_x_period =10000;
+  uint32_t new_y_period =10000;
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
@@ -511,19 +515,18 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
 
       if (cursor_parameters[obj_num].x_dir != 0)
-        cursor_parameters[obj_num].time_between_increments_x = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].x_dir))*XY_SPEED_UNITS)); //1000ms/(x_dir*XY_SPEED_UNITS)
-      else
-        cursor_parameters[obj_num].time_between_increments_x = 10000; //if not moving, need to give some value, make long interval
+        new_x_period = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].x_dir))*XY_SPEED_UNITS)); //1000ms/(x_dir*XY_SPEED_UNITS)
 
       if (cursor_parameters[obj_num].y_dir != 0)
-        cursor_parameters[obj_num].time_between_increments_y = (1000 / XY_SPEED_UNITS) / cursor_parameters[obj_num].y_dir;
-      else
-        cursor_parameters[obj_num].time_between_increments_y = 10000;
+        new_y_period = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].y_dir))*XY_SPEED_UNITS));
 
-      Serial.print("time between increments: ");
-      Serial.print(cursor_parameters[obj_num].time_between_increments_x);
-      Serial.print(", ");
-      Serial.println(cursor_parameters[obj_num].time_between_increments_y);
+      graphics.update_pos_isr_period(obj_num, new_x_period, new_y_period);
+
+
+//      Serial.print("time between increments: ");
+//      Serial.print(cursor_parameters[obj_num].time_between_increments_x);
+//      Serial.print(", ");
+//      Serial.println(cursor_parameters[obj_num].time_between_increments_y);
 
 
       screen_parameters.updated = false;  //pos frame requires screen update always

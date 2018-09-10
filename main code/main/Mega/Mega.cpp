@@ -33,6 +33,8 @@ extern struct Text_Struct text_parameters[MAX_NUM_OF_TEXT_OBJECTS];
 void mega_setup() {
 
   configure_address();
+  host.init_serial();    //enable printing to monitor
+  
   graphics.init_matrix();
   graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
 
@@ -42,7 +44,6 @@ void mega_setup() {
   coms_serial.init_serial(); //enable coms port to due
   menu.init_menu_tree();
 
-  host.init_serial();    //enable printing to monitor
   Serial.print(F("address: "));
   Serial.println(screen_parameters.node_address);
   Serial.println(F("done init"));
@@ -59,7 +60,7 @@ void mega_loop() {
 
     //    coms_serial.read_buffer();  //deal with any serial recieved reently and send nack if needed
     graphics.update_display();  // fill frame if something changed, derive area to fill based on menus
-    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
+//    graphics.interpolate_pos(); //this is reasonably slow so only set flag in interrupt and do heavy lifting at time to suit
     //    host.check_serial();
     //    host.print_messages();
     //    i++;

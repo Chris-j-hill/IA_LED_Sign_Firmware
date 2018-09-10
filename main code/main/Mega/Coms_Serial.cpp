@@ -88,7 +88,7 @@ void Coms_Serial::read_buffer() {
 
 
   //  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-  //  Timer3.stop();
+    Timer3.stop();
   bool seen_byte_1 = false;
   bool seen_byte_2 = false;
   byte break_condition = 0;
@@ -419,7 +419,7 @@ seen_byte_2:
       }
     }
   }
-  //  Timer3.start();
+    Timer3.start();
   //  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
   //  }
 }

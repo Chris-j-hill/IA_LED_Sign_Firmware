@@ -9,7 +9,7 @@
 #define ASCII_CHARACTER_BASIC_WIDTH 6
 #define ASCII_CHARACTER_BASIC_HEIGHT 8
 
-#define POS_ISR_FREQUENCY 10    // 100 gives maximum speed 50 pixels/second, minimum 0.2 pixels/second (100/128)/2
+#define POS_ISR_FREQUENCY 1    // 100 gives maximum speed 50 pixels/second, minimum 0.2 pixels/second (100/128)/2
 // Note: There may be severe stability issues with this at high speeds if delay
 // correction is used due to overflows and amount the counter is incremented
 
@@ -54,11 +54,6 @@ struct Cursor_Struct {
   int8_t x_dir = 0;         // direction and speed of text in x and y direction
   int8_t y_dir = 0;
 
-  uint32_t isr_last_update_x_time = 0;  //time vlaue was last updated at
-  uint32_t isr_last_update_y_time = 0;
-
-  uint16_t time_between_increments_x = 1000; 
-  uint16_t time_between_increments_y = 0;
 };
 
 struct Screen_Struct {
@@ -68,6 +63,10 @@ struct Screen_Struct {
   byte node_address = 0;
   bool updated = false;
   uint32_t time_last_updated = 0; //do not update screen immediately if screen update arrives, usually many frames arriving at once, wait until we suspect all arrived
+  uint16_t update_periods[2 * MAX_NUM_OF_TEXT_OBJECTS] = {1000}; //array of maximum update periods for each object in both axis
+  uint32_t cur_update_period  = 1000; // smallest value in above array
+  uint32_t last_updated[2 * MAX_NUM_OF_TEXT_OBJECTS] = {0};
+
 };
 
 struct Object_Struct_Polygons {  //colours of thing that isnt text
@@ -106,14 +105,14 @@ class Graphics {
 
   private:
 
-    inline uint16_t pos_isr_period();
+    inline uint32_t pos_isr_period();
     //void pos_isr_counter_overflow();
     byte menu_pixels_right_of_node();
 
     void set_title_colour();  //set the colour as the title colour
     void set_menu_colour();
     void set_menu_colour_highlighted();
-    
+
     //void update_menus();
     inline void set_text_colour(byte new_r, byte new_g, byte new_b);
     inline void set_text_colour(int new_hue);
@@ -133,7 +132,6 @@ class Graphics {
 
     inline void print_highlight_pgm_menu_item(byte src, byte len, byte row);
 
-
   public:
     Graphics() {};
     void init_matrix();
@@ -143,6 +141,9 @@ class Graphics {
     //cursor functions
     void increment_cursor_position(byte axis, byte obj_num = 0);
     void attach_pos_ISR();
+
+    inline void set_pos_isr_period(uint32_t period);
+
     //void delay_pos_ISR(int value, byte counter); // advance or delay the counter based on value from due
     void interpolate_pos();
 
@@ -172,6 +173,9 @@ class Graphics {
     void draw_background();   //if menu visible, draw partial background if screen not entirely covered
     void clear_area(byte top_left_x, byte top_left_y, byte bottom_right_x, byte bottom_right_y);  // clear any data in this part of the matrix, useful for clearing menu but not background etc
     //    int set_refresh_rate(int rate);  //refresh rate of matrix library ( modify library to access this value)
+
+
+    void update_pos_isr_period(byte obj_num, uint32_t new_x_val, uint32_t new_y_val);
 };
 
 #endif // GRAPHICS_H
