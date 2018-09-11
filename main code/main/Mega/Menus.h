@@ -12,9 +12,9 @@
 #define TIME_TO_DISPLAY_STARTUP 5000  // 5 second startup animation
 
 /*
- * menu numbers, these must be the same as on the due,
- * menus number passed in menu frame, will be matched to these values
- */
+   menu numbers, these must be the same as on the due,
+   menus number passed in menu frame, will be matched to these values
+*/
 // LEVEL 1
 #define STARTUP                       0
 #define DEFAULT_MENU                  1
@@ -138,9 +138,9 @@
 #define MENU_POINTER_COLOUR_G 4
 #define MENU_POINTER_COLOUR_B 4
 
-#define MENU_TITLE_BACKGROUND_R 0
+#define MENU_TITLE_BACKGROUND_R 1
 #define MENU_TITLE_BACKGROUND_G 0
-#define MENU_TITLE_BACKGROUND_B 0
+#define MENU_TITLE_BACKGROUND_B 1
 #endif
 
 
@@ -204,6 +204,50 @@
 #define TITLE_ERROR_STRING                  "Error: no title found" // default in write_menu_option function
 
 
+#define SIZEOF_MAIN_MENU_STRING               sizeof(MAIN_MENU_STRING)
+#define SIZEOF_RETURN_STRING                  sizeof(RETURN_STRING)
+#define SIZEOF_SCREEN_MODE_STRING             sizeof(SCREEN_MODE_STRING)
+#define SIZEOF_SCREEN_BRIGHTNESS_STRING       sizeof(SCREEN_BRIGHTNESS_STRING)
+#define SIZEOF_TEXT_SETTINGS_STRING           sizeof(TEXT_SETTINGS_STRING)
+
+#define SIZEOF_FAN_SETTINGS_STRING            sizeof(FAN_SETTINGS_STRING)
+#define SIZEOF_INTERNET_CONFIG_STRING         sizeof(INTERNET_CONFIG_STRING)
+#define SIZEOF_SD_CARDS_STRING                sizeof(SD_CARDS_STRING)
+#define SIZEOF_LED_STRIP_STRING               sizeof(LED_STRIP_STRING)
+
+#define SIZEOF_BOTH_ON_STRING                 sizeof(BOTH_ON_STRING)
+#define SIZEOF_FRONT_SIDE_STRING              sizeof(FRONT_SIDE_STRING)
+#define SIZEOF_BACK_SIDE_STRING               sizeof(BACK_SIDE_STRING)
+#define SIZEOF_BOTH_OFF_STRING                sizeof(BOTH_OFF_STRING)
+
+#define SIZEOF_TEXT_SIZE_STRING               sizeof(TEXT_SIZE_STRING)
+#define SIZEOF_TEXT_COLOUR_STRING             sizeof(TEXT_COLOUR_STRING)
+#define SIZEOF_SCROLL_SPEED_STRING            sizeof(SCROLL_SPEED_STRING)
+#define SIZEOF_FLIP_DIR_STRING                sizeof(FLIP_DIR_STRING)
+#define SIZEOF_FAN_SPEED_STRING               sizeof(FAN_SPEED_STRING)
+#define SIZEOF_ENABLE_STRING                  sizeof(ENABLE_STRING)
+#define SIZEOF_DISABLE_STRING                 sizeof(DISABLE_STRING)
+#define SIZEOF_FAN_MIN_SPEED_STRING           sizeof(FAN_MIN_SPEED_STRING)
+
+#define SIZEOF_READ_FOLDERS_STRING            sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_STRIP_BRIGHTNESS_STRING        sizeof(FAN_MIN_SPEED_STRING)
+
+#define SIZEOF_RED_STRING                     sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_GREEN_STRING                   sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_BLUE_STRING                    sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_HUE_STRING                     sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_USE_HUE_STRING                 sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_USE_RGB_STRING                 sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_X_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
+#define SIZEOF_Y_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
+
+#define SIZEOF_EMPTY_STRING                   sizeof(EMPTY_STRING)
+#define SIZEOF_CONTENT_ERROR_STRING           sizeof(CONTENT_ERROR_STRING)
+#define SIZEOF_TITLE_ERROR_STRING             sizeof(TITLE_ERROR_STRING)
+
+
+#define SCROLL_UP 0
+#define SCROLL_DOWN 1
 
 struct Menu_tree_items {
 
@@ -314,49 +358,6 @@ struct Menu_tree_items {
 
 };
 
-
-#define SIZEOF_MAIN_MENU_STRING               sizeof(MAIN_MENU_STRING)
-#define SIZEOF_RETURN_STRING                  sizeof(RETURN_STRING)
-#define SIZEOF_SCREEN_MODE_STRING             sizeof(SCREEN_MODE_STRING)
-#define SIZEOF_SCREEN_BRIGHTNESS_STRING       sizeof(SCREEN_BRIGHTNESS_STRING)
-#define SIZEOF_TEXT_SETTINGS_STRING           sizeof(TEXT_SETTINGS_STRING)
-
-#define SIZEOF_FAN_SETTINGS_STRING            sizeof(FAN_SETTINGS_STRING)
-#define SIZEOF_INTERNET_CONFIG_STRING         sizeof(INTERNET_CONFIG_STRING)
-#define SIZEOF_SD_CARDS_STRING                sizeof(SD_CARDS_STRING)
-#define SIZEOF_LED_STRIP_STRING               sizeof(LED_STRIP_STRING)
-
-#define SIZEOF_BOTH_ON_STRING                 sizeof(BOTH_ON_STRING)
-#define SIZEOF_FRONT_SIDE_STRING              sizeof(FRONT_SIDE_STRING)
-#define SIZEOF_BACK_SIDE_STRING               sizeof(BACK_SIDE_STRING)
-#define SIZEOF_BOTH_OFF_STRING                sizeof(BOTH_OFF_STRING)
-
-#define SIZEOF_TEXT_SIZE_STRING               sizeof(TEXT_SIZE_STRING)
-#define SIZEOF_TEXT_COLOUR_STRING             sizeof(TEXT_COLOUR_STRING)
-#define SIZEOF_SCROLL_SPEED_STRING            sizeof(SCROLL_SPEED_STRING)
-#define SIZEOF_FLIP_DIR_STRING                sizeof(FLIP_DIR_STRING)
-#define SIZEOF_FAN_SPEED_STRING               sizeof(FAN_SPEED_STRING)
-#define SIZEOF_ENABLE_STRING                  sizeof(ENABLE_STRING)
-#define SIZEOF_DISABLE_STRING                 sizeof(DISABLE_STRING)
-#define SIZEOF_FAN_MIN_SPEED_STRING           sizeof(FAN_MIN_SPEED_STRING)
-
-#define SIZEOF_READ_FOLDERS_STRING            sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_STRIP_BRIGHTNESS_STRING        sizeof(FAN_MIN_SPEED_STRING)
-
-#define SIZEOF_RED_STRING                     sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_GREEN_STRING                   sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_BLUE_STRING                    sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_HUE_STRING                     sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_USE_HUE_STRING                 sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_USE_RGB_STRING                 sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_X_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
-#define SIZEOF_Y_DIR_STRING                   sizeof(FAN_MIN_SPEED_STRING)
-
-#define SIZEOF_EMPTY_STRING                   sizeof(EMPTY_STRING)
-#define SIZEOF_CONTENT_ERROR_STRING           sizeof(CONTENT_ERROR_STRING)
-#define SIZEOF_TITLE_ERROR_STRING             sizeof(TITLE_ERROR_STRING)
-
-
 struct Menu_Tree_Item_Lengths {
   byte main_menu                PROGMEM           = SIZEOF_MAIN_MENU_STRING;
   byte RETURN                   PROGMEM           = SIZEOF_RETURN_STRING;
@@ -367,7 +368,7 @@ struct Menu_Tree_Item_Lengths {
   byte internet_settings        PROGMEM           = SIZEOF_INTERNET_CONFIG_STRING;
   byte sd_card_settings         PROGMEM           = SIZEOF_SD_CARDS_STRING;
   byte led_strip_settings       PROGMEM           = SIZEOF_LED_STRIP_STRING;
-  
+
   byte screen_mode0             PROGMEM           = SIZEOF_BOTH_ON_STRING;
   byte screen_mode1             PROGMEM           = SIZEOF_FRONT_SIDE_STRING;
   byte screen_mode3             PROGMEM           = SIZEOF_BACK_SIDE_STRING;
@@ -439,6 +440,8 @@ struct Menu_Struct {
   bool sd_card2_mounted = false;
 
   int encoder_position = 0;
+  int last_encoder_pos = -10000; //random num, so wont equal encoder pos on startup
+
   byte obj_selected = 0;
 
 };
@@ -484,11 +487,23 @@ class Menu {
     void display_text_colour_menu();
     void display_scroll_speed_menu();
 
-
-
     // takes care of all adjustment menus
     inline void display_adjustment_menu(byte menu);
 
+
+    void scroll_main_menu(byte dir);
+    void scroll_screen_mode_menu(byte dir);
+    void scroll_text_settings_menu(byte dir);
+    void scroll_fan_settings_menu(byte dir);
+    void scroll_internet_config_menu(byte dir);
+    void scroll_SD_cards_menu(byte dir);
+    void scroll_led_strip_menu(byte dir);
+    void scroll_text_colour_menu(byte dir);
+    void scroll_scroll_speed_menu(byte dir);
+    void scroll_sd_folder_menu(byte dir);
+    void scroll_text_obj_selection_menu(byte dir);
+
+    inline bool menu_is_adjustment_menu(byte test_menu);
 
 
   public:
@@ -505,6 +520,7 @@ class Menu {
       return current_menu;
     }
     void set_current_menu(byte cur_menu) {
+      if (cur_menu != current_menu) previous_menu = current_menu;
       current_menu = cur_menu;
     }
     byte get_previous_menu() {

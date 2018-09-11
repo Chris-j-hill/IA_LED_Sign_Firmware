@@ -126,16 +126,16 @@ seen_byte_2:
     if (Serial_1.available() > 0 && !seen_byte_1 && !seen_byte_2) {
       // byte avialable and neither above conditions caught it
       // could be endbyte, or middle of frame, either way, just discard char
-      //Serial_1.read();
-      if (Serial_1.peek() == END_BYTE_1) {
-        Serial.print(Serial_1.read());
-        Serial.print(" ");
-      }
-      else
-      {
-        Serial.print(Serial_1.read());
-        Serial.println();
-      }
+      Serial_1.read();
+//      if (Serial_1.peek() == END_BYTE_1) {
+//        Serial.print(Serial_1.read());
+//        Serial.print(" ");
+//      }
+//      else
+//      {
+//        Serial.print(Serial_1.read());
+//        Serial.println();
+//      }
 
     }
 

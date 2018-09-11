@@ -443,8 +443,8 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
   byte num_bytes_to_cpy = frame_length - FRAME_OVERHEAD;
   int8_t temp1 = 0;
   int8_t temp2 = 0;
-  uint32_t new_x_period =10000;
-  uint32_t new_y_period =10000;
+  uint32_t new_x_period = 10000;
+  uint32_t new_y_period = 10000;
 
   switch (frame_type) {
     case TEXT_FRAME_TYPE:
@@ -501,12 +501,12 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp1, temp_buffer[5]);  // position as recieved in frame
       cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp2, temp_buffer[7]);
-
-      Serial.print("global x = ");
-      Serial.println(cursor_parameters[obj_num].global_x_pos);
-
-      Serial.print("global y = ");
-      Serial.println(cursor_parameters[obj_num].global_y_pos);
+//
+//      Serial.print("global x = ");
+//      Serial.println(cursor_parameters[obj_num].global_x_pos);
+//
+//      Serial.print("global y = ");
+//      Serial.println(cursor_parameters[obj_num].global_y_pos);
 
       cursor_parameters[obj_num].local_x_pos = cursor_parameters[obj_num].global_x_pos - (screen_parameters.node_address * SINGLE_MATRIX_WIDTH);  // relative position for this matrix
       cursor_parameters[obj_num].local_y_pos = cursor_parameters[obj_num].global_y_pos;
@@ -515,18 +515,18 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       cursor_parameters[obj_num].y_dir = GET_TEXT_DIR(temp_buffer[9]);
 
       if (cursor_parameters[obj_num].x_dir != 0)
-        new_x_period = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].x_dir))*XY_SPEED_UNITS)); //1000ms/(x_dir*XY_SPEED_UNITS)
+        new_x_period = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].x_dir)) * XY_SPEED_UNITS)); //1000ms/(x_dir*XY_SPEED_UNITS)
 
       if (cursor_parameters[obj_num].y_dir != 0)
-        new_y_period = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].y_dir))*XY_SPEED_UNITS));
+        new_y_period = (float)(1000 / ((float)(abs(cursor_parameters[obj_num].y_dir)) * XY_SPEED_UNITS));
 
       graphics.update_pos_isr_period(obj_num, new_x_period, new_y_period);
 
 
-//      Serial.print("time between increments: ");
-//      Serial.print(cursor_parameters[obj_num].time_between_increments_x);
-//      Serial.print(", ");
-//      Serial.println(cursor_parameters[obj_num].time_between_increments_y);
+      //      Serial.print("time between increments: ");
+      //      Serial.print(cursor_parameters[obj_num].time_between_increments_x);
+      //      Serial.print(", ");
+      //      Serial.println(cursor_parameters[obj_num].time_between_increments_y);
 
 
       screen_parameters.updated = false;  //pos frame requires screen update always
@@ -538,6 +538,8 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       break;
 
     case MENU_FRAME_TYPE:
+
+      temp2 = menu.get_previous_menu(); //to check if we changed menu
 
       //temp_buffer[3] <= selected object, needed for some menus
 
@@ -551,10 +553,15 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       else
         temp1 = temp_buffer[5];
 
-      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[6]);
+      if (temp2 != menu.get_previous_menu()) //just change menu, dont run scroll animation 
+      menu_parameters.last_encoder_pos = GET_ENCODER_POS(temp1, temp_buffer[6]);
+      else                                    // else scrolling, log encoder pos before move
+      menu_parameters.last_encoder_pos = menu_parameters.encoder_position;
+      
+      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[6]);  
 
       screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
-      screen_parameters.time_last_updated = millis();
+      screen_parameters.time_last_updated = millis()+SCREEN_UPDATE_BACKOFF_PERIOD;
       break;
 
   }

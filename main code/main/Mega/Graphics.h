@@ -17,7 +17,7 @@
 
 #define MIN_DISPLAY_UPDATE_PERIOD 20  //20ms period = 50hz
 
-#define SCREEN_UPDATE_BACKOFF_PERIOD 100// after recieving frame requiring a screen update, wait a bit, to see if others are coming 
+#define SCREEN_UPDATE_BACKOFF_PERIOD 50// after recieving frame requiring a screen update, wait a bit, to see if others are coming 
 
 #if SCREEN_UPDATE_BACKOFF_PERIOD > (1000/POS_UPDATE_ISR_FREQ)
 #error "SCREEN_UPDATE_BACKOFF_PERIOD cannot be larger than period of POS_UPDATE_ISR_FREQ, ensure significantly smaller"
@@ -128,10 +128,16 @@ class Graphics {
     void print_pgm_title(byte src, byte len, byte center);
     void print_pgm_menu_item(byte src, byte len, byte row);
     void set_menu_item_cursor(byte row);
+
+    void print_pgm_menu_item_scrolling(byte src, byte len, byte row);
+    void set_menu_item_cursor_scrolling(byte row);
+
+    
     inline void fill_title_background();
-
+    inline void draw_menu_pointer();
+    
     inline void print_highlight_pgm_menu_item(byte src, byte len, byte row);
-
+    inline void print_highlight_pgm_menu_item_scrolling(byte src, byte len, byte row){};
   public:
     Graphics() {};
     void init_matrix();
@@ -157,6 +163,8 @@ class Graphics {
     void write_menu_option(byte first, byte second, byte third);
     void write_adjustment_menu(byte item, byte obj_num = 0);
     void write_enable_menu_item(byte item);   // animation to confirm click on enable/disable menu items
+    void write_menu_scrolling(byte first, byte second, byte third, byte fourth, byte fifth, byte dir);
+
 
     void draw_text_restricted_width(byte x_min, byte x_max, bool hard_limit);   // draw text from min to max. hard_limit is used to prevent anything being written beyond limits if true
     // full characters will be completed beyond limits if hard_limit is false
