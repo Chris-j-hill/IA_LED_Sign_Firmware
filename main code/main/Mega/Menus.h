@@ -474,7 +474,7 @@ class Menu {
     void display_screen_mode_menu();
     void display_screen_brightness_menu();
     void display_fan_settings_menu();
-    void display_internet_config_menu();
+    void display_internet_config_menu(){}
     void display_SD_cards_menu();
     void display_led_strip_menu();
     void display_text_obj_selection_menu();
@@ -495,12 +495,12 @@ class Menu {
     void scroll_screen_mode_menu(byte dir);
     void scroll_text_settings_menu(byte dir);
     void scroll_fan_settings_menu(byte dir);
-    void scroll_internet_config_menu(byte dir);
+    void scroll_internet_config_menu(byte dir){}
     void scroll_SD_cards_menu(byte dir);
     void scroll_led_strip_menu(byte dir);
     void scroll_text_colour_menu(byte dir);
     void scroll_scroll_speed_menu(byte dir);
-    void scroll_sd_folder_menu(byte dir);
+    void scroll_sd_folder_menu(byte dir){}
     void scroll_text_obj_selection_menu(byte dir);
 
     inline bool menu_is_adjustment_menu(byte test_menu);

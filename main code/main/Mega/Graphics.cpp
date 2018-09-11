@@ -1146,10 +1146,8 @@ void Graphics::write_menu_scrolling(byte first, byte second, byte third, byte fo
       case TEXT_COLOUR_BLUE:            print_pgm_menu_item_scrolling(BLUE_LOC,                menu_tree_item_lengths.text_colour_blue,     row);    break;
       case TEXT_COLOUR_HUE:             print_pgm_menu_item_scrolling(HUE_LOC,                 menu_tree_item_lengths.text_colour_hue,      row);    break;
 
-
       case NULL_STRING:                 print_pgm_menu_item_scrolling(EMPTY_STRING_LOC,        menu_tree_item_lengths.null_string,          row);    break;
       default:                          print_pgm_menu_item_scrolling(DEFAULT_STRING_LOC,      menu_tree_item_lengths.default_string,       row);    break;
-
 
     }
   }
