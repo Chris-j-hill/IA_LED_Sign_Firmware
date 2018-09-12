@@ -50,6 +50,14 @@
 #define SCROLL_SPEED_MENU_Y           23
 
 #define TEXT_OBJ_SELECTION_MENU       24
+#define INTERNET_CONNECTION_MENU      25
+#define GIT_SETTING_MENU              26
+
+#define CURRENT_IP_MENU               27
+#define CURRENT_NETWORK_MENU          28
+#define GIT_AUTHER_MENU               29
+#define GIT_COMMIT_MSG_MENU           30
+#define GIT_COMMIT_TAG_MENU           31
 
 
 
@@ -77,6 +85,10 @@
 #define TEXT_OBJ_2                    102
 #define TEXT_OBJ_3                    103
 #define TEXT_OBJ_4                    104
+
+
+
+
 
 
 #if defined(USING_COLOUR_SET_888)

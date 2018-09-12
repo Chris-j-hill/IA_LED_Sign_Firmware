@@ -3,7 +3,7 @@
 
 #include "Mega_Pins.h"                     //list of pins used in each board
 #include "Local_config.h"
-#include "function_declarations.h"    //any functions that need prototypes
+//#include "function_declarations.h"    //any functions that need prototypes
 #include "Mega_Libraries.h"
 
 
