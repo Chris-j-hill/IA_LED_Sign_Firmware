@@ -562,6 +562,12 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
       screen_parameters.time_last_updated = millis()+SCREEN_UPDATE_BACKOFF_PERIOD;
+
+      Serial.print("menu : ");
+      Serial.println(menu.get_current_menu());
+      Serial.print("encoder_pos : ");
+      Serial.println(menu_parameters.encoder_position);
+      Serial.println();
       break;
 
   }

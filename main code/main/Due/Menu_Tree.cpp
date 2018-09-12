@@ -167,6 +167,7 @@ void Menu::display_main_menu() {
     if (previous_menu == DEFAULT_MENU)
       encoder.recenter_encoder();
     coms_serial.send_menu_frame(MAIN_MENU);
+    Serial.println("entered main menu");
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -219,7 +220,6 @@ void Menu::display_screen_mode_menu() {
         current_menu = MAIN_MENU;
         previous_menu = SCREEN_MODE_MENU;
         menu_just_changed = true;
-        encoder.set_encoder_position(1);
         break;    //return
       case 1: screen_mode = 0 ;           break;
       case 2: screen_mode = 1 ;           break;
@@ -229,9 +229,11 @@ void Menu::display_screen_mode_menu() {
       default: current_menu = STARTUP;
 
     }
-    if (encoder_parameters.position >= 1 && encoder_parameters.position <= 4) {
+    if (encoder_parameters.position >= 1 && encoder_parameters.position <= 4)
       send_cailbration_data_to_megas(PREFIX_SCREEN_MODE);
-    }
+
+    else if (encoder_parameters.position == 0)
+      encoder.set_encoder_position(1);
 
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
@@ -355,10 +357,7 @@ void Menu::display_fan_settings_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = MAIN_MENU;
-        encoder.set_encoder_position(4);
-        break;
+      case 0: current_menu = MAIN_MENU;          break;
       case 1: current_menu = FAN_SPEED_MENU;     break;
       case 2:
         if (fan_parameters.enabled)
@@ -374,6 +373,8 @@ void Menu::display_fan_settings_menu() {
     if (encoder_parameters.position == 0 || encoder_parameters.position == 1 || encoder_parameters.position == 4) {
       menu_just_changed = true;
       previous_menu = FAN_SETTINGS_MENU;
+      if (encoder_parameters.position == 0)
+        encoder.set_encoder_position(4);
     }
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
@@ -398,10 +399,7 @@ void Menu::display_internet_config() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = MAIN_MENU;
-        encoder.set_encoder_position(5);
-        break;
+      case 0: current_menu = MAIN_MENU;                 break;
       case 1: internet.connect_to_network();            break;
       case 2: current_menu = INTERNET_CONNECTION_MENU;  break;
       case 3: internet.wifi_enable();                   break;
@@ -413,6 +411,8 @@ void Menu::display_internet_config() {
     if (encoder_parameters.position == 0 || encoder_parameters.position == 2 || encoder_parameters.position == 5) {
       menu_just_changed = true;
       previous_menu = INTERNET_CONFIG_MENU;
+      if (encoder_parameters.position == 0)
+        encoder.set_encoder_position(5);
     }
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
@@ -436,10 +436,7 @@ void Menu::display_SD_cards_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = MAIN_MENU;
-        encoder.set_encoder_position(6);
-        break;
+      case 0: current_menu = MAIN_MENU;         break;
       case 1:
         if (!card1.enabled)           // if card not enabled
           card.mount_card(EXTERNAL_CARD);         // show mount card option
@@ -461,6 +458,8 @@ void Menu::display_SD_cards_menu() {
     if (encoder_parameters.position == 0 || encoder_parameters.position == 3) {
       menu_just_changed = true;
       previous_menu = SD_CARD_MENU;
+      if (encoder_parameters.position == 0)
+        encoder.set_encoder_position(6);
     }
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
@@ -485,10 +484,7 @@ void Menu::display_led_strip_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = MAIN_MENU;
-        encoder.set_encoder_position(7);
-        break;
+      case 0: current_menu = MAIN_MENU;        break;
       case 1:
         if (!led_strip_parameters.enabled)
           led_strip.enable();
@@ -503,7 +499,10 @@ void Menu::display_led_strip_menu() {
     if (encoder_parameters.position == 0 || encoder_parameters.position == 2) {
       menu_just_changed = true;
       previous_menu = LED_STRIP_MENU;
+      if (encoder_parameters.position == 0)
+        encoder.set_encoder_position(7);
     }
+
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
   }
@@ -555,10 +554,7 @@ void Menu::display_text_colour_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = TEXT_SETTINGS_MENU;
-        encoder.set_encoder_position(2);
-        break;
+      case 0: current_menu = TEXT_SETTINGS_MENU; break;
       case 1: current_menu = TEXT_COLOUR_RED;    break;
       case 2: current_menu = TEXT_COLOUR_GREEN;  break;
       case 3: current_menu = TEXT_COLOUR_BLUE;   break;
@@ -575,6 +571,10 @@ void Menu::display_text_colour_menu() {
 
     previous_menu = TEXT_COLOUR_MENU;
     menu_just_changed = true;
+
+    if (encoder_parameters.position == 0)
+      encoder.set_encoder_position(2);
+
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
   }
@@ -599,10 +599,7 @@ void Menu::display_scroll_speed_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = TEXT_SETTINGS_MENU;
-        encoder.set_encoder_position(3);
-        break;
+      case 0: current_menu = TEXT_SETTINGS_MENU;  break;
       case 1: current_menu = SCROLL_SPEED_MENU_X; break;
       case 2: current_menu = SCROLL_SPEED_MENU_Y; break;
 
@@ -610,6 +607,10 @@ void Menu::display_scroll_speed_menu() {
     }
     previous_menu = SCROLL_SPEED_MENU;
     menu_just_changed = true;
+
+    if (encoder_parameters.position == 0)
+      encoder.set_encoder_position(3);
+
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
   }
@@ -657,7 +658,7 @@ void Menu::display_min_fan_speed_menu() {
     previous_menu = MIN_FAN_SPEED_MENU;
     button_parameters.button_pressed = false;
     time_since_menu_last_changed = millis();
-    encoder.set_encoder_position(2);
+    encoder.set_encoder_position(3);
   }
 
   if (encoder_parameters.encoder_moved) {
@@ -940,10 +941,7 @@ void Menu::display_current_network_config() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = INTERNET_CONFIG_MENU;
-        encoder.set_encoder_position(2);
-        break;
+      case 0: current_menu = INTERNET_CONFIG_MENU;  break;
       case 1: current_menu = CURRENT_NETWORK_MENU;  break;
       case 2: current_menu = CURRENT_IP_MENU;       break;
 
@@ -952,6 +950,7 @@ void Menu::display_current_network_config() {
     if (encoder_parameters.position == 0) {
       menu_just_changed = true;
       previous_menu = INTERNET_CONNECTION_MENU;
+      encoder.set_encoder_position(2);
     }
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;
@@ -977,10 +976,7 @@ void Menu::display_git_menu() {
 
   if (button_parameters.button_pressed) {
     switch (encoder_parameters.position) {
-      case 0:
-        current_menu = INTERNET_CONFIG_MENU;
-        encoder.set_encoder_position(5);
-        break;
+      case 0: current_menu = INTERNET_CONFIG_MENU;   break;
       case 1: current_menu = GIT_AUTHER_MENU;        break;
       case 2: current_menu = GIT_COMMIT_MSG_MENU;    break;
       case 3: current_menu = GIT_COMMIT_TAG_MENU;    break;
@@ -991,6 +987,8 @@ void Menu::display_git_menu() {
     if (encoder_parameters.position != 4) {
       menu_just_changed = true;
       previous_menu = GIT_SETTING_MENU;
+      if (encoder_parameters.position == 0)
+        encoder.set_encoder_position(5);
     }
     time_since_menu_last_changed = millis();
     button_parameters.button_pressed = false;

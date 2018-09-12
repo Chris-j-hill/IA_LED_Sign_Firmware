@@ -23,8 +23,6 @@
 #define SD_CARD_MENU                  8
 #define LED_STRIP_MENU                9
 
-//#define SYSTEM_OVERRIDES
-
 //LEVEL 3
 #define FAN_SPEED_MENU                13
 #define MIN_FAN_SPEED_MENU            14
@@ -56,7 +54,7 @@
 #define CURRENT_IP_MENU               27
 #define CURRENT_NETWORK_MENU          28
 #define GIT_AUTHER_MENU               29
-#define GIT_COMMIT_MSG_MENU            30
+#define GIT_COMMIT_MSG_MENU           30
 #define GIT_COMMIT_TAG_MENU           31
 
 

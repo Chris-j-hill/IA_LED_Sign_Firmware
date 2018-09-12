@@ -951,6 +951,9 @@ void Graphics::write_menu_option(byte first, byte second, byte third) {
 
       case SD_FOLDERS_MENU:             print_pgm_menu_item(SD_FOLDERS_LOC,          menu_tree_item_lengths.sd_card_folders,      i);    break;
       case LED_STRIP_BRIGHTNESS_MENU:   print_pgm_menu_item(STRIP_BRIGHTNESS_LOC,    menu_tree_item_lengths.led_strip_brightness, i);    break;
+      case ENABLE_LED_STRIP:            print_pgm_menu_item(ENABLE_LOC,              menu_tree_item_lengths.led_strip_enable,     i);    break;
+      case DISABLE_LED_STRIP:           print_pgm_menu_item(DISABLE_LOC,             menu_tree_item_lengths.led_strip_disable,    i);    break;
+      
       case TEXT_COLOUR_RED:             print_pgm_menu_item(RED_LOC,                 menu_tree_item_lengths.text_colour_red,      i);    break;
       case TEXT_COLOUR_GREEN:           print_pgm_menu_item(GREEN_LOC,               menu_tree_item_lengths.text_colour_green,    i);    break;
       case TEXT_COLOUR_BLUE:            print_pgm_menu_item(BLUE_LOC,                menu_tree_item_lengths.text_colour_blue,     i);    break;

@@ -401,6 +401,8 @@ struct Menu_Tree_Item_Lengths {
   byte sd_card_folders          PROGMEM           = SIZEOF_READ_FOLDERS_STRING;
   byte led_strip_menu           PROGMEM           = SIZEOF_LED_STRIP_STRING;
   byte led_strip_brightness     PROGMEM           = SIZEOF_STRIP_BRIGHTNESS_STRING;
+  byte led_strip_enable         PROGMEM           = SIZEOF_ENABLE_STRING;
+  byte led_strip_disable        PROGMEM           = SIZEOF_DISABLE_STRING;  
   byte text_colour_red          PROGMEM           = SIZEOF_RED_STRING;
   byte text_colour_green        PROGMEM           = SIZEOF_GREEN_STRING;
   byte text_colour_blue         PROGMEM           = SIZEOF_BLUE_STRING;
