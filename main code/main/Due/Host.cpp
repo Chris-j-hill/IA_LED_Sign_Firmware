@@ -1116,10 +1116,10 @@ void Host::print_menu_tree_options(int cur_menu) {
       case INTERNET_CONFIG_MENU:
         Serial.println(menu_items.RETURN);
         Serial.println(menu_items.select_network_manually);
-        Serial.println(menu_items.ethernet_enable);
-        Serial.println(menu_items.ethernet_disable);
+        Serial.println(menu_items.current_network);
         Serial.println(menu_items.wifi_enable);
         Serial.println(menu_items.wifi_disable);
+        Serial.println(menu_items.git_settings);
         break;
 
       case SD_CARD_MENU:
@@ -1146,6 +1146,21 @@ void Host::print_menu_tree_options(int cur_menu) {
         Serial.println(menu_items.text_colour_use_rgb);
         break;
 
+      case INTERNET_CONNECTION_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.current_connected_network);
+        Serial.println(menu_items.current_ip_address);
+        break;
+
+      case GIT_SETTING_MENU:
+        Serial.println(menu_items.RETURN);
+        Serial.println(menu_items.show_git_auther);
+        Serial.println(menu_items.show_git_commit_msg);
+        Serial.println(menu_items.show_git_commit_tag);
+        Serial.println(menu_items.get_firmware_update);
+        Serial.println(menu_items.git_settings);
+        break;
+ 
       //if any of these just print same string, these have no sub menu list
       case BRIGHTNESS_MENU:
       case TEXT_SIZE_MENU:
@@ -1173,7 +1188,7 @@ void Host::print_menu_tree_options(int cur_menu) {
       case SCREEN_MODE_MENU:            Serial.print(menu_items.screen_mode_menu);              break;
       case TEXT_SETTINGS_MENU:          Serial.print(menu_items.text_settings_menu);            break;
       case FAN_SETTINGS_MENU:           Serial.print(menu_items.fan_settings_menu);             break;
-      case INTERNET_CONFIG_MENU:        Serial.print(menu_items.internet_config_menu);          break;
+      case INTERNET_CONFIG_MENU:        Serial.print(menu_items.internet_config);               break;
       case SD_CARD_MENU:                Serial.print(menu_items.sd_cards_menu);                 break;
       case LED_STRIP_MENU:              Serial.print(menu_items.led_strip_menu);                break;
       case TEXT_COLOUR_MENU:            Serial.print(menu_items.text_colour_menu);              break;
@@ -1248,10 +1263,10 @@ void Host::position_to_menu_value() {
       switch (encoder_parameters.position) {
         case 0: Serial.print(menu_items.RETURN);                    break;
         case 1: Serial.print(menu_items.select_network_manually);   break;
-        case 2: Serial.print(menu_items.ethernet_enable);           break;
-        case 3: Serial.print(menu_items.ethernet_disable);          break;
-        case 4: Serial.print(menu_items.wifi_enable);               break;
-        case 5: Serial.print(menu_items.wifi_disable);              break;
+        case 2: Serial.print(menu_items.current_network);           break;
+        case 3: Serial.print(menu_items.wifi_enable);               break;
+        case 4: Serial.print(menu_items.wifi_disable);              break;
+        case 5: Serial.print(menu_items.git_settings);              break;
       }
       break;
 
@@ -1496,7 +1511,7 @@ bool Host::command_contains_num(byte data_to_report) {
 bool Host::print_frame_hist(byte frame_type, byte screen_num) {
 
   byte cursor_index = 0;
-  
+
   switch (frame_type) {
     case TEXT_FRAME_TYPE:        cursor_index = text_frame_history[screen_num].history_index;        break;
     case POS_FRAME_TYPE:         cursor_index = pos_frame_history[screen_num].history_index;         break;

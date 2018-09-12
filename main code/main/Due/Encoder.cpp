@@ -328,6 +328,16 @@ void Encoder::encoder_position_limits() {
       if (encoder_parameters.position < 0) below_zero_limit();
       else if (encoder_parameters.position > menu_limits.select_text_obj_menu) above_upper_limit(menu_limits.select_text_obj_menu);
       break;
+      
+    case INTERNET_CONNECTION_MENU:
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.current_network_config_menu) above_upper_limit(menu_limits.current_network_config_menu);
+      break;
+      
+    case GIT_SETTING_MENU:
+      if (encoder_parameters.position < 0) below_zero_limit();
+      else if (encoder_parameters.position > menu_limits.git_settings_menu) above_upper_limit(menu_limits.git_settings_menu);
+      break;
   }
 }
 

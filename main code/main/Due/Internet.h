@@ -17,17 +17,15 @@ class Internet {
     Internet(){}
     
     int init_ethernet();
-    int init_wifi();
-    void ethernet_enable(){}
-    void ethernet_disable(){} 
+    int init_wifi(); 
     void wifi_enable(){}
     void wifi_disable(){}
     uint16_t ping();
     void get_string();
     void get_ip();
     void run_instructions();    // <- run instructions in file on host device
-    void connect_to_network();
-     
+    void connect_to_network(){}
+    void update_firmware(){}
 };
 
 

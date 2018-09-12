@@ -26,7 +26,6 @@
 //#define SYSTEM_OVERRIDES
 
 //LEVEL 3
-#define TEXT_OBJ_SELECTION_MENU       24
 #define FAN_SPEED_MENU                13
 #define MIN_FAN_SPEED_MENU            14
 #define SD_FOLDERS_MENU               15
@@ -49,123 +48,144 @@
 #define SCROLL_SPEED_MENU_Y           23
 
 
+//added later...
+#define TEXT_OBJ_SELECTION_MENU       24
+#define INTERNET_CONNECTION_MENU      25
+#define GIT_SETTING_MENU              26
+
+#define CURRENT_IP_MENU               27
+#define CURRENT_NETWORK_MENU          28
+#define GIT_AUTHER_MENU               29
+#define GIT_COMMIT_MSG_MENU            30
+#define GIT_COMMIT_TAG_MENU           31
+
+
 struct Menu_tree_items {
 
 
-  String main_menu                PROGMEM           = "Main Menu";
+  String main_menu                      = "Main Menu";
 
   //level 1 menu items
-  String RETURN                   PROGMEM           = "RETURN";
-  String screen_mode              PROGMEM           = "Screen Mode";
-  String brightness               PROGMEM           = "Brightness";
-  String text_settings            PROGMEM           = "Text Settings";
-  String fan_settings             PROGMEM           = "Fan Settings";
-  String internet_settings        PROGMEM           = "Internet Config";
-  String sd_card_settings         PROGMEM           = "Sd Cards";
-  String led_strip_settings       PROGMEM           = "LED Strip";
+  String RETURN                         = "RETURN";
+  String screen_mode                    = "Screen Mode";
+  String brightness                     = "Brightness";
+  String text_settings                  = "Text Settings";
+  String fan_settings                   = "Fan Settings";
+  String internet_settings              = "Internet Config";
+  String sd_card_settings               = "Sd Cards";
+  String led_strip_settings             = "LED Strip";
 
 
   //level 2 menu items
   //change screen mode folder
-  String screen_mode_menu         PROGMEM           = "Mode Menu";
-  String screen_mode0             PROGMEM           = "Both on";
-  String screen_mode1             PROGMEM           = "Front Side";
-  String screen_mode3             PROGMEM           = "Back Side";
-  String screen_mode2             PROGMEM           = "Both Off";
+  String screen_mode_menu               = "Mode Menu";
+  String screen_mode0                   = "Both on";
+  String screen_mode1                   = "Front Side";
+  String screen_mode3                   = "Back Side";
+  String screen_mode2                   = "Both Off";
 
   // brightness folder
 
-  String brightness_menu          PROGMEM           = "Brightness";
+  String brightness_menu                = "Brightness";
 
   //text adjustment folder
-  String text_obj_select_menu                       = "Select Obj";
-  String text_obj_0_menu                            = "Obj 0";
-  String text_obj_1_menu                            = "Obj 1";
-  String text_obj_2_menu                            = "Obj 2";
-  String text_obj_3_menu                            = "Obj 3";
-  String text_obj_4_menu                            = "Obj 4";
+  String text_obj_select_menu           = "Select Obj";
+  String text_obj_0_menu                = "Obj 0";
+  String text_obj_1_menu                = "Obj 1";
+  String text_obj_2_menu                = "Obj 2";
+  String text_obj_3_menu                = "Obj 3";
+  String text_obj_4_menu                = "Obj 4";
 
   //fan settings folder
-  String fan_settings_menu        PROGMEM           = "Fan Settings";
-  String fan_speed_settings       PROGMEM           = "Fan Speed";
-  String fan_enable               PROGMEM           = "Enable";
-  String fan_disable              PROGMEM           = "Disable";
-  String minimum_rotating_speed   PROGMEM           = "Minimum speed";
+  String fan_settings_menu              = "Fan Settings";
+  String fan_speed_settings             = "Fan Speed";
+  String fan_enable                     = "Enable";
+  String fan_disable                    = "Disable";
+  String minimum_rotating_speed         = "Minimum speed";
 
   // internet configuration folder
-  String internet_config_menu     PROGMEM           = "Internet";
-  String select_network_manually  PROGMEM           = "Connect";
-  String ethernet_enable          PROGMEM           = "Enable Eth";
-  String ethernet_disable         PROGMEM           = "Disable Eth";
-  String wifi_enable              PROGMEM           = "Enable Wifi";
-  String wifi_disable             PROGMEM           = "Disable Wifi";
+  String internet_config                = "Internet";
+  String select_network_manually        = "Connect";
+  String current_network                = "Display current network";
+  String wifi_enable                    = "Enable Wifi";
+  String wifi_disable                   = "Disable Wifi";
+  String git_settings                   = "GitHub";
 
   // SD cards folder
-  String sd_cards_menu            PROGMEM           = "SD Cards";
-  String enable_ext_card          PROGMEM           = "Mount External Card";
-  String disable_ext_card         PROGMEM           = "Eject External Card";
-  String enable_int_card          PROGMEM           = "Mount Internal Card";
-  String disable_int_card         PROGMEM           = "Eject Internal Card";
-  String sd_card_folders          PROGMEM           = "Read Folders";
+  String sd_cards_menu                  = "SD Cards";
+  String enable_ext_card                = "Mount External Card";
+  String disable_ext_card               = "Eject External Card";
+  String enable_int_card                = "Mount Internal Card";
+  String disable_int_card               = "Eject Internal Card";
+  String sd_card_folders                = "Read Folders";
 
   // Led Strip folder
-  String led_strip_menu           PROGMEM           = "Led Strip";
-  String enable_led_strip         PROGMEM           = "Enable LED Strip";
-  String disable_led_strip        PROGMEM           = "Disable LED Strip";
-  String led_strip_brightness     PROGMEM           = "Brightness";
+  String led_strip_menu                 = "Led Strip";
+  String enable_led_strip               = "Enable LED Strip";
+  String disable_led_strip              = "Disable LED Strip";
+  String led_strip_brightness           = "Brightness";
 
 
   //level 3 folders
   // text adjustment menu
-  String text_settings_menu       PROGMEM           = "Text Settings";
-  String text_size_settings       PROGMEM           = "Text Size";
-  String text_colour_settings     PROGMEM           = "Text Colour";
-  String scroll_speed_settings    PROGMEM           = "Scroll Speed";
-  String flip_dir_settings        PROGMEM           = "Flip Direction";
+  String text_settings_menu             = "Text Settings";
+  String text_size_settings             = "Text Size";
+  String text_colour_settings           = "Text Colour";
+  String scroll_speed_settings          = "Scroll Speed";
+  String flip_dir_settings              = "Flip Direction";
 
   //set fan speed
-  String fan_speed_menu           PROGMEM           = "Set Fan Speed";
+  String fan_speed_menu                 = "Set Fan Speed";
 
   // fan minimum speed
-  String minimum_fan_speed_menu   PROGMEM           = "Set Min Speed";
+  String minimum_fan_speed_menu         = "Set Min Speed";
 
   // read sd card folders
-  String SD_card_folders_menu     PROGMEM           = "Card Files";
+  String SD_card_folders_menu           = "Card Files";
 
   // led brightness menu
-  String led_strip_brightness_menu   PROGMEM        = "Set Brightness";
+  String led_strip_brightness_menu      = "Set Brightness";
 
   //level 4
   //text size
-  String text_size_menu           PROGMEM           = "Text Size";
+  String text_size_menu                 = "Text Size";
 
   //text colour
-  String text_colour_menu         PROGMEM           = "Text Colour";
-  String text_colour_red          PROGMEM           = "Red";
-  String text_colour_green        PROGMEM           = "Green";
-  String text_colour_blue         PROGMEM           = "Blue";
-  String text_colour_hue          PROGMEM           = "Hue";
-  String text_colour_use_hue      PROGMEM           = "Use Hue";
-  String text_colour_use_rgb      PROGMEM           = "Use RGB";
+  String text_colour_menu               = "Text Colour";
+  String text_colour_red                = "Red";
+  String text_colour_green              = "Green";
+  String text_colour_blue               = "Blue";
+  String text_colour_hue                = "Hue";
+  String text_colour_use_hue            = "Use Hue";
+  String text_colour_use_rgb            = "Use RGB";
 
   // scroll speed
-  String scroll_speed_menu        PROGMEM           = "Scroll Speed Menu";
-  String scroll_speed_x           PROGMEM           = "X Direction";
-  String scroll_speed_y           PROGMEM           = "Y Direction";
+  String scroll_speed_menu              = "Scroll Speed Menu";
+  String scroll_speed_x                 = "X Direction";
+  String scroll_speed_y                 = "Y Direction";
 
   //level 5
   //text_colour_red
-  String text_colour_red_menu     PROGMEM           = "Red";
+  String text_colour_red_menu           = "Red";
 
   //text_colour_green
-  String text_colour_green_menu     PROGMEM           = "Green";
+  String text_colour_green_menu         = "Green";
 
   //text_colour_blue
-  String text_colour_blue_menu     PROGMEM           = "Blue";
+  String text_colour_blue_menu          = "Blue";
 
   //text_colour_hue
-  String text_colour_hue_menu     PROGMEM           = "Hue";
+  String text_colour_hue_menu           = "Hue";
 
+  //internet connection menu
+  String current_connected_network      = "get current network";
+  String current_ip_address             = "get ip address";
+
+  //git settings menu
+  String show_git_auther                = "show git auther";
+  String show_git_commit_msg            = "show git commit msg";
+  String show_git_commit_tag            = "show git commit tag";
+  String get_firmware_update            = "get firmware update";
 
 
 };
@@ -195,7 +215,8 @@ struct Menu_tree_menu_limits { // lengths of the menus to limit scroll distances
   byte scroll_speed_menu_x              = 255;
   byte scroll_speed_menu_y              = 255;
   byte select_text_obj_menu             = MAX_NUM_OF_TEXT_OBJECTS;
-
+  byte current_network_config_menu      = 2;
+  byte git_settings_menu                = 4;
 };
 
 
@@ -231,7 +252,7 @@ class Menu {
     void display_screen_brightness_menu();
     void display_text_settings_menu();
     void display_fan_settings_menu();
-    void display_internet_config_menu();
+    void display_internet_config();
     void display_SD_cards_menu();
     void display_led_strip_menu();
 
@@ -241,6 +262,8 @@ class Menu {
     void display_min_fan_speed_menu();
     void display_sd_folder_menu();
     void display_led_strip_brightness_menu();
+    void display_current_network_config();
+    void display_git_menu();
 
     //level 4
     void display_text_size_menu();
@@ -254,6 +277,13 @@ class Menu {
     void display_text_colour_hue_menu();
     void display_text_scroll_speed_x();
     void display_text_scroll_speed_y();
+
+
+    void show_current_ip_address();
+    void show_current_network();
+    void show_git_commit_auther();
+    void show_git_commit_msg();
+    void show_git_commit_tag();
 
   public:
 
@@ -283,7 +313,7 @@ class Menu {
     inline bool is_all_system_menu(byte menu) { //return true if test menu is startup or default with previous menu being startup
       return (menu == STARTUP || (menu == DEFAULT_MENU && previous_menu == STARTUP));
     }
-    
+
     inline void send_cailbration_data_to_megas(byte data, byte starting_address = 0, byte ending_address = NUM_SCREENS);
 
 };
