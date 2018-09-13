@@ -519,7 +519,7 @@ void Graphics::interpolate_pos() {
   uint32_t cur_time = millis(); //only need to do this once, millis isnt that fast...
 
   if (menu.get_current_menu()  == DEFAULT_MENU)  //if displaying menu, dont allow this to casue screen update
-    screen_parameters.updated = false; 
+    screen_parameters.updated = false;
   else
     screen_parameters.updated = true;
 
@@ -953,7 +953,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third) {
       case LED_STRIP_BRIGHTNESS_MENU:   print_pgm_menu_item(STRIP_BRIGHTNESS_LOC,    menu_tree_item_lengths.led_strip_brightness, i);    break;
       case ENABLE_LED_STRIP:            print_pgm_menu_item(ENABLE_LOC,              menu_tree_item_lengths.led_strip_enable,     i);    break;
       case DISABLE_LED_STRIP:           print_pgm_menu_item(DISABLE_LOC,             menu_tree_item_lengths.led_strip_disable,    i);    break;
-      
+
       case TEXT_COLOUR_RED:             print_pgm_menu_item(RED_LOC,                 menu_tree_item_lengths.text_colour_red,      i);    break;
       case TEXT_COLOUR_GREEN:           print_pgm_menu_item(GREEN_LOC,               menu_tree_item_lengths.text_colour_green,    i);    break;
       case TEXT_COLOUR_BLUE:            print_pgm_menu_item(BLUE_LOC,                menu_tree_item_lengths.text_colour_blue,     i);    break;
@@ -972,7 +972,7 @@ void Graphics::write_menu_option(byte first, byte second, byte third) {
 void Graphics::write_adjustment_menu(byte item, byte obj_num) {
 
   static int center_of_menu = SINGLE_MATRIX_WIDTH - (DEFAULT_MENU_WIDTH >> 1 - menu_pixels_right_of_node());
-  char buf[3] = {' '}; //to store converted byte
+  char buf[4] = {' '}; //to store converted byte
   byte val;
   switch (item) {
     case BRIGHTNESS_MENU:
@@ -1009,9 +1009,10 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
 
     case MIN_FAN_SPEED_MENU:
       {
-        itoa(menu_parameters.min_fan_speed, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
+        //        itoa(menu_parameters.min_fan_speed, buf, 10);
+        //        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
+        //        matrix.print(minus_string + (String)buf + plus_string);
+        print_pgm_adjustment_menu(menu_parameters.min_fan_speed);
         break;
       }
 
@@ -1055,6 +1056,32 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
         break;
       }
   }
+}
+
+
+void Graphics::print_pgm_adjustment_menu(int value) {
+
+  static int center_of_menu = SINGLE_MATRIX_WIDTH - ((DEFAULT_MENU_WIDTH >> 1) - menu_pixels_right_of_node());
+  byte num_chars = 0;
+  int temp = value;
+  while (temp != 0) {
+    temp /= 10;
+    num_chars++;
+  }
+  if (value < 0) num_chars++;//minus symbol
+
+  matrix.setCursor(center_of_menu - ((num_chars * ASCII_CHARACTER_BASIC_WIDTH) / 2), 12);
+//  char item[1];
+//  cpy_pgm_string(item, minus_string);
+//  matrix.print((char)pgm_read_byte_near(minus_string));
+//  Serial.print((char)pgm_read_byte_near(minus_string));
+  matrix.print(menu_parameters.min_fan_speed);
+  Serial.print("speed: ");
+  Serial.println(menu_parameters.min_fan_speed);
+//  cpy_pgm_string(item, plus_string);
+//  matrix.print(item);
+
+//  matrix.print(minus_string + (String)buf + plus_string);
 }
 
 void Graphics::write_enable_menu_item(byte item) {}
@@ -1110,7 +1137,7 @@ void Graphics::write_menu_scrolling(byte first, byte second, byte third, byte fo
     else if (i == 4)  line_item = fourth;
     else              line_item = fifth;
 
-//Serial.println(line_item);
+    //Serial.println(line_item);
 
     if (dir == SCROLL_UP)row = i - 1; //will go to 5 in this case, apply correction for set_menu_item_cursor_scolling function
     else row = i;

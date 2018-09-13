@@ -370,7 +370,7 @@ void Menu::display_fan_settings_menu() {
       default: current_menu = STARTUP;
     }
 
-    if (encoder_parameters.position == 0 || encoder_parameters.position == 1 || encoder_parameters.position == 4) {
+    if (encoder_parameters.position == 0 || encoder_parameters.position == 1 || encoder_parameters.position == 3) {
       menu_just_changed = true;
       previous_menu = FAN_SETTINGS_MENU;
       if (encoder_parameters.position == 0)
@@ -665,6 +665,8 @@ void Menu::display_min_fan_speed_menu() {
     fan_parameters.fan_minimum = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
+    Serial.print("min fan prefix:");
+    Serial.println(PREFIX_FAN_MINIMUM_SPEED);
     send_cailbration_data_to_megas(PREFIX_FAN_MINIMUM_SPEED, left_most_address_displaying_menu);
 
   }
@@ -916,9 +918,9 @@ void Menu::check_obj_enabled() {
   num_obj_enabled = counter;
 }
 
-inline void Menu::send_cailbration_data_to_megas(byte data, byte starting_address, byte ending_address) {
-  for (byte i = starting_address; i < ending_address; i++)
-    coms_serial.send_specific_calibration_data(0, i, false, 0);
+inline void Menu::send_cailbration_data_to_megas(byte prefix, byte starting_address, byte ending_address) {
+  for (byte i = starting_address; i <= ending_address; i++)
+    coms_serial.send_specific_calibration_data(prefix, i, false, 0);
 }
 
 

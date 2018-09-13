@@ -132,7 +132,7 @@ class Graphics {
     void print_pgm_menu_item_scrolling(byte src, byte len, byte row);
     void set_menu_item_cursor_scrolling(byte row);
 
-    
+    void print_pgm_adjustment_menu(int value);
     inline void fill_title_background();
     inline void draw_menu_pointer();
     

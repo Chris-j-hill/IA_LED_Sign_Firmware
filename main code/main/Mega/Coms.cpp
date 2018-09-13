@@ -36,8 +36,13 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
     screen_parameters.updated = true;
   }
 
-  for (byte alpha = HEADER_LENGTH; alpha < frame_length - TRAILER_LENGTH - 2; alpha += 2) { //step through frame, identify prefix and extract following data byte
+  for (byte alpha = HEADER_LENGTH; alpha < frame_length - TRAILER_LENGTH - 1; alpha += 2) { //step through frame, identify prefix and extract following data byte
 
+    Serial.print("sensor_data pair: ");
+    Serial.print(temp_buffer[alpha]);
+    Serial.print("\t");
+    Serial.println(temp_buffer[alpha + 1]);
+    
     //set the value of a variable based on what the prefix is
     switch (temp_buffer[alpha]) {
 
@@ -535,6 +540,7 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
     case SENSOR_FRAME_TYPE:
       extract_sensor_data(temp_buffer); //extract data using massive switch, conditionally update screen depending on specific data
+      Serial.println(F("sensor_frame_extracted"));
       break;
 
     case MENU_FRAME_TYPE:

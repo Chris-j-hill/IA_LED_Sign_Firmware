@@ -312,7 +312,7 @@ class Menu {
       return (menu == STARTUP || (menu == DEFAULT_MENU && previous_menu == STARTUP));
     }
 
-    inline void send_cailbration_data_to_megas(byte data, byte starting_address = 0, byte ending_address = NUM_SCREENS);
+    inline void send_cailbration_data_to_megas(byte prefix, byte starting_address = 0, byte ending_address = NUM_SCREENS);
 
 };
 

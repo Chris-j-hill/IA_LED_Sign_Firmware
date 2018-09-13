@@ -861,12 +861,19 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
         case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
-        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
+        case SENSOR_FRAME_TYPE:
+          for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
+            Serial.print(sensor_data_frame.frame_buffer[i]);
+            Serial.print(" ");
+          }
+          Serial.println();
+          Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
+          break;
         case PING_STRING_TYPE:    Serial_4.write(ping_frame.frame_buffer, ping_frame.frame_length);                 break;
         case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }
       Serial_4.write(frame_end_bytes, 2);
-            
+
 #ifdef SERIAL_4_IS_SOFT
       enable_timer_interrupts(); //stop all processes that could cause issues
 #endif
