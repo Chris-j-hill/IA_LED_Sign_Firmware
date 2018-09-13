@@ -88,7 +88,7 @@ void Coms_Serial::read_buffer() {
 
 
   //  TIMSK1 &= ~(1 << TOIE1);  //disable timer 1 interrupt (timer for screen)
-    Timer3.stop();
+  Timer3.stop();
   bool seen_byte_1 = false;
   bool seen_byte_2 = false;
   byte break_condition = 0;
@@ -96,12 +96,16 @@ void Coms_Serial::read_buffer() {
 
 
   if (Serial_1.available() > 1) {
+    if (Serial_1.available() > 32)  //buffer getting full, tell user
+      Serial.println(F("buffer overload warning"));
+
     if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_1) {
       Serial_1.read();
       seen_byte_1 = true;
+      Serial.println(F("start_byte1 found"));
     }
 
-seen_byte_1:    //jump label if we discover were lost after reading above byte
+seen_byte_1:    //jump label if we discover were lost
 
     //  if (Serial_1.available() == 0)
     //    delayMicroseconds(delay_period);
@@ -109,35 +113,43 @@ seen_byte_1:    //jump label if we discover were lost after reading above byte
     if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_2 && seen_byte_1) { //expect to see second start byte
       Serial_1.read();
       seen_byte_2 = true;
+      Serial.println(F("start_byte2 found"));
     }
+
+
     else if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_2) { //see second start byte, expecting frame coming because data arriving, proceed with caution
       Serial_1.read();
 
       if (Serial_1.available() == 0)  //if no char available, delay a bit
         delayMicroseconds(delay_period);
+
       // if next value reasonable, and parity correct, proceed with header read, high chance of frame header, if not frame header, later header checks should catch it
       if (Serial_1.available() > 0 && (Serial_1.peek() >> 1) > FRAME_OVERHEAD && (Serial_1.peek() >> 1) <= MEGA_SERIAL_BUFFER_LENGTH && parity_of(Serial_1.peek()) == 0) {
+        Serial.println(F("maybe found start bytes"));
         seen_byte_1 = true;
         seen_byte_2 = true;
       }
     }
+
 seen_byte_2:
 
     if (Serial_1.available() > 0 && !seen_byte_1 && !seen_byte_2) {
       // byte avialable and neither above conditions caught it
       // could be endbyte, or middle of frame, either way, just discard char
       Serial_1.read();
-//      if (Serial_1.peek() == END_BYTE_1) {
-//        Serial.print(Serial_1.read());
-//        Serial.print(" ");
-//      }
-//      else
-//      {
-//        Serial.print(Serial_1.read());
-//        Serial.println();
-//      }
+      //      if (Serial_1.peek() == END_BYTE_1) {
+      //        Serial.print(Serial_1.read());
+      //        Serial.print(" ");
+      //      }
+      //      else
+      //      {
+      //        Serial.print(Serial_1.read());
+      //        Serial.println();
+      //      }
 
     }
+
+    if (seen_byte_1 && seen_byte_2 && Serial_1.peek() == END_BYTE_1) return;
 
     if (seen_byte_1 && seen_byte_2) {
       //in this funciton pass we have found both bytes 1 and 2
@@ -156,7 +168,8 @@ seen_byte_2:
           return;
         }
         byte temp = Serial_1.read();
-
+        Serial.print(temp);
+        Serial.print(" ");
         if (temp == START_BYTE_1 && Serial_1.peek() == START_BYTE_2) {
           seen_byte_1 = true;
           break_condition = 1;
@@ -169,12 +182,17 @@ seen_byte_2:
 
         header[i] = temp;
       }
-
+      Serial.println();
 
       if (break_condition != 0) { //finished loop early, why...
         if (break_condition == 1) goto seen_byte_1; //seen start bytes
         else if (break_condition == 2) {
           Serial.println(F("endbytes found in header"));
+          while (Serial_1.available() != 0) {
+            Serial.print(Serial_1.read());
+            Serial.print(" ");
+          }
+          Serial.println();
           return;   //seen endbytes, leave whole function, prepare to start again
         }
       }
@@ -419,7 +437,7 @@ seen_byte_2:
       }
     }
   }
-    Timer3.start();
+  Timer3.start();
   //  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
   //  }
 }

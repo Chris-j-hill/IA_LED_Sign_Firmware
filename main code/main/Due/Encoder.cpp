@@ -161,14 +161,10 @@ void Encoder::handle_interupts() {   // function to repond to an ISR.
     if (encoder_parameters.encoder_moved_ISR) { //interrupt just happened
       encoder_parameters.encoder_moved_ISR = false;         //acknowlege interrupt just happened
       encoder_parameters.encoder_moved = true;             //set clean loop to true to allow funtions to execute next loop
-
-      Sprintln(F("encoder interrupt detected"));
     }
 
     else if (encoder_parameters.encoder_moved) {
       encoder_parameters.encoder_moved = false;              // functions executed, set clean loop false until next ISR
-
-      Sprintln(F("encoder interrupt handler completed"));
     }
   }
 
@@ -178,13 +174,9 @@ void Encoder::handle_interupts() {   // function to repond to an ISR.
     if (button_parameters.button_pressed_ISR) {
       button_parameters.button_pressed_ISR = false;
       button_parameters.button_pressed = true;
-
-      Sprintln(F("button interrupt detected"));
     }
     else if (button_parameters.button_pressed) {
       button_parameters.button_pressed = false;
-
-      Sprintln(F("button interrupt handler completed"));
     }
   }
 }

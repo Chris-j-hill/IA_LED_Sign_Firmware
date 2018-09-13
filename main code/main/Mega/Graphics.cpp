@@ -975,86 +975,17 @@ void Graphics::write_adjustment_menu(byte item, byte obj_num) {
   char buf[4] = {' '}; //to store converted byte
   byte val;
   switch (item) {
-    case BRIGHTNESS_MENU:
-      {
-        itoa(screen_parameters.brightness, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
-        break;
-      }
-
-    case TEXT_SIZE_MENU:
-      {
-        itoa(text_parameters[obj_num].text_size, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print("-" + (String)buf + "+");
-        break;
-      }
-
-    case SCROLL_SPEED_MENU:
-      {
-        itoa(cursor_parameters[obj_num].x_dir, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
-
-    case FAN_SPEED_MENU:
-      {
-        itoa(menu_parameters.fan_speed, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
-
-    case MIN_FAN_SPEED_MENU:
-      {
-        //        itoa(menu_parameters.min_fan_speed, buf, 10);
-        //        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        //        matrix.print(minus_string + (String)buf + plus_string);
-        print_pgm_adjustment_menu(menu_parameters.min_fan_speed);
-        break;
-      }
-
-    case LED_STRIP_BRIGHTNESS_MENU:
-      {
-        itoa(menu_parameters.led_strip_brightness, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
-
-    case TEXT_COLOUR_RED:
-      {
-        itoa(text_parameters[obj_num].colour_r, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
-
-    case TEXT_COLOUR_GREEN:
-      {
-        itoa(text_parameters[obj_num].colour_g, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
-
-    case TEXT_COLOUR_BLUE:
-      {
-        itoa(text_parameters[obj_num].colour_b, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
-
-    case TEXT_COLOUR_HUE:
-      {
-        itoa(text_parameters[obj_num].hue, buf, 10);
-        matrix.setCursor(12, center_of_menu - (sizeof(buf)*ASCII_CHARACTER_BASIC_WIDTH) / 2);
-        matrix.print(minus_string + (String)buf + plus_string);
-        break;
-      }
+    case BRIGHTNESS_MENU:           print_pgm_adjustment_menu(screen_parameters.brightness);              break;
+    case TEXT_SIZE_MENU:            print_pgm_adjustment_menu(text_parameters[obj_num].text_size);        break;
+    case SCROLL_SPEED_MENU:         print_pgm_adjustment_menu(cursor_parameters[obj_num].x_dir);          break;
+    case FAN_SPEED_MENU:            print_pgm_adjustment_menu(menu_parameters.fan_speed);                 break;
+    case MIN_FAN_SPEED_MENU:        print_pgm_adjustment_menu(menu_parameters.min_fan_speed);             break;
+    case LED_STRIP_BRIGHTNESS_MENU: print_pgm_adjustment_menu(menu_parameters.led_strip_brightness);      break;
+    case TEXT_COLOUR_RED:           print_pgm_adjustment_menu(text_parameters[obj_num].colour_r);         break;
+    case TEXT_COLOUR_GREEN:         print_pgm_adjustment_menu(text_parameters[obj_num].colour_g);         break;
+    case TEXT_COLOUR_BLUE:          print_pgm_adjustment_menu(text_parameters[obj_num].colour_b);         break;
+    case TEXT_COLOUR_HUE:           print_pgm_adjustment_menu(text_parameters[obj_num].hue);              break;
+     
   }
 }
 
@@ -1069,19 +1000,20 @@ void Graphics::print_pgm_adjustment_menu(int value) {
     num_chars++;
   }
   if (value < 0) num_chars++;//minus symbol
-
+  num_chars += NUM_EXTRA_ADJ_MENU_CHARS;  //counter additional chars (+,- etc)
   matrix.setCursor(center_of_menu - ((num_chars * ASCII_CHARACTER_BASIC_WIDTH) / 2), 12);
-//  char item[1];
-//  cpy_pgm_string(item, minus_string);
-//  matrix.print((char)pgm_read_byte_near(minus_string));
-//  Serial.print((char)pgm_read_byte_near(minus_string));
+  //  char item[1];
+  //  cpy_pgm_string(item, minus_string);
+  matrix.print((char)pgm_read_byte_near(minus_string));
+  matrix.print("(");
+  //  Serial.print((char)pgm_read_byte_near(minus_string));
   matrix.print(menu_parameters.min_fan_speed);
-  Serial.print("speed: ");
-  Serial.println(menu_parameters.min_fan_speed);
-//  cpy_pgm_string(item, plus_string);
-//  matrix.print(item);
+    matrix.print(")");
+  matrix.print((char)pgm_read_byte_near(plus_string));
+  //  cpy_pgm_string(item, plus_string);
+  //  matrix.print(item);
 
-//  matrix.print(minus_string + (String)buf + plus_string);
+  //  matrix.print(minus_string + (String)buf + plus_string);
 }
 
 void Graphics::write_enable_menu_item(byte item) {}

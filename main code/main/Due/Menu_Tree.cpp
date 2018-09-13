@@ -76,8 +76,10 @@ void Menu::display_menu() {
   }
 
   if ((current_menu != DEFAULT_MENU && current_menu != STARTUP) && (millis() > time_since_menu_last_changed + MENU_VISABLITIY_TIMOUT)) {
+    previous_menu = current_menu;
     current_menu = DEFAULT_MENU;
     encoder.recenter_encoder();
+    Serial.println("menu timeout");
     coms_serial.send_menu_frame(DEFAULT_MENU);
   }
 
@@ -657,6 +659,7 @@ void Menu::display_min_fan_speed_menu() {
     current_menu = FAN_SETTINGS_MENU;
     previous_menu = MIN_FAN_SPEED_MENU;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(3);
   }

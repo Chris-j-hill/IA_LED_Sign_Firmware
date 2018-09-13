@@ -42,7 +42,7 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
     Serial.print(temp_buffer[alpha]);
     Serial.print("\t");
     Serial.println(temp_buffer[alpha + 1]);
-    
+
     //set the value of a variable based on what the prefix is
     switch (temp_buffer[alpha]) {
 
@@ -80,6 +80,7 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
       case PREFIX_FAN_MINIMUM_SPEED:
         menu_parameters.min_fan_speed = temp_buffer[alpha + 1];
+        screen_parameters.updated = false;
         break;
 
       case PREFIX_FAN_ENABLED:
@@ -506,12 +507,12 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
 
       cursor_parameters[obj_num].global_x_pos = GET_GLOBAL_POS(temp1, temp_buffer[5]);  // position as recieved in frame
       cursor_parameters[obj_num].global_y_pos = GET_GLOBAL_POS(temp2, temp_buffer[7]);
-//
-//      Serial.print("global x = ");
-//      Serial.println(cursor_parameters[obj_num].global_x_pos);
-//
-//      Serial.print("global y = ");
-//      Serial.println(cursor_parameters[obj_num].global_y_pos);
+      //
+      //      Serial.print("global x = ");
+      //      Serial.println(cursor_parameters[obj_num].global_x_pos);
+      //
+      //      Serial.print("global y = ");
+      //      Serial.println(cursor_parameters[obj_num].global_y_pos);
 
       cursor_parameters[obj_num].local_x_pos = cursor_parameters[obj_num].global_x_pos - (screen_parameters.node_address * SINGLE_MATRIX_WIDTH);  // relative position for this matrix
       cursor_parameters[obj_num].local_y_pos = cursor_parameters[obj_num].global_y_pos;
@@ -559,15 +560,15 @@ void Coms::frame_cpy(byte *temp_buffer, byte frame_type) {
       else
         temp1 = temp_buffer[5];
 
-      if (temp2 != menu.get_previous_menu()) //just change menu, dont run scroll animation 
-      menu_parameters.last_encoder_pos = GET_ENCODER_POS(temp1, temp_buffer[6]);
+      if (temp2 != menu.get_previous_menu()) //just change menu, dont run scroll animation
+        menu_parameters.last_encoder_pos = GET_ENCODER_POS(temp1, temp_buffer[6]);
       else                                    // else scrolling, log encoder pos before move
-      menu_parameters.last_encoder_pos = menu_parameters.encoder_position;
-      
-      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[6]);  
+        menu_parameters.last_encoder_pos = menu_parameters.encoder_position;
+
+      menu_parameters.encoder_position = GET_ENCODER_POS(temp1, temp_buffer[6]);
 
       screen_parameters.updated = false;  //menu update should casue screen update, menu frame not sent to megas that cant display screen
-      screen_parameters.time_last_updated = millis()+SCREEN_UPDATE_BACKOFF_PERIOD;
+      screen_parameters.time_last_updated = millis() + SCREEN_UPDATE_BACKOFF_PERIOD;
 
       Serial.print("menu : ");
       Serial.println(menu.get_current_menu());

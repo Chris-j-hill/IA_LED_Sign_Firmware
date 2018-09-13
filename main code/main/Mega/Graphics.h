@@ -26,6 +26,7 @@
 // Similar to F(), but for PROGMEM string pointers rather than literals
 #define F2(progmem_ptr) (const __FlashStringHelper *)progmem_ptr
 
+#define NUM_EXTRA_ADJ_MENU_CHARS 4
 
 struct Text_Struct {
   byte string [MAX_TWEET_SIZE] = "No due found";
