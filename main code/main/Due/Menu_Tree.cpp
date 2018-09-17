@@ -632,6 +632,7 @@ void Menu::display_fan_speed_menu() {
     current_menu = FAN_SETTINGS_MENU;
     previous_menu = FAN_SPEED_MENU;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(1);
   }
@@ -720,6 +721,7 @@ void Menu::display_led_strip_brightness_menu() {
     current_menu = LED_STRIP_MENU;
     previous_menu = LED_STRIP_BRIGHTNESS_MENU;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(2);
   }
@@ -748,6 +750,7 @@ void Menu::display_text_colour_red_menu() {
     current_menu = TEXT_COLOUR_MENU;
     previous_menu = TEXT_COLOUR_RED;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(1);
   }
@@ -775,6 +778,7 @@ void Menu::display_text_colour_green_menu() {
     current_menu = TEXT_COLOUR_MENU;
     previous_menu = TEXT_COLOUR_GREEN;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(2);
   }
@@ -802,6 +806,7 @@ void Menu::display_text_colour_blue_menu() {
     current_menu = TEXT_COLOUR_MENU;
     previous_menu = TEXT_COLOUR_BLUE;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(3);
   }
@@ -832,6 +837,7 @@ void Menu::display_text_colour_hue_menu() {
     current_menu = TEXT_COLOUR_MENU;
     previous_menu = TEXT_COLOUR_HUE;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(4);
   }
@@ -863,6 +869,7 @@ void Menu::display_text_scroll_speed_x() {
     current_menu = SCROLL_SPEED_MENU;
     previous_menu = SCROLL_SPEED_MENU_X;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(1);
   }
@@ -894,6 +901,7 @@ void Menu::display_text_scroll_speed_y() {
     current_menu = SCROLL_SPEED_MENU;
     previous_menu = SCROLL_SPEED_MENU_Y;
     button_parameters.button_pressed = false;
+    menu_just_changed = true;
     time_since_menu_last_changed = millis();
     encoder.set_encoder_position(2);
   }

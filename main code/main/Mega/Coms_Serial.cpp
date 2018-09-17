@@ -102,18 +102,18 @@ void Coms_Serial::read_buffer() {
     if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_1) {
       Serial_1.read();
       seen_byte_1 = true;
-      Serial.println(F("start_byte1 found"));
+//      Serial.println(F("start_byte1 found"));
     }
 
 seen_byte_1:    //jump label if we discover were lost
 
-    //  if (Serial_1.available() == 0)
-    //    delayMicroseconds(delay_period);
+      if (Serial_1.available() == 0)
+        delayMicroseconds(delay_period);
 
     if (Serial_1.available() > 0 && Serial_1.peek() == START_BYTE_2 && seen_byte_1) { //expect to see second start byte
       Serial_1.read();
       seen_byte_2 = true;
-      Serial.println(F("start_byte2 found"));
+      //Serial.println(F("start_byte2 found"));
     }
 
 
@@ -125,7 +125,7 @@ seen_byte_1:    //jump label if we discover were lost
 
       // if next value reasonable, and parity correct, proceed with header read, high chance of frame header, if not frame header, later header checks should catch it
       if (Serial_1.available() > 0 && (Serial_1.peek() >> 1) > FRAME_OVERHEAD && (Serial_1.peek() >> 1) <= MEGA_SERIAL_BUFFER_LENGTH && parity_of(Serial_1.peek()) == 0) {
-        Serial.println(F("maybe found start bytes"));
+        //Serial.println(F("maybe found start bytes"));
         seen_byte_1 = true;
         seen_byte_2 = true;
       }
@@ -168,8 +168,8 @@ seen_byte_2:
           return;
         }
         byte temp = Serial_1.read();
-        Serial.print(temp);
-        Serial.print(" ");
+//        Serial.print(temp);
+//        Serial.print(" ");
         if (temp == START_BYTE_1 && Serial_1.peek() == START_BYTE_2) {
           seen_byte_1 = true;
           break_condition = 1;
@@ -182,7 +182,7 @@ seen_byte_2:
 
         header[i] = temp;
       }
-      Serial.println();
+//      Serial.println();
 
       if (break_condition != 0) { //finished loop early, why...
         if (break_condition == 1) goto seen_byte_1; //seen start bytes

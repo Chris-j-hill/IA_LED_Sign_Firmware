@@ -458,7 +458,7 @@ inline void Graphics::draw_text(byte obj_num) {
 
   if (cursorx < (0 - ASCII_CHARACTER_BASIC_WIDTH)) {
     start_loc = abs(cursorx / ASCII_CHARACTER_BASIC_WIDTH);
-    matrix.setCursor(cursorx / ASCII_CHARACTER_BASIC_WIDTH, cursory); //move cursor closer to x=0 and ignore earlier characters
+    matrix.setCursor(cursorx % ASCII_CHARACTER_BASIC_WIDTH, cursory); //move cursor closer to x=0 and ignore earlier characters
   }
   else if (cursorx >= SINGLE_MATRIX_WIDTH) //dont print if fully off screen
     return;
@@ -518,7 +518,7 @@ void Graphics::interpolate_pos() {
   interpolate_pos_flag = false;
   uint32_t cur_time = millis(); //only need to do this once, millis isnt that fast...
 
-  if (menu.get_current_menu()  == DEFAULT_MENU)  //if displaying menu, dont allow this to casue screen update
+  if (menu.get_current_menu()  == DEFAULT_MENU)  //if displaying any menu, dont allow this to cause screen update
     screen_parameters.updated = false;
   else
     screen_parameters.updated = true;
