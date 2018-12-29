@@ -19,7 +19,7 @@
 
 extern struct Screen_Struct screen_parameters;
 
-//mega_class mega;
+
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE1, OE2, true, 64, DEFAULT_SCREEN_MODE);
 //RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE2, false, 64);
 Menu menu;
@@ -85,13 +85,13 @@ void configure_address() {
   if (address_bit1 == LOW && address_bit2 == LOW)
     screen_parameters.node_address = 0;
 
-  if (address_bit1 == LOW && address_bit2 == HIGH)
+  else if (address_bit1 == LOW && address_bit2 == HIGH)
     screen_parameters.node_address = 1;
 
-  if (address_bit1 == HIGH && address_bit2 == LOW)
+  else if (address_bit1 == HIGH && address_bit2 == LOW)
     screen_parameters.node_address = 2;
 
-  if (address_bit1 == HIGH && address_bit2 == HIGH)
+  else if (address_bit1 == HIGH && address_bit2 == HIGH)
     screen_parameters.node_address = 3;
 }
 

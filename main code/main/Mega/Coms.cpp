@@ -38,11 +38,6 @@ void Coms::extract_sensor_data(byte *temp_buffer) {
 
   for (byte alpha = HEADER_LENGTH; alpha < frame_length - TRAILER_LENGTH - 1; alpha += 2) { //step through frame, identify prefix and extract following data byte
 
-//    Serial.print("sensor_data pair: ");
-//    Serial.print(temp_buffer[alpha]);
-//    Serial.print("\t");
-//    Serial.println(temp_buffer[alpha + 1]);
-
     //set the value of a variable based on what the prefix is
     switch (temp_buffer[alpha]) {
 
