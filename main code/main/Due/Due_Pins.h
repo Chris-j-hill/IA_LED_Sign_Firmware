@@ -33,14 +33,14 @@
 
 
 //NB: configure ports to run on hardware serial if possible, should auto configure in setup code
-#define RX_PIN_1 15 // software serial port's reception pin
-#define TX_PIN_1 14 // software serial port's transmision pin
+#define RX_PIN_1 42 // software serial port's reception pin
+#define TX_PIN_1 43 // software serial port's transmision pin
 #define RX_PIN_2 17 
 #define TX_PIN_2 16 
 #define RX_PIN_3 19 
 #define TX_PIN_3 18 
-#define RX_PIN_4 42 
-#define TX_PIN_4 43 
+#define RX_PIN_4 15 
+#define TX_PIN_4 14 
 
 
 #endif // Due_Pins_H

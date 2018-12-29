@@ -5,13 +5,24 @@
 
 #include "Coms.h"
 #include "Local_Config.h"
+#include "Mega_Pins.h"
 
 
 #define APPROX_BYTE_TRANSMIT_TIME 8/((COMS_SPEED<<12/1000000)>>12)//approximate number of microseconds expected per byte, shift by 12 bits retains precision
 #define WAIT_FOR_BYTE_PERIOD   APPROX_BYTE_TRANSMIT_TIME<<1 //wait twice this long, rounding error above and maybe start and stop bits
 
+
+#if (SERIAL_RX_PIN == 19) //selects which serial port is connected automatically, should be serial1 due to PCB 
 #define Serial_1 Serial1
-#define SERIAL1_RX_PIN 19
+
+#elif (SERIAL_RX_PIN == 17)
+#define Serial_1 Serial2
+
+#elif (SERIAL_RX_PIN == 15)
+#define Serial_1 Serial3
+#endif
+
+#define SERIAL1_RX_PIN SERIAL_RX_PIN
 
 
 class Coms_Serial: public Coms {

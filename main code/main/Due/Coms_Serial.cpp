@@ -264,7 +264,7 @@ void Coms_Serial::configure_serial_4(uint32_t baud) {
 
   NVIC_SetPriority (SERIAL_4_TIMER, SOFT_SERIAL_PRIORITY);
 #else
-  Serial_4.begin(buad, HARD_COMS_CONFIG);
+  Serial_4.begin(baud, HARD_COMS_CONFIG);
 #endif
 
 }
@@ -861,14 +861,7 @@ void Coms_Serial::write_frame(byte address, byte frame_type, byte * buf, byte fr
         case TEXT_FRAME_TYPE:     Serial_4.write(text_frame.frame_buffer, text_frame.frame_length);                 break;
         case POS_FRAME_TYPE:      Serial_4.write(pos_frame.frame_buffer, pos_frame.frame_length);                   break;
         case MENU_FRAME_TYPE:     Serial_4.write(menu_frame.frame_buffer, menu_frame.frame_length);                 break;
-        case SENSOR_FRAME_TYPE:
-          for (byte i = 0; i < sensor_data_frame.frame_length; i++) {
-            Serial.print(sensor_data_frame.frame_buffer[i]);
-            Serial.print(" ");
-          }
-          Serial.println();
-          Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);
-          break;
+        case SENSOR_FRAME_TYPE:   Serial_4.write(sensor_data_frame.frame_buffer, sensor_data_frame.frame_length);   break;
         case PING_STRING_TYPE:    Serial_4.write(ping_frame.frame_buffer, ping_frame.frame_length);                 break;
         case FRAME_RETRANSMIT:    Serial_4.write(buf, frame_length);                                                break;
       }

@@ -106,7 +106,6 @@ void Menu::display_menu() {
 
     else {
 
-      Serial.println("standard");
       //clear_background_text(); // check if menu covers whole area, if not display partial background
       switch (current_menu) {
         case MAIN_MENU:                   display_main_menu();                                  break;

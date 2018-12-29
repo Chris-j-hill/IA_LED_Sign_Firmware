@@ -669,8 +669,6 @@ void Menu::display_min_fan_speed_menu() {
     fan_parameters.fan_minimum = encoder_parameters.position;
     encoder_parameters.encoder_moved = false;
     time_since_menu_last_changed = millis();
-    Serial.print("min fan prefix:");
-    Serial.println(PREFIX_FAN_MINIMUM_SPEED);
     send_cailbration_data_to_megas(PREFIX_FAN_MINIMUM_SPEED, left_most_address_displaying_menu);
 
   }

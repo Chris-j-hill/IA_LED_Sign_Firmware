@@ -158,7 +158,7 @@ seen_byte_2:
       seen_byte_1 = false;
       seen_byte_2 = false;
       break_condition = 0;
-
+      Serial.print(F("header: "));
       for (byte i = 0; i < HEADER_LENGTH; i++) {
         if (Serial_1.available() == 0)  //if no char available, delay a bit
           delayMicroseconds(delay_period);
@@ -168,8 +168,9 @@ seen_byte_2:
           return;
         }
         byte temp = Serial_1.read();
-//        Serial.print(temp);
-//        Serial.print(" ");
+        
+        Serial.print(temp);
+        Serial.print(" ");
         if (temp == START_BYTE_1 && Serial_1.peek() == START_BYTE_2) {
           seen_byte_1 = true;
           break_condition = 1;
@@ -182,12 +183,14 @@ seen_byte_2:
 
         header[i] = temp;
       }
-//      Serial.println();
+      Serial.println();
 
       if (break_condition != 0) { //finished loop early, why...
         if (break_condition == 1) goto seen_byte_1; //seen start bytes
         else if (break_condition == 2) {
+          delay(10);
           Serial.println(F("endbytes found in header"));
+          Serial.print(F("dump buffer: "));
           while (Serial_1.available() != 0) {
             Serial.print(Serial_1.read());
             Serial.print(" ");
@@ -216,7 +219,7 @@ seen_byte_2:
 
 
 #ifndef DISABLE_REQUEST_RETRANSMISSION
-          request_frame_retransmission();
+          //request_frame_retransmission();
           Serial.println(F("bunch of frames requested"));
 #endif
 
@@ -292,7 +295,7 @@ seen_byte_2:
             if (!error_check_frame_body(data, TEXT_FRAME_TYPE, frame_length)) { //if frame ok, returns false(no errors), save data
               remove_byte_parity_bit(data, BYTE_PARITY_LOC, text_frame.frame_length - TRAILER_LENGTH, HEADER_LENGTH);
               frame_cpy(data, TEXT_FRAME_TYPE);
-              Serial.println(F("Text frame recieved"));
+//              Serial.println(F("Text frame recieved"));
             }
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //failed parity checks
@@ -345,10 +348,12 @@ seen_byte_2:
 
           else if (frame_type == SENSOR_FRAME_TYPE) { //frame read fully and is text frame
             memcpy(data, header, HEADER_LENGTH);       //copy header to beginning of frame
-
+            if(Serial_1.peek() == END_BYTE_1)Serial_1.read();
+            if(Serial_1.peek() == END_BYTE_2)Serial_1.read();
+            
             if (!error_check_frame_body(data, SENSOR_FRAME_TYPE, frame_length)) { //if frame ok, returns false(no errors), save data
               frame_cpy(data, SENSOR_FRAME_TYPE);
-              Serial.println(F("Sensor data frame recieved"));
+              //Serial.println(F("Sensor data frame recieved"));
             }
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //failed parity checks
@@ -369,9 +374,10 @@ seen_byte_2:
           else if (frame_type == MENU_FRAME_TYPE) { //frame read fully and is text frame
             memcpy(data, header, HEADER_LENGTH);       //copy header to beginning of frame
 
+            
             if (!error_check_frame_body(data, MENU_FRAME_TYPE, frame_length)) { //if frame ok, returns false(no errors), save data
               frame_cpy(data, MENU_FRAME_TYPE);
-              Serial.println(F("menu frame recieved"));
+//              Serial.println(F("menu frame recieved"));
             }
 #ifndef DISABLE_REQUEST_RETRANSMISSION
             else { //failed parity checks

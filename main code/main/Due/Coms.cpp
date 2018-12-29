@@ -177,18 +177,18 @@ inline void Coms::pack_xy_coordinates(byte obj_num) {
   pos_frame.frame_buffer[6] = y_vals[0];
   pos_frame.frame_buffer[7] = y_vals[1];
 
-//  Serial.print("x pos, obj ");
-//  Serial.print(obj_num);
-//  Serial.print(": ");
-//  Serial.println(text_cursor[obj_num].x);
-//  Serial.print("x dir: ");
-//  Serial.println(text_cursor[obj_num].x_pos_dir);
-//  Serial.print("obj_used: ");
-//  Serial.println(text_cursor[obj_num].object_used);
-//  
-//  host.println_bits(text_cursor[obj_num].x, 16, BIN);
-//  host.print_bits(pos_frame.frame_buffer[4], 8, BIN);
-//  host.println_bits(pos_frame.frame_buffer[5], 8, BIN);
+  //  Serial.print("x pos, obj ");
+  //  Serial.print(obj_num);
+  //  Serial.print(": ");
+  //  Serial.println(text_cursor[obj_num].x);
+  //  Serial.print("x dir: ");
+  //  Serial.println(text_cursor[obj_num].x_pos_dir);
+  //  Serial.print("obj_used: ");
+  //  Serial.println(text_cursor[obj_num].object_used);
+  //
+  //  host.println_bits(text_cursor[obj_num].x, 16, BIN);
+  //  host.print_bits(pos_frame.frame_buffer[4], 8, BIN);
+  //  host.println_bits(pos_frame.frame_buffer[5], 8, BIN);
 
 
   //  if (text_cursor[obj_num].x < 0) {
@@ -310,6 +310,19 @@ void Coms::init_frames() {
 
 
 void Coms::build_menu_data_frame(byte menu_number) {   //function to build the frame to send menu info
+
+//weird errors of header data getting over written, explicitly set for each menu
+//NB: error occurs returning from adjustment menu, header becomes corrupted
+ 
+  menu_frame.frame_buffer[0] = MENU_FRAME_LENGTH;
+  menu_frame.frame_buffer[1] = MENU_FRAME_TYPE;
+  menu_frame.frame_buffer[2] = PACK_FRAME_NUM_DATA(1, 1);
+#ifdef DO_HEAVY_ERROR_CHECKING
+  menu_frame.frame_buffer[0] = (menu_frame.frame_buffer[0] << 1) | (parity_of(menu_frame.frame_buffer[0]));
+  menu_frame.frame_buffer[1] = (menu_frame.frame_buffer[1] << 1) | (parity_of(menu_frame.frame_buffer[1]));
+  menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_FRAME_NUM_DATA(menu_frame.frame_buffer[2])) << 4));
+  menu_frame.frame_buffer[2] = (menu_frame.frame_buffer[2]       | (parity_of(GET_THIS_FRAME_DATA( menu_frame.frame_buffer[2] ))));
+#endif
 
   menu_frame.frame_buffer[3] = (byte) menu.get_selected_object();
   menu_frame.frame_buffer[4] = (byte) menu_number;
